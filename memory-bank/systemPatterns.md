@@ -14,11 +14,11 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 (Content remains the same)
 
-### Library Pattern - ✅ STABLE & TESTED (Refactoring and Validation Enhanced)
+### Library Pattern - ✅ STABLE & TESTED (Refactoring, Validation Enhanced, NatSpec Added)
 
-- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. (`_calculatePurchaseReturn` refactored and fixed; validation strategy confirmed. The `DiscreteCurveMathLib_v1.t.sol` test suite has been refactored (removal of `segmentsData`) and all 65 tests are passing, confirming library stability).
+- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations, now with NatSpec comments for key functions. (`_calculatePurchaseReturn` refactored and fixed; validation strategy confirmed. State mutability of core functions confirmed as `pure`. The `DiscreteCurveMathLib_v1.t.sol` test suite has been refactored, compiler warnings fixed, and all 65 tests are passing, confirming library stability).
 - **PackedSegmentLib**: Helper library for bit manipulation and validation. (`_create` function's stricter validation for "True Flat" and "True Sloped" segments confirmed and tested).
-- Stateless, reusable across multiple modules.
+- Stateless (all core math functions are `pure`), reusable across multiple modules.
 - Type-safe with custom PackedSegment type.
 
 ### Auxiliary Module Pattern

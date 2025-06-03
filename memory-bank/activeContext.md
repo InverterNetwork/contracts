@@ -2,24 +2,27 @@
 
 ## Current Work Focus
 
-**Primary**: Strengthening fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
-**Secondary**: Ensuring all Memory Bank documentation accurately reflects this as the next priority.
+**Primary**: Updating documentation for `DiscreteCurveMathLib_v1` (NatSpec in code, Memory Bank files, and Markdown documentation).
+**Secondary**: Preparing for strengthening fuzz testing for `DiscreteCurveMathLib_v1.t.sol` once all documentation is synchronized.
 
-**Reason for Shift**: Previous task (renaming `defaultTestCurve` and Memory Bank updates for `DiscreteCurveMathLib_v1` stability) is complete. Next priority is enhancing test robustness through more comprehensive fuzzing.
+**Reason for Shift**: NatSpec comments have been added to key functions in `DiscreteCurveMathLib_v1.sol`, their state mutability confirmed as `pure`, and compiler warnings in the test file `DiscreteCurveMathLib_v1.t.sol` have been resolved. The immediate next step is to ensure all related documentation reflects these changes accurately.
 
 ## Recent Progress
 
+- ✅ NatSpec comments added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
+- ✅ State mutability for `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` confirmed/updated to `pure`.
+- ✅ Compiler warnings in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (related to unused variables in destructuring and try-catch returns) have been fixed.
 - ✅ `DiscreteCurveMathLib_v1.t.sol` refactored to remove `segmentsData` and use `packedSegmentsArray` directly.
-- ✅ All 65 tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` are passing after refactor.
+- ✅ All 65 tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` are passing after refactor and warning fixes.
 - ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` refactored by user (previous session).
 - ✅ `IDiscreteCurveMathLib_v1.sol` updated with new error types (`InvalidFlatSegment`, `InvalidPointSegment`) (previous session).
 - ✅ `PackedSegmentLib.sol`'s `_create` function confirmed to contain stricter validation rules (previous session).
 - ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` are passing (previous session).
-- ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are considered stable and fully tested.
+- ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are considered stable, internally well-documented (NatSpec), and fully tested.
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
-**`DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are now stable, and all tests are passing.** Core library and tests maintain:
+**`DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are now stable, internally well-documented with NatSpec, and all tests (including fixes for compiler warnings) are passing.** Core library and tests maintain:
 
 - Defensive programming patterns (validation strategy updated, see below).
 - Gas-optimized algorithms with safety bounds.
@@ -29,10 +32,14 @@
 
 ## Next Immediate Steps
 
-1.  **Review existing fuzz tests** in `DiscreteCurveMathLib_v1.t.sol` and identify gaps/areas for enhancement (e.g., for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, and new fuzz test for `_calculateSaleReturn`).
-2.  **Implement new/enhanced fuzz tests** for core calculation functions in `DiscreteCurveMathLib_v1.t.sol`.
-3.  **Update Memory Bank** after fuzz tests are implemented and passing.
-4.  Then, proceed to **plan `FM_BC_DBC` Implementation**.
+1.  **Update Memory Bank files** (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect NatSpec additions, `pure` keyword updates, and test file warning fixes.
+2.  **Update the Markdown documentation file** `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md` to align with the latest code changes (NatSpec, `pure` functions) and ensure consistency.
+3.  Once all documentation is synchronized: **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
+    - Review existing fuzz tests and identify gaps.
+    - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`.
+    - Add a new fuzz test for `_calculateSaleReturn`.
+4.  **Update Memory Bank** again after fuzz tests are implemented and passing.
+5.  Then, proceed to **plan `FM_BC_DBC` Implementation**.
 
 ## Implementation Insights Discovered (And Being Revised)
 
@@ -176,19 +183,24 @@ This function in `FM_BC_DBC` becomes even more critical as it's the point where 
 - ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested (previous session).
 - ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered (previous session).
 - ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing (previous session).
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`)**: All 65 tests passing (confirming stability of both lib and its tests).
-- 🎯 **Next**: Strengthen fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
+- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`)**: All 65 tests passing (confirming stability of both lib and its tests after warning fixes).
+- ✅ **NatSpec**: Added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
+- ✅ **State Mutability**: `_calculateReserveForSupply` and `_calculatePurchaseReturn` confirmed/updated to `pure`.
+- 🎯 **Next**: Update all documentation (Memory Bank, Markdown docs), then strengthen fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
 
 ## Next Development Priorities - CONFIRMED
 
-1.  **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
+1.  **Synchronize Documentation (Current Task)**:
+    - Update Memory Bank files (`activeContext.md`, `progress.md`, `systemPatterns.md`, `techContext.md`).
+    - Update `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
+2.  **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`.
     - Add a new fuzz test for `_calculateSaleReturn`.
-2.  **Update Memory Bank** after fuzz tests are implemented and passing.
-3.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
-4.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
+3.  **Update Memory Bank** after fuzz tests are implemented and passing.
+4.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
+5.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
 
-## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Stable)
+## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Stable & Documented)
 
-**High-quality, production-ready code achieved for both the library and its test suite.** The refactoring of `_calculatePurchaseReturn`, stricter validation in `PackedSegmentLib`, and comprehensive, passing tests (including the refactored `DiscreteCurveMathLib_v1.t.sol`) have resulted in a stable and robust math foundation. Logic has been simplified, and illegal states are effectively prevented or handled.
+**High-quality, production-ready code achieved for both the library and its test suite.** The refactoring of `_calculatePurchaseReturn`, stricter validation in `PackedSegmentLib`, comprehensive passing tests (including the refactored `DiscreteCurveMathLib_v1.t.sol` and fixes for compiler warnings), and recent NatSpec additions have resulted in a stable, robust, and well-documented math foundation. Logic has been simplified, and illegal states are effectively prevented or handled.

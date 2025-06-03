@@ -11,6 +11,7 @@ import {IDiscreteCurveMathLib_v1} from
     "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
 import {DiscreteCurveMathLibV1_Exposed} from
     "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
+import {Math} from "@oz/utils/math/Math.sol";
 
 contract DiscreteCurveMathLib_v1_Test is Test {
     // Allow using PackedSegmentLib functions directly on PackedSegment type
@@ -64,13 +65,23 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //          Supply 30-50:  Price 1.50 (Segment 1, Step 0)
     //          Supply 50-70:  Price 1.55 (Segment 1, Step 1)
 
-    function _calculateCurveReserve(PackedSegment[] memory segments) internal pure returns (uint totalReserve_) {
+    function _calculateCurveReserve(PackedSegment[] memory segments)
+        internal
+        pure
+        returns (uint totalReserve_)
+    {
         for (uint i = 0; i < segments.length; i++) {
-            (uint initialPrice, uint priceIncrease, uint supplyPerStep, uint numberOfSteps) = segments[i]._unpack();
-            
+            (
+                uint initialPrice,
+                uint priceIncrease,
+                uint supplyPerStep,
+                uint numberOfSteps
+            ) = segments[i]._unpack();
+
             for (uint j = 0; j < numberOfSteps; j++) {
                 uint priceAtStep = initialPrice + (j * priceIncrease);
-                totalReserve_ += (supplyPerStep * priceAtStep) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+                totalReserve_ += (supplyPerStep * priceAtStep)
+                    / DiscreteCurveMathLib_v1.SCALING_FACTOR;
             }
         }
     }
@@ -83,69 +94,76 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Segment 0 (Sloped)
         twoSlopedSegmentsTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
-                1 ether,    // initialPrice
-                0.1 ether,  // priceIncrease
-                10 ether,   // supplyPerStep
-                3           // numberOfSteps (Prices: 1.0, 1.1, 1.2)
+                1 ether, // initialPrice
+                0.1 ether, // priceIncrease
+                10 ether, // supplyPerStep
+                3 // numberOfSteps (Prices: 1.0, 1.1, 1.2)
             )
         );
         // Segment 1 (Sloped)
         twoSlopedSegmentsTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
-                1.5 ether,  // initialPrice
+                1.5 ether, // initialPrice
                 0.05 ether, // priceIncrease
-                20 ether,   // supplyPerStep
-                2           // numberOfSteps (Prices: 1.5, 1.55)
+                20 ether, // supplyPerStep
+                2 // numberOfSteps (Prices: 1.5, 1.55)
             )
         );
-        twoSlopedSegmentsTestCurve.totalCapacity = (10 ether * 3) + (20 ether * 2); // 30 + 40 = 70 ether
-        twoSlopedSegmentsTestCurve.totalReserve = _calculateCurveReserve(twoSlopedSegmentsTestCurve.packedSegmentsArray);
+        twoSlopedSegmentsTestCurve.totalCapacity =
+            (10 ether * 3) + (20 ether * 2); // 30 + 40 = 70 ether
+        twoSlopedSegmentsTestCurve.totalReserve = _calculateCurveReserve(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray
+        );
 
         // --- Initialize flatSlopedTestCurve ---
-        flatSlopedTestCurve.description = "Flat segment followed by a sloped segment";
+        flatSlopedTestCurve.description =
+            "Flat segment followed by a sloped segment";
         // Segment 0 (Flat)
         flatSlopedTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
                 0.5 ether, // initialPrice
-                0,         // priceIncrease
-                50 ether,  // supplyPerStep
-                1          // numberOfSteps
+                0, // priceIncrease
+                50 ether, // supplyPerStep
+                1 // numberOfSteps
             )
         );
         // Segment 1 (Sloped)
         flatSlopedTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
-                0.8 ether,  // initialPrice (Must be >= 0.5)
+                0.8 ether, // initialPrice (Must be >= 0.5)
                 0.02 ether, // priceIncrease
-                25 ether,   // supplyPerStep
-                2           // numberOfSteps (Prices: 0.8, 0.82)
+                25 ether, // supplyPerStep
+                2 // numberOfSteps (Prices: 0.8, 0.82)
             )
         );
         flatSlopedTestCurve.totalCapacity = (50 ether * 1) + (25 ether * 2); // 50 + 50 = 100 ether
-        flatSlopedTestCurve.totalReserve = _calculateCurveReserve(flatSlopedTestCurve.packedSegmentsArray);
+        flatSlopedTestCurve.totalReserve =
+            _calculateCurveReserve(flatSlopedTestCurve.packedSegmentsArray);
 
         // --- Initialize flatToFlatTestCurve ---
-        flatToFlatTestCurve.description = "Flat segment followed by another flat segment";
+        flatToFlatTestCurve.description =
+            "Flat segment followed by another flat segment";
         // Segment 0 (Flat)
         flatToFlatTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
-                1 ether,   // initialPrice
-                0,         // priceIncrease
-                20 ether,  // supplyPerStep
-                1          // numberOfSteps
+                1 ether, // initialPrice
+                0, // priceIncrease
+                20 ether, // supplyPerStep
+                1 // numberOfSteps
             )
         );
         // Segment 1 (Flat)
         flatToFlatTestCurve.packedSegmentsArray.push(
             exposedLib.exposed_createSegment(
                 1.5 ether, // initialPrice (Valid progression from 1 ether)
-                0,         // priceIncrease
-                30 ether,  // supplyPerStep
-                1          // numberOfSteps
+                0, // priceIncrease
+                30 ether, // supplyPerStep
+                1 // numberOfSteps
             )
         );
         flatToFlatTestCurve.totalCapacity = (20 ether * 1) + (30 ether * 1); // 20 + 30 = 50 ether
-        flatToFlatTestCurve.totalReserve = _calculateCurveReserve(flatToFlatTestCurve.packedSegmentsArray);
+        flatToFlatTestCurve.totalReserve =
+            _calculateCurveReserve(flatToFlatTestCurve.packedSegmentsArray);
     }
 
     function test_FindPositionForSupply_SingleSegment_WithinStep() public {
@@ -218,11 +236,15 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Segment 1 (default): supplyPerStep = 20 ether.
         //   Step 0 of seg1 covers supply 0-20 (total 30-50 for the curve). Price 1.5 ether.
         //   Target 10 ether from Segment 1 falls into its step 0.
-        uint seg0Capacity = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep() * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._numberOfSteps();
+        uint seg0Capacity = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+            ._supplyPerStep()
+            * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._numberOfSteps();
         uint targetSupply = seg0Capacity + 10 ether; // 30 + 10 = 40 ether
 
         IDiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
-            .exposed_findPositionForSupply(twoSlopedSegmentsTestCurve.packedSegmentsArray, targetSupply);
+            .exposed_findPositionForSupply(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, targetSupply
+        );
 
         assertEq(pos.segmentIndex, 1, "Segment index mismatch");
         // Supply from seg0 = 30. Supply needed from seg1 = 10.
@@ -233,8 +255,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             pos.stepIndexWithinSegment, 0, "Step index mismatch for segment 1"
         );
 
-        uint expectedPrice =
-            twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._initialPrice() + (0 * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease()); // Price at step 0 of segment 1
+        uint expectedPrice = twoSlopedSegmentsTestCurve.packedSegmentsArray[1]
+            ._initialPrice()
+            + (
+                0
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease()
+            ); // Price at step 0 of segment 1
         assertEq(
             pos.priceAtCurrentStep,
             expectedPrice,
@@ -253,19 +279,29 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint targetSupply = twoSlopedSegmentsTestCurve.totalCapacity + 10 ether; // Beyond capacity (70 + 10 = 80)
 
         IDiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
-            .exposed_findPositionForSupply(twoSlopedSegmentsTestCurve.packedSegmentsArray, targetSupply);
+            .exposed_findPositionForSupply(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, targetSupply
+        );
 
         assertEq(
             pos.segmentIndex, 1, "Segment index should be last segment (1)"
         );
         assertEq(
             pos.stepIndexWithinSegment,
-            twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps() - 1,
+            twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps()
+                - 1,
             "Step index should be last step of last segment"
         );
 
-        uint expectedPriceAtEndOfCurve = twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._initialPrice()
-            + ((twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps() - 1) * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease());
+        uint expectedPriceAtEndOfCurve = twoSlopedSegmentsTestCurve
+            .packedSegmentsArray[1]._initialPrice()
+            + (
+                (
+                    twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps(
+                    ) - 1
+                )
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease()
+            );
         assertEq(
             pos.priceAtCurrentStep,
             expectedPriceAtEndOfCurve,
@@ -424,7 +460,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using twoSlopedSegmentsTestCurve.packedSegmentsArray
         uint currentSupply = 0 ether;
         (uint price, uint stepIdx, uint segmentIdx) = exposedLib
-            .exposed_getCurrentPriceAndStep(twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply);
+            .exposed_getCurrentPriceAndStep(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply
+        );
 
         assertEq(
             segmentIdx, 0, "Segment index should be 0 for current supply 0"
@@ -444,12 +482,18 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Step 1: 10-20 supply, price 1.1.
         uint currentSupply = 15 ether; // Falls in step 1 of segment 0
         (uint price, uint stepIdx, uint segmentIdx) = exposedLib
-            .exposed_getCurrentPriceAndStep(twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply);
+            .exposed_getCurrentPriceAndStep(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply
+        );
 
         assertEq(segmentIdx, 0, "Segment index mismatch");
         assertEq(stepIdx, 1, "Step index mismatch - should be step 1");
-        uint expectedPrice =
-            twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._initialPrice() + (1 * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._priceIncrease()); // Price of step 1
+        uint expectedPrice = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+            ._initialPrice()
+            + (
+                1
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._priceIncrease()
+            ); // Price of step 1
         assertEq(
             price, expectedPrice, "Price mismatch - should be price of step 1"
         );
@@ -460,14 +504,21 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Default Seg0: initialPrice 1, increase 0.1, supplyPerStep 10, steps 3.
         // Current supply is 10 ether, exactly at the end of step 0 of segment 0.
         // Price should be for step 1 of segment 0.
-        uint currentSupply = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep(); // 10 ether
+        uint currentSupply =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep(); // 10 ether
         (uint price, uint stepIdx, uint segmentIdx) = exposedLib
-            .exposed_getCurrentPriceAndStep(twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply);
+            .exposed_getCurrentPriceAndStep(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply
+        );
 
         assertEq(segmentIdx, 0, "Segment index mismatch");
         assertEq(stepIdx, 1, "Step index should advance to 1");
-        uint expectedPrice =
-            twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._initialPrice() + (1 * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._priceIncrease()); // Price of step 1 (1.1)
+        uint expectedPrice = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+            ._initialPrice()
+            + (
+                1
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._priceIncrease()
+            ); // Price of step 1 (1.1)
         assertEq(price, expectedPrice, "Price should be for step 1");
     }
 
@@ -475,10 +526,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using twoSlopedSegmentsTestCurve.packedSegmentsArray
         // Current supply is 30 ether, exactly at the end of segment 0.
         // Price/step should be for the start of segment 1.
-        uint seg0Capacity = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep() * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._numberOfSteps();
+        uint seg0Capacity = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+            ._supplyPerStep()
+            * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._numberOfSteps();
         uint currentSupply = seg0Capacity;
         (uint price, uint stepIdx, uint segmentIdx) = exposedLib
-            .exposed_getCurrentPriceAndStep(twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply);
+            .exposed_getCurrentPriceAndStep(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply
+        );
 
         assertEq(segmentIdx, 1, "Segment index should advance to 1");
         assertEq(stepIdx, 0, "Step index should be 0 of segment 1");
@@ -495,16 +550,26 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint currentSupply = twoSlopedSegmentsTestCurve.totalCapacity;
 
         (uint price, uint stepIdx, uint segmentIdx) = exposedLib
-            .exposed_getCurrentPriceAndStep(twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply);
+            .exposed_getCurrentPriceAndStep(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, currentSupply
+        );
 
         assertEq(segmentIdx, 1, "Segment index should be last segment (1)");
         assertEq(
             stepIdx,
-            twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps() - 1,
+            twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps()
+                - 1,
             "Step index should be last step of last segment"
         );
-        uint expectedPrice = twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._initialPrice()
-            + ((twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps() - 1) * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease());
+        uint expectedPrice = twoSlopedSegmentsTestCurve.packedSegmentsArray[1]
+            ._initialPrice()
+            + (
+                (
+                    twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._numberOfSteps(
+                    ) - 1
+                )
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[1]._priceIncrease()
+            );
         assertEq(
             price,
             expectedPrice,
@@ -517,8 +582,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     {
         // Using a single segment for simplicity
         PackedSegment[] memory segments = new PackedSegment[](1);
-        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]; 
-        uint singleSegmentCapacity = segments[0]._supplyPerStep() * segments[0]._numberOfSteps(); // Capacity 30 ether
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        uint singleSegmentCapacity =
+            segments[0]._supplyPerStep() * segments[0]._numberOfSteps(); // Capacity 30 ether
 
         uint currentSupply = singleSegmentCapacity + 5 ether; // Beyond capacity of this single segment array
 
@@ -554,8 +620,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_CalculateReserveForSupply_TargetSupplyZero() public {
         // Using twoSlopedSegmentsTestCurve.packedSegmentsArray
-        uint reserve =
-            exposedLib.exposed_calculateReserveForSupply(twoSlopedSegmentsTestCurve.packedSegmentsArray, 0);
+        uint reserve = exposedLib.exposed_calculateReserveForSupply(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray, 0
+        );
         assertEq(reserve, 0, "Reserve for 0 supply should be 0");
     }
 
@@ -766,11 +833,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
 
         uint currentSupply = 0 ether;
-        uint collateralIn = 45 ether; 
+        uint collateralIn = 45 ether;
         // New segment: 1 step, 10 supply, price 2. Cost to buy out = 20 ether.
         // Collateral 45 ether is more than enough.
-        uint expectedIssuanceOut = 10 ether; 
-        uint expectedCollateralSpent = (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
+        uint expectedIssuanceOut = 10 ether;
+        uint expectedCollateralSpent =
+            (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
@@ -821,8 +889,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint collateralIn = 50 ether;
         // New segment: 1 step, 10 supply, price 2. Cost to buy out = 20 ether.
         // Collateral 50 ether is more than enough.
-        uint expectedIssuanceOut = 10 ether; 
-        uint expectedCollateralSpent = (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
+        uint expectedIssuanceOut = 10 ether;
+        uint expectedCollateralSpent =
+            (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
@@ -928,7 +997,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //          Supply 30-50:  Price 1.50
     //          Supply 50-70:  Price 1.55
     function testRevert_CalculateSaleReturn_SupplyExceedsCapacity() public {
-        uint supplyOverCapacity = twoSlopedSegmentsTestCurve.totalCapacity + 1 ether;
+        uint supplyOverCapacity =
+            twoSlopedSegmentsTestCurve.totalCapacity + 1 ether;
         bytes memory expectedRevertData = abi.encodeWithSelector(
             IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
@@ -1045,7 +1115,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_calculateSaleReturn(
             twoSlopedSegmentsTestCurve.packedSegmentsArray,
             0, // Zero issuanceAmountIn
-            (twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep() * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._numberOfSteps()) // currentTotalIssuanceSupply
+            (
+                twoSlopedSegmentsTestCurve.packedSegmentsArray[0]._supplyPerStep(
+                )
+                    * twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+                        ._numberOfSteps()
+            ) // currentTotalIssuanceSupply
         );
     }
 
@@ -1080,7 +1155,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Current supply is 30 ether (3 steps minted from seg0)
         uint currentSupply = seg0._supplyPerStep() * seg0._numberOfSteps(); // 30 ether
-        
+
         PackedSegment[] memory tempSegArray = new PackedSegment[](1);
         tempSegArray[0] = seg0;
         uint reserveForSeg0Full = _calculateCurveReserve(tempSegArray); // Reserve for 30 supply = 33 ether
@@ -1129,7 +1204,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // twoSlopedSegmentsTestCurve.totalCapacity = 70 ether
         // twoSlopedSegmentsTestCurve.totalReserve = 94 ether
         uint actualReserve = exposedLib.exposed_calculateReserveForSupply(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, twoSlopedSegmentsTestCurve.totalCapacity
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            twoSlopedSegmentsTestCurve.totalCapacity
         );
         assertEq(
             actualReserve,
@@ -1143,13 +1219,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using twoSlopedSegmentsTestCurve.packedSegmentsArray
         PackedSegment seg0 = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]; // capacity 30
         PackedSegment seg1 = twoSlopedSegmentsTestCurve.packedSegmentsArray[1]; // initialPrice 1.5, increase 0.05, supplyPerStep 20, steps 2.
-        
+
         PackedSegment[] memory tempSeg0Array = new PackedSegment[](1);
         tempSeg0Array[0] = seg0;
         uint reserveForSeg0Full = _calculateCurveReserve(tempSeg0Array); // reserve 33
 
         // Target supply: Full seg0 (30) + 1 step of seg1 (20) = 50 ether
-        uint targetSupply = (seg0._supplyPerStep() * seg0._numberOfSteps()) + seg1._supplyPerStep(); // 30 + 20 = 50 ether
+        uint targetSupply = (seg0._supplyPerStep() * seg0._numberOfSteps())
+            + seg1._supplyPerStep(); // 30 + 20 = 50 ether
 
         // Cost for the first step of segment 1:
         // 20 supply * (1.5 price + 0 * 0.05 increase) = 30 ether collateral
@@ -1176,7 +1253,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using twoSlopedSegmentsTestCurve.packedSegmentsArray
         // twoSlopedSegmentsTestCurve.totalCapacity = 70 ether
         // twoSlopedSegmentsTestCurve.totalReserve = 94 ether
-        uint targetSupplyBeyondCapacity = twoSlopedSegmentsTestCurve.totalCapacity + 100 ether; // e.g., 70e18 + 100e18 = 170e18
+        uint targetSupplyBeyondCapacity =
+            twoSlopedSegmentsTestCurve.totalCapacity + 100 ether; // e.g., 70e18 + 100e18 = 170e18
 
         // Expect revert because targetSupplyBeyondCapacity > twoSlopedSegmentsTestCurve.totalCapacity
         bytes memory expectedError = abi.encodeWithSelector(
@@ -1188,7 +1266,32 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
         vm.expectRevert(expectedError);
         exposedLib.exposed_calculateReserveForSupply(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, targetSupplyBeyondCapacity
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            targetSupplyBeyondCapacity
+        );
+    }
+
+    function test_CalculateReserveForSupply_SingleSlopedSegment_PartialStepFill(
+    ) public {
+        // Using the first segment of twoSlopedSegmentsTestCurve:
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3
+        // Prices: 1.0 (0-10), 1.1 (10-20), 1.2 (20-30)
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        // Target Supply: 15 ether
+        // Step 0 (0-10 supply): 10 ether * 1.0 price = 10 ether reserve
+        // Step 1 (10-15 supply, partial 5 ether): 5 ether * 1.1 price = 5.5 ether reserve
+        // Total expected reserve = 10 + 5.5 = 15.5 ether
+        uint targetSupply = 15 ether;
+        uint expectedReserve = 155 * 10 ** 17; // 15.5 ether
+
+        uint actualReserve =
+            exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+        assertEq(
+            actualReserve,
+            expectedReserve,
+            "Reserve for sloped segment partial step fill mismatch"
         );
     }
 
@@ -1273,9 +1376,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint currentSupply = 0 ether;
         // Cost of the first step of seg0 is 10 ether
-        uint costFirstStep = (
-            seg0._supplyPerStep() * seg0._initialPrice()
-        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        uint costFirstStep = (seg0._supplyPerStep() * seg0._initialPrice())
+            / DiscreteCurveMathLib_v1.SCALING_FACTOR;
         uint collateralIn = costFirstStep - 1 wei; // Just less than enough for the first step
 
         // With partial purchases.
@@ -1310,11 +1412,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Test with exact collateral to buy out the curve
         uint collateralInExact = twoSlopedSegmentsTestCurve.totalReserve;
         uint expectedIssuanceOutExact = twoSlopedSegmentsTestCurve.totalCapacity;
-        uint expectedCollateralSpentExact = twoSlopedSegmentsTestCurve.totalReserve;
+        uint expectedCollateralSpentExact =
+            twoSlopedSegmentsTestCurve.totalReserve;
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralInExact, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralInExact,
+            currentSupply
         );
 
         assertEq(
@@ -1329,14 +1434,18 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
 
         // Test with slightly more collateral than needed to buy out the curve
-        uint collateralInMore = twoSlopedSegmentsTestCurve.totalReserve + 100 ether;
+        uint collateralInMore =
+            twoSlopedSegmentsTestCurve.totalReserve + 100 ether;
         // Expected behavior: still only buys out the curve capacity and spends the required reserve.
         uint expectedIssuanceOutMore = twoSlopedSegmentsTestCurve.totalCapacity;
-        uint expectedCollateralSpentMore = twoSlopedSegmentsTestCurve.totalReserve;
+        uint expectedCollateralSpentMore =
+            twoSlopedSegmentsTestCurve.totalReserve;
 
         (issuanceOut, collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralInMore, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralInMore,
+            currentSupply
         );
 
         assertEq(
@@ -1365,9 +1474,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Collateral to buy one full step (step 0 of segment 0, price 1.0)
         // Note: calculatePurchaseReturn's internal _calculatePurchaseForSingleSegment will attempt to buy
         // full steps from the identified startStep (step 0 of seg0 in this case).
-        uint collateralIn = (
-            seg0._supplyPerStep() * seg0._initialPrice()
-        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 ether
+        uint collateralIn = (seg0._supplyPerStep() * seg0._initialPrice())
+            / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 ether
 
         // Expected: Buys remaining 5e18 of step 0 (cost 5e18), remaining budget 5e18.
         // Next step price 1.1e18. Buys 5/1.1 = 4.545...e18 tokens.
@@ -1377,7 +1485,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralIn, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralIn,
+            currentSupply
         );
 
         assertEq(issuanceOut, expectedIssuanceOut, "Issuance mid-step mismatch");
@@ -1398,8 +1508,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // segmentAtPurchaseStart = 0 (index of seg0)
 
         // Collateral to buy one full step (which will be step 1 of segment 0, price 1.1)
-        uint priceOfStep1Seg0 =
-            seg0._initialPrice() + seg0._priceIncrease();
+        uint priceOfStep1Seg0 = seg0._initialPrice() + seg0._priceIncrease();
         uint collateralIn = (seg0._supplyPerStep() * priceOfStep1Seg0)
             / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 11 ether
 
@@ -1409,7 +1518,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralIn, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralIn,
+            currentSupply
         );
 
         assertEq(
@@ -1435,9 +1546,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // segmentAtPurchaseStart = 1 (index of segment 1)
 
         // Collateral to buy one full step from segment 1 (step 0 of seg1, price 1.5)
-        uint collateralIn = (
-            seg1._supplyPerStep() * seg1._initialPrice()
-        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 30 ether
+        uint collateralIn = (seg1._supplyPerStep() * seg1._initialPrice())
+            / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 30 ether
 
         // Expected: Buys 1 full step (step 0 of segment 1)
         uint expectedIssuanceOut = seg1._supplyPerStep(); // 20 ether (supply of step 0 of seg1)
@@ -1445,7 +1555,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralIn, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralIn,
+            currentSupply
         );
 
         assertEq(
@@ -1468,7 +1580,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         PackedSegment[] memory tempSeg0Array = new PackedSegment[](1);
         tempSeg0Array[0] = seg0;
         uint reserveForSeg0Full = _calculateCurveReserve(tempSeg0Array); // Collateral needed for segment 0 (33 ether)
-        
+
         // For segment 1:
         //   Price of first step = seg1._initialPrice() (1.5 ether)
         //   Supply per step in seg1 = seg1._supplyPerStep() (20 ether)
@@ -1480,13 +1592,17 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint collateralIn = reserveForSeg0Full + costForPartialInSeg1; // 33 + 7.5 = 40.5 ether
 
-        uint expectedIssuanceOut = (seg0._supplyPerStep() * seg0._numberOfSteps()) + partialIssuanceInSeg1; // 30 + 5 = 35 ether
+        uint expectedIssuanceOut = (
+            seg0._supplyPerStep() * seg0._numberOfSteps()
+        ) + partialIssuanceInSeg1; // 30 + 5 = 35 ether
         // Due to how partial purchases are calculated, the spent collateral should exactly match collateralIn if it's utilized fully.
         uint expectedCollateralSpent = collateralIn;
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray, collateralIn, currentSupply
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            collateralIn,
+            currentSupply
         );
 
         assertEq(
@@ -1502,7 +1618,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     // Test P3.4.2: End in next segment (segment transition) - From flat segment to sloped segment
-    function test_CalculatePurchaseReturn_Transition_FlatToSloped_PartialBuyInSlopedSegment() public {
+    function test_CalculatePurchaseReturn_Transition_FlatToSloped_PartialBuyInSlopedSegment(
+    ) public {
         // Uses flatSlopedTestCurve.packedSegmentsArray:
         PackedSegment flatSeg0 = flatSlopedTestCurve.packedSegmentsArray[0]; // Seg0 (Flat): initialPrice 0.5, supplyPerStep 50, steps 1. Capacity 50. Cost to buyout = 25 ether.
         PackedSegment slopedSeg1 = flatSlopedTestCurve.packedSegmentsArray[1]; // Seg1 (Sloped): initialPrice 0.8, priceIncrease 0.02, supplyPerStep 25, steps 2.
@@ -1520,33 +1637,45 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint tokensToBuyInSlopedSeg = 10 ether;
         uint costForPartialSlopedSeg = (
-            tokensToBuyInSlopedSeg * slopedSeg1._initialPrice() // Price of first step in sloped segment
-        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+            tokensToBuyInSlopedSeg * slopedSeg1._initialPrice()
+        ) // Price of first step in sloped segment
+            / DiscreteCurveMathLib_v1.SCALING_FACTOR;
 
         uint collateralIn = collateralToBuyoutFlatSeg + costForPartialSlopedSeg; // 25 + 8 = 33 ether
 
-        uint expectedTokensToMint = flatSeg0._supplyPerStep() + tokensToBuyInSlopedSeg; // 50 + 10 = 60 ether
+        uint expectedTokensToMint =
+            flatSeg0._supplyPerStep() + tokensToBuyInSlopedSeg; // 50 + 10 = 60 ether
         uint expectedCollateralSpent = collateralIn; // Should spend all 33 ether
 
-        (uint tokensToMint, uint collateralSpent) = exposedLib.exposed_calculatePurchaseReturn(
+        (uint tokensToMint, uint collateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(
             flatSlopedTestCurve.packedSegmentsArray, // Use the flatSlopedTestCurve configuration
             collateralIn,
             currentSupply
         );
 
-        assertEq(tokensToMint, expectedTokensToMint, "Flat to Sloped transition: tokensToMint mismatch");
-        assertEq(collateralSpent, expectedCollateralSpent, "Flat to Sloped transition: collateralSpent mismatch");
+        assertEq(
+            tokensToMint,
+            expectedTokensToMint,
+            "Flat to Sloped transition: tokensToMint mismatch"
+        );
+        assertEq(
+            collateralSpent,
+            expectedCollateralSpent,
+            "Flat to Sloped transition: collateralSpent mismatch"
+        );
     }
 
     // Test P2.2.1: CurrentSupply mid-step, budget can complete current step - Flat segment
-    function test_CalculatePurchaseReturn_StartMidStep_CompleteStep_FlatSegment() public {
+    function test_CalculatePurchaseReturn_StartMidStep_CompleteStep_FlatSegment(
+    ) public {
         // Use the flat segment from flatSlopedTestCurve
         PackedSegment flatSeg = flatSlopedTestCurve.packedSegmentsArray[0]; // initialPrice = 0.5 ether, priceIncrease = 0, supplyPerStep = 50 ether, numberOfSteps = 1
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = flatSeg;
 
         uint currentSupply = 10 ether; // Start 10 ether into the 50 ether capacity of the flat segment's single step.
-        
+
         // Remaining supply in the step = 50 ether (flatSeg._supplyPerStep()) - 10 ether (currentSupply) = 40 ether.
         // Cost to purchase remaining supply = 40 ether * 0.5 ether (flatSeg._initialPrice()) / SCALING_FACTOR = 20 ether.
         uint collateralIn = (
@@ -1556,44 +1685,57 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint expectedTokensToMint = flatSeg._supplyPerStep() - currentSupply; // 40 ether
         uint expectedCollateralSpent = collateralIn; // 20 ether
 
-        (uint tokensToMint, uint collateralSpent) = exposedLib.exposed_calculatePurchaseReturn(
-            segments,
-            collateralIn,
-            currentSupply
-        );
+        (uint tokensToMint, uint collateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
 
-        assertEq(tokensToMint, expectedTokensToMint, "Flat mid-step complete: tokensToMint mismatch");
-        assertEq(collateralSpent, expectedCollateralSpent, "Flat mid-step complete: collateralSpent mismatch");
+        assertEq(
+            tokensToMint,
+            expectedTokensToMint,
+            "Flat mid-step complete: tokensToMint mismatch"
+        );
+        assertEq(
+            collateralSpent,
+            expectedCollateralSpent,
+            "Flat mid-step complete: collateralSpent mismatch"
+        );
     }
 
     // Test P2.3.1: CurrentSupply mid-step, budget cannot complete current step (early exit) - Flat segment
-    function test_CalculatePurchaseReturn_StartMidStep_CannotCompleteStep_FlatSegment() public {
+    function test_CalculatePurchaseReturn_StartMidStep_CannotCompleteStep_FlatSegment(
+    ) public {
         // Use the flat segment from flatSlopedTestCurve
         PackedSegment flatSeg = flatSlopedTestCurve.packedSegmentsArray[0]; // initialPrice = 0.5 ether, priceIncrease = 0, supplyPerStep = 50 ether, numberOfSteps = 1
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = flatSeg;
 
         uint currentSupply = 10 ether; // Start 10 ether into the 50 ether capacity.
-        
+
         // Remaining supply in step = 40 ether. Cost to complete step = 20 ether.
         // Provide collateral that CANNOT complete the step. Let's buy 10 tokens.
         // Cost for 10 tokens = 10 ether * 0.5 price / SCALING_FACTOR = 5 ether.
-        uint collateralIn = 5 ether; 
+        uint collateralIn = 5 ether;
 
         uint expectedTokensToMint = 10 ether; // Should be able to buy 10 tokens.
         uint expectedCollateralSpent = collateralIn; // Collateral should be fully spent.
 
-        (uint tokensToMint, uint collateralSpent) = exposedLib.exposed_calculatePurchaseReturn(
-            segments,
-            collateralIn,
-            currentSupply
-        );
+        (uint tokensToMint, uint collateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
 
-        assertEq(tokensToMint, expectedTokensToMint, "Flat mid-step cannot complete: tokensToMint mismatch");
-        assertEq(collateralSpent, expectedCollateralSpent, "Flat mid-step cannot complete: collateralSpent mismatch");
+        assertEq(
+            tokensToMint,
+            expectedTokensToMint,
+            "Flat mid-step cannot complete: tokensToMint mismatch"
+        );
+        assertEq(
+            collateralSpent,
+            expectedCollateralSpent,
+            "Flat mid-step cannot complete: collateralSpent mismatch"
+        );
     }
 
-    function test_CalculatePurchaseReturn_Transition_FlatToFlatSegment() public {
+    function test_CalculatePurchaseReturn_Transition_FlatToFlatSegment()
+        public
+    {
         // Using flatToFlatTestCurve
         uint currentSupply = 0 ether;
         PackedSegment flatSeg0_ftf = flatToFlatTestCurve.packedSegmentsArray[0];
@@ -1602,23 +1744,34 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         PackedSegment[] memory tempSeg0Array_ftf = new PackedSegment[](1);
         tempSeg0Array_ftf[0] = flatSeg0_ftf;
         uint reserveForFlatSeg0 = _calculateCurveReserve(tempSeg0Array_ftf);
-        
+
         // Collateral to buy out segment 0 and 10 tokens from segment 1
         uint tokensToBuyInSeg1 = 10 ether;
-        uint costForPartialSeg1 = (tokensToBuyInSeg1 * flatSeg1_ftf._initialPrice()) / DiscreteCurveMathLib_v1.SCALING_FACTOR; 
+        uint costForPartialSeg1 = (
+            tokensToBuyInSeg1 * flatSeg1_ftf._initialPrice()
+        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
         uint collateralIn = reserveForFlatSeg0 + costForPartialSeg1;
 
-        uint expectedTokensToMint = (flatSeg0_ftf._supplyPerStep() * flatSeg0_ftf._numberOfSteps()) + tokensToBuyInSeg1;
+        uint expectedTokensToMint = (
+            flatSeg0_ftf._supplyPerStep() * flatSeg0_ftf._numberOfSteps()
+        ) + tokensToBuyInSeg1;
         uint expectedCollateralSpent = collateralIn;
 
-        (uint tokensToMint, uint collateralSpent) = exposedLib.exposed_calculatePurchaseReturn(
-            flatToFlatTestCurve.packedSegmentsArray,
-            collateralIn,
-            currentSupply
+        (uint tokensToMint, uint collateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(
+            flatToFlatTestCurve.packedSegmentsArray, collateralIn, currentSupply
         );
 
-        assertEq(tokensToMint, expectedTokensToMint, "Flat to Flat transition: tokensToMint mismatch");
-        assertEq(collateralSpent, expectedCollateralSpent, "Flat to Flat transition: collateralSpent mismatch");
+        assertEq(
+            tokensToMint,
+            expectedTokensToMint,
+            "Flat to Flat transition: tokensToMint mismatch"
+        );
+        assertEq(
+            collateralSpent,
+            expectedCollateralSpent,
+            "Flat to Flat transition: collateralSpent mismatch"
+        );
     }
 
     // --- Test for _createSegment ---
@@ -1645,8 +1798,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // numberOfSteps is already assumed > 0
         if (numberOfSteps == 1) {
             vm.assume(priceIncrease == 0); // True Flat: 1 step, 0 priceIncrease
-        } else { // numberOfSteps > 1
-            vm.assume(priceIncrease > 0);  // True Sloped: >1 steps, >0 priceIncrease
+        } else {
+            // numberOfSteps > 1
+            vm.assume(priceIncrease > 0); // True Sloped: >1 steps, >0 priceIncrease
         }
 
         PackedSegment segment = exposedLib.exposed_createSegment(
@@ -1845,7 +1999,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     function test_ValidateSegmentArray_Pass_MultipleValidSegments_CorrectProgression(
     ) public view {
         // Uses twoSlopedSegmentsTestCurve.packedSegmentsArray which are set up with correct progression
-        exposedLib.exposed_validateSegmentArray(twoSlopedSegmentsTestCurve.packedSegmentsArray); // Should not revert
+        exposedLib.exposed_validateSegmentArray(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray
+        ); // Should not revert
     }
 
     function test_ValidateSegmentArray_Revert_NoSegmentsConfigured() public {
@@ -1875,8 +2031,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // numberOfSteps is already assumed > 0
         if (numberOfSteps == 1) {
             vm.assume(priceIncrease == 0); // True Flat: 1 step, 0 priceIncrease
-        } else { // numberOfSteps > 1
-            vm.assume(priceIncrease > 0);  // True Sloped: >1 steps, >0 priceIncrease
+        } else {
+            // numberOfSteps > 1
+            vm.assume(priceIncrease > 0); // True Sloped: >1 steps, >0 priceIncrease
         }
 
         PackedSegment validSegmentTemplate = exposedLib.exposed_createSegment(
@@ -1920,7 +2077,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Ensure segment0 is "True Flat" or "True Sloped"
         if (ns0 == 1) {
             vm.assume(pi0 == 0);
-        } else { // ns0 > 1
+        } else {
+            // ns0 > 1
             vm.assume(pi0 > 0);
         }
 
@@ -1934,7 +2092,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Ensure segment1 is "True Flat" or "True Sloped"
         if (ns1 == 1) {
             vm.assume(pi1 == 0);
-        } else { // ns1 > 1
+        } else {
+            // ns1 > 1
             vm.assume(pi1 > 0);
         }
 
@@ -2003,8 +2162,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // numberOfStepsTpl is already assumed > 0
         if (numberOfStepsTpl == 1) {
             vm.assume(priceIncreaseTpl == 0); // True Flat template: 1 step, 0 priceIncrease
-        } else { // numberOfStepsTpl > 1
-            vm.assume(priceIncreaseTpl > 0);  // True Sloped template: >1 steps, >0 priceIncrease
+        } else {
+            // numberOfStepsTpl > 1
+            vm.assume(priceIncreaseTpl > 0); // True Sloped template: >1 steps, >0 priceIncrease
         }
 
         PackedSegment[] memory segments = new PackedSegment[](numSegmentsToFuzz);
@@ -2080,6 +2240,56 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
+    // Test P3.2.1 (from test_cases.md, adapted): Complete partial step, then partial purchase next step - Flat segment to Flat segment
+    // This covers "Case 3: Starting mid-step (Phase 2 + Phase 3 integration)"
+    // 3.2: Complete partial step, then partial purchase next step
+    // 3.2.1: Flat segment (implies transition to next segment which is also flat here)
+    function test_CalculatePurchaseReturn_StartMidFlat_CompleteFlat_PartialNextFlat(
+    ) public {
+        // Uses flatToFlatTestCurve:
+        // Seg0 (Flat): initialPrice 1 ether, supplyPerStep 20 ether, steps 1. Capacity 20. Cost to buyout = 20 ether.
+        // Seg1 (Flat): initialPrice 1.5 ether, supplyPerStep 30 ether, steps 1. Capacity 30.
+        PackedSegment flatSeg0 = flatToFlatTestCurve.packedSegmentsArray[0];
+        PackedSegment flatSeg1 = flatToFlatTestCurve.packedSegmentsArray[1];
+
+        uint currentSupply = 10 ether; // Start 10 ether into Seg0 (20 ether capacity)
+        uint remainingInSeg0 = flatSeg0._supplyPerStep() - currentSupply; // 10 ether
+
+        // Collateral to:
+        // 1. Buy out remaining in flatSeg0:
+        //    Cost = 10 ether (remaining supply) * 1 ether (price) / SCALING_FACTOR = 10 ether.
+        uint collateralToCompleteSeg0 = (
+            remainingInSeg0 * flatSeg0._initialPrice()
+        ) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+
+        // 2. Buy 5 tokens from the first (and only) step of flatSeg1 (price 1.5 ether):
+        uint tokensToBuyInSeg1 = 5 ether;
+        uint costForPartialSeg1 = (tokensToBuyInSeg1 * flatSeg1._initialPrice())
+            / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+
+        uint collateralIn = collateralToCompleteSeg0 + costForPartialSeg1; // 10 + 7.5 = 17.5 ether
+
+        uint expectedTokensToMint = remainingInSeg0 + tokensToBuyInSeg1; // 10 + 5 = 15 ether
+        // For flat segments with exact math, collateral spent should equal collateralIn if fully utilized.
+        uint expectedCollateralSpent = collateralIn;
+
+        (uint tokensToMint, uint collateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(
+            flatToFlatTestCurve.packedSegmentsArray, collateralIn, currentSupply
+        );
+
+        assertEq(
+            tokensToMint,
+            expectedTokensToMint,
+            "MidFlat->NextFlat: tokensToMint mismatch"
+        );
+        assertEq(
+            collateralSpent,
+            expectedCollateralSpent,
+            "MidFlat->NextFlat: collateralSpent mismatch"
+        );
+    }
+
     // --- Fuzz tests for _findPositionForSupply ---
 
     function _createFuzzedSegmentAndCalcProperties(
@@ -2090,7 +2300,11 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     )
         internal
         view
-        returns (PackedSegment newSegment, uint capacityOfThisSegment, uint finalPriceOfThisSegment)
+        returns (
+            PackedSegment newSegment,
+            uint capacityOfThisSegment,
+            uint finalPriceOfThisSegment
+        )
     {
         // Assumptions for currentIterInitialPriceToUse:
         // - Already determined (either template or previous final price).
@@ -2106,7 +2320,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             numberOfStepsTpl
         );
 
-        capacityOfThisSegment = newSegment._supplyPerStep() * newSegment._numberOfSteps();
+        capacityOfThisSegment =
+            newSegment._supplyPerStep() * newSegment._numberOfSteps();
 
         uint priceRangeInSegment;
         // numberOfStepsTpl is assumed > 0 by the caller _generateFuzzedValidSegmentsAndCapacity
@@ -2114,17 +2329,22 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         if (priceIncreaseTpl > 0 && term > 0) {
             // Overflow check for term * priceIncreaseTpl
             // Using PRICE_INCREASE_MASK as a general large number check for the result of multiplication
-            if (priceIncreaseTpl != 0 && PRICE_INCREASE_MASK / priceIncreaseTpl < term) {
+            if (
+                priceIncreaseTpl != 0
+                    && PRICE_INCREASE_MASK / priceIncreaseTpl < term
+            ) {
                 vm.assume(false);
             }
         }
         priceRangeInSegment = term * priceIncreaseTpl;
 
         // Overflow check for currentIterInitialPriceToUse + priceRangeInSegment
-        if (currentIterInitialPriceToUse > type(uint).max - priceRangeInSegment) {
+        if (currentIterInitialPriceToUse > type(uint).max - priceRangeInSegment)
+        {
             vm.assume(false);
         }
-        finalPriceOfThisSegment = currentIterInitialPriceToUse + priceRangeInSegment;
+        finalPriceOfThisSegment =
+            currentIterInitialPriceToUse + priceRangeInSegment;
 
         return (newSegment, capacityOfThisSegment, finalPriceOfThisSegment);
     }
@@ -2154,12 +2374,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             numberOfStepsTpl <= NUMBER_OF_STEPS_MASK && numberOfStepsTpl > 0
         );
         if (initialPriceTpl == 0) {
-            vm.assume(priceIncreaseTpl > 0); 
+            vm.assume(priceIncreaseTpl > 0);
         }
 
         if (numberOfStepsTpl == 1) {
-            vm.assume(priceIncreaseTpl == 0); 
-        } else { 
+            vm.assume(priceIncreaseTpl == 0);
+        } else {
             vm.assume(priceIncreaseTpl > 0);
         }
 
@@ -2175,7 +2395,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
                 // vm.assume(lastSegFinalPrice <= INITIAL_PRICE_MASK); // This check is now inside the helper for currentIterInitialPriceToUse
                 currentSegInitialPriceToUse = lastSegFinalPrice;
             }
-            
+
             (
                 PackedSegment createdSegment,
                 uint capacityOfCreatedSegment,
@@ -2482,225 +2702,653 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Fuzz tests for _calculateReserveForSupply ---
 
-    // function testFuzz_CalculateReserveForSupply_Properties(
-    //     uint8 numSegmentsToFuzz,
-    //     uint initialPriceTpl,
-    //     uint priceIncreaseTpl,
-    //     uint supplyPerStepTpl,
-    //     uint numberOfStepsTpl,
-    //     uint targetSupplyRatio // Ratio from 0 to 110 (0=0%, 100=100% capacity, 110=110% capacity)
-    // ) public {
-    //     // Bound inputs for segment generation
-    //     numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
-    //     initialPriceTpl = bound(initialPriceTpl, 0, INITIAL_PRICE_MASK); // Allow 0 initial price if PI > 0
-    //     priceIncreaseTpl = bound(priceIncreaseTpl, 0, PRICE_INCREASE_MASK);
-    //     supplyPerStepTpl = bound(supplyPerStepTpl, 1, SUPPLY_PER_STEP_MASK); // Must be > 0
-    //     numberOfStepsTpl = bound(numberOfStepsTpl, 1, NUMBER_OF_STEPS_MASK); // Must be > 0
+    function testFuzz_CalculateReserveForSupply_Properties(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint targetSupplyRatio // Ratio from 0 to 110 (0=0%, 100=100% capacity, 110=110% capacity)
+    ) public {
+        // Bound inputs for segment generation
+        numSegmentsToFuzz = uint8(
+            bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS)
+        );
+        initialPriceTpl = bound(initialPriceTpl, 0, INITIAL_PRICE_MASK); // Allow 0 initial price if PI > 0
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, PRICE_INCREASE_MASK);
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1, SUPPLY_PER_STEP_MASK); // Must be > 0
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, NUMBER_OF_STEPS_MASK); // Must be > 0
 
-    //     // Ensure template is not free if initialPriceTpl is 0
-    //     if (initialPriceTpl == 0) {
-    //         vm.assume(priceIncreaseTpl > 0);
-    //     }
+        // Ensure template is not free if initialPriceTpl is 0
+        if (initialPriceTpl == 0) {
+            vm.assume(priceIncreaseTpl > 0);
+        }
 
-    //     (
-    //         PackedSegment[] memory segments,
-    //         uint totalCurveCapacity
-    //     ) = _generateFuzzedValidSegmentsAndCapacity(
-    //         numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
-    //     );
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
+        );
 
-    //     // If segment generation resulted in an empty array (e.g. due to internal vm.assume failures in helper)
-    //     // or if totalCurveCapacity is 0 (which can happen if supplyPerStep or numberOfSteps are fuzzed to 0
-    //     // despite bounding, or if numSegments is 0 - though we bound numSegmentsToFuzz >= 1),
-    //     // then we can't meaningfully proceed with ratio-based targetSupply.
-    //     if (segments.length == 0) { // Helper ensures numSegmentsToFuzz >=1, so this is defensive
-    //         return;
-    //     }
+        // If segment generation resulted in an empty array (e.g. due to internal vm.assume failures in helper)
+        // or if totalCurveCapacity is 0 (which can happen if supplyPerStep or numberOfSteps are fuzzed to 0
+        // despite bounding, or if numSegments is 0 - though we bound numSegmentsToFuzz >= 1),
+        // then we can't meaningfully proceed with ratio-based targetSupply.
+        if (segments.length == 0) {
+            // Helper ensures numSegmentsToFuzz >=1, so this is defensive
+            return;
+        }
 
-    //     targetSupplyRatio = bound(targetSupplyRatio, 0, 110); // 0% to 110%
+        targetSupplyRatio = bound(targetSupplyRatio, 0, 110); // 0% to 110%
 
-    //     uint targetSupply;
-    //     if (totalCurveCapacity == 0) {
-    //         // If curve capacity is 0 (e.g. 1 segment with 0 supply/steps, though createSegment prevents this)
-    //         // only test targetSupply = 0.
-    //         if (targetSupplyRatio == 0) {
-    //             targetSupply = 0;
-    //         } else {
-    //             // Cannot test ratios against 0 capacity other than 0 itself.
-    //             return;
-    //         }
-    //     } else {
-    //         if (targetSupplyRatio == 0) {
-    //             targetSupply = 0;
-    //         } else if (targetSupplyRatio <= 100) {
-    //             targetSupply = (totalCurveCapacity * targetSupplyRatio) / 100;
-    //             // Ensure targetSupply does not exceed totalCurveCapacity due to rounding,
-    //             // especially if targetSupplyRatio is 100.
-    //             if (targetSupply > totalCurveCapacity) {
-    //                 targetSupply = totalCurveCapacity;
-    //             }
-    //         } else { // targetSupplyRatio > 100 (e.g., 101 to 110)
-    //             // Calculate supply beyond capacity. Add 1 wei to ensure it's strictly greater if ratio calculation results in equality.
-    //             targetSupply = (totalCurveCapacity * (targetSupplyRatio - 100) / 100) + totalCurveCapacity + 1;
-    //         }
-    //     }
+        uint targetSupply;
+        if (totalCurveCapacity == 0) {
+            // If curve capacity is 0 (e.g. 1 segment with 0 supply/steps, though createSegment prevents this)
+            // only test targetSupply = 0.
+            if (targetSupplyRatio == 0) {
+                targetSupply = 0;
+            } else {
+                // Cannot test ratios against 0 capacity other than 0 itself.
+                return;
+            }
+        } else {
+            if (targetSupplyRatio == 0) {
+                targetSupply = 0;
+            } else if (targetSupplyRatio <= 100) {
+                targetSupply = (totalCurveCapacity * targetSupplyRatio) / 100;
+                // Ensure targetSupply does not exceed totalCurveCapacity due to rounding,
+                // especially if targetSupplyRatio is 100.
+                if (targetSupply > totalCurveCapacity) {
+                    targetSupply = totalCurveCapacity;
+                }
+            } else {
+                // targetSupplyRatio > 100 (e.g., 101 to 110)
+                // Calculate supply beyond capacity. Add 1 wei to ensure it's strictly greater if ratio calculation results in equality.
+                targetSupply = (
+                    totalCurveCapacity * (targetSupplyRatio - 100) / 100
+                ) + totalCurveCapacity + 1;
+            }
+        }
 
-    //     if (targetSupply > totalCurveCapacity && totalCurveCapacity > 0) {
-    //         // This check is for when we intentionally set targetSupply > totalCurveCapacity
-    //         // and the curve actually has capacity.
-    //         // _validateSupplyAgainstSegments (called by _calculateReserveForSupply) should revert.
-    //         bytes memory expectedError = abi.encodeWithSelector(
-    //             IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
-    //             targetSupply,
-    //             totalCurveCapacity
-    //         );
-    //         vm.expectRevert(expectedError);
-    //         exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
-    //     } else {
-    //         // Conditions where it should not revert with SupplyExceedsCurveCapacity:
-    //         // 1. targetSupply <= totalCurveCapacity
-    //         // 2. totalCurveCapacity == 0 (and thus targetSupply must also be 0 to reach here)
+        if (targetSupply > totalCurveCapacity && totalCurveCapacity > 0) {
+            // This check is for when we intentionally set targetSupply > totalCurveCapacity
+            // and the curve actually has capacity.
+            // _validateSupplyAgainstSegments (called by _calculateReserveForSupply) should revert.
+            bytes memory expectedError = abi.encodeWithSelector(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
+                    .selector,
+                targetSupply,
+                totalCurveCapacity
+            );
+            vm.expectRevert(expectedError);
+            exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+        } else {
+            // Conditions where it should not revert with SupplyExceedsCurveCapacity:
+            // 1. targetSupply <= totalCurveCapacity
+            // 2. totalCurveCapacity == 0 (and thus targetSupply must also be 0 to reach here)
 
-    //         uint reserve = exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+            uint reserve = exposedLib.exposed_calculateReserveForSupply(
+                segments, targetSupply
+            );
 
-    //         if (targetSupply == 0) {
-    //             assertEq(reserve, 0, "FCR_P: Reserve for 0 supply should be 0");
-    //         }
+            if (targetSupply == 0) {
+                assertEq(reserve, 0, "FCR_P: Reserve for 0 supply should be 0");
+            }
 
-    //         // Further property: If the curve consists of a single flat segment, and targetSupply is within its capacity
-    //         if (numSegmentsToFuzz == 1 && priceIncreaseTpl == 0 && initialPriceTpl > 0 && targetSupply <= totalCurveCapacity) {
-    //             // Calculate expected reserve for a single flat segment
-    //             // uint expectedReserve = (targetSupply * initialPriceTpl) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // Original calculation before _mulDivUp consideration
-    //             // Note: The library uses _mulDivUp for reserve calculation in flat segments if initialPrice > 0.
-    //             // So, if (targetSupply * initialPriceTpl) % SCALING_FACTOR > 0, it rounds up.
-    //             uint directCalc = (targetSupply * initialPriceTpl) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-    //             if ( (targetSupply * initialPriceTpl) % DiscreteCurveMathLib_v1.SCALING_FACTOR > 0) {
-    //                 directCalc++;
-    //             }
-    //             assertEq(reserve, directCalc, "FCR_P: Reserve for single flat segment mismatch");
-    //         }
-    //         // Add more specific assertions based on fuzzed segment properties if complex invariants can be derived.
-    //         // For now, primarily testing reverts and zero conditions.
-    //         assertTrue(true, "FCR_P: Passed without unexpected revert"); // Placeholder if no specific value check
-    //     }
-    // }
+            // Further property: If the curve consists of a single flat segment, and targetSupply is within its capacity
+            if (
+                numSegmentsToFuzz == 1 && priceIncreaseTpl == 0
+                    && initialPriceTpl > 0 && targetSupply <= totalCurveCapacity
+            ) {
+                // Calculate expected reserve for a single flat segment
+                // uint expectedReserve = (targetSupply * initialPriceTpl) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // Original calculation before _mulDivUp consideration
+                // Note: The library uses _mulDivUp for reserve calculation in flat segments if initialPrice > 0.
+                // So, if (targetSupply * initialPriceTpl) % SCALING_FACTOR > 0, it rounds up.
+                uint directCalc = (targetSupply * initialPriceTpl)
+                    / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+                if (
+                    (targetSupply * initialPriceTpl)
+                        % DiscreteCurveMathLib_v1.SCALING_FACTOR > 0
+                ) {
+                    directCalc++;
+                }
+                assertEq(
+                    reserve,
+                    directCalc,
+                    "FCR_P: Reserve for single flat segment mismatch"
+                );
+            }
+            // Add more specific assertions based on fuzzed segment properties if complex invariants can be derived.
+            // For now, primarily testing reverts and zero conditions.
+            assertTrue(true, "FCR_P: Passed without unexpected revert"); // Placeholder if no specific value check
+        }
+    }
 
     // // --- Fuzz tests for _calculatePurchaseReturn ---
 
-    // function testFuzz_CalculatePurchaseReturn_Properties(
-    //     uint8 numSegmentsToFuzz,
-    //     uint initialPriceTpl,
-    //     uint priceIncreaseTpl,
-    //     uint supplyPerStepTpl,
-    //     uint numberOfStepsTpl,
-    //     uint collateralToSpendProvidedRatio, // Ratio of totalCurveReserve, 0 to 150 (0=0, 100=totalReserve, 150=1.5*totalReserve)
-    //     uint currentSupplyRatio // Ratio of totalCurveCapacity, 0 to 100
-    // ) public {
-    //     numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
-    //     initialPriceTpl = bound(initialPriceTpl, 0, INITIAL_PRICE_MASK);
-    //     priceIncreaseTpl = bound(priceIncreaseTpl, 0, PRICE_INCREASE_MASK);
-    //     supplyPerStepTpl = bound(supplyPerStepTpl, 1, SUPPLY_PER_STEP_MASK);
-    //     numberOfStepsTpl = bound(numberOfStepsTpl, 1, NUMBER_OF_STEPS_MASK);
+    function testFuzz_CalculatePurchaseReturn_Properties(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint collateralToSpendProvidedRatio,
+        uint currentSupplyRatio
+    ) public {
+        // RESTRICTIVE BOUNDS to prevent overflow while maintaining good test coverage
 
-    //     if (initialPriceTpl == 0) {
-    //         vm.assume(priceIncreaseTpl > 0);
-    //     }
+        // Segments: Test with 1-5 segments (instead of MAX_SEGMENTS=10)
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, 5));
 
-    //     (
-    //         PackedSegment[] memory segments,
-    //         uint totalCurveCapacity
-    //     ) = _generateFuzzedValidSegmentsAndCapacity(
-    //         numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
-    //     );
+        // Prices: Keep in reasonable DeFi ranges (0.001 to 10,000 tokens, scaled by 1e18)
+        // This represents $0.001 to $10,000 per token - realistic DeFi price range
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e22); // 0.001 to 10,000 ether
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e21); // 0 to 1,000 ether increase per step
 
-    //     if (segments.length == 0) {
-    //         return;
-    //     }
+        // Supply per step: Reasonable token amounts (1 to 1M tokens)
+        // This prevents massive capacity calculations
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e18, 1e24); // 1 to 1,000,000 ether (tokens)
 
-    //     currentSupplyRatio = bound(currentSupplyRatio, 0, 100);
-    //     uint currentTotalIssuanceSupply;
-    //     if (totalCurveCapacity == 0) {
-    //         if (currentSupplyRatio > 0) return; // Cannot have supply if capacity is 0
-    //         currentTotalIssuanceSupply = 0;
-    //     } else {
-    //         currentTotalIssuanceSupply = (totalCurveCapacity * currentSupplyRatio) / 100;
-    //         if (currentTotalIssuanceSupply > totalCurveCapacity) currentTotalIssuanceSupply = totalCurveCapacity;
-    //     }
+        // Number of steps: Keep reasonable for gas and overflow prevention
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 20); // Max 20 steps per segment
 
-    //     uint totalCurveReserve = exposedLib.exposed_calculateReserveForSupply(segments, totalCurveCapacity);
+        // Collateral ratio: 0% to 200% of reserve (testing under/over spending)
+        collateralToSpendProvidedRatio =
+            bound(collateralToSpendProvidedRatio, 0, 200);
 
-    //     collateralToSpendProvidedRatio = bound(collateralToSpendProvidedRatio, 0, 150);
-    //     uint collateralToSpendProvided;
-    //     if (totalCurveReserve == 0 && collateralToSpendProvidedRatio > 0) {
-    //         // If total reserve is 0 (e.g. fully free curve), but trying to spend, use a nominal amount
-    //         // or handle specific free mint logic if applicable. For now, use a small non-zero amount.
-    //         collateralToSpendProvided = bound(collateralToSpendProvidedRatio, 1, 100 ether); // Use ratio as a small absolute value
-    //     } else if (totalCurveReserve == 0 && collateralToSpendProvidedRatio == 0) {
-    //         collateralToSpendProvided = 0;
-    //     } else {
-    //         collateralToSpendProvided = (totalCurveReserve * collateralToSpendProvidedRatio) / 100;
-    //          if (collateralToSpendProvidedRatio > 100 && totalCurveReserve > 0) { // Spending more than total reserve
-    //             collateralToSpendProvided = totalCurveReserve + (totalCurveReserve * (collateralToSpendProvidedRatio - 100) / 100) + 1;
-    //         }
-    //     }
+        // Current supply ratio: 0% to 100% of capacity
+        currentSupplyRatio = bound(currentSupplyRatio, 0, 100);
 
-    //     if (collateralToSpendProvided == 0) {
-    //         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput.selector);
-    //         exposedLib.exposed_calculatePurchaseReturn(segments, collateralToSpendProvided, currentTotalIssuanceSupply);
-    //     } else if (currentTotalIssuanceSupply > totalCurveCapacity && totalCurveCapacity > 0) {
-    //         // This case should be caught by _validateSupplyAgainstSegments in _calculatePurchaseReturn
-    //         // Note: _generateFuzzedValidSegmentsAndCapacity ensures currentTotalIssuanceSupply <= totalCurveCapacity
-    //         // So this branch is more for logical completeness if inputs were constructed differently.
-    //         // For this test structure, currentTotalIssuanceSupply is derived from totalCurveCapacity.
-    //         // The primary test for SupplyExceeds is in its own dedicated unit/fuzz test.
-    //         // However, if totalCurveCapacity is 0, currentTotalIssuanceSupply must also be 0.
-    //         // If currentTotalIssuanceSupply > 0 and totalCurveCapacity is 0, _validateSupplyAgainstSegments will revert.
-    //         // This specific condition (currentSupply > capacity > 0) is less likely here due to setup.
-    //          bytes memory expectedError = abi.encodeWithSelector(
-    //             IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
-    //             currentTotalIssuanceSupply,
-    //             totalCurveCapacity
-    //         );
-    //         vm.expectRevert(expectedError);
-    //         exposedLib.exposed_calculatePurchaseReturn(segments, collateralToSpendProvided, currentTotalIssuanceSupply);
-    //     } else {
-    //         (uint tokensToMint, uint collateralSpentByPurchaser) = exposedLib.exposed_calculatePurchaseReturn(
-    //             segments, collateralToSpendProvided, currentTotalIssuanceSupply
-    //         );
+        // Enforce validation rules from PackedSegmentLib
+        if (initialPriceTpl == 0) {
+            vm.assume(priceIncreaseTpl > 0);
+        }
+        if (numberOfStepsTpl > 1) {
+            vm.assume(priceIncreaseTpl > 0); // Prevent multi-step flat segments
+        }
 
-    //         assertTrue(collateralSpentByPurchaser <= collateralToSpendProvided, "FCPR_P: Spent more than provided");
+        // Additional overflow protection for extreme combinations
+        uint maxTheoreticalCapacityPerSegment =
+            supplyPerStepTpl * numberOfStepsTpl;
+        uint maxTheoreticalTotalCapacity =
+            maxTheoreticalCapacityPerSegment * numSegmentsToFuzz;
 
-    //         if (totalCurveCapacity > 0) { // Avoid division by zero if capacity is 0
-    //              assertTrue(tokensToMint <= (totalCurveCapacity - currentTotalIssuanceSupply), "FCPR_P: Minted more than available capacity");
-    //         } else { // totalCurveCapacity is 0
-    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens when capacity is 0");
-    //         }
+        // Skip test if total capacity would exceed reasonable bounds (100M tokens total)
+        if (maxTheoreticalTotalCapacity > 1e26) {
+            // 100M tokens * 1e18
+            return;
+        }
 
-    //         if (currentTotalIssuanceSupply == totalCurveCapacity && totalCurveCapacity > 0) {
-    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens at full capacity");
-    //             // Collateral spent might be > 0 if it tries to buy into a non-existent next step of a 0-price segment.
-    //             // However, _calculatePurchaseForSingleSegment should handle startStepInCurrentSegment_ >= currentSegmentTotalSteps_
-    //         }
+        // Skip if price progression could get too extreme
+        uint maxPriceInSegment =
+            initialPriceTpl + (numberOfStepsTpl - 1) * priceIncreaseTpl;
+        if (maxPriceInSegment > 1e23) {
+            // More than $100,000 per token
+            return;
+        }
 
-    //         // If the entire curve is free (initialPrice and priceIncrease are 0 for all segments)
-    //         // This is hard to set up with _generateFuzzedValidSegmentsAndCapacity due to `assume(initialPriceTpl > 0 || priceIncreaseTpl > 0)`
-    //         // and `assume(currentSegInitialPrice > 0 || priceIncreaseTpl > 0)`.
-    //         // A dedicated test for fully free curves might be needed if that's a valid state.
+        // Generate segments with overflow protection
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
+        );
 
-    //         // If collateralSpentByPurchaser is 0, tokensToMint should also be 0, unless it's a free portion.
-    //         bool isPotentiallyFree = false;
-    //         if (tokensToMint > 0 && segments.length > 0) {
-    //             (,,uint segIdxAtPurchase) = exposedLib.exposed_getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
-    //             (uint initialP, uint increaseP,,) = segments[segIdxAtPurchase]._unpack();
-    //             if (initialP == 0 && increaseP == 0) { // This segment is free
-    //                 isPotentiallyFree = true;
-    //             }
-    //         }
 
-    //         if (collateralSpentByPurchaser == 0 && !isPotentiallyFree) {
-    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens without spending collateral on non-free segment");
-    //         }
-    //          assertTrue(true, "FCPR_P: Passed without unexpected revert");
-    //     }
-    // }
+        if (segments.length == 0) {
+            return;
+        }
+
+        // Additional check for generation issues
+        if (totalCurveCapacity == 0 && segments.length > 0) {
+            // This suggests overflow occurred in capacity calculation during generation
+            return;
+        }
+
+        // Verify individual segment capacities don't overflow
+        uint calculatedTotalCapacity = 0;
+        for (uint i = 0; i < segments.length; i++) {
+            (,, uint supplyPerStep, uint numberOfSteps) = segments[i]._unpack();
+
+            if (supplyPerStep == 0 || numberOfSteps == 0) {
+                return; // Invalid segment
+            }
+
+            // Check for overflow in capacity calculation
+            uint segmentCapacity = supplyPerStep * numberOfSteps;
+            if (segmentCapacity / supplyPerStep != numberOfSteps) {
+                return; // Overflow detected
+            }
+
+            calculatedTotalCapacity += segmentCapacity;
+            if (calculatedTotalCapacity < segmentCapacity) {
+                return; // Overflow in total capacity
+            }
+        }
+
+        // Setup current supply with overflow protection
+        currentSupplyRatio = bound(currentSupplyRatio, 0, 100);
+        uint currentTotalIssuanceSupply;
+        if (totalCurveCapacity == 0) {
+            if (currentSupplyRatio > 0) {
+                return;
+            }
+            currentTotalIssuanceSupply = 0;
+        } else {
+            currentTotalIssuanceSupply =
+                (totalCurveCapacity * currentSupplyRatio) / 100;
+            if (currentTotalIssuanceSupply > totalCurveCapacity) {
+                currentTotalIssuanceSupply = totalCurveCapacity;
+            }
+        }
+
+        // Calculate total curve reserve with error handling
+        uint totalCurveReserve;
+        bool reserveCalcFailedFuzz = false;
+        try exposedLib.exposed_calculateReserveForSupply(
+            segments, totalCurveCapacity
+        ) returns (uint reserve) {
+            totalCurveReserve = reserve;
+        } catch {
+            reserveCalcFailedFuzz = true;
+            // If reserve calculation fails due to overflow, skip test
+            return;
+        }
+
+        // Setup collateral to spend with overflow protection
+        collateralToSpendProvidedRatio =
+            bound(collateralToSpendProvidedRatio, 0, 200);
+        uint collateralToSpendProvided;
+
+        if (totalCurveReserve == 0) {
+            // Handle zero-reserve edge case more systematically
+            collateralToSpendProvided = collateralToSpendProvidedRatio == 0
+                ? 0
+                : bound(collateralToSpendProvidedRatio, 1, 10 ether); // Using ratio as proxy for small amount
+        } else {
+            // Protect against overflow in collateral calculation
+            if (collateralToSpendProvidedRatio <= 100) {
+                collateralToSpendProvided =
+                    (totalCurveReserve * collateralToSpendProvidedRatio) / 100;
+            } else {
+                // For ratios > 100%, calculate more carefully to prevent overflow
+                uint baseAmount = totalCurveReserve;
+                uint extraRatio = collateralToSpendProvidedRatio - 100;
+                uint extraAmount = (totalCurveReserve * extraRatio) / 100;
+
+                // Check for overflow before addition
+                if (baseAmount > type(uint).max - extraAmount - 1) {
+                    // Added -1
+                    return; // Would overflow
+                }
+                collateralToSpendProvided = baseAmount + extraAmount + 1;
+            }
+        }
+
+        // Test expected reverts
+        if (collateralToSpendProvided == 0) {
+            vm.expectRevert(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__ZeroCollateralInput
+                    .selector
+            );
+            exposedLib.exposed_calculatePurchaseReturn(
+                segments, collateralToSpendProvided, currentTotalIssuanceSupply
+            );
+            return;
+        }
+
+        if (
+            currentTotalIssuanceSupply > totalCurveCapacity
+                && totalCurveCapacity > 0 // Only expect if capacity > 0
+        ) {
+            bytes memory expectedError = abi.encodeWithSelector(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
+                    .selector,
+                currentTotalIssuanceSupply,
+                totalCurveCapacity
+            );
+            vm.expectRevert(expectedError);
+            exposedLib.exposed_calculatePurchaseReturn(
+                segments, collateralToSpendProvided, currentTotalIssuanceSupply
+            );
+            return;
+        }
+
+        // Main test execution with comprehensive error handling
+        uint tokensToMint;
+        uint collateralSpentByPurchaser;
+
+
+        try exposedLib.exposed_calculatePurchaseReturn(
+            segments, collateralToSpendProvided, currentTotalIssuanceSupply
+        ) returns (uint _tokensToMint, uint _collateralSpentByPurchaser) {
+            tokensToMint = _tokensToMint;
+            collateralSpentByPurchaser = _collateralSpentByPurchaser;
+        } catch Error(string memory reason) {
+            // Log the revert reason for debugging
+            emit log(string.concat("Unexpected revert: ", reason));
+            fail(
+                string.concat(
+                    "Function should not revert with valid inputs: ", reason
+                )
+            );
+        } catch (bytes memory lowLevelData) {
+            emit log("Unexpected low-level revert");
+            emit log_bytes(lowLevelData);
+            fail("Function reverted with low-level error");
+        }
+
+        // === CORE INVARIANTS ===
+
+        // Property 1: Never overspend
+        assertTrue(
+            collateralSpentByPurchaser <= collateralToSpendProvided,
+            "FCPR_P1: Spent more than provided"
+        );
+
+        // Property 2: Never overmint
+        if (totalCurveCapacity > 0) {
+            assertTrue(
+                tokensToMint
+                    <= (totalCurveCapacity - currentTotalIssuanceSupply),
+                "FCPR_P2: Minted more than available capacity"
+            );
+        } else {
+            assertEq(
+                tokensToMint, 0, "FCPR_P2: Minted tokens when capacity is 0"
+            );
+        }
+
+        // Property 3: Deterministic behavior (only test if first call succeeded)
+        try exposedLib.exposed_calculatePurchaseReturn(
+            segments, collateralToSpendProvided, currentTotalIssuanceSupply
+        ) returns (uint tokensToMint2, uint collateralSpentByPurchaser2) {
+            assertEq(
+                tokensToMint,
+                tokensToMint2,
+                "FCPR_P3: Non-deterministic token calculation"
+            );
+            assertEq(
+                collateralSpentByPurchaser,
+                collateralSpentByPurchaser2,
+                "FCPR_P3: Non-deterministic collateral calculation"
+            );
+        } catch {
+            // If second call fails but first succeeded, that indicates non-determinship
+            fail("FCPR_P3: Second identical call failed while first succeeded");
+        }
+
+        // === BOUNDARY CONDITIONS ===
+
+        // Property 4: No activity at full capacity
+        if (
+            currentTotalIssuanceSupply == totalCurveCapacity
+                && totalCurveCapacity > 0
+        ) {
+            console2.log("P4: tokensToMint (at full capacity):", tokensToMint);
+            console2.log(
+                "P4: collateralSpentByPurchaser (at full capacity):",
+                collateralSpentByPurchaser
+            );
+            assertEq(tokensToMint, 0, "FCPR_P4: No tokens at full capacity");
+            assertEq(
+                collateralSpentByPurchaser,
+                0,
+                "FCPR_P4: No spending at full capacity"
+            );
+        }
+
+        // Property 5: Zero spending implies zero minting (except for free segments)
+        if (collateralSpentByPurchaser == 0 && tokensToMint > 0) {
+            bool isPotentiallyFree = false;
+            if (
+                segments.length > 0
+                    && currentTotalIssuanceSupply < totalCurveCapacity
+            ) {
+                try exposedLib.exposed_getCurrentPriceAndStep(
+                    segments, currentTotalIssuanceSupply
+                ) returns (uint currentPrice, uint, uint segIdx) {
+                    if (segIdx < segments.length && currentPrice == 0) {
+                        isPotentiallyFree = true;
+                    }
+                } catch {
+                    console2.log(
+                        "FUZZ CPR DEBUG: P5 - getCurrentPriceAndStep reverted."
+                    );
+                }
+            }
+            if (!isPotentiallyFree) {
+                assertEq(
+                    tokensToMint,
+                    0,
+                    "FCPR_P5: Minted tokens without spending on non-free segment"
+                );
+            }
+        }
+
+        // === MATHEMATICAL PROPERTIES ===
+
+        // Property 6: Monotonicity (more budget → more/equal tokens when capacity allows)
+        if (
+            currentTotalIssuanceSupply < totalCurveCapacity
+                && collateralToSpendProvided > 0
+                && collateralSpentByPurchaser < collateralToSpendProvided
+                && collateralToSpendProvided <= type(uint).max - 1 ether // Prevent overflow
+        ) {
+            uint biggerBudget = collateralToSpendProvided + 1 ether;
+            try exposedLib.exposed_calculatePurchaseReturn(
+                segments, biggerBudget, currentTotalIssuanceSupply
+            ) returns (uint tokensMore, uint) {
+                assertTrue(
+                    tokensMore >= tokensToMint,
+                    "FCPR_P6: More budget should yield more/equal tokens"
+                );
+            } catch {
+                console2.log(
+                    "FUZZ CPR DEBUG: P6 - Call with biggerBudget failed."
+                );
+            }
+        }
+
+        // Property 7: Rounding should favor protocol (spent ≥ theoretical minimum)
+        if (
+            tokensToMint > 0 && collateralSpentByPurchaser > 0
+                && currentTotalIssuanceSupply + tokensToMint <= totalCurveCapacity
+        ) {
+            try exposedLib.exposed_calculateReserveForSupply(
+                segments, currentTotalIssuanceSupply + tokensToMint
+            ) returns (uint reserveAfter) {
+                try exposedLib.exposed_calculateReserveForSupply(
+                    segments, currentTotalIssuanceSupply
+                ) returns (uint reserveBefore) {
+                    if (reserveAfter >= reserveBefore) {
+                        uint theoreticalCost = reserveAfter - reserveBefore;
+                        assertTrue(
+                            collateralSpentByPurchaser >= theoreticalCost,
+                            "FCPR_P7: Should favor protocol in rounding"
+                        );
+                    }
+                } catch {
+                    console2.log(
+                        "FUZZ CPR DEBUG: P7 - Calculation of reserveBefore failed."
+                    );
+                }
+            } catch {
+                console2.log(
+                    "FUZZ CPR DEBUG: P7 - Calculation of reserveAfter failed."
+                );
+            }
+        }
+
+        // Property 8: Compositionality (for non-boundary cases)
+        if (
+            tokensToMint > 0 && collateralSpentByPurchaser > 0
+                && collateralSpentByPurchaser < collateralToSpendProvided / 2 // Ensure first purchase is partial
+                && currentTotalIssuanceSupply + tokensToMint < totalCurveCapacity // Ensure capacity for second
+        ) {
+            uint remainingBudget =
+                collateralToSpendProvided - collateralSpentByPurchaser;
+            uint newSupply = currentTotalIssuanceSupply + tokensToMint;
+
+            try exposedLib.exposed_calculatePurchaseReturn(
+                segments, remainingBudget, newSupply
+            ) returns (uint tokensSecond, uint) {
+                try exposedLib.exposed_calculatePurchaseReturn(
+                    segments,
+                    collateralToSpendProvided,
+                    currentTotalIssuanceSupply
+                ) returns (uint tokensTotal, uint) {
+                    uint combinedTokens = tokensToMint + tokensSecond;
+                    uint tolerance = Math.max(combinedTokens / 1000, 1);
+
+                    assertApproxEqAbs(
+                        tokensTotal,
+                        combinedTokens,
+                        tolerance,
+                        "FCPR_P8: Compositionality within rounding tolerance"
+                    );
+                } catch {
+                    console2.log(
+                        "FUZZ CPR DEBUG: P8 - Single large purchase for comparison failed."
+                    );
+                }
+            } catch {
+                console2.log(
+                    "FUZZ CPR DEBUG: P8 - Second purchase in compositionality test failed."
+                );
+            }
+        }
+
+        // === BOUNDARY DETECTION ===
+
+        // Property 9: Detect and validate step/segment boundaries
+        if (currentTotalIssuanceSupply > 0 && segments.length > 0) {
+            try exposedLib.exposed_getCurrentPriceAndStep(
+                segments, currentTotalIssuanceSupply
+            ) returns (uint, uint stepIdx, uint segIdx) { // Removed 'price'
+                if (segIdx < segments.length) {
+                    (,, uint supplyPerStepP9,) = segments[segIdx]._unpack();
+                    if (supplyPerStepP9 > 0) {
+                        bool atStepBoundary =
+                            (currentTotalIssuanceSupply % supplyPerStepP9) == 0;
+
+                        if (atStepBoundary && currentTotalIssuanceSupply > 0) {
+                            assertTrue(
+                                stepIdx > 0 || segIdx > 0,
+                                "FCPR_P9: At step boundary should not be at curve start"
+                            );
+                        }
+                    }
+                }
+            } catch {
+                console2.log(
+                    "FUZZ CPR DEBUG: P9 - getCurrentPriceAndStep reverted."
+                );
+            }
+        }
+
+        // Property 10: Consistency with capacity calculations
+        uint remainingCapacity = totalCurveCapacity > currentTotalIssuanceSupply
+            ? totalCurveCapacity - currentTotalIssuanceSupply
+            : 0;
+
+        if (remainingCapacity == 0) {
+            assertEq(
+                tokensToMint, 0, "FCPR_P10: No tokens when no capacity remains"
+            );
+        }
+
+        if (tokensToMint == remainingCapacity && remainingCapacity > 0) {
+            bool couldBeFreeP10 = false;
+            if (segments.length > 0) {
+                try exposedLib.exposed_getCurrentPriceAndStep(
+                    segments, currentTotalIssuanceSupply
+                ) returns (uint currentPriceP10, uint, uint) {
+                    if (currentPriceP10 == 0) {
+                        couldBeFreeP10 = true;
+                    }
+                } catch {
+                    console2.log(
+                        "FUZZ CPR DEBUG: P10 - getCurrentPriceAndStep reverted for free check."
+                    );
+                }
+            }
+
+            if (!couldBeFreeP10) {
+                assertTrue(
+                    collateralSpentByPurchaser > 0,
+                    "FCPR_P10: Should spend collateral when filling entire remaining capacity"
+                );
+            }
+        }
+
+        // Final success assertion
+        assertTrue(true, "FCPR_P: All properties satisfied");
+    }
+
+    // Test: Compare _calculateReserveForSupply with _calculatePurchaseReturn
+    // Start with an empty curve, calculate reserve for a target supply.
+    // Then, use that reserve as collateral input for _calculatePurchaseReturn.
+    // Ensure the minted tokens match the target supply and collateral spent matches the calculated reserve.
+    function test_Compare_ReserveForSupply_vs_PurchaseReturn_TwoSlopedCurve()
+        public
+    {
+        // Use twoSlopedSegmentsTestCurve
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+
+        // Calculate target supply: one third into the last step of the second segment
+        PackedSegment seg0 = segments[0];
+        PackedSegment seg1 = segments[1];
+
+        uint supplySeg0 = seg0._supplyPerStep() * seg0._numberOfSteps(); // 30 ether
+
+        // Supply of the first step of segment 1
+        uint supplySeg1Step0 = seg1._supplyPerStep(); // 20 ether
+
+        // Total supply at the beginning of the last step of segment 1
+        uint supplyAtStartOfLastStepSeg1 = supplySeg0 + supplySeg1Step0; // 50 ether
+
+        // Supply per step in the last step of segment 1 (which is seg1._supplyPerStep())
+        uint supplyPerStepInLastStepSeg1 = seg1._supplyPerStep(); // 20 ether
+
+        // One third of the supply in that last step
+        uint supplyIntoLastStep = (supplyPerStepInLastStepSeg1 * 1) / 3;
+
+        uint targetSupply = supplyAtStartOfLastStepSeg1 + supplyIntoLastStep;
+        // targetSupply = 50 ether + (20 ether / 3) = (150e18 + 20e18) / 3 = 170e18 / 3 = 56666666666666666666 wei
+
+        // 1. Calculate the reserve needed to reach targetSupply
+        uint expectedReserve =
+            exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+
+        // 2. Use that reserve to purchase tokens from an empty curve
+        (uint actualTokensMinted, uint actualCollateralSpent) = exposedLib
+            .exposed_calculatePurchaseReturn(
+            segments,
+            expectedReserve, // Collateral to spend
+            0 // Current total issuance supply (empty curve)
+        );
+
+        // 3. Assertions
+        assertEq(
+            actualTokensMinted,
+            targetSupply,
+            "Tokens minted should match target supply"
+        );
+        assertEq(
+            actualCollateralSpent,
+            expectedReserve,
+            "Collateral spent should match expected reserve"
+        );
+    }
 }

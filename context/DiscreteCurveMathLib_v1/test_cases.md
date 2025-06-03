@@ -96,7 +96,7 @@ eCurveMathLib_v1.t.sol -vv`, make sure it is green, continue (don't add many tes
     - 3.1.1: Flat segment `[COVERED by: test_CalculatePurchaseReturn_StartMidStep_CompleteStep_FlatSegment (for True Flat 1-step segments, implies transition for more steps)]`
     - 3.1.2: Sloped segment `[PARTIALLY COVERED by: test_CalculatePurchaseReturn_StartMidStep_Sloped (completes partial, then partial next; needs larger budget for full steps after)]`
   - 3.2: Complete partial step, then partial purchase next step
-    - 3.2.1: Flat segment `[PARTIALLY COVERED by: test_CalculatePurchaseReturn_Transition_FlatToFlatSegment or test_CalculatePurchaseReturn_Transition_FlatToSloped_PartialBuyInSlopedSegment (if interpreted as transition and partial buy in next segment)]`
+    - 3.2.1: Flat segment `[COVERED by: test_CalculatePurchaseReturn_StartMidFlat_CompleteFlat_PartialNextFlat]`
     - 3.2.2: Sloped segment `[COVERED by: test_CalculatePurchaseReturn_StartMidStep_Sloped]`
 
 ## Edge Case Tests

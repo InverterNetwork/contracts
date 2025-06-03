@@ -36,7 +36,7 @@
 
 (Content remains the same)
 
-#### Core Functions Implemented - ✅ STABLE & TESTED (Reflects fixes and new validation)
+#### Core Functions Implemented - ✅ STABLE & TESTED (Reflects fixes, new validation, NatSpec, and `pure` status)
 
 ```solidity
 // Primary calculation functions
@@ -44,18 +44,18 @@ function _calculatePurchaseReturn(
     PackedSegment[] memory segments_,
     uint collateralToSpendProvided_,
     uint currentTotalIssuanceSupply_
-) internal pure returns (uint tokensToMint_, uint collateralSpentByPurchaser_); // STABLE & TESTED: Refactored algorithm, fixed, caller validates segments/supply capacity.
+) internal pure returns (uint tokensToMint_, uint collateralSpentByPurchaser_); // STABLE & TESTED: Refactored algorithm, fixed, caller validates segments/supply capacity. NatSpec added. Is pure.
 
 function _calculateSaleReturn(
     PackedSegment[] memory segments_,
     uint tokensToSell_,
     uint currentTotalIssuanceSupply_
-) internal pure returns (uint collateralToReturn_, uint tokensToBurn_); // Stable.
+) internal pure returns (uint collateralToReturn_, uint tokensToBurn_); // Stable. Is pure.
 
 function _calculateReserveForSupply(
     PackedSegment[] memory segments_,
     uint targetSupply_
-) internal pure returns (uint totalReserve_); // Stable.
+) internal pure returns (uint totalReserve_); // Stable. NatSpec added. Is pure.
 
 // Configuration & validation functions
 function _createSegment( // This is a convenience function in DiscreteCurveMathLib_v1
@@ -71,12 +71,12 @@ function _validateSegmentArray(PackedSegment[] memory segments_) internal pure; 
 function _getCurrentPriceAndStep( // Still used by other functions, e.g., potentially by a UI or analytics.
     PackedSegment[] memory segments_,
     uint currentTotalIssuanceSupply_
-) internal pure returns (uint price_, uint stepIndex_, uint segmentIndex_);
+) internal pure returns (uint price_, uint stepIndex_, uint segmentIndex_); // Is pure.
 
 function _findPositionForSupply( // Still used by other functions.
     PackedSegment[] memory segments_,
     uint targetSupply_
-) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_);
+) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_); // Is pure.
 // Note: _calculatePurchaseReturn no longer uses _getCurrentPriceAndStep or _findPositionForSupply directly.
 ```
 
@@ -151,12 +151,14 @@ function _findPositionForSupply( // Still used by other functions.
 
 ### ✅ `DiscreteCurveMathLib_v1` (Stable, All Tests Green)
 
-- **`_calculatePurchaseReturn`**: Successfully refactored and fixed. All calculation/rounding issues resolved. Validation strategy (caller validates segments/supply capacity, internal basic checks) confirmed and tested.
-- **Other functions**: Stable and production-ready.
+- **`_calculatePurchaseReturn`**: Successfully refactored and fixed. All calculation/rounding issues resolved. Validation strategy (caller validates segments/supply capacity, internal basic checks) confirmed and tested. NatSpec added. Confirmed `pure`.
+- **`_calculateReserveForSupply`**: Stable and production-ready. NatSpec added. Confirmed `pure`.
+- **Other functions**: Stable, `pure`, and production-ready.
 - **PackedSegmentLib**: `_create` function's stricter validation for "True Flat" and "True Sloped" segments is implemented and fully tested.
 - **Validation Strategy**: Confirmed and tested. `PackedSegmentLib` is stricter; `_calculatePurchaseReturn` relies on caller validation as designed.
 - **Interface**: `IDiscreteCurveMathLib_v1.sol` new error types integrated and tested.
-- **Testing**: All 65 unit tests in `DiscreteCurveMathLib_v1.t.sol` (after refactoring out `segmentsData`) and all 10 unit tests in `PackedSegmentLib.t.sol` are passing.
+- **Testing**: All 65 unit tests in `DiscreteCurveMathLib_v1.t.sol` (after refactoring out `segmentsData` and fixing compiler warnings) and all 10 unit tests in `PackedSegmentLib.t.sol` are passing.
+- **Documentation**: NatSpec added for key functions.
 
 ### ✅ Integration Interfaces Confirmed (Caller validation is key)
 
@@ -166,6 +168,6 @@ function _findPositionForSupply( // Still used by other functions.
 
 - **Architectural patterns for `_calculatePurchaseReturn` refactor**: Implemented, tested, and stable.
 - **Performance and Security for refactor**: Confirmed through successful testing.
-- **Next**: Proceed with `FM_BC_DBC` module implementation.
+- **Next**: Synchronize all documentation (Memory Bank, Markdown docs), then strengthen fuzz testing before proceeding with `FM_BC_DBC` module implementation.
 
-**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, fully tested, and production-ready. Documentation is being updated. The project is prepared for the `FM_BC_DBC` implementation phase.
+**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, internally documented (NatSpec), fully tested (unit tests and compiler warning fixes), and production-ready. External documentation is currently being updated.

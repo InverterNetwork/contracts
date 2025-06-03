@@ -39,12 +39,12 @@ The core design decision for `DiscreteCurveMathLib_v1` is the use of **type-safe
 
 To ensure economic sensibility and robustness, `DiscreteCurveMathLib_v1` and its helper `PackedSegmentLib` enforce specific validation rules for segment configurations:
 
-1.  **No Free Segments (`PackedSegmentLib.create`)**:
-    Segments that are entirely "free" – meaning their `initialPrice` is 0 AND their `priceIncreasePerStep` is also 0 – are disallowed. Attempting to create such a segment will cause `PackedSegmentLib.create()` to revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree()`. This prevents scenarios where tokens could be minted indefinitely at no cost from a segment that never increases in price.
+1.  **No Free Segments (`PackedSegmentLib._create`)**:
+    Segments that are entirely "free" – meaning their `initialPrice` is 0 AND their `priceIncreasePerStep` is also 0 – are disallowed. Attempting to create such a segment will cause `PackedSegmentLib._create()` to revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree()`. This prevents scenarios where tokens could be minted indefinitely at no cost from a segment that never increases in price.
 
-2.  **Non-Decreasing Price Progression (`DiscreteCurveMathLib_v1.validateSegmentArray`)**:
-    When an array of segments is validated using `DiscreteCurveMathLib_v1.validateSegmentArray()`, the library checks for logical price progression between consecutive segments. Specifically, the `initialPrice` of any segment `N+1` must be greater than or equal to the calculated final price of the preceding segment `N`. The final price of segment `N` is determined as `segments[N].initialPrice() + (segments[N].numberOfSteps() - 1) * segments[N].priceIncreasePerStep()`.
-    If this condition is violated (i.e., if a subsequent segment starts at a lower price than where the previous one ended), `validateSegmentArray()` will revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice)`.
+2.  **Non-Decreasing Price Progression (`DiscreteCurveMathLib_v1._validateSegmentArray`)**:
+    When an array of segments is validated using `DiscreteCurveMathLib_v1._validateSegmentArray()`, the library checks for logical price progression between consecutive segments. Specifically, the `initialPrice` of any segment `N+1` must be greater than or equal to the calculated final price of the preceding segment `N`. The final price of segment `N` is determined as `segments[N]._initialPrice() + (segments[N]._numberOfSteps() - 1) * segments[N]._priceIncrease()`.
+    If this condition is violated (i.e., if a subsequent segment starts at a lower price than where the previous one ended), `_validateSegmentArray()` will revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice)`.
     This rule ensures a generally non-decreasing (or strictly increasing, if price increases are positive) price curve across the entire set of segments.
 
 3.  **No Price Decrease Within Sloped Segments**:
@@ -56,9 +56,9 @@ _Note: The custom errors `DiscreteCurveMathLib__SegmentIsFree` and `DiscreteCurv
 
 To further optimize gas for on-chain computations:
 
-- **Arithmetic Series for Reserve/Cost Calculation:** For sloped segments (where `priceIncreasePerStep > 0`), functions like `calculateReserveForSupply` use the mathematical formula for the sum of an arithmetic series. This allows calculating the total collateral for multiple steps without iterating through each step individually, saving gas.
-- **Direct Iteration for Purchase Calculation:** The `calculatePurchaseReturn` function uses a direct iterative approach to determine the number of tokens to be minted for a given collateral input. It iterates through the curve segments and steps, calculating the cost for each, until the provided collateral is exhausted or the curve capacity is reached.
-- **Optimized Sale Calculation:** The `calculateSaleReturn` function determines the collateral out by calculating the total reserve locked in the curve before and after the sale, then taking the difference. This approach (`R(S_current) - R(S_final)`) is generally more efficient than iterating backward through curve steps.
+- **Arithmetic Series for Reserve/Cost Calculation:** For sloped segments (where `priceIncreasePerStep > 0`), functions like `_calculateReserveForSupply` use the mathematical formula for the sum of an arithmetic series. This allows calculating the total collateral for multiple steps without iterating through each step individually, saving gas.
+- **Direct Iteration for Purchase Calculation:** The `_calculatePurchaseReturn` function uses a direct iterative approach to determine the number of tokens to be minted for a given collateral input. It iterates through the curve segments and steps, calculating the cost for each, until the provided collateral is exhausted or the curve capacity is reached.
+- **Optimized Sale Calculation:** The `_calculateSaleReturn` function determines the collateral out by calculating the total reserve locked in the curve before and after the sale, then taking the difference. This approach (`R(S_current) - R(S_final)`) is generally more efficient than iterating backward through curve steps.
 
 ### Limitations of Packed Storage and Low-Priced Collateral
 
@@ -109,7 +109,7 @@ The library is well-suited for its primary intended applications. If support for
 
 ### Internal Functions and Composability
 
-Most functions in the library are `internal pure`, designed to be called by other smart contracts (typically Funding Managers). This makes the library a set of reusable mathematical tools rather than a standalone stateful contract. The `using PackedSegmentLib for PackedSegment;` directive enables convenient syntax for accessing segment data (e.g., `mySegment.initialPrice()`).
+Most functions in the library are `internal pure`, designed to be called by other smart contracts (typically Funding Managers). This makes the library a set of reusable mathematical tools rather than a standalone stateful contract. The `using PackedSegmentLib for PackedSegment;` directive enables convenient syntax for accessing segment data (e.g., `mySegment._initialPrice()`).
 
 ## Inheritance
 
@@ -128,13 +128,13 @@ classDiagram
         +MAX_SEGMENTS : uint256
         +CurvePosition (struct)
         ---
-        #_findPositionForSupply(PackedSegment[] memory, uint256) CurvePosition
-        #getCurrentPriceAndStep(PackedSegment[] memory, uint256) (uint256, uint256, uint256)
-        #calculateReserveForSupply(PackedSegment[] memory, uint256) uint256
-        #calculatePurchaseReturn(PackedSegment[] memory, uint256, uint256) (uint256, uint256)
-        #calculateSaleReturn(PackedSegment[] memory, uint256, uint256) (uint256, uint256)
-        #createSegment(uint256, uint256, uint256, uint256) PackedSegment
-        #validateSegmentArray(PackedSegment[] memory)
+        #_findPositionForSupply(PackedSegment[] memory, uint256) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory)
+        #_getCurrentPriceAndStep(PackedSegment[] memory, uint256) internal pure returns (uint256 price_, uint256 stepIndex_, uint256 segmentIndex_)
+        #_calculateReserveForSupply(PackedSegment[] memory, uint256) internal pure returns (uint256 totalReserve_)
+        #_calculatePurchaseReturn(PackedSegment[] memory, uint256, uint256) internal pure returns (uint256 tokensToMint_, uint256 collateralSpentByPurchaser_)
+        #_calculateSaleReturn(PackedSegment[] memory, uint256, uint256) internal view returns (uint256 collateralToReturn_, uint256 tokensToBurn_)
+        #_createSegment(uint256, uint256, uint256, uint256) internal pure returns (PackedSegment)
+        #_validateSegmentArray(PackedSegment[] memory) internal pure
     }
 
     class PackedSegmentLib {
@@ -144,12 +144,12 @@ classDiagram
         -SUPPLY_BITS : uint256
         -STEPS_BITS : uint256
         ---
-        #create(uint256, uint256, uint256, uint256) PackedSegment
-        #initialPrice(PackedSegment) uint256
-        #priceIncrease(PackedSegment) uint256
-        #supplyPerStep(PackedSegment) uint256
-        #numberOfSteps(PackedSegment) uint256
-        #unpack(PackedSegment) (uint256, uint256, uint256, uint256)
+        #_create(uint256, uint256, uint256, uint256) internal pure returns (PackedSegment)
+        #_initialPrice(PackedSegment) internal pure returns (uint256)
+        #_priceIncrease(PackedSegment) internal pure returns (uint256)
+        #_supplyPerStep(PackedSegment) internal pure returns (uint256)
+        #_numberOfSteps(PackedSegment) internal pure returns (uint256)
+        #_unpack(PackedSegment) internal pure returns (uint256, uint256, uint256, uint256)
     }
 
     class PackedSegment {
@@ -192,7 +192,7 @@ _This library itself does not have direct user interactions with state changes. 
 
 ### Example: Calculating Purchase Return
 
-A Funding Manager (FM) contract would use `calculatePurchaseReturn` to determine how many issuance tokens a user receives for a given amount of collateral.
+A Funding Manager (FM) contract would use `_calculatePurchaseReturn` to determine how many issuance tokens a user receives for a given amount of collateral.
 
 **Preconditions (for the FM, not the library call itself):**
 
@@ -200,7 +200,7 @@ A Funding Manager (FM) contract would use `calculatePurchaseReturn` to determine
 - The FM knows the `currentTotalIssuanceSupply` of its token.
 - The user (caller of the FM) has sufficient collateral and has approved it to the FM.
 
-1.  **FM calls `calculatePurchaseReturn` from the library:**
+1.  **FM calls `_calculatePurchaseReturn` from the library:**
     The FM passes its segment data, the user's `collateralAmountIn`, and the `currentTotalIssuanceSupply` to the library function.
 
     ```solidity
@@ -230,7 +230,7 @@ A Funding Manager (FM) contract would use `calculatePurchaseReturn` to determine
 
 
         (issuanceAmountOut, collateralAmountSpent) =
-            DiscreteCurveMathLib_v1.calculatePurchaseReturn(
+            DiscreteCurveMathLib_v1._calculatePurchaseReturn(
                 segments,
                 collateralAmountIn,
                 currentTotalIssuanceSupply
@@ -252,7 +252,7 @@ sequenceDiagram
     participant IT as Issuance Token
 
     User->>FM: buyTokens(collateralAmountIn, minIssuanceOut)
-    FM->>Lib: calculatePurchaseReturn(segments, collateralAmountIn, currentSupply)
+    FM->>Lib: _calculatePurchaseReturn(segments, collateralAmountIn, currentSupply)
     Lib-->>FM: issuanceAmountOut, collateralSpent
     FM->>FM: Check issuanceAmountOut >= minIssuanceOut
     FM->>CT: transferFrom(User, FM, collateralSpent)
@@ -293,6 +293,6 @@ Not applicable for the library itself. A contract using this library (e.g., a Fu
 1.  Preparing an array of `IDiscreteCurveMathLib_v1.SegmentConfig` structs.
 2.  Iterating through this array, calling `DiscreteCurveMathLib_v1._createSegment()` for each config to get the `PackedSegment` data.
 3.  Storing this `PackedSegment[]` array in its state.
-4.  Validating the array using `DiscreteCurveMathLib_v1.validateSegmentArray()`.
+4.  Validating the array using `DiscreteCurveMathLib_v1._validateSegmentArray()`.
 
 The NatSpec comments within `DiscreteCurveMathLib_v1.sol` and `IDiscreteCurveMathLib_v1.sol` provide details on function parameters and errors, which would be relevant for developers integrating this library.

@@ -5,7 +5,7 @@ import {IDiscreteCurveMathLib_v1} from
     "../interfaces/IDiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from "../libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "../types/PackedSegment_v1.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@oz/utils/math/Math.sol";
 
 /**
  * @title DiscreteCurveMathLib_v1
@@ -226,8 +226,13 @@ library DiscreteCurveMathLib_v1 {
     // Core Calculation Functions
 
     /**
-     * @notice Calculates the total collateral reserve required to back a given target supply.
-     * @dev Iterates through segments_, summing the collateral needed for the portion of targetSupply_ in each.
+     * @notice Calculates the total collateral reserve required to back a given target supply of issuance tokens.
+     * @dev Iterates through the curve segments, summing the collateral required for each step up to the targetSupply_.
+     *      Uses arithmetic series for sloped segments and direct multiplication for flat segments.
+     *      Rounds up collateral calculations for individual steps to favor the protocol.
+     *      Reverts if segments_ array is empty and targetSupply_ > 0.
+     *      Reverts if segments_ array exceeds MAX_SEGMENTS.
+     *      Reverts if targetSupply_ exceeds the total capacity of all segments_.
      * @param segments_ Array of PackedSegment configurations for the curve.
      * @param targetSupply_ The target total issuance supply for which to calculate the reserve.
      * @return totalReserve_ The total collateral reserve required.
@@ -239,7 +244,7 @@ library DiscreteCurveMathLib_v1 {
         if (targetSupply_ == 0) {
             return 0;
         }
-        uint numSegments_ = segments_.length; // Cache length
+        uint numSegments_ = segments_.length;
         if (numSegments_ == 0) {
             revert
                 IDiscreteCurveMathLib_v1
@@ -250,120 +255,106 @@ library DiscreteCurveMathLib_v1 {
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__TooManySegments();
         }
-        _validateSupplyAgainstSegments(segments_, targetSupply_); // Validation occurs, returned capacity not stored if unused
-        // The loop condition `cumulativeSupplyProcessed_ >= targetSupply_` and `targetSupply_ <= totalCurveCapacity_` (from validation)
-        // should be sufficient.
+        _validateSupplyAgainstSegments(segments_, targetSupply_);
 
         uint cumulativeSupplyProcessed_ = 0;
-        // totalReserve_ is initialized to 0 by default
 
         for (
             uint segmentIndex_ = 0;
             segmentIndex_ < numSegments_;
             ++segmentIndex_
         ) {
-            // Use cached length
             if (cumulativeSupplyProcessed_ >= targetSupply_) {
-                break; // All target supply has been accounted for.
+                break;
             }
 
-            // Unpack segment data - using batch unpack as per instruction suggestion for this case
             (
                 uint initialPrice_,
                 uint priceIncreasePerStep_,
                 uint supplyPerStep_,
                 uint totalStepsInSegment_
             ) = segments_[segmentIndex_]._unpack();
-            // Note: supplyPerStep_ is guaranteed > 0 by PackedSegmentLib.create validation.
 
+            uint segmentCapacity_ = totalStepsInSegment_ * supplyPerStep_;
             uint supplyRemainingInTarget_ =
                 targetSupply_ - cumulativeSupplyProcessed_;
 
-            // Calculate how many steps from *this* segment are needed to cover supplyRemainingInTarget_
-            // Ceiling division: (numerator + denominator - 1) / denominator
-            uint stepsToProcessInSegment_ =
-                (supplyRemainingInTarget_ + supplyPerStep_ - 1) / supplyPerStep_;
+            // Calculate how much of this segment we need to process
+            uint supplyToProcessInSegment_ = supplyRemainingInTarget_
+                > segmentCapacity_ ? segmentCapacity_ : supplyRemainingInTarget_;
 
-            // Cap at the segment's actual available steps
-            if (stepsToProcessInSegment_ > totalStepsInSegment_) {
-                stepsToProcessInSegment_ = totalStepsInSegment_;
-            }
+            // Calculate full steps and partial step for this segment
+            uint fullStepsToProcess_ =
+                supplyToProcessInSegment_ / supplyPerStep_;
+            uint partialStepSupply_ = supplyToProcessInSegment_ % supplyPerStep_;
 
-            uint collateralForPortion_;
-            if (priceIncreasePerStep_ == 0) {
-                // Flat segment
-                // Use _mulDivUp for conservative reserve calculation (favors protocol)
-                if (initialPrice_ == 0) {
-                    // Free portion
-                    collateralForPortion_ = 0;
-                } else {
-                    collateralForPortion_ = _mulDivUp(
-                        stepsToProcessInSegment_ * supplyPerStep_,
-                        initialPrice_,
-                        SCALING_FACTOR
-                    );
-                }
-            } else {
-                // Sloped segment: sum of an arithmetic series
-                // S_n = n/2 * (2a + (n-1)d)
-                // Here, n = stepsToProcessInSegment_, a = initialPrice_, d = priceIncreasePerStep_
-                // Each term (price) is multiplied by supplyPerStep_ and divided by SCALING_FACTOR.
-                // Collateral = supplyPerStep_/SCALING_FACTOR * Sum_{k=0}^{n-1} (initialPrice_ + k*priceIncreasePerStep_)
-                // Collateral = supplyPerStep_/SCALING_FACTOR * (n*initialPrice_ + priceIncreasePerStep_ * n*(n-1)/2)
-                // Collateral = (supplyPerStep_ * n * (2*initialPrice_ + (n-1)*priceIncreasePerStep_)) / (2 * SCALING_FACTOR)
-                // where n is stepsToProcessInSegment_.
+            uint collateralForPortion_ = 0;
 
-                if (stepsToProcessInSegment_ == 0) {
-                    collateralForPortion_ = 0;
-                } else {
-                    uint firstStepPrice_ = initialPrice_;
-                    uint lastStepPrice_ = initialPrice_
-                        + (stepsToProcessInSegment_ - 1) * priceIncreasePerStep_;
-                    uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
-                    uint totalPriceForAllStepsInPortion_;
-                    if (sumOfPrices_ == 0 || stepsToProcessInSegment_ == 0) {
-                        totalPriceForAllStepsInPortion_ = 0;
-                    } else {
-                        // n * sumOfPrices_ is always even, so Math.mulDiv is exact.
-                        totalPriceForAllStepsInPortion_ = Math.mulDiv(
-                            stepsToProcessInSegment_, sumOfPrices_, 2
+            // Calculate cost for full steps
+            if (fullStepsToProcess_ > 0) {
+                if (priceIncreasePerStep_ == 0) {
+                    // Flat segment
+                    if (initialPrice_ > 0) {
+                        collateralForPortion_ += _mulDivUp(
+                            fullStepsToProcess_ * supplyPerStep_,
+                            initialPrice_,
+                            SCALING_FACTOR
                         );
                     }
-                    // Use _mulDivUp for conservative reserve calculation (favors protocol)
-                    collateralForPortion_ = _mulDivUp(
-                        supplyPerStep_,
-                        totalPriceForAllStepsInPortion_,
-                        SCALING_FACTOR
+                } else {
+                    // Sloped segment: arithmetic series for full steps
+                    uint firstStepPrice_ = initialPrice_;
+                    uint lastStepPrice_ = initialPrice_
+                        + (fullStepsToProcess_ - 1) * priceIncreasePerStep_;
+                    uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
+                    uint totalPriceForAllSteps_ =
+                        Math.mulDiv(fullStepsToProcess_, sumOfPrices_, 2);
+                    collateralForPortion_ += _mulDivUp(
+                        supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
+                    );
+                }
+            }
+
+            // Calculate cost for partial step (if any)
+            if (partialStepSupply_ > 0) {
+                uint partialStepPrice_ = initialPrice_
+                    + (fullStepsToProcess_ * priceIncreasePerStep_);
+                if (partialStepPrice_ > 0) {
+                    collateralForPortion_ += _mulDivUp(
+                        partialStepSupply_, partialStepPrice_, SCALING_FACTOR
                     );
                 }
             }
 
             totalReserve_ += collateralForPortion_;
-            cumulativeSupplyProcessed_ +=
-                stepsToProcessInSegment_ * supplyPerStep_;
-        }
 
-        // Note: The case where targetSupply_ > totalCurveCapacity_ is handled by the
-        // _validateSupplyAgainstSegments check at the beginning of this function,
-        // which will cause a revert. Therefore, this function will only proceed
-        // if targetSupply_ is within the curve's defined capacity.
-        // If, for some other reason, cumulativeSupplyProcessed_ < targetSupply_ at this point
-        // (e.g. an issue with loop logic or segment data), it implies an internal inconsistency
-        // as the initial validation should have caught out-of-bounds targetSupply_.
-        // The function calculates reserve for the portion of targetSupply_ covered by the loop.
+            // Update cumulative supply with actual supply processed
+            cumulativeSupplyProcessed_ += supplyToProcessInSegment_;
+        }
 
         return totalReserve_;
     }
 
     /**
-     * @notice Calculates the amount of issuance tokens received for a given collateral input.
-     * @dev Iterates through segments starting from the current supply's position.
-     *      Assumes segments are pre-validated by caller.
+     * @notice Calculates the amount of issuance tokens a purchaser receives for a given amount of collateral,
+     *         and the actual amount of collateral spent.
+     * @dev Iterates through curve segments starting from the position_ indicated by currentTotalIssuanceSupply_.
+     *      It first determines the starting segment and step. If the starting supply is mid-step,
+     *      it calculates the cost to complete that partial step. Then, it iterates through subsequent
+     *      full steps and segments, consuming the provided collateral.
+     *      The function handles purchases that span multiple steps and segments.
+     *      It ensures that collateral is not overspent and issuance does not exceed curve capacity.
+     *      Collateral calculations for steps are rounded up to favor the protocol.
+     *      Tokens minted for a partial final step (due to budget constraint) are rounded down.
+     *      Reverts if collateralToSpendProvided_ is zero.
+     *      Reverts if segments_ array is empty.
+     *      Caller is responsible for pre-validating the segments_ array structure (e.g., price progression, MAX_SEGMENTS)
+     *      and ensuring currentTotalIssuanceSupply_ does not exceed total curve capacity before calling this function.
      * @param segments_ Array of PackedSegment configurations for the curve.
-     * @param collateralToSpendProvided_ The amount of collateral being provided for purchase.
-     * @param currentTotalIssuanceSupply_ The current total supply before this purchase.
-     * @return tokensToMint_ The total amount of issuance tokens minted.
-     * @return collateralSpentByPurchaser_ The actual amount of collateral spent.
+     * @param collateralToSpendProvided_ The amount of collateral the purchaser is providing.
+     * @param currentTotalIssuanceSupply_ The current total issuance supply before this purchase.
+     * @return tokensToMint_ The total amount of issuance tokens to be minted.
+     * @return collateralSpentByPurchaser_ The actual amount of collateral spent from the provided budget.
      */
     function _calculatePurchaseReturn(
         PackedSegment[] memory segments_,
@@ -371,7 +362,7 @@ library DiscreteCurveMathLib_v1 {
         uint currentTotalIssuanceSupply_
     )
         internal
-        pure
+        pure // Already pure, ensuring it stays
         returns (uint tokensToMint_, uint collateralSpentByPurchaser_)
     {
         if (collateralToSpendProvided_ == 0) {
@@ -386,41 +377,42 @@ library DiscreteCurveMathLib_v1 {
         }
 
         // Phase 1: Find which segment and step to start purchasing from.
-        uint segmentIndex_ = 0; 
-        uint supplyCoveredByPreviousSegments_ = 0; 
+        uint segmentIndex_ = 0;
+        uint supplyCoveredByPreviousSegments_ = 0;
 
-        if (currentTotalIssuanceSupply_ > 0) { // Only search if there's existing supply
+        if (currentTotalIssuanceSupply_ > 0) {
+            // Only search if there's existing supply
             uint cumulativeProcessedSupply_ = 0;
             for (uint i_ = 0; i_ < segments_.length; ++i_) {
-                uint currentSegmentCapacity_ = segments_[i_]._supplyPerStep() * segments_[i_]._numberOfSteps();
-                uint endOfCurrentSegmentSupply_ = cumulativeProcessedSupply_ + currentSegmentCapacity_;
+                uint currentSegmentCapacity_ = segments_[i_]._supplyPerStep()
+                    * segments_[i_]._numberOfSteps();
+                uint endOfCurrentSegmentSupply_ =
+                    cumulativeProcessedSupply_ + currentSegmentCapacity_;
 
                 if (currentTotalIssuanceSupply_ < endOfCurrentSegmentSupply_) {
                     // currentTotalIssuanceSupply_ is within segment i_
                     segmentIndex_ = i_;
-                    supplyCoveredByPreviousSegments_ = cumulativeProcessedSupply_;
+                    supplyCoveredByPreviousSegments_ =
+                        cumulativeProcessedSupply_;
                     break;
-                } else if (currentTotalIssuanceSupply_ == endOfCurrentSegmentSupply_) {
+                } else if (
+                    currentTotalIssuanceSupply_ == endOfCurrentSegmentSupply_
+                ) {
                     // currentTotalIssuanceSupply_ is exactly at the end of segment i_.
                     // Purchase should start at the beginning of the next segment (i_ + 1), if it exists.
                     if (i_ + 1 < segments_.length) {
                         segmentIndex_ = i_ + 1;
-                        supplyCoveredByPreviousSegments_ = endOfCurrentSegmentSupply_;
+                        supplyCoveredByPreviousSegments_ =
+                            endOfCurrentSegmentSupply_;
                     } else {
                         // At the very end of the last segment, no more capacity to purchase.
                         segmentIndex_ = segments_.length; // Will prevent Phase 3 loop
-                        supplyCoveredByPreviousSegments_ = endOfCurrentSegmentSupply_;
+                        supplyCoveredByPreviousSegments_ =
+                            endOfCurrentSegmentSupply_;
                     }
                     break;
                 }
                 cumulativeProcessedSupply_ = endOfCurrentSegmentSupply_;
-                // If loop finishes and we are here, currentTotalIssuanceSupply_ > total capacity of all segments
-                // This case should ideally be prevented by caller validation.
-                // If it occurs, segmentIndex_ will be set to segments_.length below.
-                if (i_ == segments_.length - 1) { 
-                    segmentIndex_ = segments_.length; 
-                    supplyCoveredByPreviousSegments_ = cumulativeProcessedSupply_;
-                }
             }
         }
         // If currentTotalIssuanceSupply_ is 0, segmentIndex_ remains 0, supplyCoveredByPreviousSegments_ remains 0.
@@ -428,7 +420,7 @@ library DiscreteCurveMathLib_v1 {
         // Phase 2: Find step position and handle partial start step
         uint stepIndex_;
         uint remainingBudget_ = collateralToSpendProvided_;
-        
+
         // Check if there's any segment to purchase from
         if (segmentIndex_ >= segments_.length) {
             // currentTotalIssuanceSupply_ is at or beyond total capacity. No purchase possible.
@@ -436,28 +428,18 @@ library DiscreteCurveMathLib_v1 {
             // tokensToMint_ is already 0
             return (tokensToMint_, collateralSpentByPurchaser_);
         }
-        
+
         {
             // Calculate position within current segment (segmentIndex_)
-            uint segmentIssuanceSupply_ = currentTotalIssuanceSupply_ - supplyCoveredByPreviousSegments_;
-            
+            uint segmentIssuanceSupply_ =
+                currentTotalIssuanceSupply_ - supplyCoveredByPreviousSegments_;
+
             uint supplyPerStep_ = segments_[segmentIndex_]._supplyPerStep();
             // If supplyPerStep_ is 0 (should be prevented by PackedSegmentLib), handle to avoid division by zero.
             // However, PackedSegmentLib ensures supplyPerStep_ > 0.
             stepIndex_ = segmentIssuanceSupply_ / supplyPerStep_;
-            uint currentStepIssuanceSupply_ = segmentIssuanceSupply_ % supplyPerStep_;
-
-            // Calculate current step price and remaining capacity
-            // Ensure stepIndex_ is within bounds for the current segment before calculating stepPrice_
-            if (stepIndex_ >= segments_[segmentIndex_]._numberOfSteps() && currentStepIssuanceSupply_ == 0) {
-                // This means currentTotalIssuanceSupply_ was exactly at the end of segmentIndex_,
-                // and Phase 1 should have advanced segmentIndex_. This indicates a logic flaw if reached.
-                // For safety, or if Phase 1 didn't advance segmentIndex_ to segments_.length for end-of-curve,
-                // treat as no capacity in this segment.
-                // This path should ideally not be hit if Phase 1 is correct.
-                 // Let Phase 3 handle moving to the next segment or exiting.
-            }
-
+            uint currentStepIssuanceSupply_ =
+                segmentIssuanceSupply_ % supplyPerStep_;
             uint stepPrice_ = segments_[segmentIndex_]._initialPrice()
                 + (segments_[segmentIndex_]._priceIncrease() * stepIndex_);
             uint remainingStepIssuanceSupply_ =
@@ -481,11 +463,15 @@ library DiscreteCurveMathLib_v1 {
                     );
                     tokensToMint_ += additionalIssuanceAmount_; // tokensToMint_ was 0 before this line in this specific path
                     // Calculate actual collateral spent for this partial amount
-                    collateralSpentByPurchaser_ = _mulDivUp(additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR);
+                    collateralSpentByPurchaser_ = _mulDivUp(
+                        additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR
+                    );
                     return (tokensToMint_, collateralSpentByPurchaser_);
                 }
             }
         }
+
+        uint fullStepBacking = 0;
 
         // Phase 3: Purchase through remaining steps until budget exhausted
         while (remainingBudget_ > 0 && segmentIndex_ < segments_.length) {
@@ -513,12 +499,16 @@ library DiscreteCurveMathLib_v1 {
                 remainingBudget_ -= stepCollateralCapacity_;
                 tokensToMint_ += supplyPerStep_;
                 stepIndex_++;
+                fullStepBacking += stepCollateralCapacity_;
             } else {
                 // Partial step purchase and exit
                 uint partialIssuance_ =
                     Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
                 tokensToMint_ += partialIssuance_;
-                remainingBudget_ = 0;
+                remainingBudget_ -=
+                    _mulDivUp(partialIssuance_, stepPrice_, SCALING_FACTOR);
+
+                break;
             }
         }
 
@@ -529,11 +519,11 @@ library DiscreteCurveMathLib_v1 {
 
     /**
      * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
-    /**
+     * /**
      * @notice Helper function to calculate purchase return for a single segment.
-    /**
+     * /**
      * @notice Calculates the amount of partial issuance and its cost given budget_ and various constraints.
-    /**
+     * /**
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
      * @dev Uses the difference in reserve at current supply and supply after sale.
      * @param segments_ Array of PackedSegment configurations for the curve.
