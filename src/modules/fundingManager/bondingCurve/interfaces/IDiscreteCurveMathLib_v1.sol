@@ -144,7 +144,9 @@ interface IDiscreteCurveMathLib_v1 {
      * @param requested The amount of tokens requested to be sold.
      * @param available The actual amount of tokens available for sale (current total issuance supply).
      */
-    error DiscreteCurveMathLib__InsufficientIssuanceToSell(uint requested, uint available);
+    error DiscreteCurveMathLib__InsufficientIssuanceToSell(
+        uint requested, uint available
+    );
 
     // --- Events ---
 

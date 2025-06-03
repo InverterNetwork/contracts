@@ -1,14 +1,3 @@
-<!-- # Task instructions (OUTDATED)
-
-- focus on calculatePurchaseReturn only for now
-- add all tests that are missing according to this doc (except fuzz tests)
-- don't add any fuzz tests yet, first we want to nail all test cases in a controlled setting
-- all segment configurations required by the various tests need to be provided as default configurations on the top of the file, or retrieved through calling a helper function (but not defined repetitively in the test cases)
-- test names need to be descriptive and not reference this doc
-- approach: add one test, run the tests `contracts git:(experimental/per) ✗ forge test --match-path test/unit/modules/fundingManager/bondingCurve/formulas/Discret
-eCurveMathLib_v1.t.sol -vv`, make sure it is green, continue (don't add many tests at the same time)
-- via-ir is not an option -->
-
 # Test Cases for \_calculatePurchaseReturn
 
 **Legend:**
@@ -138,102 +127,101 @@ eCurveMathLib_v1.t.sol -vv`, make sure it is green, continue (don't add many tes
 ### Input Validation Tests (for \_calculateSaleReturn)
 
 - **Case 0: Input validation**
-  - 0.1: `tokensToSell_ = 0` (should revert) `[NEEDS SPECIFIC TEST]`
-  - 0.2: `segments_` array is empty (should revert) `[NEEDS SPECIFIC TEST]`
-  - 0.3: `currentTotalIssuanceSupply_ = 0` (should revert, as there's nothing to sell) `[NEEDS SPECIFIC TEST]`
-  - 0.4: `tokensToSell_` > `currentTotalIssuanceSupply_` (should revert or sell all available, depending on desired behavior) `[NEEDS SPECIFIC TEST]`
+  - 0.1: `tokensToSell_ = 0` (should revert) `[COVERED by: testRevert_CalculateSaleReturn_ZeroIssuanceInput]`
+  - 0.3: `currentTotalIssuanceSupply_ = 0` (should revert, as there's nothing to sell) `[COVERED by: testPass_CalculateSaleReturn_SupplyZero_TokensPositive]`
+  - 0.4: `tokensToSell_` > `currentTotalIssuanceSupply_` (should revert) `[COVERED by: testPass_CalculateSaleReturn_SellMoreThanSupply_SellsAllAvailable]`
 
 ### Phase 2 Tests (Partial End Step Handling - Reversed from Purchase Start Step)
 
 - **Case P2: Sale operation ending position within a step**
   - P2.1: TargetSupply (after sale) exactly at end of a step (Analogous to purchase starting at step boundary; sale's "partial step" logic might be skipped if sale ends precisely at a step boundary from a higher supply)
-    - P2.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P2.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P2.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_SingleTrueFlat_SellToEndOfStep]`
+    - P2.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_SingleSloped_SellToEndOfLowerStep]`
   - P2.2: TargetSupply (after sale) mid-step, tokens sold were sufficient to cross from a higher step/segment
-    - P2.2.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P2.2.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P2.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_TransitionFlatToFlat_EndMidLowerFlatSegment]`
+    - P2.2.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_TransitionSlopedToSloped_EndMidLowerSlopedSegment]`
   - P2.3: TargetSupply (after sale) mid-step, tokens sold were not sufficient to cross from a higher step/segment (sale ends within the step it started in, from a higher supply point)
-    - P2.3.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P2.3.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P2.3.1: Flat segment `[COVERED by: test_CalculateSaleReturn_SingleFlat_StartMidStep_EndMidSameStep_NotEnoughToClearStep]`
+    - P2.3.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_SingleSloped_StartMidStep_EndMidSameStep_NotEnoughToClearStep]`
 
 ### Phase 3 Tests (Main Sale Loop - Reversed from Purchase Loop)
 
 - **Case P3: Sale starting conditions (reversed from purchase ending conditions)**
   - P3.1: Start with partial step sale (selling from a partially filled step, sale ends within the same step)
-    - P3.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P3.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P3.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_Flat_StartPartial_EndSamePartialStep]`
+    - P3.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_Sloped_StartPartial_EndSamePartialStep]`
   - P3.2: Start at exact step boundary (selling from a supply level that is an exact step boundary)
-    - P3.2.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P3.2.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P3.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_Flat_StartExactStepBoundary_SellIntoStep]`
+    - P3.2.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_Sloped_StartExactStepBoundary_SellIntoLowerStep]`
   - P3.3: Start at exact segment boundary (selling from a supply level that is an exact segment boundary)
-    - P3.3.1: From higher segment into Flat segment `[NEEDS SPECIFIC TEST]`
-    - P3.3.2: From higher segment into Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P3.3.1: From higher segment into Flat segment `[COVERED by: test_CalculateSaleReturn_Transition_SlopedToFlat_StartSegBoundary_EndInFlat]`
+    - P3.3.2: From higher segment into Sloped segment `[COVERED by: test_CalculateSaleReturn_Transition_SlopedToSloped_StartSegBoundary_EndInLowerSloped]`
   - P3.4: Start in a higher supply segment (segment transition during sale)
-    - P3.4.1: From flat segment to flat segment (selling across boundary) `[NEEDS SPECIFIC TEST]`
-    - P3.4.2: From sloped segment to flat segment (selling across boundary) `[NEEDS SPECIFIC TEST]`
-    - P3.4.3: From flat segment to sloped segment (selling across boundary) `[NEEDS SPECIFIC TEST]`
-    - P3.4.4: From sloped segment to sloped segment (selling across boundary) `[NEEDS SPECIFIC TEST]`
+    - P3.4.1: From flat segment to flat segment (selling across boundary) `[COVERED by: test_CalculateSaleReturn_Transition_FlatToFlat_SellAcrossBoundary_MidHigherFlat]`
+    - P3.4.2: From sloped segment to flat segment (selling across boundary) `[COVERED by: test_CalculateSaleReturn_Transition_SlopedToFlat_SellAcrossBoundary_EndInFlat]`
+    - P3.4.3: From flat segment to sloped segment (selling across boundary) `[COVERED by: test_CalculateSaleReturn_Transition_FlatToSloped_SellAcrossBoundary_EndInSloped]`
+    - P3.4.4: From sloped segment to sloped segment (selling across boundary) `[COVERED by: test_CalculateSaleReturn_Transition_SlopedToSloped_SellAcrossBoundary_MidHigherSloped]`
   - P3.5: Tokens to sell exhausted before completing any full step sale (selling less than one step from current position)
-    - P3.5.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - P3.5.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - P3.5.1: Flat segment `[COVERED by: test_CalculateSaleReturn_Flat_SellLessThanOneStep_FromMidStep]`
+    - P3.5.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_Sloped_SellLessThanOneStep_FromMidStep]`
 
 ### Comprehensive Integration Tests (Reversed)
 
 - **Case 1: Ending exactly at segment beginning (selling out a segment from a higher supply point)**
 
   - 1.1: Sell tokens equivalent to exactly the current segment's capacity (from its current supply to its start)
-    - 1.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 1.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 1.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_Flat_SellExactlySegmentCapacity_FromHigherSegmentEnd]`
+    - 1.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_Sloped_SellExactlySegmentCapacity_FromHigherSegmentEnd]`
   - 1.2: Sell less than current segment's capacity (from its current supply, ending mid-segment)
-    - 1.2.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 1.2.2: Sloped segment (multiple step transitions during sale) `[NEEDS SPECIFIC TEST]`
+    - 1.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C1_2_1_Flat_SellLessThanCurSegCapacity_EndMidSeg]`
+    - 1.2.2: Sloped segment (multiple step transitions during sale) `[COVERED by: test_CalculateSaleReturn_C1_2_2_Sloped_SellLessThanCurSegCapacity_EndMidSeg_MultiStep]`
   - 1.3: Sell more than current segment's capacity (from its current supply, ending in a previous segment)
-    - 1.3.1: From higher segment, crossing into and ending in a Flat segment `[NEEDS SPECIFIC TEST]`
-    - 1.3.2: From higher segment, crossing into and ending in a Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 1.3.1: From higher segment, crossing into and ending in a Flat segment `[COVERED by: test_CalculateSaleReturn_C1_3_1_Transition_SellMoreThanCurSegCapacity_EndInLowerFlat]`
+    - 1.3.2: From higher segment, crossing into and ending in a Sloped segment `[COVERED by: test_CalculateSaleReturn_C1_3_2_Transition_SellMoreThanCurSegCapacity_EndInLowerSloped]`
 
 - **Case 2: Ending mid-segment (not at first step of segment - selling from a supply point not at the very end of the segment)**
 
   - 2.1: Sell tokens equivalent to exactly the remaining capacity from current supply to segment start
-    - 2.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 2.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 2.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C2_1_1_Flat_SellExactlyRemainingToSegStart_FromMidSeg]`
+    - 2.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_C2_1_2_Sloped_SellExactlyRemainingToSegStart_FromMidSeg]`
   - 2.2: Sell less than remaining capacity from current supply to segment start (ending mid-segment)
-    - 2.2.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 2.2.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 2.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C2_2_1_Flat_EndMidSeg_SellLessThanRemainingToSegStart]`
+    - 2.2.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_C2_2_2_Sloped_EndMidSeg_SellLessThanRemainingToSegStart]`
   - 2.3: Sell more than remaining capacity from current supply to segment start (ending in a previous segment)
-    - 2.3.1: From higher segment, crossing into and ending in a Flat segment `[NEEDS SPECIFIC TEST]`
-    - 2.3.2: From higher segment, crossing into and ending in a Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 2.3.1: From higher segment, crossing into and ending in a Flat segment `[COVERED by: test_CalculateSaleReturn_C2_3_1_FlatTransition_EndInPrevFlat_SellMoreThanRemainingToSegStart]`
+    - 2.3.2: From higher segment, crossing into and ending in a Sloped segment `[COVERED by: test_CalculateSaleReturn_C2_3_2_SlopedTransition_EndInPrevSloped_SellMoreThanRemainingToSegStart]`
 
 - **Case 3: Ending mid-step (Phase 2 for sale + Phase 3 for sale integration - selling across step boundaries and landing mid-step)**
   - 3.1: Start selling from a full step, then continue with partial step sale into a lower step
-    - 3.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 3.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 3.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C3_1_1_Flat_StartFullStep_EndPartialLowerStep]`
+    - 3.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_C3_1_2_Sloped_StartFullStep_EndPartialLowerStep]`
   - 3.2: Start selling from a partial step, then partial sale from the previous step
-    - 3.2.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - 3.2.2: Sloped segment `[NEEDS SPECIFIC TEST]`
+    - 3.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C3_2_1_Flat_StartPartialStep_EndPartialPrevStep]`
+    - 3.2.2: Sloped segment `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_C3_2_2_Sloped_StartPartialStep_EndPartialPrevStep]`
 
 ### Edge Case Tests (Reversed/Adapted for Sale)
 
 - **Case E: Extreme scenarios**
   - E.1: Very small token amount to sell (cannot clear any complete step downwards)
-    - E.1.1: Flat segment `[NEEDS SPECIFIC TEST]`
-    - E.1.2: Sloped segment `[NEEDS SPECIFIC TEST]`
-  - E.2: Tokens to sell exactly matches current total issuance supply (selling entire supply) `[NEEDS SPECIFIC TEST]`
-  - E.3: Tokens to sell exceeds total current issuance supply (should sell all available or revert) `[NEEDS SPECIFIC TEST]`
-  - E.4: Only a single step of supply exists in the current segment (selling from a segment with minimal population) `[NEEDS SPECIFIC TEST]`
-  - E.5: Selling from the "first" segment of the curve (lowest priced tokens) `[NEEDS SPECIFIC TEST]`
+    - E.1.1: Flat segment `[COVERED by: test_CalculateSaleReturn_E1_1_Flat_SellVerySmallAmount_NoStepClear]`
+    - E.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_E1_2_Sloped_SellVerySmallAmount_NoStepClear]`
+  - E.2: Tokens to sell exactly matches current total issuance supply (selling entire supply) `[COVERED by: test_CalculateSaleReturn_E2_SellExactlyTotalSupply]`
+  - E.3: Tokens to sell exceeds total current issuance supply (should sell all available or revert) `[COVERED by: testPass_CalculateSaleReturn_SellMoreThanSupply_SellsAllAvailable (revert part)]`
+  - E.4: Only a single step of supply exists in the current segment (selling from a segment with minimal population) `[COVERED by: test_CalculateSaleReturn_E4_SellFromSingleStepSegmentPopulation]`
+  - E.5: Selling from the "first" segment of the curve (lowest priced tokens) `[COVERED by: test_CalculateSaleReturn_E5_SellFromFirstSegment]`
   - E.6: Mathematical precision edge cases for sale calculations
-    - E.6.1: Rounding behavior verification (e.g., `_mulDivDown` vs internal rounding for collateral returned) `[NEEDS SPECIFIC TEST]`
-    - E.6.2: Very small amounts near precision limits `[NEEDS SPECIFIC TEST]`
-    - E.6.3: Very large amounts near bit field limits `[NEEDS SPECIFIC TEST]`
+    - E.6.1: Rounding behavior verification (e.g., `_mulDivDown` vs internal rounding for collateral returned) `[COVERED by: test_CalculateSaleReturn_E6_1_RoundingBehaviorVerification]`
+    - E.6.2: Very small amounts near precision limits `[COVERED by: test_CalculateSaleReturn_E6_2_PrecisionLimits_SmallAmounts]`
+    - E.6.3: Very large amounts near bit field limits `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_E6_3_PrecisionLimits_LargeAmounts]`
 
 ### Boundary Condition Tests (Reversed/Adapted for Sale)
 
 - **Case B: Exact boundary scenarios**
-  - B.1: Ending (after sale) exactly at step boundary `[NEEDS SPECIFIC TEST]`
-  - B.2: Ending (after sale) exactly at segment boundary `[NEEDS SPECIFIC TEST]`
-  - B.3: Starting (before sale) exactly at step boundary `[NEEDS SPECIFIC TEST]`
-  - B.4: Starting (before sale) exactly at segment boundary `[NEEDS SPECIFIC TEST]`
-  - B.5: Ending (after sale) exactly at curve start (supply becomes zero) `[NEEDS SPECIFIC TEST]`
+  - B.1: Ending (after sale) exactly at step boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B1_EndAtStepBoundary]`
+  - B.2: Ending (after sale) exactly at segment boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B2_EndAtSegmentBoundary]`
+  - B.3: Starting (before sale) exactly at step boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B3_StartAtStepBoundary]`
+  - B.4: Starting (before sale) exactly at segment boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B4_StartAtSegmentBoundary]`
+  - B.5: Ending (after sale) exactly at curve start (supply becomes zero) `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B5_EndAtCurveStart]`
 
 ## Verification Checklist
 

@@ -13,7 +13,6 @@ import {DiscreteCurveMathLibV1_Exposed} from
     "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
 import {Math} from "@oz/utils/math/Math.sol";
 
-
 contract DiscreteCurveMathLib_v1_Test is Test {
     // Allow using PackedSegmentLib functions directly on PackedSegment type
     using PackedSegmentLib for PackedSegment;
@@ -105,6 +104,25 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //          Supply 20-50:  Price 1.50 (Segment 1, Step 0)
     CurveTestData internal flatToFlatTestCurve;
 
+    // Based on slopedFlatTestCurve initialized in setUp():
+    // Seg0 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2 (Prices: 0.80, 0.82)
+    // Seg1 (Flat): P_init=1.0, S_step=50, N_steps=1  (Price: 1.00)
+    //
+    //     Price (ether)
+    //       ^
+    //     1.00|           +-----------+ (Supply: 100)
+    //         |           |           |
+    //     0.82|     +-----+           | (Supply: 50)
+    //         |     |     |           |
+    //     0.80|-----+     |           | (Supply: 25)
+    //         +-----+-----+-----------+--> Supply (ether)
+    //         0   25      50          100
+    //
+    //          Step Prices:
+    //          Supply  0-25:  Price 0.80 (Segment 0, Step 0)
+    //          Supply 25-50:  Price 0.82 (Segment 0, Step 1)
+    //          Supply 50-100: Price 1.00 (Segment 1, Step 0)
+    CurveTestData internal slopedFlatTestCurve;
 
     function _calculateCurveReserve(PackedSegment[] memory segments)
         internal
@@ -205,6 +223,33 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         flatToFlatTestCurve.totalCapacity = (20 ether * 1) + (30 ether * 1); // 20 + 30 = 50 ether
         flatToFlatTestCurve.totalReserve =
             _calculateCurveReserve(flatToFlatTestCurve.packedSegmentsArray);
+
+        // --- Initialize slopedFlatTestCurve ---
+        slopedFlatTestCurve.description =
+            "Sloped segment followed by a flat segment";
+        // Segment 0 (Sloped)
+        slopedFlatTestCurve.packedSegmentsArray.push(
+            exposedLib.exposed_createSegment(
+                0.8 ether, // initialPrice
+                0.02 ether, // priceIncrease
+                25 ether, // supplyPerStep
+                2 // numberOfSteps (Prices: 0.80, 0.82)
+            )
+        );
+        // Segment 1 (Flat)
+        // Final price of Seg0 = 0.8 + (2-1)*0.02 = 0.82 ether.
+        // Initial price of Seg1 must be >= 0.82 ether.
+        slopedFlatTestCurve.packedSegmentsArray.push(
+            exposedLib.exposed_createSegment(
+                1.0 ether, // initialPrice (>= 0.82 ether, so valid)
+                0, // priceIncrease
+                50 ether, // supplyPerStep
+                1 // numberOfSteps
+            )
+        );
+        slopedFlatTestCurve.totalCapacity = (25 ether * 2) + (50 ether * 1); // 50 + 50 = 100 ether
+        slopedFlatTestCurve.totalReserve =
+            _calculateCurveReserve(slopedFlatTestCurve.packedSegmentsArray);
     }
 
     function test_FindPositionForSupply_SingleSegment_WithinStep() public {
@@ -1089,6 +1134,733 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             issuanceBurned,
             expectedIssuanceBurned,
             "Sloped partial sell: issuanceBurned mismatch"
+        );
+    }
+
+    // Test (Markdown 0.3 adapted): Reverts if current supply is zero but tokens to sell are positive.
+    function testPass_CalculateSaleReturn_SupplyZero_TokensPositive() public {
+        // Using twoSlopedSegmentsTestCurve for a valid segment configuration, though it won't be used.
+        uint currentSupply = 0 ether;
+        uint tokensToSell = 5 ether; // Positive tokens to sell
+
+        bytes memory expectedError = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InsufficientIssuanceToSell
+                .selector,
+            tokensToSell,
+            currentSupply
+        );
+        vm.expectRevert(expectedError);
+        exposedLib.exposed_calculateSaleReturn(
+            twoSlopedSegmentsTestCurve.packedSegmentsArray,
+            tokensToSell,
+            currentSupply
+        );
+    }
+
+    // Test (Markdown 0.4): Reverts if tokensToSell > currentTotalIssuanceSupply.
+    function testPass_CalculateSaleReturn_SellMoreThanSupply_SellsAllAvailable()
+        public
+    {
+        // Use a single sloped segment for simplicity (first segment of twoSlopedSegmentsTestCurve)
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0]; // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3
+
+        uint currentSupply = 15 ether; // Mid-segment: 1 full step (10 supply, price 1.0) + 5 into next step (price 1.1)
+        uint tokensToSell = 20 ether; // More than currentSupply
+
+        bytes memory expectedError = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InsufficientIssuanceToSell
+                .selector,
+            tokensToSell,
+            currentSupply
+        );
+        vm.expectRevert(expectedError);
+        exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+    }
+
+    // Test (P2.1.1 from test_cases.md): TargetSupply (after sale) exactly at end of a step - Flat segment
+    function test_CalculateSaleReturn_SingleTrueFlat_SellToEndOfStep() public {
+        // Use a single "True Flat" segment.
+        // P_init=0.5 ether, S_step=50 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] =
+            exposedLib.exposed_createSegment(0.5 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 50 ether; // Capacity of the segment
+        uint tokensToSell = 50 ether; // Sell all tokens
+
+        // Expected: targetSupply = 0 ether.
+        // Collateral to return = (50 ether * 0.5 ether/token) = 25 ether.
+        // Tokens to burn = 50 ether.
+        uint expectedCollateralOut = 25 ether;
+        uint expectedTokensBurned = 50 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Flat sell to end of step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Flat sell to end of step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P2.1.2 from test_cases.md): TargetSupply (after sale) exactly at end of a step - Sloped segment
+    function test_CalculateSaleReturn_SingleSloped_SellToEndOfLowerStep()
+        public
+    {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        // Step 0: Supply 0-10, Price 1.0
+        // Step 1: Supply 10-20, Price 1.1
+        // Step 2: Supply 20-30, Price 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 25 ether; // Mid step 2
+        uint tokensToSell = 15 ether; // Sell to reach end of step 0 (supply 10)
+
+        // Expected: targetSupply = 10 ether.
+        // Collateral from step 2 (5 tokens @ 1.2 price): 5 * 1.2 = 6 ether
+        // Collateral from step 1 (10 tokens @ 1.1 price): 10 * 1.1 = 11 ether
+        // Total collateral to return = 6 + 11 = 17 ether.
+        // Tokens to burn = 15 ether.
+        uint expectedCollateralOut = 17 ether;
+        uint expectedTokensBurned = 15 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped sell to end of lower step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped sell to end of lower step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P2.2.1 from test_cases.md): TargetSupply (after sale) mid-step, tokens sold were sufficient to cross from a higher step/segment - Flat to Flat
+    function test_CalculateSaleReturn_TransitionFlatToFlat_EndMidLowerFlatSegment(
+    ) public {
+        // Use flatToFlatTestCurve.packedSegmentsArray
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1.
+        PackedSegment[] memory segments =
+            flatToFlatTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 40 ether; // 20 from Seg0 (price 1.0), 20 from Seg1 (price 1.5)
+        uint tokensToSell = 25 ether;
+
+        // Expected: targetSupply = 15 ether (40 - 25 = 15).
+        // This means all 20 from Seg1 are sold, and 5 from Seg0 are sold.
+        // Collateral from Seg1 (20 tokens @ 1.5 price): 20 * 1.5 = 30 ether
+        // Collateral from Seg0 (5 tokens @ 1.0 price): 5 * 1.0 = 5 ether
+        // Total collateral to return = 30 + 5 = 35 ether.
+        // Tokens to burn = 25 ether.
+        uint expectedCollateralOut = 35 ether;
+        uint expectedTokensBurned = 25 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Flat to Flat transition, end mid lower: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Flat to Flat transition, end mid lower: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P2.2.2 from test_cases.md): TargetSupply (after sale) mid-step, tokens sold were sufficient to cross from a higher step/segment - Sloped to Sloped
+    function test_CalculateSaleReturn_TransitionSlopedToSloped_EndMidLowerSlopedSegment(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2)
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55)
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 60 ether; // In Seg1, Step 1 (supply 50-70, price 1.55)
+            // 10 ether into this step.
+        uint tokensToSell = 35 ether;
+        // Sale breakdown:
+        // 1. Sell 10 ether from Seg1, Step 1 (current supply 60 -> 50). Price 1.55. Collateral = 10 * 1.55 = 15.5 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (current supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        // 3. Sell 5 ether from Seg0, Step 2 (current supply 30 -> 25). Price 1.20. Collateral = 5 * 1.20 = 6.0 ether.
+        // Target supply = 60 - 35 = 25 ether.
+        // Expected collateral out = 15.5 + 30.0 + 6.0 = 51.5 ether.
+        // Expected tokens burned = 35 ether.
+
+        uint expectedCollateralOut = 51_500_000_000_000_000_000; // 51.5 ether
+        uint expectedTokensBurned = 35 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped to Sloped transition, end mid lower: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped to Sloped transition, end mid lower: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P2.3.1 from test_cases.md): TargetSupply (after sale) mid-step, tokens sold were not sufficient to cross from a higher step/segment - Flat segment
+    function test_CalculateSaleReturn_SingleFlat_StartMidStep_EndMidSameStep_NotEnoughToClearStep(
+    ) public {
+        // Use a single "True Flat" segment.
+        // P_init=0.5 ether, S_step=50 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] =
+            exposedLib.exposed_createSegment(0.5 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 30 ether; // Mid-step of the single flat segment.
+        uint tokensToSell = 10 ether; // Sell an amount that does not clear the step.
+
+        // Expected: targetSupply = 30 - 10 = 20 ether.
+        // Collateral to return = 10 ether * 0.5 ether/token = 5 ether.
+        // Tokens to burn = 10 ether.
+        uint expectedCollateralOut = 5 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Flat start mid-step, end mid same step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Flat start mid-step, end mid same step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P2.3.2 from test_cases.md): TargetSupply (after sale) mid-step, tokens sold were not sufficient to cross from a higher step/segment - Sloped segment
+    function test_CalculateSaleReturn_SingleSloped_StartMidStep_EndMidSameStep_NotEnoughToClearStep(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 15 ether; // Mid Step 1 (supply 10-20, price 1.1)
+        uint tokensToSell = 2 ether; // Sell an amount that does not clear the step.
+
+        // Expected: targetSupply = 15 - 2 = 13 ether. Still in Step 1.
+        // Collateral to return = 2 ether * 1.1 ether/token (price of Step 1) = 2.2 ether.
+        // Tokens to burn = 2 ether.
+        uint expectedCollateralOut = 2_200_000_000_000_000_000; // 2.2 ether
+        uint expectedTokensBurned = 2 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped start mid-step, end mid same step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped start mid-step, end mid same step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.1.1 from test_cases.md): Start with partial step sale (selling from a partially filled step, sale ends within the same step) - Flat segment
+    function test_CalculateSaleReturn_SingleFlat_StartPartialStep_EndSamePartialStep(
+    ) public {
+        // Use a single "True Flat" segment.
+        // P_init=0.5 ether, S_step=50 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] =
+            exposedLib.exposed_createSegment(0.5 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 25 ether; // Start with a partially filled step (25 out of 50)
+        uint tokensToSell = 10 ether; // Sell an amount that is less than the current fill (25)
+
+        // Expected: targetSupply = 25 - 10 = 15 ether. Sale ends within the same partial step.
+        // Collateral to return = 10 ether * 0.5 ether/token = 5 ether.
+        // Tokens to burn = 10 ether.
+        uint expectedCollateralOut = 5 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Flat start partial step, end same partial step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Flat start partial step, end same partial step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.1.2 from test_cases.md): Start with partial step sale (selling from a partially filled step, sale ends within the same step) - Sloped segment
+    function test_CalculateSaleReturn_SingleSloped_StartPartialStep_EndSamePartialStep(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 15 ether; // Start in Step 1 (supply 10-20, price 1.1), 5 ether into this step.
+        uint tokensToSell = 3 ether; // Sell an amount less than the 5 ether fill of this step.
+
+        // Expected: targetSupply = 15 - 3 = 12 ether. Still in Step 1.
+        // Collateral to return = 3 ether * 1.1 ether/token (price of Step 1) = 3.3 ether.
+        // Tokens to burn = 3 ether.
+        uint expectedCollateralOut = 3_300_000_000_000_000_000; // 3.3 ether
+        uint expectedTokensBurned = 3 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped start partial step, end same partial step: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped start partial step, end same partial step: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.2.1 from test_cases.md): Start at exact step boundary (selling from a supply level that is an exact step boundary) - Flat segment
+    function test_CalculateSaleReturn_SingleFlat_StartExactStepBoundary_SellPartialStep(
+    ) public {
+        // Use a flat segment with multiple conceptual steps, but represented as one for "True Flat"
+        // P_init=1.0 ether, S_step=30 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 30 ether, 1);
+
+        // currentSupply is at the "end" of this single step, which is also a boundary.
+        uint currentSupply = 30 ether;
+        uint tokensToSell = 10 ether; // Sell a portion of this step.
+
+        // Expected: targetSupply = 30 - 10 = 20 ether.
+        // Collateral to return = 10 ether * 1.0 ether/token = 10 ether.
+        // Tokens to burn = 10 ether.
+        uint expectedCollateralOut = 10 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Flat start exact boundary, sell partial: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Flat start exact boundary, sell partial: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.2.2 from test_cases.md): Start at exact step boundary (selling from a supply level that is an exact step boundary) - Sloped segment
+    function test_CalculateSaleReturn_SingleSloped_StartExactStepBoundary_SellPartialStep(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply is 10 ether, exactly at the end of step 0 (tokens priced at 1.0).
+        uint currentSupply = seg0._supplyPerStep(); // 10 ether
+        uint tokensToSell = 5 ether; // Sell a partial amount of these tokens.
+
+        // Expected: targetSupply = 10 - 5 = 5 ether.
+        // The 5 tokens sold are from the first 10 tokens, which were priced at 1.0.
+        // Collateral to return = 5 ether * 1.0 ether/token (price of Step 0) = 5 ether.
+        // Tokens to burn = 5 ether.
+        uint expectedCollateralOut = 5 ether;
+        uint expectedTokensBurned = 5 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped start exact step boundary, sell partial: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped start exact step boundary, sell partial: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.3.1 from test_cases.md): Start at exact segment boundary - From higher (sloped) segment into Flat segment
+    function test_CalculateSaleReturn_StartExactSegBoundary_SlopedToFlat_SellPartialInFlat(
+    ) public {
+        // Use flatSlopedTestCurve:
+        // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1. Capacity 50.
+        // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2. Prices: 0.80, 0.82. Capacity 50.
+        // Total capacity = 100.
+        PackedSegment[] memory segments =
+            flatSlopedTestCurve.packedSegmentsArray;
+
+        uint currentSupply = flatSlopedTestCurve.totalCapacity; // 100 ether (end of Seg1, sloped)
+        uint tokensToSell = 60 ether;
+
+        // Sale breakdown:
+        // 1. Sell 25 ether from Seg1, Step 1 (supply 100 -> 75). Price 0.82. Collateral = 25 * 0.82 = 20.5 ether.
+        // 2. Sell 25 ether from Seg1, Step 0 (supply 75 -> 50). Price 0.80. Collateral = 25 * 0.80 = 20.0 ether.
+        //    Tokens sold so far = 50. Remaining to sell = 60 - 50 = 10.
+        // 3. Sell 10 ether from Seg0, Step 0 (Flat) (supply 50 -> 40). Price 0.50. Collateral = 10 * 0.50 = 5.0 ether.
+        // Target supply = 100 - 60 = 40 ether.
+        // Expected collateral out = 20.5 + 20.0 + 5.0 = 45.5 ether.
+        // Expected tokens burned = 60 ether.
+
+        uint expectedCollateralOut = 45_500_000_000_000_000_000; // 45.5 ether
+        uint expectedTokensBurned = 60 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped to Flat transition, sell partial in flat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped to Flat transition, sell partial in flat: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.3.2 from test_cases.md): Start at exact segment boundary - From higher (sloped) segment into Sloped segment
+    function test_CalculateSaleReturn_StartExactSegBoundary_SlopedToSloped_SellPartialInLowerSloped(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2). Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55). Capacity 40.
+        // Total capacity = 70.
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+
+        uint currentSupply = twoSlopedSegmentsTestCurve.totalCapacity; // 70 ether (end of Seg1)
+        uint tokensToSell = 50 ether;
+
+        // Sale breakdown:
+        // 1. Sell 20 ether from Seg1, Step 1 (supply 70 -> 50). Price 1.55. Collateral = 20 * 1.55 = 31.0 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        //    Tokens sold so far = 40. Remaining to sell = 50 - 40 = 10.
+        // 3. Sell 10 ether from Seg0, Step 2 (supply 30 -> 20). Price 1.20. Collateral = 10 * 1.20 = 12.0 ether.
+        // Target supply = 70 - 50 = 20 ether.
+        // Expected collateral out = 31.0 + 30.0 + 12.0 = 73.0 ether.
+        // Expected tokens burned = 50 ether.
+
+        uint expectedCollateralOut = 73 ether;
+        uint expectedTokensBurned = 50 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "Sloped to Sloped transition, sell partial in lower sloped: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "Sloped to Sloped transition, sell partial in lower sloped: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.1.1 from test_cases.md): Start with partial step sale (selling from a partially filled step, sale ends within the same step) - Flat segment
+    function test_CalculateSaleReturn_Flat_StartPartial_EndSamePartialStep()
+        public
+    {
+        // Use a single "True Flat" segment.
+        // P_init=0.5 ether, S_step=50 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] =
+            exposedLib.exposed_createSegment(0.5 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 30 ether; // Start with a partially filled step (30 out of 50)
+        uint tokensToSell = 10 ether; // Sell an amount that is less than the current fill (30)
+
+        // Expected: targetSupply = 30 - 10 = 20 ether. Sale ends within the same partial step.
+        // Collateral to return = 10 ether * 0.5 ether/token = 5 ether.
+        // Tokens to burn = 10 ether.
+        uint expectedCollateralOut = 5 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.1.1 Flat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.1.1 Flat: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.1.2 from test_cases.md): Start with partial step sale (selling from a partially filled step, sale ends within the same step) - Sloped segment
+    function test_CalculateSaleReturn_Sloped_StartPartial_EndSamePartialStep()
+        public
+    {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 15 ether; // Start in Step 1 (supply 10-20, price 1.1), 5 ether into this step.
+        uint tokensToSell = 2 ether; // Sell an amount less than the 5 ether fill of this step.
+
+        // Expected: targetSupply = 15 - 2 = 13 ether. Still in Step 1.
+        // Collateral to return = 2 ether * 1.1 ether/token (price of Step 1) = 2.2 ether.
+        // Tokens to burn = 2 ether.
+        uint expectedCollateralOut = 2_200_000_000_000_000_000; // 2.2 ether
+        uint expectedTokensBurned = 2 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.1.2 Sloped: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.1.2 Sloped: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.2.1 from test_cases.md): Start at exact step boundary (selling from a supply level that is an exact step boundary) - Flat segment
+    function test_CalculateSaleReturn_Flat_StartExactStepBoundary_SellIntoStep()
+        public
+    {
+        // Use a flat segment, e.g., P_init=1.0 ether, S_step=30 ether, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 30 ether, 1);
+
+        // currentSupply is at the "end" of this single step.
+        uint currentSupply = 30 ether;
+        uint tokensToSell = 10 ether; // Sell a portion of this step.
+
+        // Expected: targetSupply = 30 - 10 = 20 ether.
+        // Collateral to return = 10 ether * 1.0 ether/token = 10 ether.
+        // Tokens to burn = 10 ether.
+        uint expectedCollateralOut = 10 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.2.1 Flat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.2.1 Flat: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.2.2 from test_cases.md): Start at exact step boundary (selling from a supply level that is an exact step boundary) - Sloped segment
+    function test_CalculateSaleReturn_Sloped_StartExactStepBoundary_SellIntoLowerStep(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply is 20 ether, exactly at the end of step 1 (tokens priced at 1.1).
+        // Selling from here means selling tokens from step 1 (price 1.1) first.
+        uint currentSupply = 2 * seg0._supplyPerStep(); // 20 ether
+        uint tokensToSell = 5 ether; // Sell a partial amount of tokens from step 1.
+
+        // Expected: targetSupply = 20 - 5 = 15 ether.
+        // The 5 tokens sold are from step 1, which were priced at 1.1.
+        // Collateral to return = 5 ether * 1.1 ether/token = 5.5 ether.
+        // Tokens to burn = 5 ether.
+        uint expectedCollateralOut = 5_500_000_000_000_000_000; // 5.5 ether
+        uint expectedTokensBurned = 5 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.2.2 Sloped: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.2.2 Sloped: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.3.1 from test_cases.md): Start at exact segment boundary - From higher (sloped) segment into Flat segment
+    function test_CalculateSaleReturn_Transition_SlopedToFlat_StartSegBoundary_EndInFlat(
+    ) public {
+        // Use flatSlopedTestCurve:
+        // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1. Capacity 50.
+        // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2. Prices: 0.80, 0.82. Capacity 50.
+        // Total capacity = 100.
+        PackedSegment[] memory segments =
+            flatSlopedTestCurve.packedSegmentsArray;
+
+        uint currentSupply = flatSlopedTestCurve.packedSegmentsArray[0]
+            ._supplyPerStep()
+            * flatSlopedTestCurve.packedSegmentsArray[0]._numberOfSteps(); // 50 ether, end of Seg0 (Flat), start of Seg1 (Sloped)
+            // To test selling FROM a higher segment (Seg1) INTO a flat segment (Seg0),
+            // currentSupply should be in Seg1. Let's set it to the end of Seg1.
+        currentSupply = flatSlopedTestCurve.totalCapacity; // 100 ether (end of Seg1, sloped)
+        uint tokensToSell = 60 ether;
+
+        // Sale breakdown:
+        // 1. Sell 25 ether from Seg1, Step 1 (supply 100 -> 75). Price 0.82. Collateral = 25 * 0.82 = 20.5 ether.
+        // 2. Sell 25 ether from Seg1, Step 0 (supply 75 -> 50). Price 0.80. Collateral = 25 * 0.80 = 20.0 ether.
+        //    Tokens sold so far = 50. Remaining to sell = 60 - 50 = 10.
+        // 3. Sell 10 ether from Seg0, Step 0 (Flat) (supply 50 -> 40). Price 0.50. Collateral = 10 * 0.50 = 5.0 ether.
+        // Target supply = 100 - 60 = 40 ether.
+        // Expected collateral out = 20.5 + 20.0 + 5.0 = 45.5 ether.
+        // Expected tokens burned = 60 ether.
+
+        uint expectedCollateralOut = 45_500_000_000_000_000_000; // 45.5 ether
+        uint expectedTokensBurned = 60 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.3.1 SlopedToFlat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.3.1 SlopedToFlat: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.3.2 from test_cases.md): Start at exact segment boundary - From higher (sloped) segment into Sloped segment
+    function test_CalculateSaleReturn_Transition_SlopedToSloped_StartSegBoundary_EndInLowerSloped(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2). Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55). Capacity 40.
+        // Total capacity = 70.
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+
+        // currentSupply is at the end of Seg1 (higher sloped segment)
+        uint currentSupply = twoSlopedSegmentsTestCurve.totalCapacity; // 70 ether
+        uint tokensToSell = 45 ether; // Sell all of Seg1 (40 tokens) and 5 tokens from Seg0's last step.
+
+        // Sale breakdown:
+        // 1. Sell 20 ether from Seg1, Step 1 (supply 70 -> 50). Price 1.55. Collateral = 20 * 1.55 = 31.0 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        //    Tokens sold so far = 40. Remaining to sell = 45 - 40 = 5.
+        // 3. Sell 5 ether from Seg0, Step 2 (supply 30 -> 25). Price 1.20. Collateral = 5 * 1.20 = 6.0 ether.
+        // Target supply = 70 - 45 = 25 ether.
+        // Expected collateral out = 31.0 + 30.0 + 6.0 = 67.0 ether.
+        // Expected tokens burned = 45 ether.
+
+        uint expectedCollateralOut = 67 ether;
+        uint expectedTokensBurned = 45 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.3.2 SlopedToSloped: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.3.2 SlopedToSloped: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.4.1 from test_cases.md): Start in a higher supply segment (segment transition during sale) - From flat segment to flat segment (selling across boundary)
+    function test_CalculateSaleReturn_Transition_FlatToFlat_SellAcrossBoundary_MidHigherFlat(
+    ) public {
+        // Use flatToFlatTestCurve.packedSegmentsArray
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments =
+            flatToFlatTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 35 ether; // In Seg1 (higher flat): 20 from Seg0, 15 into Seg1.
+        uint tokensToSell = 25 ether; // Sell remaining 15 from Seg1, and 10 from Seg0.
+
+        // Sale breakdown:
+        // 1. Sell 15 ether from Seg1 (supply 35 -> 20). Price 1.5. Collateral = 15 * 1.5 = 22.5 ether.
+        //    Tokens sold so far = 15. Remaining to sell = 25 - 15 = 10.
+        // 2. Sell 10 ether from Seg0 (supply 20 -> 10). Price 1.0. Collateral = 10 * 1.0 = 10.0 ether.
+        // Target supply = 35 - 25 = 10 ether.
+        // Expected collateral out = 22.5 + 10.0 = 32.5 ether.
+        // Expected tokens burned = 25 ether.
+
+        uint expectedCollateralOut = 32_500_000_000_000_000_000; // 32.5 ether
+        uint expectedTokensBurned = 25 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.4.1 FlatToFlat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.4.1 FlatToFlat: tokensBurned mismatch"
         );
     }
 
@@ -3188,6 +3960,947 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Final success assertion
         assertTrue(true, "FCPR_P: All properties satisfied");
     }
+
+    // --- New tests for _calculateSaleReturn ---
+
+    // Test (P3.4.2 from test_cases.md): Transition Sloped to Flat - Sell Across Boundary, End in Flat
+    function test_CalculateSaleReturn_Transition_SlopedToFlat_SellAcrossBoundary_EndInFlat(
+    ) public {
+        // Use flatSlopedTestCurve:
+        // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1. Capacity 50.
+        // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2. Prices: 0.80, 0.82. Capacity 50. Total 100.
+        PackedSegment[] memory segments =
+            flatSlopedTestCurve.packedSegmentsArray;
+        PackedSegment flatSeg0 = segments[0]; // Flat
+        PackedSegment slopedSeg1 = segments[1]; // Sloped (higher supply part of the curve)
+
+        // Start supply in the middle of the sloped segment (Seg1)
+        // Seg1, Step 0 (supply 50-75, price 0.80)
+        // Seg1, Step 1 (supply 75-100, price 0.82)
+        // currentSupply = 90 ether (15 ether into Seg1, Step 1, which is priced at 0.82)
+        uint currentSupply = flatSeg0._supplyPerStep()
+            * flatSeg0._numberOfSteps() // Seg0 capacity
+            + slopedSeg1._supplyPerStep() // Seg1 Step 0 capacity
+            + 15 ether; // 50 + 25 + 15 = 90 ether
+
+        uint tokensToSell = 50 ether; // Sell 15 from Seg1@0.82, 25 from Seg1@0.80, and 10 from Seg0@0.50
+
+        // Sale breakdown:
+        // 1. Sell 15 ether from Seg1, Step 1 (supply 90 -> 75). Price 0.82. Collateral = 15 * 0.82 = 12.3 ether.
+        // 2. Sell 25 ether from Seg1, Step 0 (supply 75 -> 50). Price 0.80. Collateral = 25 * 0.80 = 20.0 ether.
+        //    Tokens sold so far = 15 + 25 = 40. Remaining to sell = 50 - 40 = 10.
+        // 3. Sell 10 ether from Seg0, Step 0 (Flat) (supply 50 -> 40). Price 0.50. Collateral = 10 * 0.50 = 5.0 ether.
+        // Target supply = 90 - 50 = 40 ether.
+        // Expected collateral out = 12.3 + 20.0 + 5.0 = 37.3 ether.
+        // Expected tokens burned = 50 ether.
+
+        uint expectedCollateralOut = 37_300_000_000_000_000_000; // 37.3 ether
+        uint expectedTokensBurned = 50 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.4.2 SlopedToFlat: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.4.2 SlopedToFlat: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.4.3 from test_cases.md): Transition Flat to Sloped - Sell Across Boundary, End in Sloped
+    function test_CalculateSaleReturn_Transition_FlatToSloped_SellAcrossBoundary_EndInSloped(
+    ) public {
+        // Use slopedFlatTestCurve:
+        // Seg0 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2. Prices: 0.80, 0.82. Capacity 50.
+        // Seg1 (Flat): P_init=1.0, S_step=50, N_steps=1. Price 1.00. Capacity 50. Total 100.
+        PackedSegment[] memory segments =
+            slopedFlatTestCurve.packedSegmentsArray;
+        PackedSegment slopedSeg0 = segments[0]; // Sloped (lower supply part of the curve)
+        PackedSegment flatSeg1 = segments[1]; // Flat (higher supply part of the curve)
+
+        // Start supply in the middle of the flat segment (Seg1)
+        // currentSupply = 75 ether (25 ether into Seg1, price 1.00)
+        // Seg0 capacity = 50.
+        uint currentSupply = slopedSeg0._supplyPerStep()
+            * slopedSeg0._numberOfSteps() // Seg0 capacity
+            + (flatSeg1._supplyPerStep() / 2); // Half of Seg1 capacity
+            // 50 + 25 = 75 ether
+
+        uint tokensToSell = 35 ether; // Sell 25 from Seg1@1.00, and 10 from Seg0@0.82
+
+        // Sale breakdown:
+        // 1. Sell 25 ether from Seg1, Step 0 (Flat) (supply 75 -> 50). Price 1.00. Collateral = 25 * 1.00 = 25.0 ether.
+        //    Tokens sold so far = 25. Remaining to sell = 35 - 25 = 10.
+        // 2. Sell 10 ether from Seg0, Step 1 (Sloped) (supply 50 -> 40). Price 0.82. Collateral = 10 * 0.82 = 8.2 ether.
+        // Target supply = 75 - 35 = 40 ether.
+        // Expected collateral out = 25.0 + 8.2 = 33.2 ether.
+        // Expected tokens burned = 35 ether.
+
+        uint expectedCollateralOut = 33_200_000_000_000_000_000; // 33.2 ether
+        uint expectedTokensBurned = 35 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.4.3 FlatToSloped: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.4.3 FlatToSloped: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.4.4 from test_cases.md): Transition Sloped to Sloped - Sell Across Boundary (Starting Mid-Higher Segment)
+    function test_CalculateSaleReturn_Transition_SlopedToSloped_SellAcrossBoundary_MidHigherSloped(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2). Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55). Capacity 40. Total 70.
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+        PackedSegment seg0 = segments[0]; // Lower sloped
+        PackedSegment seg1 = segments[1]; // Higher sloped
+
+        // Start supply mid-Seg1. Seg1, Step 0 (supply 30-50, price 1.5), Seg1, Step 1 (supply 50-70, price 1.55)
+        // currentSupply = 60 ether (10 ether into Seg1, Step 1).
+        uint currentSupply = seg0._supplyPerStep() * seg0._numberOfSteps() // Seg0 capacity
+            + seg1._supplyPerStep() // Seg1 Step 0 capacity
+            + 10 ether; // 30 + 20 + 10 = 60 ether
+
+        uint tokensToSell = 35 ether; // Sell 10 from Seg1@1.55, 20 from Seg1@1.50, and 5 from Seg0@1.20
+
+        // Sale breakdown:
+        // 1. Sell 10 ether from Seg1, Step 1 (supply 60 -> 50). Price 1.55. Collateral = 10 * 1.55 = 15.5 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        //    Tokens sold so far = 10 + 20 = 30. Remaining to sell = 35 - 30 = 5.
+        // 3. Sell 5 ether from Seg0, Step 2 (supply 30 -> 25). Price 1.20. Collateral = 5 * 1.20 = 6.0 ether.
+        // Target supply = 60 - 35 = 25 ether.
+        // Expected collateral out = 15.5 + 30.0 + 6.0 = 51.5 ether.
+        // Expected tokens burned = 35 ether.
+
+        uint expectedCollateralOut = 51_500_000_000_000_000_000; // 51.5 ether
+        uint expectedTokensBurned = 35 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.4.4 SlopedToSloped MidHigher: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.4.4 SlopedToSloped MidHigher: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.5.1 from test_cases.md): Tokens to sell exhausted before completing any full step sale - Flat segment
+    function test_CalculateSaleReturn_Flat_SellLessThanOneStep_FromMidStep()
+        public
+    {
+        // Use a single "True Flat" segment. P_init=1.0, S_step=50, N_steps=1
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 25 ether; // Mid-step
+        uint tokensToSell = 5 ether; // Sell less than remaining in step (25 ether)
+
+        // Expected: targetSupply = 25 - 5 = 20 ether.
+        // Collateral to return = 5 ether * 1.0 ether/token = 5 ether.
+        // Tokens to burn = 5 ether.
+        uint expectedCollateralOut = 5 ether;
+        uint expectedTokensBurned = 5 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.5.1 Flat SellLessThanStep: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.5.1 Flat SellLessThanStep: tokensBurned mismatch"
+        );
+    }
+
+    // Test (P3.5.2 from test_cases.md): Tokens to sell exhausted before completing any full step sale - Sloped segment
+    function test_CalculateSaleReturn_Sloped_SellLessThanOneStep_FromMidStep()
+        public
+    {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0]
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 15 ether; // Mid Step 1 (supply 10-20, price 1.1), 5 ether into this step.
+        uint tokensToSell = 1 ether; // Sell less than remaining in step (5 ether).
+
+        // Expected: targetSupply = 15 - 1 = 14 ether. Still in Step 1.
+        // Collateral to return = 1 ether * 1.1 ether/token (price of Step 1) = 1.1 ether.
+        // Tokens to burn = 1 ether.
+        uint expectedCollateralOut = 1_100_000_000_000_000_000; // 1.1 ether
+        uint expectedTokensBurned = 1 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "P3.5.2 Sloped SellLessThanStep: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "P3.5.2 Sloped SellLessThanStep: tokensBurned mismatch"
+        );
+    }
+
+    // Test (C1.1.1 from test_cases.md): Sell exactly current segment's capacity - Flat segment
+    function test_CalculateSaleReturn_Flat_SellExactlySegmentCapacity_FromHigherSegmentEnd(
+    ) public {
+        // Use flatToFlatTestCurve.
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments =
+            flatToFlatTestCurve.packedSegmentsArray;
+        PackedSegment flatSeg1 = segments[1]; // Higher flat segment
+
+        uint currentSupply = flatToFlatTestCurve.totalCapacity; // 50 ether (end of Seg1)
+        uint tokensToSell =
+            flatSeg1._supplyPerStep() * flatSeg1._numberOfSteps(); // Capacity of Seg1 = 30 ether
+
+        // Expected: targetSupply = 50 - 30 = 20 ether (end of Seg0).
+        // Collateral from Seg1 (30 tokens @ 1.5 price): 30 * 1.5 = 45 ether.
+        // Tokens to burn = 30 ether.
+        uint expectedCollateralOut = 45 ether;
+        uint expectedTokensBurned = 30 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "C1.1.1 Flat SellExactSegCapacity: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "C1.1.1 Flat SellExactSegCapacity: tokensBurned mismatch"
+        );
+    }
+
+    // Test (C1.1.2 from test_cases.md): Sell exactly current segment's capacity - Sloped segment
+    function test_CalculateSaleReturn_Sloped_SellExactlySegmentCapacity_FromHigherSegmentEnd(
+    ) public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2. Prices: 1.5, 1.55. Capacity 40. Total 70.
+        PackedSegment[] memory segments =
+            twoSlopedSegmentsTestCurve.packedSegmentsArray;
+        PackedSegment slopedSeg1 = segments[1]; // Higher sloped segment
+
+        uint currentSupply = twoSlopedSegmentsTestCurve.totalCapacity; // 70 ether (end of Seg1)
+        uint tokensToSell =
+            slopedSeg1._supplyPerStep() * slopedSeg1._numberOfSteps(); // Capacity of Seg1 = 40 ether
+
+        // Sale breakdown for Seg1:
+        // 1. Sell 20 ether from Seg1, Step 1 (supply 70 -> 50). Price 1.55. Collateral = 20 * 1.55 = 31.0 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        // Target supply = 70 - 40 = 30 ether (end of Seg0).
+        // Expected collateral out = 31.0 + 30.0 = 61.0 ether.
+        // Expected tokens burned = 40 ether.
+
+        uint expectedCollateralOut = 61 ether;
+        uint expectedTokensBurned = 40 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib
+            .exposed_calculateSaleReturn(segments, tokensToSell, currentSupply);
+
+        assertEq(
+            collateralOut,
+            expectedCollateralOut,
+            "C1.1.2 Sloped SellExactSegCapacity: collateralOut mismatch"
+        );
+        assertEq(
+            tokensBurned,
+            expectedTokensBurned,
+            "C1.1.2 Sloped SellExactSegCapacity: tokensBurned mismatch"
+        );
+    }
+
+    // --- New test cases for _calculateSaleReturn ---
+
+    // Test (C1.2.1 from test_cases.md): Sell less than current segment's capacity - Flat segment
+    function test_CalculateSaleReturn_C1_2_1_Flat_SellLessThanCurSegCapacity_EndMidSeg() public {
+        // Seg0 (Flat): P_init=1.0, S_step=50, N_steps=1. Capacity 50.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 50 ether; // At end of segment
+        uint tokensToSell = 20 ether;  // Sell less than segment capacity
+
+        // Expected: targetSupply = 50 - 20 = 30 ether.
+        // Collateral from segment (20 tokens @ 1.0 price): 20 * 1.0 = 20 ether.
+        uint expectedCollateralOut = 20 ether;
+        uint expectedTokensBurned = 20 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C1.2.1 Flat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C1.2.1 Flat: tokensBurned mismatch");
+    }
+
+    // Test (C1.2.2 from test_cases.md): Sell less than current segment's capacity - Sloped segment
+    function test_CalculateSaleReturn_C1_2_2_Sloped_SellLessThanCurSegCapacity_EndMidSeg_MultiStep() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2. Capacity 30.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        uint currentSupply = seg0._supplyPerStep() * seg0._numberOfSteps(); // 30 ether (end of segment)
+        uint tokensToSell = 15 ether; // Sell less than segment capacity (30), spanning multiple steps.
+
+        // Sale breakdown:
+        // 1. Sell 10 ether from Step 2 (supply 30 -> 20). Price 1.2. Collateral = 10 * 1.2 = 12.0 ether.
+        // 2. Sell 5 ether from Step 1 (supply 20 -> 15). Price 1.1. Collateral = 5 * 1.1 = 5.5 ether.
+        // Target supply = 30 - 15 = 15 ether.
+        // Expected collateral out = 12.0 + 5.5 = 17.5 ether.
+        // Expected tokens burned = 15 ether.
+        uint expectedCollateralOut = 17_500_000_000_000_000_000; // 17.5 ether
+        uint expectedTokensBurned = 15 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C1.2.2 Sloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C1.2.2 Sloped: tokensBurned mismatch");
+    }
+
+    // Test (C1.3.1 from test_cases.md): Transition - From higher segment, sell more than current segment's capacity, ending in a lower Flat segment
+    function test_CalculateSaleReturn_C1_3_1_Transition_SellMoreThanCurSegCapacity_EndInLowerFlat() public {
+        // Use flatToFlatTestCurve.
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments = flatToFlatTestCurve.packedSegmentsArray;
+        PackedSegment flatSeg1 = segments[1]; // Higher flat segment
+
+        uint currentSupply = flatToFlatTestCurve.totalCapacity; // 50 ether (end of Seg1)
+        // Capacity of Seg1 is 30 ether. Sell 40 ether (more than Seg1 capacity).
+        uint tokensToSell = 40 ether;
+
+        // Sale breakdown:
+        // 1. Sell 30 ether from Seg1 (supply 50 -> 20). Price 1.5. Collateral = 30 * 1.5 = 45 ether.
+        // 2. Sell 10 ether from Seg0 (supply 20 -> 10). Price 1.0. Collateral = 10 * 1.0 = 10 ether.
+        // Target supply = 50 - 40 = 10 ether.
+        // Expected collateral out = 45 + 10 = 55 ether.
+        // Expected tokens burned = 40 ether.
+        uint expectedCollateralOut = 55 ether;
+        uint expectedTokensBurned = 40 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C1.3.1 FlatToFlat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C1.3.1 FlatToFlat: tokensBurned mismatch");
+    }
+
+    // Test (C1.3.2 from test_cases.md): Transition - From higher segment, sell more than current segment's capacity, ending in a lower Sloped segment
+    function test_CalculateSaleReturn_C1_3_2_Transition_SellMoreThanCurSegCapacity_EndInLowerSloped() public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2). Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55). Capacity 40. Total 70.
+        PackedSegment[] memory segments = twoSlopedSegmentsTestCurve.packedSegmentsArray;
+        PackedSegment slopedSeg1 = segments[1]; // Higher sloped segment
+
+        uint currentSupply = twoSlopedSegmentsTestCurve.totalCapacity; // 70 ether (end of Seg1)
+        // Capacity of Seg1 is 40 ether. Sell 50 ether (more than Seg1 capacity).
+        uint tokensToSell = 50 ether;
+
+        // Sale breakdown:
+        // 1. Sell 20 ether from Seg1, Step 1 (supply 70 -> 50). Price 1.55. Collateral = 20 * 1.55 = 31.0 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        //    Tokens sold from Seg1 = 40. Remaining to sell = 50 - 40 = 10.
+        // 3. Sell 10 ether from Seg0, Step 2 (supply 30 -> 20). Price 1.20. Collateral = 10 * 1.20 = 12.0 ether.
+        // Target supply = 70 - 50 = 20 ether.
+        // Expected collateral out = 31.0 + 30.0 + 12.0 = 73.0 ether.
+        // Expected tokens burned = 50 ether.
+        uint expectedCollateralOut = 73 ether;
+        uint expectedTokensBurned = 50 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C1.3.2 SlopedToSloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C1.3.2 SlopedToSloped: tokensBurned mismatch");
+    }
+
+    // Test (C2.1.1 from test_cases.md): Flat segment - Ending mid-segment, sell exactly remaining capacity to segment start
+    function test_CalculateSaleReturn_C2_1_1_Flat_SellExactlyRemainingToSegStart_FromMidSeg() public {
+        // Seg0 (Flat): P_init=1.0, S_step=50, N_steps=1. Capacity 50.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 30 ether; // Mid-segment
+        uint tokensToSell = 30 ether;  // Sell all remaining to reach start of segment (0)
+
+        // Expected: targetSupply = 30 - 30 = 0 ether.
+        // Collateral from segment (30 tokens @ 1.0 price): 30 * 1.0 = 30 ether.
+        uint expectedCollateralOut = 30 ether;
+        uint expectedTokensBurned = 30 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.1.1 Flat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.1.1 Flat: tokensBurned mismatch");
+    }
+
+    // Test (C2.1.2 from test_cases.md): Sloped segment - Ending mid-segment, sell exactly remaining capacity to segment start
+    function test_CalculateSaleReturn_C2_1_2_Sloped_SellExactlyRemainingToSegStart_FromMidSeg() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2. Capacity 30.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 15 ether; // Mid Step 1 (supply 10-20, price 1.1), 5 ether into this step.
+        uint tokensToSell = 15 ether;  // Sell all 15 to reach start of segment (0)
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Step 1 (supply 15 -> 10). Price 1.1. Collateral = 5 * 1.1 = 5.5 ether.
+        // 2. Sell 10 ether from Step 0 (supply 10 -> 0). Price 1.0. Collateral = 10 * 1.0 = 10.0 ether.
+        // Target supply = 15 - 15 = 0 ether.
+        // Expected collateral out = 5.5 + 10.0 = 15.5 ether.
+        // Expected tokens burned = 15 ether.
+        uint expectedCollateralOut = 15_500_000_000_000_000_000; // 15.5 ether
+        uint expectedTokensBurned = 15 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.1.2 Sloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.1.2 Sloped: tokensBurned mismatch");
+    }
+
+    // Test (C2.2.1 from test_cases.md): Flat segment - Ending mid-segment, sell less than remaining capacity to segment start
+    function test_CalculateSaleReturn_C2_2_1_Flat_SellLessThanRemainingToSegStart_EndMidSeg() public {
+        // Seg0 (Flat): P_init=1.0, S_step=50, N_steps=1. Capacity 50.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 30 ether; // Mid-segment. Remaining to segment start is 30.
+        uint tokensToSell = 10 ether;  // Sell less than remaining.
+
+        // Expected: targetSupply = 30 - 10 = 20 ether.
+        // Collateral from segment (10 tokens @ 1.0 price): 10 * 1.0 = 10 ether.
+        uint expectedCollateralOut = 10 ether;
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.2.1 Flat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.2.1 Flat: tokensBurned mismatch");
+    }
+
+    // Test (C2.2.2 from test_cases.md): Sloped segment - Ending mid-segment, sell less than remaining capacity to segment start
+    function test_CalculateSaleReturn_C2_2_2_Sloped_EndMidSeg_SellLessThanRemainingToSegStart() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2. Capacity 30.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+
+        uint currentSupply = 25 ether; // Mid Step 2 (supply 20-30, price 1.2), 5 ether into this step.
+                                       // Remaining to segment start is 25 ether.
+        uint tokensToSell = 10 ether;  // Sell less than remaining (25 ether).
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Step 2 (supply 25 -> 20). Price 1.2. Collateral = 5 * 1.2 = 6.0 ether.
+        // 2. Sell 5 ether from Step 1 (supply 20 -> 15). Price 1.1. Collateral = 5 * 1.1 = 5.5 ether.
+        // Target supply = 25 - 10 = 15 ether. (Ends mid Step 1)
+        // Expected collateral out = 6.0 + 5.5 = 11.5 ether.
+        // Expected tokens burned = 10 ether.
+        uint expectedCollateralOut = 11_500_000_000_000_000_000; // 11.5 ether
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.2.2 Sloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.2.2 Sloped: tokensBurned mismatch");
+    }
+
+    // Test (C2.3.1 from test_cases.md): Flat segment transition - Ending mid-segment, sell more than remaining capacity to segment start, ending in a previous Flat segment
+    function test_CalculateSaleReturn_C2_3_1_FlatTransition_EndInPrevFlat_SellMoreThanRemainingToSegStart() public {
+        // Use flatToFlatTestCurve.
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments = flatToFlatTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 35 ether; // Mid Seg1 (15 ether into Seg1). Remaining in Seg1 to its start = 15 ether.
+        uint tokensToSell = 25 ether;  // Sell more than remaining in Seg1 (15 ether). Will sell 15 from Seg1, 10 from Seg0.
+
+        // Sale breakdown:
+        // 1. Sell 15 ether from Seg1 (supply 35 -> 20). Price 1.5. Collateral = 15 * 1.5 = 22.5 ether.
+        // 2. Sell 10 ether from Seg0 (supply 20 -> 10). Price 1.0. Collateral = 10 * 1.0 = 10.0 ether.
+        // Target supply = 35 - 25 = 10 ether. (Ends mid Seg0)
+        // Expected collateral out = 22.5 + 10.0 = 32.5 ether.
+        // Expected tokens burned = 25 ether.
+        uint expectedCollateralOut = 32_500_000_000_000_000_000; // 32.5 ether
+        uint expectedTokensBurned = 25 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.3.1 FlatTransition: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.3.1 FlatTransition: tokensBurned mismatch");
+    }
+
+    // Test (C2.3.2 from test_cases.md): Sloped segment transition - Ending mid-segment, sell more than remaining capacity to segment start, ending in a previous Sloped segment
+    function test_CalculateSaleReturn_C2_3_2_SlopedTransition_EndInPrevSloped_SellMoreThanRemainingToSegStart() public {
+        // Use twoSlopedSegmentsTestCurve
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Prices: 1.0, 1.1, 1.2). Capacity 30.
+        // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55). Capacity 40. Total 70.
+        PackedSegment[] memory segments = twoSlopedSegmentsTestCurve.packedSegmentsArray;
+
+        // currentSupply = 60 ether. (Mid Seg1, Step 1: 10 ether into this step, price 1.55).
+        // Remaining in Seg1 to its start = 30 ether (10 from current step, 20 from step 0 of Seg1).
+        uint currentSupply = 60 ether;
+        uint tokensToSell = 35 ether; // Sell more than remaining in Seg1 (30 ether). Will sell 30 from Seg1, 5 from Seg0.
+
+        // Sale breakdown:
+        // 1. Sell 10 ether from Seg1, Step 1 (supply 60 -> 50). Price 1.55. Collateral = 10 * 1.55 = 15.5 ether.
+        // 2. Sell 20 ether from Seg1, Step 0 (supply 50 -> 30). Price 1.50. Collateral = 20 * 1.50 = 30.0 ether.
+        //    Tokens sold from Seg1 = 30. Remaining to sell = 35 - 30 = 5.
+        // 3. Sell 5 ether from Seg0, Step 2 (supply 30 -> 25). Price 1.20. Collateral = 5 * 1.20 = 6.0 ether.
+        // Target supply = 60 - 35 = 25 ether. (Ends mid Seg0, Step 2)
+        // Expected collateral out = 15.5 + 30.0 + 6.0 = 51.5 ether.
+        // Expected tokens burned = 35 ether.
+        uint expectedCollateralOut = 51_500_000_000_000_000_000; // 51.5 ether
+        uint expectedTokensBurned = 35 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C2.3.2 SlopedTransition: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C2.3.2 SlopedTransition: tokensBurned mismatch");
+    }
+
+    // Test (C3.1.1 from test_cases.md): Flat segment - Start selling from a full step, then continue with partial step sale into a lower step (implies transition)
+    function test_CalculateSaleReturn_C3_1_1_Flat_StartFullStep_EndPartialLowerStep() public {
+        // Use flatToFlatTestCurve.
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments = flatToFlatTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 50 ether; // End of Seg1 (a full step/segment).
+        uint tokensToSell = 35 ether;  // Sell all of Seg1 (30 tokens) and 5 tokens from Seg0.
+
+        // Sale breakdown:
+        // 1. Sell 30 ether from Seg1 (supply 50 -> 20). Price 1.5. Collateral = 30 * 1.5 = 45 ether.
+        // 2. Sell 5 ether from Seg0 (supply 20 -> 15). Price 1.0. Collateral = 5 * 1.0 = 5 ether.
+        // Target supply = 50 - 35 = 15 ether. (Ends mid Seg0)
+        // Expected collateral out = 45 + 5 = 50 ether.
+        // Expected tokens burned = 35 ether.
+        uint expectedCollateralOut = 50 ether;
+        uint expectedTokensBurned = 35 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C3.1.1 Flat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C3.1.1 Flat: tokensBurned mismatch");
+    }
+
+    // Test (C3.1.2 from test_cases.md): Sloped segment - Start selling from a full step, then continue with partial step sale into a lower step
+    function test_CalculateSaleReturn_C3_1_2_Sloped_StartFullStep_EndPartialLowerStep() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2. Capacity 30.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        uint currentSupply = 2 * seg0._supplyPerStep(); // 20 ether (end of Step 1, price 1.1)
+        uint tokensToSell = 15 ether; // Sell all of Step 1 (10 tokens) and 5 tokens from Step 0.
+
+        // Sale breakdown:
+        // 1. Sell 10 ether from Step 1 (supply 20 -> 10). Price 1.1. Collateral = 10 * 1.1 = 11.0 ether.
+        // 2. Sell 5 ether from Step 0 (supply 10 -> 5). Price 1.0. Collateral = 5 * 1.0 = 5.0 ether.
+        // Target supply = 20 - 15 = 5 ether. (Ends mid Step 0)
+        // Expected collateral out = 11.0 + 5.0 = 16.0 ether.
+        // Expected tokens burned = 15 ether.
+        uint expectedCollateralOut = 16 ether;
+        uint expectedTokensBurned = 15 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C3.1.2 Sloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C3.1.2 Sloped: tokensBurned mismatch");
+    }
+
+    // Test (C3.2.1 from test_cases.md): Flat segment - Start selling from a partial step, then partial sale from the previous step (implies transition)
+    function test_CalculateSaleReturn_C3_2_1_Flat_StartPartialStep_EndPartialPrevStep() public {
+        // Use flatToFlatTestCurve.
+        // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1. Capacity 20.
+        // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1. Capacity 30. Total 50.
+        PackedSegment[] memory segments = flatToFlatTestCurve.packedSegmentsArray;
+
+        uint currentSupply = 25 ether; // Mid Seg1 (5 ether into Seg1).
+        uint tokensToSell = 10 ether;  // Sell 5 from Seg1, and 5 from Seg0.
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Seg1 (supply 25 -> 20). Price 1.5. Collateral = 5 * 1.5 = 7.5 ether.
+        // 2. Sell 5 ether from Seg0 (supply 20 -> 15). Price 1.0. Collateral = 5 * 1.0 = 5.0 ether.
+        // Target supply = 25 - 10 = 15 ether. (Ends mid Seg0)
+        // Expected collateral out = 7.5 + 5.0 = 12.5 ether.
+        // Expected tokens burned = 10 ether.
+        uint expectedCollateralOut = 12_500_000_000_000_000_000; // 12.5 ether
+        uint expectedTokensBurned = 10 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C3.2.1 Flat: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C3.2.1 Flat: tokensBurned mismatch");
+    }
+
+    // Test (C3.2.2 from test_cases.md): Sloped segment - Start selling from a partial step, then partial sale from the previous step
+    function test_CalculateSaleReturn_C3_2_2_Sloped_StartPartialStep_EndPartialPrevStep() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply = 15 ether (Mid Step 1: 5 ether into this step, price 1.1)
+        uint currentSupply = seg0._supplyPerStep() + 5 ether;
+        uint tokensToSell = 8 ether; // Sell 5 from Step 1, 3 from Step 0.
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Step 1 (supply 15 -> 10). Price 1.1. Collateral = 5 * 1.1 = 5.5 ether.
+        // 2. Sell 3 ether from Step 0 (supply 10 -> 7). Price 1.0. Collateral = 3 * 1.0 = 3.0 ether.
+        // Target supply = 15 - 8 = 7 ether.
+        // Expected collateral out = 5.5 + 3.0 = 8.5 ether.
+        // Expected tokens burned = 8 ether.
+        uint expectedCollateralOut = 8_500_000_000_000_000_000; // 8.5 ether
+        uint expectedTokensBurned = 8 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "C3.2.2 Sloped: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "C3.2.2 Sloped: tokensBurned mismatch");
+    }
+
+    // Test (E.1.1 from test_cases.md): Flat segment - Very small token amount to sell (cannot clear any complete step downwards)
+    function test_CalculateSaleReturn_E1_1_Flat_SellVerySmallAmount_NoStepClear() public {
+        // Seg0 (Flat): P_init=2.0, S_step=50, N_steps=1.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = exposedLib.exposed_createSegment(2 ether, 0, 50 ether, 1);
+
+        uint currentSupply = 25 ether; // Mid-segment
+        uint tokensToSell = 1 wei;     // Sell very small amount
+
+        // Expected: targetSupply = 25 ether - 1 wei.
+        // Collateral from segment (1 wei @ 2.0 price): (1 wei * 2 ether) / 1 ether = 2 wei.
+        // Using _mulDivDown: (1 * 2e18) / 1e18 = 2.
+        uint expectedCollateralOut = 2 wei;
+        uint expectedTokensBurned = 1 wei;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E1.1 Flat SmallSell: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E1.1 Flat SmallSell: tokensBurned mismatch");
+    }
+
+    // Test (E.1.2 from test_cases.md): Sloped segment - Very small token amount to sell (cannot clear any complete step downwards)
+    function test_CalculateSaleReturn_E1_2_Sloped_SellVerySmallAmount_NoStepClear() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply = 15 ether (Mid Step 1: 5 ether into this step, price 1.1)
+        uint currentSupply = seg0._supplyPerStep() + 5 ether;
+        uint tokensToSell = 1 wei; // Sell very small amount
+
+        // Expected: targetSupply = 15 ether - 1 wei.
+        // Collateral from Step 1 (1 wei @ 1.1 price): (1 wei * 1.1 ether) / 1 ether.
+        // Using _mulDivDown: (1 * 1.1e18) / 1e18 = 1.
+        uint expectedCollateralOut = 1 wei;
+        uint expectedTokensBurned = 1 wei;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E1.2 Sloped SmallSell: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E1.2 Sloped SmallSell: tokensBurned mismatch");
+    }
+
+    // Test (E.2 from test_cases.md): Tokens to sell exactly matches current total issuance supply (selling entire supply)
+    function test_CalculateSaleReturn_E2_SellExactlyTotalSupply() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2. Capacity 30.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply = 25 ether (Mid Step 2: 5 ether into this step, price 1.2)
+        uint currentSupply = (2 * seg0._supplyPerStep()) + 5 ether;
+        uint tokensToSell = currentSupply; // 25 ether
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Step 2 (supply 25 -> 20). Price 1.2. Collateral = 5 * 1.2 = 6.0 ether.
+        // 2. Sell 10 ether from Step 1 (supply 20 -> 10). Price 1.1. Collateral = 10 * 1.1 = 11.0 ether.
+        // 3. Sell 10 ether from Step 0 (supply 10 -> 0). Price 1.0. Collateral = 10 * 1.0 = 10.0 ether.
+        // Target supply = 25 - 25 = 0 ether.
+        // Expected collateral out = 6.0 + 11.0 + 10.0 = 27.0 ether.
+        // Expected tokens burned = 25 ether.
+        uint expectedCollateralOut = 27 ether;
+        uint expectedTokensBurned = 25 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E2 SellAll: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E2 SellAll: tokensBurned mismatch");
+
+        // Verify with _calculateReserveForSupply
+        uint reserveForSupply = exposedLib.exposed_calculateReserveForSupply(segments, currentSupply);
+        assertEq(collateralOut, reserveForSupply, "E2 SellAll: collateral vs reserve mismatch");
+    }
+
+    // Test (E.4 from test_cases.md): Only a single step of supply exists in the current segment (selling from a segment with minimal population)
+    function test_CalculateSaleReturn_E4_SellFromSingleStepSegmentPopulation() public {
+        PackedSegment[] memory segments = new PackedSegment[](2);
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=2. (Prices 1.0, 1.1). Capacity 20. Final Price 1.1.
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
+        // Seg1: TrueFlat. P_init=1.2, P_inc=0, S_step=15, N_steps=1. (Price 1.2). Capacity 15.
+        segments[1] = exposedLib.exposed_createSegment(1.2 ether, 0, 15 ether, 1);
+        PackedSegment seg1 = segments[1];
+
+        // currentSupply = 25 ether (End of Seg0 (20) + 5 into Seg1). Seg1 has 1 step, 5/15 populated.
+        uint supplySeg0 = segments[0]._supplyPerStep() * segments[0]._numberOfSteps();
+        uint currentSupply = supplySeg0 + 5 ether;
+        uint tokensToSell = 3 ether; // Sell from Seg1, which has only one step.
+
+        // Expected: targetSupply = 25 - 3 = 22 ether.
+        // Collateral from Seg1 (3 tokens @ 1.2 price): 3 * 1.2 = 3.6 ether.
+        uint expectedCollateralOut = 3_600_000_000_000_000_000; // 3.6 ether
+        uint expectedTokensBurned = 3 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E4 SingleStepSeg: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E4 SingleStepSeg: tokensBurned mismatch");
+    }
+
+    // Test (E.5 from test_cases.md): Selling from the "first" segment of the curve (lowest priced tokens)
+    function test_CalculateSaleReturn_E5_SellFromFirstSegment() public {
+        // Use twoSlopedSegmentsTestCurve.packedSegmentsArray[0] in isolation, it's the "first" segment.
+        // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = segments[0];
+
+        // currentSupply = 15 ether (Mid Step 1: 5 ether into this step, price 1.1)
+        uint currentSupply = seg0._supplyPerStep() + 5 ether;
+        uint tokensToSell = 8 ether; // Sell 5 from Step 1, 3 from Step 0.
+
+        // Sale breakdown:
+        // 1. Sell 5 ether from Step 1 (supply 15 -> 10). Price 1.1. Collateral = 5 * 1.1 = 5.5 ether.
+        // 2. Sell 3 ether from Step 0 (supply 10 -> 7). Price 1.0. Collateral = 3 * 1.0 = 3.0 ether.
+        // Target supply = 15 - 8 = 7 ether.
+        // Expected collateral out = 5.5 + 3.0 = 8.5 ether.
+        // Expected tokens burned = 8 ether.
+        uint expectedCollateralOut = 8_500_000_000_000_000_000; // 8.5 ether
+        uint expectedTokensBurned = 8 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E5 SellFirstSeg: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E5 SellFirstSeg: tokensBurned mismatch");
+    }
+
+    // Test (E.6.1 from test_cases.md): Rounding behavior verification for sale
+    function test_CalculateSaleReturn_E6_1_RoundingBehaviorVerification() public {
+        // Single flat segment: P_init=1e18 + 1 wei, S_step=10e18, N_steps=1.
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        uint priceWithRounding = 1 ether + 1 wei;
+        segments[0] = exposedLib.exposed_createSegment(priceWithRounding, 0, 10 ether, 1);
+
+        uint currentSupply = 5 ether;
+        uint tokensToSell = 3 ether;
+
+        // Expected collateralOut = _mulDivDown(3 ether, 1e18 + 1 wei, 1e18)
+        // = (3e18 * (1e18 + 1)) / 1e18
+        // = (3e36 + 3e18) / 1e18
+        // = 3e18 + 3
+        uint expectedCollateralOut = 3 ether + 3 wei;
+        uint expectedTokensBurned = 3 ether;
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E6.1 Rounding: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E6.1 Rounding: tokensBurned mismatch");
+    }
+
+    // Test (E.6.2 from test_cases.md): Very small amounts near precision limits
+    function test_CalculateSaleReturn_E6_2_PrecisionLimits_SmallAmounts() public {
+        // Scenario 1: Flat segment, selling 1 wei
+        PackedSegment[] memory flatSegments = new PackedSegment[](1);
+        flatSegments[0] = exposedLib.exposed_createSegment(2 ether, 0, 10 ether, 1); // P_init=2.0, S_step=10, N_steps=1
+
+        uint currentSupplyFlat = 5 ether;
+        uint tokensToSellFlat = 1 wei;
+        uint expectedCollateralFlat = 2 wei; // (1 wei * 2 ether) / 1 ether = 2 wei
+        uint expectedBurnedFlat = 1 wei;
+
+        (uint collateralOutFlat, uint tokensBurnedFlat) = exposedLib.exposed_calculateSaleReturn(
+            flatSegments, tokensToSellFlat, currentSupplyFlat
+        );
+
+        assertEq(collateralOutFlat, expectedCollateralFlat, "E6.2 Flat Small: collateralOut mismatch");
+        assertEq(tokensBurnedFlat, expectedBurnedFlat, "E6.2 Flat Small: tokensBurned mismatch");
+
+        // Scenario 2: Sloped segment, selling 1 wei from 1 wei into a step
+        PackedSegment[] memory slopedSegments = new PackedSegment[](1);
+        // P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Prices: 1.0, 1.1, 1.2
+        slopedSegments[0] = twoSlopedSegmentsTestCurve.packedSegmentsArray[0];
+        PackedSegment seg0 = slopedSegments[0];
+
+        uint currentSupplySloped1 = seg0._supplyPerStep() + 1 wei; // 10 ether + 1 wei (into step 1, price 1.1)
+        uint tokensToSellSloped1 = 1 wei;
+        // Collateral = _mulDivUp(1 wei, 1.1 ether, 1 ether) = 2 wei (due to _calculateReserveForSupply using _mulDivUp)
+        uint expectedCollateralSloped1 = 2 wei;
+        uint expectedBurnedSloped1 = 1 wei;
+
+        (uint collateralOutSloped1, uint tokensBurnedSloped1) = exposedLib.exposed_calculateSaleReturn(
+            slopedSegments, tokensToSellSloped1, currentSupplySloped1
+        );
+
+        assertEq(collateralOutSloped1, expectedCollateralSloped1, "E6.2 Sloped Small (1 wei): collateralOut mismatch");
+        assertEq(tokensBurnedSloped1, expectedBurnedSloped1, "E6.2 Sloped Small (1 wei): tokensBurned mismatch");
+
+        // Scenario 3: Sloped segment, selling 2 wei from 1 wei into a step (crossing micro-boundary)
+        uint currentSupplySloped2 = seg0._supplyPerStep() + 1 wei; // 10 ether + 1 wei (into step 1, price 1.1)
+        uint tokensToSellSloped2 = 2 wei;
+
+        // Expected:
+        // 1. Sell 1 wei from current step (step 1, price 1.1): reserve portion = _mulDivUp(1 wei, 1.1e18, 1e18) = 2 wei.
+        //    Reserve before = reserve(10e18) + _mulDivUp(1 wei, 1.1e18, 1e18) = 10e18 + 2 wei.
+        // 2. Sell 1 wei from previous step (step 0, price 1.0):
+        //    Target supply after sale = 10e18 - 1 wei.
+        //    Reserve after = reserve(10e18 - 1 wei) = _mulDivUp(10e18 - 1 wei, 1.0e18, 1e18) = 10e18 - 1 wei.
+        // Total collateral = (10e18 + 2 wei) - (10e18 - 1 wei) = 3 wei.
+        // Total burned = 1 wei + 1 wei = 2 wei.
+        uint expectedCollateralSloped2 = 3 wei;
+        uint expectedBurnedSloped2 = 2 wei;
+
+        (uint collateralOutSloped2, uint tokensBurnedSloped2) = exposedLib.exposed_calculateSaleReturn(
+            slopedSegments, tokensToSellSloped2, currentSupplySloped2
+        );
+
+        assertEq(collateralOutSloped2, expectedCollateralSloped2, "E6.2 Sloped Small (2 wei cross): collateralOut mismatch");
+        assertEq(tokensBurnedSloped2, expectedBurnedSloped2, "E6.2 Sloped Small (2 wei cross): tokensBurned mismatch");
+    }
+
+    // Test (E.6.3 from test_cases.md): Very large amounts near bit field limits
+    function test_CalculateSaleReturn_E6_3_PrecisionLimits_LargeAmounts() public {
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        uint largePrice = INITIAL_PRICE_MASK - 1; // Max price - 1
+        uint largeSupplyPerStep = SUPPLY_PER_STEP_MASK / 2; // Half of max supply per step to avoid overflow with price
+        uint numberOfSteps = 1; // Single step for simplicity with large values
+
+        // Ensure supplyPerStep is not zero if mask is small
+        if (largeSupplyPerStep == 0) {
+            largeSupplyPerStep = 100 ether; // Fallback to a reasonably large supply
+        }
+        // Ensure price is not zero
+        if (largePrice == 0) {
+            largePrice = 100 ether; // Fallback to a reasonably large price
+        }
+
+
+        segments[0] = exposedLib.exposed_createSegment(
+            largePrice,
+            0, // Flat segment
+            largeSupplyPerStep,
+            numberOfSteps
+        );
+
+        uint currentSupply = largeSupplyPerStep; // Segment is full
+        uint tokensToSell = largeSupplyPerStep / 2; // Sell half of the supply
+
+        // Ensure tokensToSell is not zero
+        if (tokensToSell == 0 && largeSupplyPerStep > 0) {
+            tokensToSell = 1; // Sell at least 1 wei if supply is not zero
+        }
+        if (tokensToSell == 0 && largeSupplyPerStep == 0) {
+             // If supply is 0, selling 0 should revert due to ZeroIssuanceInput, or return 0,0 if not caught by that.
+             // This specific test is for large amounts, so skip if we can't form a valid large amount scenario.
+            return;
+        }
+
+
+        uint expectedTokensBurned = tokensToSell;
+        uint expectedCollateralOut = Math._mulDivDown(
+            tokensToSell,
+            largePrice,
+            DiscreteCurveMathLib_v1.SCALING_FACTOR
+        );
+
+        (uint collateralOut, uint tokensBurned) = exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell, currentSupply
+        );
+
+        assertEq(collateralOut, expectedCollateralOut, "E6.3 LargeAmounts: collateralOut mismatch");
+        assertEq(tokensBurned, expectedTokensBurned, "E6.3 LargeAmounts: tokensBurned mismatch");
+    }
+
 
     // --- Fuzz tests for _calculateSaleReturn ---
 

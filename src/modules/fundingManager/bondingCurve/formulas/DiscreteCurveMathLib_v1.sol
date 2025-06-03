@@ -595,9 +595,10 @@ library DiscreteCurveMathLib_v1 {
         }
 
         if (tokensToSell_ > currentTotalIssuanceSupply_) {
-            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InsufficientIssuanceToSell(
-                tokensToSell_,
-                currentTotalIssuanceSupply_
+            revert
+                IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InsufficientIssuanceToSell(
+                tokensToSell_, currentTotalIssuanceSupply_
             );
         }
         tokensToBurn_ = tokensToSell_;
