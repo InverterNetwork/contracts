@@ -248,6 +248,19 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
     // -------------------------------------------------------------------------
     // Functions
 
+    /// @notice	Sets the maximum number of orders that can be processed in a
+    ///         single queue execution.
+    /// @param	maxOrdersPerExecution_ The maximum number of orders.
+    function setMaxOrdersPerExecution(uint maxOrdersPerExecution_) external;
+
+    /// @notice	Gets the maximum number of orders that can be processed in a
+    ///         single queue execution.
+    /// @return	maxOrdersPerExecution_ The maximum number of orders.
+    function getMaxOrdersPerExecution()
+        external
+        view
+        returns (uint maxOrdersPerExecution_);
+
     /// @notice	Retrieves a payment order by its ID.
     /// @param  orderId_ The ID of the payment order.
     /// @param  client_ The client associated with the order.

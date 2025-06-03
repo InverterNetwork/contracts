@@ -64,6 +64,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
         bytes4(keccak256(bytes("processPayments(address)")));
     uint internal constant BPS = 10_000;
+    uint internal constant DEFAULT_MAX_ORDERS_PER_EXECUTION = 30;
 
     //Role
     bytes32 internal roleIDqueue;
@@ -114,6 +115,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(
             address(queue.getFailedOrdersTreasury()),
             address(failedOrdersTreasury)
+        );
+        assertEq(
+            queue.getMaxOrdersPerExecution(), DEFAULT_MAX_ORDERS_PER_EXECUTION
         );
     }
 
@@ -443,6 +447,74 @@ contract PP_Queue_v1_Test is ModuleTest {
                 "Should return 0 when flag is not set or data is empty."
             );
         }
+    }
+
+    // ================================================================================
+    // Test Set Max Orders Per Execution
+
+    /* Test: Function setMaxOrdersPerExecution()
+        └── Given the caller does not have the QUEUE_OPERATOR_ROLE_ADMIN role
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should revert
+    */
+    function testSetMaxOrdersPerExecution_revertGivenNonQueueOperator(
+        address nonQueueOperator_
+    ) public {
+        // Setup
+        vm.assume(nonQueueOperator_ != address(this));
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(queue), queue.getQueueOperatorRole()
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                roleId,
+                nonQueueOperator_
+            )
+        );
+        // Test
+        vm.prank(nonQueueOperator_);
+        queue.setMaxOrdersPerExecution(100);
+    }
+
+    /* Test: Function setMaxOrdersPerExecution()
+        ├── Given the caller has the QUEUE_OPERATOR_ROLE_ADMIN role
+        └── And the number of orders per execution is zero
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should revert with Module__PP_Queue_ZeroAmount
+    */
+    function testSetMaxOrdersPerExecution_revertGivenZeroAmount() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Queue_v1.Module__PP_Queue_ZeroAmount.selector
+            )
+        );
+        queue.setMaxOrdersPerExecution(0);
+    }
+
+    /* Test: Function setMaxOrdersPerExecution()
+        ├── Given the caller has the QUEUE_OPERATOR_ROLE_ADMIN role
+        └── And the number of orders per execution is not zero
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should update the state
+    */
+    function testSetMaxOrdersPerExecution_worksGivenQueueOperatorAndNonZeroAmount(
+        uint maxOrdersPerExecution_
+    ) public {
+        // Setup
+        uint currentMaxOrdersPerExecution_ = queue.getMaxOrdersPerExecution();
+        vm.assume(maxOrdersPerExecution_ > 0);
+        vm.assume(maxOrdersPerExecution_ != DEFAULT_MAX_ORDERS_PER_EXECUTION);
+
+        // Test
+        queue.setMaxOrdersPerExecution(maxOrdersPerExecution_);
+
+        // Post Assertion
+        assertNotEq(
+            queue.getMaxOrdersPerExecution(), currentMaxOrdersPerExecution_
+        );
+        assertEq(queue.getMaxOrdersPerExecution(), maxOrdersPerExecution_);
     }
 
     // ================================================================================
@@ -1575,17 +1647,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertFalse(success_, "Processing empty queue should fail.");
     }
 
+    // ================================================================================
+    // Test Execute Payment Transfer
+
     /* Test: Function _executePaymentTransfer()
-        ├── Given the payment transfer succeeds
-        │   └── When the function _executePaymentTransfer() is called
-        │       ├── Then the order state is set to PROCESSED
-        │       └── And the order is removed from the queue
-        └── Given the payment transfer fails (receiver blacklisted)
+        └── Given the payment transfer succeeds
             └── When the function _executePaymentTransfer() is called
-                ├── Then the order state is set to FAILED
+                ├── Then the order state is set to PROCESSED
                 └── And the order is removed from the queue
     */
-
     function testInternalExecutePaymentTransfer_worksGivenStateIsProcessedAndRemovedFromQueue(
         address recipient_,
         uint96 amount_
@@ -1636,6 +1706,13 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(_token.balanceOf(recipient_), amount_);
         assertEq(queueSize_, 0);
     }
+
+    /* Test: Function _executePaymentTransfer()
+        └── Given the payment transfer fails (receiver blacklisted)
+            └── When the function _executePaymentTransfer() is called
+                ├── Then the order state is set to FAILED
+                └── And the order is removed from the queue
+    */
 
     function testInternalExecutePaymentTransfer_worksGivenStateIsFailedAndRemovedFromQueue(
         address recipient_,
@@ -2383,6 +2460,44 @@ contract PP_Queue_v1_Test is ModuleTest {
                 "Recipient should receive correct amount."
             );
         }
+    }
+
+    /* Test: Function executePaymentQueue()
+        └── Given the number of orders in queue is greater than max orders per execution
+            └── When the function executePaymentQueue() is called
+                ├── Then the function should execute only until maxOrdersPerExecution is reached
+                └── And the the remaining orders should be left in the queue
+    */
+    function testExecutePaymentQueue_worksGivenMaxOrdersPerExecutionIsReached()
+        public
+    {
+        // Setup
+        // Get max orders per execution
+        uint maxOrdersPerExecution = queue.getMaxOrdersPerExecution();
+        // Number of orders to add to the queue such that max orders per execution is reached
+        uint numberOfOrders = maxOrdersPerExecution + 50;
+        // Total amount of collateral that is being redeemed
+        uint96 totalSellAmount = 1000e6;
+        // Setup large queue with helper function
+        helper_setupLargeQueue(totalSellAmount, numberOfOrders);
+        // Get queue size before execution
+        uint preExecutionQueueSize_ =
+            queue.getQueueSizeForClient(address(paymentClient));
+
+        // Pre-assertions
+        assertEq(preExecutionQueueSize_, numberOfOrders);
+        uint blockNumber_ = block.number;
+        vm.roll(blockNumber_ + 10);
+        // Test
+        vm.prank(address(paymentClient));
+        queue.exposed_executePaymentQueue(address(paymentClient));
+
+        // Post-assertions
+        uint postExecutionQueueSize_ =
+            queue.getQueueSizeForClient(address(paymentClient));
+        assertEq(
+            postExecutionQueueSize_, numberOfOrders - maxOrdersPerExecution
+        );
     }
 
     /* Test testExecutePaymentQueue_GivenMultipleOrders()
@@ -3908,5 +4023,38 @@ contract PP_Queue_v1_Test is ModuleTest {
         paymentParameters[0] = bytes32(orderId_);
 
         return (_flags, paymentParameters);
+    }
+
+    function helper_setupLargeQueue(
+        uint96 totalSellAmount_,
+        uint numberOfOrders_
+    ) internal {
+        // Start Queue ID for adding the orders
+        uint queueId = 1;
+
+        // Max number of orders that can be processed in a single execution
+        uint maxOrdersPerExecution = queue.getMaxOrdersPerExecution();
+
+        // Amount of collateral to be redeemed for each order
+        uint96 sellAmountForEachOrder =
+            uint96(totalSellAmount_ / maxOrdersPerExecution);
+
+        // Mint tokens to payment client and approve PP Queue
+        helper_setupPaymentTokenBalanceAndApproval(totalSellAmount_, _token);
+
+        vm.startPrank(address(paymentClient));
+        for (uint i = 0; i < numberOfOrders_; i++) {
+            address recipient_ =
+                makeAddr(string.concat("recipient", vm.toString(i)));
+            // Create payment order
+            IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
+            helper_createTestPaymentOrder(
+                recipient_, sellAmountForEachOrder, queueId, address(_token)
+            );
+            // Add order to queue
+            queue.exposed_addPaymentOrderToQueue(order_, address(paymentClient));
+            queueId++;
+        }
+        vm.stopPrank();
     }
 }

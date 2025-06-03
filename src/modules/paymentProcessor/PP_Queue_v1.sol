@@ -137,6 +137,10 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @notice Treasury address which receives the collateral of failed orders.
     address internal _failedOrdersTreasury;
 
+    /// @notice Maximum number of orders that can be processed in a single
+    ///         queue execution to prevent gas limit issues.
+    uint internal _maxOrdersPerExecution;
+
     /// @dev    Gap for possible future upgrades.
     uint[50] private __gap;
 
@@ -182,10 +186,23 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
         _setCanceledOrdersTreasury(cancelledOrdersTreasury_);
         _setFailedOrdersTreasury(failedOrdersTreasury_);
+
+        // Default value for max orders per execution to ensure not to run out of gas.
+        _maxOrdersPerExecution = 30;
     }
 
     //--------------------------------------------------------------------------
     // Public View Functions
+
+    /// @inheritdoc IPP_Queue_v1
+    function getMaxOrdersPerExecution()
+        external
+        view
+        virtual
+        returns (uint maxOrdersPerExecution_)
+    {
+        return _maxOrdersPerExecution;
+    }
 
     /// @inheritdoc IPP_Queue_v1
     function getCanceledOrdersTreasury()
@@ -299,6 +316,18 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     //--------------------------------------------------------------------------
     // Public Mutating Functions
+
+    /// @inheritdoc IPP_Queue_v1
+    function setMaxOrdersPerExecution(uint maxOrdersPerExecution_)
+        external
+        virtual
+        onlyModuleRole(QUEUE_OPERATOR_ROLE)
+    {
+        if (maxOrdersPerExecution_ == 0) {
+            revert Module__PP_Queue_ZeroAmount();
+        }
+        _maxOrdersPerExecution = maxOrdersPerExecution_;
+    }
 
     /// @inheritdoc IPP_Queue_v1
     function setCanceledOrdersTreasury(address treasury_)
@@ -631,7 +660,10 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         }
 
         uint processedCount;
-        while (_processNextOrder(client_)) {
+        while (
+            _processNextOrder(client_)
+                && processedCount < _maxOrdersPerExecution
+        ) {
             ++processedCount;
         }
 
