@@ -74,38 +74,21 @@ library DiscreteCurveMathLib_v1 {
         // Implicitly returns totalCurveCapacity_
     }
 
-    /**
-     * @notice Finds the segment, step, price, and cumulative supply for a given target total issuance supply.
-     * @dev Iterates linearly through segments.
-     * @param segments_ Array of PackedSegment configurations for the curve.
-     * @param targetSupply_ The total supply for which to find the position.
-     * @return position_ A CurvePosition struct detailing the location on the curve.
-     */
     function _findPositionForSupply(
         PackedSegment[] memory segments_,
-        uint targetSupply_ // Renamed from targetTotalIssuanceSupply
+        uint targetSupply_
     )
         internal
-        view
-        returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_)
+        pure
+        returns (
+            uint segmentIndex,
+            uint stepIndexWithinSegment,
+            uint priceAtCurrentStep
+        )
     {
-        console2.log();
-        console2.log("ENTER _findPositionForSupply");
         uint numSegments_ = segments_.length;
-        if (numSegments_ == 0) {
-            revert
-                IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__NoSegmentsConfigured();
-        }
-        // Although callers like _getCurrentPriceAndStep might do their own MAX_SEGMENTS check via _validateSegmentArray,
-        // _findPositionForSupply can be called by other internal logic, so keeping this is safer.
-        if (numSegments_ > MAX_SEGMENTS) {
-            revert
-                IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__TooManySegments();
-        }
-
         uint cumulativeSupply_ = 0;
+        // segmentIndex, stepIndexWithinSegment, priceAtCurrentStep are implicitly declared due to named returns.
 
         for (uint i_ = 0; i_ < numSegments_; ++i_) {
             (
@@ -119,115 +102,35 @@ library DiscreteCurveMathLib_v1 {
             uint segmentEndSupply_ = cumulativeSupply_ + segmentCapacity_;
 
             if (targetSupply_ <= segmentEndSupply_) {
-                // Found the segment where targetSupply_ resides or ends.
-                position_.segmentIndex = i_;
-                // supplyCoveredUpToThisPosition is critical for _getCurrentPriceAndStep validation.
-                // If targetSupply_ is within this segment (or at its end), it's covered up to targetSupply_.
-                position_.supplyCoveredUpToThisPosition = targetSupply_;
+                // Found the segment containing targetSupply_
+                segmentIndex = i_;
 
-                console2.log("targetSupply_: ", targetSupply_);
-                console2.log("segmentEndSupply_: ", segmentEndSupply_);
-                console2.log("i_: ", i_);
-                console2.log("numSegments_: ", numSegments_);
+                // Calculate position within segment
+                uint supplyIntoSegment_ = targetSupply_ - cumulativeSupply_;
 
-                if (targetSupply_ == segmentEndSupply_ && i_ + 1 < numSegments_)
-                {
-                    // Exactly at a boundary AND there's a next segment:
-                    // Position points to the start of the next segment.
-                    position_.segmentIndex = i_ + 1;
-                    position_.stepIndexWithinSegment = 0;
-                    // Price is the initial price of the next segment.
-                    position_.priceAtCurrentStep =
-                        segments_[i_ + 1]._initialPrice(); // Use direct accessor
+                // Determine current step (0-based)
+                if (supplyIntoSegment_ == 0) {
+                    stepIndexWithinSegment = 0;
                 } else {
-                    // Either within the current segment, or at the end of the *last* segment.
-                    uint supplyIntoThisSegment_ =
-                        targetSupply_ - cumulativeSupply_;
-                    // stepIndex is the 0-indexed step that contains/is completed by supplyIntoThisSegment_.
-                    // For "next price" semantic, this is the step whose price will be quoted.
-                    position_.stepIndexWithinSegment =
-                        supplyIntoThisSegment_ / supplyPerStep_;
-
-                    // If at the end of the *last* segment, stepIndex needs to be the last step.
-                    if (
-                        targetSupply_ == segmentEndSupply_
-                            && i_ == numSegments_ - 1
-                    ) {
-                        position_.stepIndexWithinSegment = totalStepsInSegment_
-                            > 0 ? totalStepsInSegment_ - 1 : 0;
-                    }
-                    position_.priceAtCurrentStep = initialPrice_
-                        + (position_.stepIndexWithinSegment * priceIncreasePerStep_);
+                    stepIndexWithinSegment =
+                        (supplyIntoSegment_ - 1) / supplyPerStep_;
                 }
-                return position_;
+
+                // Calculate price at current step
+                priceAtCurrentStep = initialPrice_
+                    + (stepIndexWithinSegment * priceIncreasePerStep_);
+
+                return
+                    (segmentIndex, stepIndexWithinSegment, priceAtCurrentStep);
             }
             cumulativeSupply_ = segmentEndSupply_;
         }
 
-        // Fallback: targetSupply_ is greater than total capacity of all segments_.
-        // This should be caught by _validateSupplyAgainstSegments in public-facing functions.
-        // If reached, position_ to the end of the last segment.
-        position_.segmentIndex = numSegments_ - 1;
-        (
-            uint lastSegInitialPrice_,
-            uint lastSegPriceIncreasePerStep_,
-            ,
-            uint lastSegTotalSteps_
-        ) = segments_[numSegments_ - 1]._unpack();
-
-        position_.stepIndexWithinSegment =
-            lastSegTotalSteps_ > 0 ? lastSegTotalSteps_ - 1 : 0;
-        position_.priceAtCurrentStep = lastSegInitialPrice_
-            + (position_.stepIndexWithinSegment * lastSegPriceIncreasePerStep_);
-        // supplyCoveredUpToThisPosition is the total capacity of the curve.
-        position_.supplyCoveredUpToThisPosition = cumulativeSupply_;
-        return position_;
-    }
-
-    // Functions from sections IV-VIII will be added in subsequent steps.
-
-    /**
-     * @notice Gets the current price, step index, and segment index for a given total issuance supply.
-     * @dev Adjusts to the price of the *next* step if currentTotalIssuanceSupply_ exactly lands on a step boundary.
-     * @param segments_ Array of PackedSegment configurations for the curve.
-     * @param currentTotalIssuanceSupply_ The current total supply.
-     * @return price_ The price at the current (or next, if on boundary) step.
-     * @return stepIndex_ The index of the current (or next) step within its segment.
-     * @return segmentIndex_ The index of the current (or next) segment.
-     */
-    function _getCurrentPriceAndStep(
-        PackedSegment[] memory segments_,
-        uint currentTotalIssuanceSupply_
-    )
-        internal
-        view
-        returns (uint price_, uint stepIndex_, uint segmentIndex_)
-    {
-        // Perform validation first. This will revert if currentTotalIssuanceSupply_ > totalCurveCapacity.
-        _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_);
-        // Note: The returned totalCurveCapacity_ is not explicitly used here as _findPositionForSupply
-        // will correctly determine the position_ based on the now-validated currentTotalIssuanceSupply_.
-
-        // _findPositionForSupply can now assume currentTotalIssuanceSupply_ is valid (within or at capacity).
-        IDiscreteCurveMathLib_v1.CurvePosition memory posDetails_ =
-            _findPositionForSupply(segments_, currentTotalIssuanceSupply_);
-
-        // The previous explicit check:
-        // if (currentTotalIssuanceSupply_ > posDetails_.supplyCoveredUpToThisPosition) {
-        //     revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
-        // }
-        // is now covered by the _validateSupplyAgainstSegments call above.
-        // _findPositionForSupply ensures posDetails_.supplyCoveredUpToThisPosition is either currentTotalIssuanceSupply_
-        // or the total curve capacity if currentTotalIssuanceSupply_ was at the very end.
-
-        // Since _findPositionForSupply now correctly handles
-        // segment boundaries by pointing to the start of the next segment (or the last step of the
-        // last segment if at max capacity), and returns the price/step for that position_,
-        // we can directly use its output. The complex adjustment logic previously here is no longer needed.
-        return (
-            posDetails_.priceAtCurrentStep,
-            posDetails_.stepIndexWithinSegment,
-            posDetails_.segmentIndex
+        // Target supply exceeds total curve capacity
+        revert
+            IDiscreteCurveMathLib_v1
+            .DiscreteCurveMathLib__SupplyExceedsCurveCapacity(
+            targetSupply_, cumulativeSupply_
         );
     }
 

@@ -28,19 +28,14 @@ contract DiscreteCurveMathLibV1_Exposed {
     )
         public
         view
-        returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos_)
+        returns (
+            uint segmentIndex,
+            uint stepIndexWithinSegment,
+            uint priceAtCurrentStep
+        )
     {
         return DiscreteCurveMathLib_v1._findPositionForSupply(
             segments_, targetTotalIssuanceSupply_
-        );
-    }
-
-    function exposed_getCurrentPriceAndStep(
-        PackedSegment[] memory segments_,
-        uint currentTotalIssuanceSupply_
-    ) public view returns (uint price_, uint stepIndex_, uint segmentIndex_) {
-        return DiscreteCurveMathLib_v1._getCurrentPriceAndStep(
-            segments_, currentTotalIssuanceSupply_
         );
     }
 

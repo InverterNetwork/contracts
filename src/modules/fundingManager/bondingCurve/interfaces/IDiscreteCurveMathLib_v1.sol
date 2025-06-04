@@ -9,21 +9,6 @@ import {PackedSegment} from "../types/PackedSegment_v1.sol";
  * for discrete bonding curves using packed segment data.
  */
 interface IDiscreteCurveMathLib_v1 {
-    // --- Structs ---
-
-    /**
-     * @notice Helper struct to represent a specific position on the bonding curve.
-     * @param segmentIndex The index of the segment where the position lies.
-     * @param stepIndexWithinSegment The index of the step within that segment.
-     * @param priceAtCurrentStep The price at this specific step.
-     * @param supplyCoveredUpToThisPosition The total supply minted up to and including this position.
-     */
-    struct CurvePosition {
-        uint segmentIndex;
-        uint stepIndexWithinSegment;
-        uint priceAtCurrentStep;
-        uint supplyCoveredUpToThisPosition;
-    }
     // --- Errors ---
 
     /**
