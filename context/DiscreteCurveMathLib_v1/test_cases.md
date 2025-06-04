@@ -197,7 +197,7 @@
     - 3.1.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_C3_1_2_Sloped_StartFullStep_EndPartialLowerStep]`
   - 3.2: Start selling from a partial step, then partial sale from the previous step
     - 3.2.1: Flat segment `[COVERED by: test_CalculateSaleReturn_C3_2_1_Flat_StartPartialStep_EndPartialPrevStep]`
-    - 3.2.2: Sloped segment `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_C3_2_2_Sloped_StartPartialStep_EndPartialPrevStep]`
+    - 3.2.2: Sloped segment `[COVERED by: test_CalculateSaleReturn_C3_2_2_Sloped_StartPartialStep_EndPartialPrevStep]`
 
 ### Edge Case Tests (Reversed/Adapted for Sale)
 
@@ -211,17 +211,17 @@
   - E.5: Selling from the "first" segment of the curve (lowest priced tokens) `[COVERED by: test_CalculateSaleReturn_E5_SellFromFirstSegment]`
   - E.6: Mathematical precision edge cases for sale calculations
     - E.6.1: Rounding behavior verification (e.g., `_mulDivDown` vs internal rounding for collateral returned) `[COVERED by: test_CalculateSaleReturn_E6_1_RoundingBehaviorVerification]`
-    - E.6.2: Very small amounts near precision limits `[COVERED by: test_CalculateSaleReturn_E6_2_PrecisionLimits_SmallAmounts]`
-    - E.6.3: Very large amounts near bit field limits `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_E6_3_PrecisionLimits_LargeAmounts]`
+  - E.6.2: Very small amounts near precision limits `[COVERED by: test_CalculateSaleReturn_E6_2_PrecisionLimits_SmallAmounts]`
+  - E.6.3: Very large amounts near bit field limits `[COVERED by: test_CalculateSaleReturn_E6_3_PrecisionLimits_LargeAmounts]`
 
 ### Boundary Condition Tests (Reversed/Adapted for Sale)
 
 - **Case B: Exact boundary scenarios**
-  - B.1: Ending (after sale) exactly at step boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B1_EndAtStepBoundary]`
-  - B.2: Ending (after sale) exactly at segment boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B2_EndAtSegmentBoundary]`
-  - B.3: Starting (before sale) exactly at step boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B3_StartAtStepBoundary]`
-  - B.4: Starting (before sale) exactly at segment boundary `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B4_StartAtSegmentBoundary]`
-  - B.5: Ending (after sale) exactly at curve start (supply becomes zero) `[PENDING IMPLEMENTATION: test_CalculateSaleReturn_B5_EndAtCurveStart]`
+  - B.1: Ending (after sale) exactly at step boundary `[COVERED by: test_CalculateSaleReturn_B1_EndAtStepBoundary_Sloped]`
+  - B.2: Ending (after sale) exactly at segment boundary `[COVERED by: test_CalculateSaleReturn_B2_EndAtSegmentBoundary_SlopedToSloped, test_CalculateSaleReturn_B2_EndAtSegmentBoundary_FlatToFlat]`
+  - B.3: Starting (before sale) exactly at step boundary `[COVERED by: test_CalculateSaleReturn_B3_StartAtStepBoundary_Sloped, test_CalculateSaleReturn_B3_StartAtStepBoundary_Flat]`
+  - B.4: Starting (before sale) exactly at segment boundary `[COVERED by: test_CalculateSaleReturn_B4_StartAtIntermediateSegmentBoundary_SlopedToSloped, test_CalculateSaleReturn_B4_StartAtIntermediateSegmentBoundary_FlatToFlat]`
+  - B.5: Ending (after sale) exactly at curve start (supply becomes zero) `[COVERED by: test_CalculateSaleReturn_B5_EndAtCurveStart_SingleSegment, test_CalculateSaleReturn_B5_EndAtCurveStart_MultiSegment]`
 
 ## Verification Checklist
 
@@ -261,3 +261,103 @@ While the above unit tests cover specific scenarios, comprehensive fuzz testing 
   - Verify properties like `tokensToBurn_` constraints and consistency with reserve calculations.
   - Check expected reverts.
 - **Helper `_generateFuzzedValidSegmentsAndCapacity`**: Review and potentially enhance to generate more diverse valid curve structures for fuzz inputs.
+
+# FULL COVERAGE
+
+## Test Cases for \_validateSupplyAgainstSegments
+
+**Legend:** As above.
+
+### Input Validation & Edge Cases
+
+- **Case VSS_1: Empty segments array**
+
+  - VSS*1.1: `segments*`is empty,`currentTotalIssuanceSupply\_ == 0`.
+    - **Expected Behavior**: Should pass, return `totalCurveCapacity_ = 0`.
+    - **Coverage Target**: Line 48 in `DiscreteCurveMathLib_v1.sol.gcov.html` (and `else` branch of L41).
+    - `[NEEDS SPECIFIC TEST via exposed function]`
+  - VSS*1.2: `segments*`is empty,`currentTotalIssuanceSupply\_ > 0`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__NoSegmentsConfigured`.
+    - **Coverage Target**: Lines 43-46. (Already covered by `testRevert_CalculatePurchaseReturn_NoSegments_SupplyPositive` which calls `_validateSupplyAgainstSegments` indirectly, but a direct test is good).
+    - `[COVERED by existing tests, consider direct test]`
+
+- **Case VSS_2: Supply exceeds capacity**
+  - VSS*2.1: `currentTotalIssuanceSupply*`is greater than the calculated`totalCurveCapacity*`of non-empty`segments*`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__SupplyExceedsCurveCapacity`.
+    - **Coverage Target**: Lines 66-71. (Covered by many existing tests, e.g., `testRevert_CalculateReserveForSupply_SupplyExceedsCapacity`).
+    - `[COVERED by existing tests]`
+
+## Test Cases for \_calculateReserveForSupply
+
+**Legend:** As above.
+
+### Input Validation & Edge Cases (Additional to existing `_calculatePurchaseReturn` and `_calculateSaleReturn` which call this)
+
+- **Case CRS_IV1: Empty segments array**
+
+  - CRS*IV1.1: `segments*`is empty,`targetSupply\_ > 0`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__NoSegmentsConfigured`.
+    - **Coverage Target**: Lines 249-252 in `DiscreteCurveMathLib_v1.sol.gcov.html` (and branch L248).
+    - `[NEEDS SPECIFIC TEST via exposed function]`
+
+- **Case CRS_IV2: Too many segments**
+
+  - CRS*IV2.1: `segments*`array length >`MAX_SEGMENTS`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__TooManySegments`.
+    - **Coverage Target**: Lines 254-257 in `DiscreteCurveMathLib_v1.sol.gcov.html` (and branch L253).
+    - `[NEEDS SPECIFIC TEST via exposed function]`
+
+- **Case CRS*E1: targetSupply* is 0**
+  - CRS*E1.1: `targetSupply* == 0`.
+    - **Expected Behavior**: Return 0.
+    - **Coverage Target**: Lines 244-245. (Covered by many existing tests, e.g. `testPass_CalculateReserveForSupply_ZeroTargetSupply`).
+    - `[COVERED by existing tests]`
+
+## Test Cases for \_calculateReservesForTwoSupplies
+
+**Legend:** As above.
+
+### Edge Cases
+
+- **Case CRTS_E1: Equal supply points**
+  - CRTS*E1.1: `lowerSupply* == higherSupply\_`.
+    - **Expected Behavior**: Should calculate reserve once and return it for both `lowerReserve_` and `higherReserve_`.
+    - **Coverage Target**: Lines 637-644 in `DiscreteCurveMathLib_v1.sol.gcov.html` (and branch L636).
+    - `[NEEDS SPECIFIC TEST via exposed function]`
+      - CRTS*E1.1.1: `lowerSupply* == higherSupply\_ == 0`.
+      - CRTS*E1.1.2: `lowerSupply* == higherSupply\_ > 0` and within curve capacity.
+      - CRTS*E1.1.3: `lowerSupply* == higherSupply\_ > 0` and at curve capacity.
+
+## Test Cases for \_validateSegmentArray
+
+**Legend:** As above.
+
+### Edge Cases for Segment Properties
+
+- **Case VSA_E1: Segment with zero steps**
+
+  - VSA*E1.1: A segment in `segments*`has`numberOfSteps\_ == 0`.
+    - **Expected Behavior**: The `if (currentNumberOfSteps_ == 0)` branch at L868 is taken. `finalPriceCurrentSegment_` should be `currentInitialPrice_`.
+    - **Coverage Target**: Line 875 and branch L868 in `DiscreteCurveMathLib_v1.sol.gcov.html`.
+    - `[NEEDS SPECIFIC TEST via exposed function, requires crafting a segment with 0 steps manually, bypassing PackedSegmentLib._create if it prevents this. This might indicate dead/unreachable code if segments are always made with _createSegment.]`
+    - `[DESIGN NOTE: PackedSegmentLib._create reverts if numberOfSteps_ is 0. If _validateSegmentArray is only ever called with segments created by _createSegment, this branch might be unreachable. Test by directly providing a handcrafted PackedSegment array to an exposed _validateSegmentArray.]`
+
+- **Case VSA_IV1: Empty segments array**
+
+  - VSA*IV1.1: `segments*` is empty.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__NoSegmentsConfigured`.
+    - **Coverage Target**: Lines 839-842. (Covered by `testRevert_ValidateSegmentArray_NoSegments`).
+    - `[COVERED by existing tests]`
+
+- **Case VSA_IV2: Too many segments**
+
+  - VSA*IV2.1: `segments*`array length >`MAX_SEGMENTS`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__TooManySegments`.
+    - **Coverage Target**: Lines 844-847. (Covered by `testRevert_ValidateSegmentArray_TooManySegments`).
+    - `[COVERED by existing tests]`
+
+- **Case VSA_IV3: Invalid price progression**
+  - VSA*IV3.1: `initialPriceNextSegment* < finalPriceCurrentSegment\_`.
+    - **Expected Behavior**: Revert with `DiscreteCurveMathLib__InvalidPriceProgression`.
+    - **Coverage Target**: Lines 889-895. (Covered by `testRevert_ValidateSegmentArray_InvalidPriceProgression`).
+    - `[COVERED by existing tests]`

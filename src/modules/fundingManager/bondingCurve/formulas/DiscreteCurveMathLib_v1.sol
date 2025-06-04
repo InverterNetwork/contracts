@@ -7,6 +7,8 @@ import {PackedSegmentLib} from "../libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "../types/PackedSegment_v1.sol";
 import {Math} from "@oz/utils/math/Math.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 /**
  * @title DiscreteCurveMathLib_v1
  * @notice Library for mathematical operations on discrete bonding curves.
@@ -84,9 +86,11 @@ library DiscreteCurveMathLib_v1 {
         uint targetSupply_ // Renamed from targetTotalIssuanceSupply
     )
         internal
-        pure
+        view
         returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_)
     {
+        console2.log();
+        console2.log("ENTER _findPositionForSupply");
         uint numSegments_ = segments_.length;
         if (numSegments_ == 0) {
             revert
@@ -120,6 +124,11 @@ library DiscreteCurveMathLib_v1 {
                 // supplyCoveredUpToThisPosition is critical for _getCurrentPriceAndStep validation.
                 // If targetSupply_ is within this segment (or at its end), it's covered up to targetSupply_.
                 position_.supplyCoveredUpToThisPosition = targetSupply_;
+
+                console2.log("targetSupply_: ", targetSupply_);
+                console2.log("segmentEndSupply_: ", segmentEndSupply_);
+                console2.log("i_: ", i_);
+                console2.log("numSegments_: ", numSegments_);
 
                 if (targetSupply_ == segmentEndSupply_ && i_ + 1 < numSegments_)
                 {
@@ -191,7 +200,7 @@ library DiscreteCurveMathLib_v1 {
         uint currentTotalIssuanceSupply_
     )
         internal
-        pure
+        view
         returns (uint price_, uint stepIndex_, uint segmentIndex_)
     {
         // Perform validation first. This will revert if currentTotalIssuanceSupply_ > totalCurveCapacity.
@@ -787,16 +796,6 @@ library DiscreteCurveMathLib_v1 {
         }
 
         return collateral_;
-    }
-
-    // New helper function to calculate collateral for a specific range
-    function _calculateCollateralForRange(
-        PackedSegment[] memory segments_,
-        uint fromSupply_,
-        uint toSupply_
-    ) internal pure returns (uint collateral_) {
-        // Implementation would calculate collateral only for the range being sold
-        // This avoids redundant calculations and is more efficient
     }
 
     // =========================================================================
