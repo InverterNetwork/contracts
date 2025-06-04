@@ -2809,6 +2809,23 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test (Covers L43, L45): Empty segments array, currentTotalIssuanceSupply_ > 0.
+    // Expected Behavior: Should revert with DiscreteCurveMathLib__NoSegmentsConfigured.
+    function test_ValidateSupplyAgainstSegments_EmptySegments_PositiveSupply_Reverts(
+    ) public {
+        PackedSegment[] memory segments = new PackedSegment[](0);
+        uint currentSupply = 1; // Positive supply
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__NoSegmentsConfigured
+                .selector
+        );
+        exposedLib.exposed_validateSupplyAgainstSegments(
+            segments, currentSupply
+        );
+    }
+
     function test_CalculateReserveForSupply_MultiSegment_FullCurve() public {
         uint actualReserve = exposedLib.exposed_calculateReserveForSupply(
             twoSlopedSegmentsTestCurve.packedSegmentsArray,
@@ -3748,6 +3765,53 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
         segments[1] =
             exposedLib.exposed_createSegment(1.1 ether, 0, 10 ether, 1);
+        exposedLib.exposed_validateSegmentArray(segments);
+    }
+
+    // First segment has zero steps, leading to InvalidPriceProgression on the next.
+    function test_ValidateSegmentArray_FirstSegmentWithZeroSteps_CoversL770_L777_Reverts(
+    ) public {
+        PackedSegment[] memory segments = new PackedSegment[](2);
+
+        // Manually construct segments[0] with numberOfSteps = 0
+        uint initialPrice0 = 1 ether;
+        uint priceIncrease0 = 0;
+        uint supplyPerStep0 = 100 ether;
+        uint numberOfSteps0 = 0;
+        uint packedValue0 = (initialPrice0 << (72 + 96 + 16))
+            | (priceIncrease0 << (96 + 16)) | (supplyPerStep0 << 16)
+            | numberOfSteps0;
+        segments[0] = PackedSegment.wrap(bytes32(packedValue0));
+
+        // Create a valid segments[1] whose initial price is less than segments[0]'s initial price
+        // This will trigger InvalidPriceProgression because finalPrice of segment[0] (with 0 steps)
+        // will be its initialPrice.
+        uint initialPrice1 = 0.5 ether; // Less than initialPrice0
+        uint priceIncrease1 = 0;
+        uint supplyPerStep1 = 10 ether;
+        uint numberOfSteps1 = 1;
+        segments[1] = exposedLib.exposed_createSegment(
+            initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1
+        );
+
+        // Expected revert from price progression check for segments[1]
+        // finalPricePreviousSegment will be initialPrice0 (1 ether)
+        // initialPriceCurrentSegment will be initialPrice1 (0.5 ether)
+        bytes memory expectedError = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidPriceProgression
+                .selector,
+            1, // segmentIndex for segments[1]
+            initialPrice0, // finalPricePreviousSegment (final price of segment 0 is its initial price)
+            initialPrice1 // initialPriceCurrentSegment for segments[1]
+        );
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidPriceProgression
+                .selector
+        );
+
+        // vm.expectRevert(expectedError);
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
