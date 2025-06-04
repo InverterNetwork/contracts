@@ -263,7 +263,7 @@ contract ModuleFactory_v1 is
     function registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         _registerMetadata(metadata, beacon);
     }
 
