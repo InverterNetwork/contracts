@@ -148,13 +148,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Factories
         console2.log("  - Factories");
 
-        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
-            "ModuleFactory_v1",
-            abi.encodePacked(
-                vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
-                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
-            )
-        );
+        createModuleFactorySingleton(transactionForwarder);
 
         impl_fac_OrchestratorFactory_v1 = deployAndLogWithCreate2(
             "OrchestratorFactory_v1",
@@ -295,6 +289,22 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             abi.encodePacked(
                 vm.getCode("Orchestrator_v1.sol:Orchestrator_v1"),
                 abi.encode(transactionForwarder)
+            )
+        );
+    }
+
+    // Function to create the module factory singleton.
+    // Externalized into a function so it can be overridden for the
+    // testnet deployment.
+    function createModuleFactorySingleton(address transactionForwarder)
+        internal
+        virtual
+    {
+        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
+            "ModuleFactory_v1",
+            abi.encodePacked(
+                vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
             )
         );
     }
