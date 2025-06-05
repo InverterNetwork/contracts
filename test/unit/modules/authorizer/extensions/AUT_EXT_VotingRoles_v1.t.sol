@@ -103,12 +103,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _authorizer.grantRole(adminRole, address(_votingRoles));
         // _authorizer.setIsAuthorized(address(_votingRoles), true);
 
-        // Initialize the votingRoles with 3 users
+        // Initialize the votingRoles with 2 users
 
-        initialVoters = new address[](3);
+        initialVoters = new address[](2);
         initialVoters[0] = ALBA;
         initialVoters[1] = BOB;
-        initialVoters[2] = COBIE;
 
         uint _startingThreshold = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
@@ -121,7 +120,6 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         currentVoters.push(ALBA);
         currentVoters.push(BOB);
-        currentVoters.push(COBIE);
 
         // validation of the initial state happens in testInit()
     }
@@ -290,13 +288,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         assertEq(_authorizer.hasRole(admin, address(_votingRoles)), true); // Admin role
         assertEq(_votingRoles.isVoter(ALBA), true);
         assertEq(_votingRoles.isVoter(BOB), true);
-        assertEq(_votingRoles.isVoter(COBIE), true);
         assertEq(_authorizer.hasRole(admin, address(this)), true);
         assertEq(_authorizer.hasRole(admin, address(_orchestrator)), false);
         assertEq(_votingRoles.isVoter(address(this)), false);
         assertEq(_votingRoles.isVoter(address(_orchestrator)), false);
 
-        assertEq(_votingRoles.getVoterCount(), 3);
+        assertEq(_votingRoles.getVoterCount(), 2);
     }
 
     function testInitWithInitialVoters(address[] memory testVoters) public {
@@ -1043,6 +1040,34 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.stopPrank();
     }
 
+    function testAddVoters_ValidatesThreshold() public {
+        // To check the validate threshold function we lower the threshold to 1
+        vm.prank(address(_votingRoles));
+        _votingRoles.setThreshold(1);
+
+        // Afterwards we remove one of the voters
+        // As the threshold check is tied to having the specific amount of voters of 2
+        // after the addVoter function call
+        vm.prank(address(_votingRoles));
+        _votingRoles.removeVoter(BOB);
+
+        // Now we add two voters again, as the condition only triggers on 3+ voters
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(BOB);
+
+        // Here we expect the revert
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__InvalidThreshold
+                    .selector
+            )
+        );
+
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(address(0xBEEF));
+    }
+
     function testRemoveVoter(address[] memory users) public {
         _validateUserList(users);
         batchAddAuthorized(users);
@@ -1132,7 +1157,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Set a new threshold
     function testMotionSetgetThreshold() public {
         uint oldThreshold = _votingRoles.getThreshold();
-        uint newThreshold = 3;
+        uint newThreshold = 2;
 
         vm.prank(address(_votingRoles));
 
@@ -1147,7 +1172,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to set a threshold that's too damn high or too damn low
     function testSetInvalidThreshold(uint newThreshold) public {
         // Test too high
-        vm.assume(newThreshold > _votingRoles.getVoterCount());
+        vm.assume(newThreshold > 3);
 
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
@@ -1157,16 +1182,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.prank(address(_votingRoles));
         _votingRoles.setThreshold(newThreshold);
 
-        // Test too low
-        vm.expectRevert(
-            IAUT_EXT_VotingRoles_v1
-                .Module__VotingRoleManager__InvalidThreshold
-                .selector
-        );
-        vm.prank(address(_votingRoles));
-        _votingRoles.setThreshold(1);
-
-        // Test too low with zero
+        // Test too if amount of voters is less than 3
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__InvalidThreshold
@@ -1174,6 +1190,20 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         );
         vm.prank(address(_votingRoles));
         _votingRoles.setThreshold(0);
+
+        // Should fail if voters are equal or more than 3 and threshold is less than 2
+
+        // Add voter
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(address(makeAddr("voter")));
+
+        vm.expectRevert(
+            IAUT_EXT_VotingRoles_v1
+                .Module__VotingRoleManager__InvalidThreshold
+                .selector
+        );
+        vm.prank(address(_votingRoles));
+        _votingRoles.setThreshold(1);
     }
 
     // Fail to change threshold when not the module itself
@@ -1195,7 +1225,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     // Change the threshold by going through governance
     function testGovernanceThresholdChange() public {
-        uint _newThreshold = 3;
+        uint _newThreshold = 2;
 
         // 1) Create and approve a vote
         bytes memory _encodedAction =

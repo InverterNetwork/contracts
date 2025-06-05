@@ -295,6 +295,9 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             unchecked {
                 ++_voterCount;
             }
+            // Validate threshold after adding voter.
+            _validateThreshold(_voterCount, _threshold);
+
             emit VoterAdded(who_);
         }
     }
