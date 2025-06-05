@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.19;
 
+// Internal
 import {IDiscreteCurveMathLib_v1} from
     "../interfaces/IDiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from "../libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "../types/PackedSegment_v1.sol";
+
+// External
 import {Math} from "@oz/utils/math/Math.sol";
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
-
 import {console2} from "forge-std/console2.sol";
 
 /**

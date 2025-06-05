@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.19;
 
+// Internal
+import {IDiscreteCurveMathLib_v1} from
+    "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
+
+// External
 import {Test, console2} from "forge-std/Test.sol";
+import {Math} from "@oz/utils/math/Math.sol";
+
+// Tests and Mocks
+import {DiscreteCurveMathLibV1_Exposed} from
+    "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
+
+// System under Test (SuT)
 import {
     DiscreteCurveMathLib_v1,
     PackedSegmentLib
 } from "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
-import {IDiscreteCurveMathLib_v1} from
-    "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
-import {DiscreteCurveMathLibV1_Exposed} from
-    "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
-import {Math} from "@oz/utils/math/Math.sol";
 
 contract DiscreteCurveMathLib_v1_Test is Test {
     // Allow using PackedSegmentLib functions directly on PackedSegment type
@@ -572,7 +579,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_findPositionForSupply(segments, currentSupply);
     }
 
-        function testFuzz_FindPositionForSupply_WithinOrAtCapacity(
+    function testFuzz_FindPositionForSupply_WithinOrAtCapacity(
         uint8 numSegmentsToFuzz,
         uint initialPriceTpl,
         uint priceIncreaseTpl,
@@ -4397,14 +4404,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
                 └── Then it should pass
     */
 
-    function test_ValidateSegmentArray_Pass_SingleSegment() public view {
+    function test_ValidateSegmentArray_Pass_SingleSegment() public pure {
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1);
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
     function test_ValidateSegmentArray_Pass_MultipleValidSegments_CorrectProgression(
-    ) public view {
+    ) public pure {
         exposedLib.exposed_validateSegmentArray(
             twoSlopedSegmentsTestCurve.packedSegmentsArray
         );
@@ -4528,7 +4535,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint priceIncreaseTpl,
         uint supplyPerStepTpl,
         uint numberOfStepsTpl
-    ) public view {
+    ) public pure {
         vm.assume(
             numSegmentsToFuzz >= 1
                 && numSegmentsToFuzz <= DiscreteCurveMathLib_v1.MAX_SEGMENTS
@@ -4582,7 +4589,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_ExactMatch()
         public
-        view
+        pure
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] =
@@ -4594,7 +4601,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_FlatThenSloped()
         public
-        view
+        pure
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1);
@@ -4605,7 +4612,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_SlopedThenFlat()
         public
-        view
+        pure
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] =
@@ -4930,7 +4937,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint numberOfStepsTpl
     )
         internal
-        view
+        pure
         returns (
             PackedSegment newSegment,
             uint capacityOfThisSegment,
@@ -4980,7 +4987,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint numberOfStepsTpl
     )
         internal
-        view
+        pure
         returns (PackedSegment[] memory segments, uint totalCurveCapacity)
     {
         vm.assume(

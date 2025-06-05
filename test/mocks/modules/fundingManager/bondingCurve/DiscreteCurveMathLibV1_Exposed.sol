@@ -13,7 +13,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         uint priceIncrease_,
         uint supplyPerStep_,
         uint numberOfSteps_
-    ) public view returns (PackedSegment) {
+    ) public pure returns (PackedSegment) {
         return DiscreteCurveMathLib_v1._createSegment(
             initialPrice_, priceIncrease_, supplyPerStep_, numberOfSteps_
         );
@@ -27,7 +27,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         uint targetTotalIssuanceSupply_
     )
         public
-        view
+        pure
         returns (
             uint segmentIndex,
             uint stepIndexWithinSegment,
@@ -42,7 +42,7 @@ contract DiscreteCurveMathLibV1_Exposed {
     function exposed_calculateReserveForSupply(
         PackedSegment[] memory segments_,
         uint targetSupply_
-    ) public view returns (uint totalReserve_) {
+    ) public pure returns (uint totalReserve_) {
         return DiscreteCurveMathLib_v1._calculateReserveForSupply(
             segments_, targetSupply_
         );
@@ -54,7 +54,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         uint currentTotalIssuanceSupply_
     )
         public
-        view
+        pure
         returns (uint issuanceAmountOut_, uint collateralAmountSpent_)
     {
         return DiscreteCurveMathLib_v1._calculatePurchaseReturn(
@@ -68,7 +68,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         uint currentTotalIssuanceSupply_
     )
         public
-        view
+        pure
         returns (uint collateralAmountOut_, uint issuanceAmountBurned_)
     {
         return DiscreteCurveMathLib_v1._calculateSaleReturn(
@@ -78,7 +78,7 @@ contract DiscreteCurveMathLibV1_Exposed {
 
     function exposed_validateSegmentArray(PackedSegment[] memory segments_)
         public
-        view
+        pure
     {
         DiscreteCurveMathLib_v1._validateSegmentArray(segments_);
     }
@@ -86,7 +86,7 @@ contract DiscreteCurveMathLibV1_Exposed {
     function exposed_validateSupplyAgainstSegments(
         PackedSegment[] memory segments_,
         uint currentTotalIssuanceSupply_
-    ) public view returns (uint totalCurveCapacity_) {
+    ) public pure returns (uint totalCurveCapacity_) {
         return DiscreteCurveMathLib_v1._validateSupplyAgainstSegments(
             segments_, currentTotalIssuanceSupply_
         );
@@ -96,7 +96,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         PackedSegment[] memory segments_,
         uint lowerSupply_,
         uint higherSupply_
-    ) public view returns (uint lowerReserve_, uint higherReserve_) {
+    ) public pure returns (uint lowerReserve_, uint higherReserve_) {
         return DiscreteCurveMathLib_v1._calculateReservesForTwoSupplies(
             segments_, lowerSupply_, higherSupply_
         );
