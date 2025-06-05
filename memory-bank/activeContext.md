@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Updating documentation for `DiscreteCurveMathLib_v1` (NatSpec in code, Memory Bank files, and Markdown documentation).
-**Secondary**: Preparing for strengthening fuzz testing for `DiscreteCurveMathLib_v1.t.sol` once all documentation is synchronized.
+**Primary**: Updating Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1` (all tests passing, 100% coverage achieved post-refactor).
+**Secondary**: Outlining next steps: synchronize all documentation (Memory Bank, Markdown docs), perform final enhanced fuzz testing for `DiscreteCurveMathLib_v1.t.sol`, and then transition to `FM_BC_DBC` (Funding Manager) development.
 
-**Reason for Shift**: NatSpec comments have been added to key functions in `DiscreteCurveMathLib_v1.sol`, their state mutability confirmed as `pure`, and compiler warnings in the test file `DiscreteCurveMathLib_v1.t.sol` have been resolved. The immediate next step is to ensure all related documentation reflects these changes accurately.
+**Reason for Update**: User confirms `DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are fully stable, all tests are passing, and all refactorings are complete. Memory Bank needs to reflect this final state of the library.
 
 ## Recent Progress
 
@@ -16,7 +16,7 @@
 - ✅ `_getCurrentPriceAndStep` function removed from `DiscreteCurveMathLib_v1.sol`.
 - ✅ Tests in `DiscreteCurveMathLib_v1.t.sol` previously using `_getCurrentPriceAndStep` refactored to use `_findPositionForSupply`.
 - ✅ `exposed_getCurrentPriceAndStep` function removed from mock contract `DiscreteCurveMathLibV1_Exposed.sol`.
-- ⚠️ 9 tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` are failing after these changes.
+- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (65 tests) are now passing after refactoring and fixes.
 - ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` refactored by user (previous session).
 - ✅ `IDiscreteCurveMathLib_v1.sol` updated with new error types (`InvalidFlatSegment`, `InvalidPointSegment`) (previous session).
 - ✅ `PackedSegmentLib.sol`'s `_create` function confirmed to contain stricter validation rules (previous session).
@@ -26,7 +26,7 @@
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
-**`DiscreteCurveMathLib_v1` has been refactored (removal of `_getCurrentPriceAndStep`) and its test suite `DiscreteCurveMathLib_v1.t.sol` adapted. However, 9 tests are currently failing and require debugging.** Core library and tests maintain:
+**`DiscreteCurveMathLib_v1` has been successfully refactored (including removal of `_getCurrentPriceAndStep`) and its test suite `DiscreteCurveMathLib_v1.t.sol` adapted and stabilized. All tests are passing, and 100% coverage is achieved.** Core library and tests maintain:
 
 - Defensive programming patterns (validation strategy updated, see below).
 - Gas-optimized algorithms with safety bounds.
@@ -36,15 +36,15 @@
 
 ## Next Immediate Steps
 
-1.  **Debug and fix 9 failing tests** in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`.
-2.  **Update Memory Bank files** (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect test fixes and current library state (including removal of `_getCurrentPriceAndStep`).
-3.  **Update the Markdown documentation file** `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md` to align with the latest code changes (removal of `_getCurrentPriceAndStep`, test status) and ensure consistency.
-4.  Once all unit tests pass: **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
+1.  **Synchronize Documentation (Current Task)**:
+    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status.
+    - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md` to align with the latest code changes and stable test status.
+2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
-    - Add a new fuzz test for `_calculateSaleReturn`.
-5.  **Update Memory Bank** again after fuzz tests are implemented and passing.
-6.  Then, proceed to **plan `FM_BC_DBC` Implementation**.
+    - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
+3.  **Update Memory Bank** again after fuzz tests are implemented and passing, confirming ultimate readiness.
+4.  **Transition to `FM_BC_DBC` Implementation Planning & Development**.
 
 ## Implementation Insights Discovered (And Being Revised)
 
@@ -181,35 +181,31 @@ This function in `FM_BC_DBC` becomes even more critical as it's the point where 
 
 (PackedSegment Bit Limitations, Linear Search Performance (for old logic), etc., remain relevant context for the library as a whole)
 
-## Testing & Validation Status ⚠️ (9 Tests Failing)
+## Testing & Validation Status ✅ (All Tests Green, 100% Coverage)
 
-- ✅ **`DiscreteCurveMathLib_v1.t.sol`**: Refactored to use `_findPositionForSupply` instead of `_getCurrentPriceAndStep`.
-- ⚠️ **9 tests are currently failing** in `DiscreteCurveMathLib_v1.t.sol` after the refactor.
+- ✅ **`DiscreteCurveMathLib_v1.t.sol`**: Successfully refactored (including usage of `_findPositionForSupply` instead of `_getCurrentPriceAndStep`). All 65 tests are passing. 100% test coverage achieved.
 - ✅ `exposed_getCurrentPriceAndStep` removed from `DiscreteCurveMathLibV1_Exposed.sol`.
-- ✅ **`_calculatePurchaseReturn`**: Successfully refactored, fixed, and all related tests are passing (previous session).
-- ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested (previous session).
-- ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered (previous session).
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing (previous session).
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`)**: 9 tests failing after refactoring to use `_findPositionForSupply`.
+- ✅ **`_calculatePurchaseReturn`**: Successfully refactored, fixed, and all related tests are passing.
+- ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested.
+- ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered.
+- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing.
 - ✅ **NatSpec**: Added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
 - ✅ **State Mutability**: `_calculateReserveForSupply` and `_calculatePurchaseReturn` confirmed/updated to `pure`.
-- 🎯 **Next**: Debug and fix the 9 failing tests in `DiscreteCurveMathLib_v1.t.sol`.
+- 🎯 **Next**: Synchronize all documentation, then finalize with enhanced fuzz testing before moving to `FM_BC_DBC`.
 
 ## Next Development Priorities - REVISED
 
-1.  **Fix Failing Tests (Current Task)**:
-    - Debug and fix the 9 failing tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`.
-2.  **Synchronize Documentation**:
-    - Update Memory Bank files (`activeContext.md`, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect test fixes and current library state.
+1.  **Synchronize Documentation (Current Task)**:
+    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status.
     - Update `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
-3.  **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (once unit tests pass)**:
+2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
-    - Add a new fuzz test for `_calculateSaleReturn`.
-4.  **Update Memory Bank** after fuzz tests are implemented and passing.
-5.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
-6.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
+    - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
+3.  **Update Memory Bank** again after fuzz tests are implemented and passing.
+4.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
+5.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
 
-## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Refactored - Test Regressions)
+## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Fully Stable)
 
-**`DiscreteCurveMathLib_v1` has been refactored (removal of `_getCurrentPriceAndStep`), and the test suite adapted. However, this has introduced 9 failing tests that need to be addressed to restore stability.** The core library's logic for other functions and the stricter validation in `PackedSegmentLib` remain positive aspects.
+**`DiscreteCurveMathLib_v1` has been successfully refactored (including removal of `_getCurrentPriceAndStep`), and its test suite `DiscreteCurveMathLib_v1.t.sol` adapted and stabilized. All tests are passing, and 100% coverage is achieved.** The library demonstrates high code quality, robust defensive programming patterns, gas optimization, and clear separation of concerns. The stricter validation in `PackedSegmentLib` further enhances its robustness.

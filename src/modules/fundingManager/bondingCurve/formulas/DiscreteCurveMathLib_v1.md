@@ -8,17 +8,18 @@ The `DiscreteCurveMathLib_v1` is a Solidity library designed to provide mathemat
 
 To understand the functionalities of this library and its context, it is important to be familiar with the following definitions.
 
-| Definition              | Explanation                                                                                                                                                                                     |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PP                      | Payment Processor module, typically handles queued payment operations.                                                                                                                          |
-| FM                      | Funding Manager type module, which would utilize this library for its bonding curve calculations.                                                                                               |
-| Issuance Token          | Tokens that are distributed (minted/burned) by a Funding Manager contract, often based on the calculations provided by this library.                                                            |
-| Discrete Bonding Curve  | A bonding curve where the price of the issuance token changes at discrete intervals (steps) rather than continuously.                                                                           |
-| Segment                 | A distinct portion of the discrete bonding curve, defined by its own set of parameters: an initial price, a price increase per step, a supply amount per step, and a total number of steps.     |
-| Step                    | The smallest unit within a segment where a specific quantity of issuance tokens (`supplyPerStep`) can be bought or sold at a fixed price.                                                       |
-| PackedSegment           | A custom Solidity type (`type PackedSegment is bytes32;`) used by this library to store all four parameters of a curve segment into a single `bytes32` value. This optimizes storage gas costs. |
-| `PackedSegmentLib`      | An internal library within `DiscreteCurveMathLib_v1` responsible for the creation, validation, packing, and unpacking of `PackedSegment` data.                                                  |
-| Scaling Factor (`1e18`) | A constant used for fixed-point arithmetic to handle decimal precision for prices and token amounts, assuming standard 18-decimal tokens.                                                       |
+| Definition              | Explanation                                                                                                                                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PP                      | Payment Processor module, typically handles queued payment operations.                                                                                                                              |
+| FM                      | Funding Manager type module, which would utilize this library for its bonding curve calculations.                                                                                                   |
+| Issuance Token          | Tokens that are distributed (minted/burned) by a Funding Manager contract, often based on the calculations provided by this library.                                                                |
+| Discrete Bonding Curve  | A bonding curve where the price of the issuance token changes at discrete intervals (steps) rather than continuously.                                                                               |
+| Segment                 | A distinct portion of the discrete bonding curve, defined by its own set of parameters: an initial price, a price increase per step, a supply amount per step, and a total number of steps.         |
+| Step                    | The smallest unit within a segment where a specific quantity of issuance tokens (`supplyPerStep`) can be bought or sold at a fixed price.                                                           |
+| PackedSegment           | A custom Solidity type (`type PackedSegment is bytes32;`) used by this library to store all four parameters of a curve segment into a single `bytes32` value. This optimizes storage gas costs.     |
+| `PackedSegmentLib`      | A helper library (located in `../libraries/PackedSegmentLib.sol`), imported by `DiscreteCurveMathLib_v1`, responsible for the creation, validation, packing, and unpacking of `PackedSegment` data. |
+| Scaling Factor (`1e18`) | A constant (`10^18`) used for fixed-point arithmetic to handle decimal precision for prices and token amounts, assuming standard 18-decimal tokens.                                                 |
+| `MAX_SEGMENTS`          | A constant (`10`) defining the maximum number of segments a curve configuration can have, enforced by functions like `_validateSegmentArray` and `_calculateReserveForSupply`.                      |
 
 ## Implementation Design Decision
 
@@ -47,18 +48,38 @@ To ensure economic sensibility and robustness, `DiscreteCurveMathLib_v1` and its
     If this condition is violated (i.e., if a subsequent segment starts at a lower price than where the previous one ended), `_validateSegmentArray()` will revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice)`.
     This rule ensures a generally non-decreasing (or strictly increasing, if price increases are positive) price curve across the entire set of segments.
 
-3.  **No Price Decrease Within Sloped Segments**:
-    The `priceIncreasePerStep` parameter for a segment is a `uint256`. This inherently means that for any single sloped segment (where `priceIncreasePerStep > 0`), the price per step will only increase or stay the same (if `priceIncreasePerStep` was 0, but such segments are now handled by the "No Free Segments" rule if `initialPrice` is also 0, or they are flat segments if `initialPrice > 0`). Direct price decreases _within_ a single segment are not possible due to the unsigned nature of this parameter.
+3.  **Specific Segment Structure ("True Flat" / "True Sloped") (`PackedSegmentLib._create`)**:
+    `PackedSegmentLib._create()` enforces specific structural rules for segments:
+    - A "True Flat" segment must have `numberOfSteps == 1` and `priceIncreasePerStep == 0`. Attempting to create a multi-step flat segment (e.g., `numberOfSteps > 1` and `priceIncreasePerStep == 0`) will revert with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidFlatSegment()`.
+    - A "True Sloped" segment must have `numberOfSteps > 1` and `priceIncreasePerStep > 0`. Attempting to create a single-step sloped segment (e.g., `numberOfSteps == 1` and `priceIncreasePerStep > 0`) will revert with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPointSegment()`.
+      These rules ensure that segments are clearly defined as either single-step fixed-price points or multi-step incrementally priced slopes. The `priceIncreasePerStep` being `uint256` inherently prevents price decreases within a single segment.
 
-_Note: The custom errors `DiscreteCurveMathLib__SegmentIsFree` and `DiscreteCurveMathLib__InvalidPriceProgression` must be defined in the `IDiscreteCurveMathLib_v1.sol` interface file for the contracts to compile and function correctly._
+**Other Important Validation Rules & Errors:**
+
+- **No Segments Configured (`_validateSegmentArray`, `_calculateReserveForSupply`, `_calculatePurchaseReturn` via internal checks):** If an operation requiring segments is attempted but no segments are defined (e.g., `segments_` array is empty), the library may revert with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured()`.
+- **Too Many Segments (`_validateSegmentArray`, `_calculateReserveForSupply`):** If the provided `segments_` array exceeds `MAX_SEGMENTS` (currently 10), relevant functions will revert with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments()`.
+- **Supply Exceeds Curve Capacity (`_validateSupplyAgainstSegments`, `_findPositionForSupply`):** If a target supply or current supply exceeds the total possible supply defined by all segments, functions will revert with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity(uint256 currentSupplyOrTarget, uint256 totalCapacity)`.
+- **Zero Collateral Input (`_calculatePurchaseReturn`):** Attempting a purchase with zero collateral reverts with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput()`.
+- **Zero Issuance Input (`_calculateSaleReturn`):** Attempting a sale with zero issuance tokens reverts with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput()`.
+- **Insufficient Issuance to Sell (`_calculateSaleReturn`):** Attempting to sell more tokens than the `currentTotalIssuanceSupply` reverts with `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InsufficientIssuanceToSell(uint256 tokensToSell, uint256 currentSupply)`.
+
+_Note: All custom errors mentioned (e.g., `DiscreteCurveMathLib__SegmentIsFree`, `DiscreteCurveMathLib__InvalidPriceProgression`, `DiscreteCurveMathLib__InvalidFlatSegment`, `DiscreteCurveMathLib__InvalidPointSegment`, `DiscreteCurveMathLib__NoSegmentsConfigured`, `DiscreteCurveMathLib__TooManySegments`, `DiscreteCurveMathLib__SupplyExceedsCurveCapacity`, `DiscreteCurveMathLib__ZeroCollateralInput`, `DiscreteCurveMathLib__ZeroIssuanceInput`, `DiscreteCurveMathLib__InsufficientIssuanceToSell`) must be defined in the `IDiscreteCurveMathLib_v1.sol` interface file for the contracts to compile and function correctly._
 
 ### Efficient Calculation Methods
 
 To further optimize gas for on-chain computations:
 
-- **Arithmetic Series for Reserve/Cost Calculation:** For sloped segments (where `priceIncreasePerStep > 0`), functions like `_calculateReserveForSupply` use the mathematical formula for the sum of an arithmetic series. This allows calculating the total collateral for multiple steps without iterating through each step individually, saving gas.
+- **Arithmetic Series for Reserve/Cost Calculation:** For sloped segments (where `priceIncreasePerStep > 0`), functions like `_calculateReserveForSupply` (and its internal helper `_calculateSegmentReserve`) use the mathematical formula for the sum of an arithmetic series. This allows calculating the total collateral for multiple steps without iterating through each step individually, saving gas.
 - **Direct Iteration for Purchase Calculation:** The `_calculatePurchaseReturn` function uses a direct iterative approach to determine the number of tokens to be minted for a given collateral input. It iterates through the curve segments and steps, calculating the cost for each, until the provided collateral is exhausted or the curve capacity is reached.
-- **Optimized Sale Calculation:** The `_calculateSaleReturn` function determines the collateral out by calculating the total reserve locked in the curve before and after the sale, then taking the difference. This approach (`R(S_current) - R(S_final)`) is generally more efficient than iterating backward through curve steps.
+- **Optimized Sale Calculation:** The `_calculateSaleReturn` function determines the collateral out by calculating the total reserve locked in the curve before and after the sale, then taking the difference. This approach (`R(S_current) - R(S_final)`) is generally more efficient than iterating backward through curve steps. It leverages the internal helper `_calculateReservesForTwoSupplies` to efficiently get both reserve values in a single pass.
+
+**Internal Helper Functions for Calculation:**
+The library utilizes several internal helper functions to achieve its calculations efficiently and maintain modularity:
+
+- `_validateSupplyAgainstSegments`: Ensures a given supply is consistent with the curve's capacity.
+- `_calculateSegmentReserve`: Calculates the reserve for a portion of a single segment, handling flat and sloped logic.
+- `_calculateReservesForTwoSupplies`: An optimized helper for `_calculateSaleReturn` that calculates reserves for two different supply points in one pass.
+  While these are internal, understanding their role can be helpful for a deeper analysis of the library's mechanics.
 
 ### Limitations of Packed Storage and Low-Priced Collateral
 
@@ -126,15 +147,16 @@ classDiagram
         <<library>>
         +SCALING_FACTOR : uint256
         +MAX_SEGMENTS : uint256
-        +CurvePosition (struct)
         ---
-        #_findPositionForSupply(PackedSegment[] memory, uint256) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory)
-        #_getCurrentPriceAndStep(PackedSegment[] memory, uint256) internal pure returns (uint256 price_, uint256 stepIndex_, uint256 segmentIndex_)
+        #_findPositionForSupply(PackedSegment[] memory, uint256) internal pure returns (uint segmentIndex, uint stepIndexWithinSegment, uint priceAtCurrentStep)
         #_calculateReserveForSupply(PackedSegment[] memory, uint256) internal pure returns (uint256 totalReserve_)
         #_calculatePurchaseReturn(PackedSegment[] memory, uint256, uint256) internal pure returns (uint256 tokensToMint_, uint256 collateralSpentByPurchaser_)
-        #_calculateSaleReturn(PackedSegment[] memory, uint256, uint256) internal view returns (uint256 collateralToReturn_, uint256 tokensToBurn_)
+        #_calculateSaleReturn(PackedSegment[] memory, uint256, uint256) internal pure returns (uint256 collateralToReturn_, uint256 tokensToBurn_)
         #_createSegment(uint256, uint256, uint256, uint256) internal pure returns (PackedSegment)
         #_validateSegmentArray(PackedSegment[] memory) internal pure
+        #_validateSupplyAgainstSegments(PackedSegment[] memory, uint256) internal pure returns (uint totalCurveCapacity_)
+        #_calculateReservesForTwoSupplies(PackedSegment[] memory, uint256, uint256) internal pure returns (uint lowerReserve_, uint higherReserve_)
+        #_calculateSegmentReserve(uint256, uint256, uint256, uint256) internal pure returns (uint collateral_)
     }
 
     class PackedSegmentLib {
@@ -159,9 +181,11 @@ classDiagram
 
     class IDiscreteCurveMathLib_v1 {
         <<interface>>
-        +SegmentConfig (struct)
         +Errors...
         +Events...
+        // Note: CurvePosition struct might be defined here if used by _findPositionForSupply's NatSpec,
+        // but the function itself returns a tuple.
+        // SegmentConfig struct is not directly used by _createSegment's signature.
     }
 
     note for DiscreteCurveMathLib_v1 "Uses PackedSegmentLib for segment data manipulation"
@@ -290,9 +314,9 @@ Deployment of contracts _using_ this library would follow standard Inverter Netw
 
 Not applicable for the library itself. A contract using this library (e.g., a Funding Manager) would require setup steps to define its curve segments. This typically involves:
 
-1.  Preparing an array of `IDiscreteCurveMathLib_v1.SegmentConfig` structs.
-2.  Iterating through this array, calling `DiscreteCurveMathLib_v1._createSegment()` for each config to get the `PackedSegment` data.
-3.  Storing this `PackedSegment[]` array in its state.
-4.  Validating the array using `DiscreteCurveMathLib_v1._validateSegmentArray()`.
+1.  **Preparing Segment Data**: For each segment, the individual parameters (`initialPrice_`, `priceIncrease_`, `supplyPerStep_`, `numberOfSteps_`) need to be determined. While an off-chain script or helper might use a struct similar to `SegmentConfig` for convenience, the library's `_createSegment` function takes these as individual arguments.
+2.  **Creating PackedSegments**: Iterating through the prepared segment data and calling `DiscreteCurveMathLib_v1._createSegment()` for each set of parameters to get the `PackedSegment` bytes32 value. `PackedSegmentLib` (used by `_createSegment`) will validate individual parameters.
+3.  **Storing PackedSegments**: Storing the resulting `PackedSegment[]` array in the consuming contract's state.
+4.  **Validating Segment Array**: Validating the entire `PackedSegment[]` array using `DiscreteCurveMathLib_v1._validateSegmentArray()` to check for array-level properties like `MAX_SEGMENTS` and correct inter-segment price progression.
 
 The NatSpec comments within `DiscreteCurveMathLib_v1.sol` and `IDiscreteCurveMathLib_v1.sol` provide details on function parameters and errors, which would be relevant for developers integrating this library.

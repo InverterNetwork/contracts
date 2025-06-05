@@ -14,10 +14,10 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 (Content remains the same)
 
-### Library Pattern - ✅ STABLE & TESTED (Refactoring, Validation Enhanced, NatSpec Added)
+### Library Pattern - ✅ STABLE, FULLY TESTED & DOCUMENTED (All Refactoring Complete)
 
-- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations, now with NatSpec comments for key functions. (`_calculatePurchaseReturn` refactored and fixed; validation strategy confirmed. State mutability of core functions confirmed as `pure`. The `DiscreteCurveMathLib_v1.t.sol` test suite has been refactored, compiler warnings fixed, and all 65 tests are passing, confirming library stability).
-- **PackedSegmentLib**: Helper library for bit manipulation and validation. (`_create` function's stricter validation for "True Flat" and "True Sloped" segments confirmed and tested).
+- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. All refactorings (including `_calculatePurchaseReturn` and removal of `_getCurrentPriceAndStep`) are complete. NatSpec comments added to key functions. State mutability of core functions confirmed as `pure`. The `DiscreteCurveMathLib_v1.t.sol` test suite has been fully refactored, all compiler warnings fixed, and all 65 tests are passing (100% coverage), confirming library stability and production-readiness.
+- **PackedSegmentLib**: Helper library for bit manipulation and validation. (`_create` function's stricter validation for "True Flat" and "True Sloped" segments confirmed and fully tested with 10/10 tests passing).
 - Stateless (all core math functions are `pure`), reusable across multiple modules.
 - Type-safe with custom PackedSegment type.
 
@@ -27,7 +27,7 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 ## Implementation Patterns - ✅ DISCOVERED FROM CODE (Validation pattern revised)
 
-### Defensive Programming Pattern ✅ (Stable & Tested for Libs)
+### Defensive Programming Pattern ✅ (Stable & Fully Tested for Libraries)
 
 **Revised Multi-layer validation strategy:**
 
@@ -74,7 +74,7 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 (Content remains the same)
 
-### Error Handling Pattern - ✅ STABLE & TESTED (New segment errors integrated)
+### Error Handling Pattern - ✅ STABLE & FULLY TESTED (New segment errors integrated and covered)
 
 **Descriptive custom errors with context:**
 
@@ -96,9 +96,7 @@ interface IDiscreteCurveMathLib_v1 {
 
 (Content remains the same)
 
-### Library Architecture Pattern - ✅ STABLE & TESTED (Reflects refactored `_calculatePurchaseReturn`)
-
-(Content remains the same, noting `_calculatePurchaseReturn` has been refactored and its helper functions removed).
+### Library Architecture Pattern - ✅ STABLE & FULLY TESTED (Reflects all refactoring, including `_calculatePurchaseReturn` and removal of helpers/other functions like `_getCurrentPriceAndStep`)
 
 ## Integration Patterns - ✅ READY FOR IMPLEMENTATION (Caller validation emphasized)
 
@@ -172,7 +170,7 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
 ## Implementation Readiness Assessment
 
-### ✅ Patterns Confirmed & Stable (Ready for `FM_BC_DBC` Application)
+### ✅ Patterns Confirmed, Stable & Fully Tested (Ready for `FM_BC_DBC` Application)
 
-1.  **Defensive programming**: Multi-layer validation approach (stricter `PackedSegmentLib._create` rules, revised `_calculatePurchaseReturn` caller responsibilities) is now stable and fully tested within the libraries.
-    (Other patterns remain the same)
+1.  **Defensive programming**: Multi-layer validation approach (stricter `PackedSegmentLib._create` rules, revised `_calculatePurchaseReturn` caller responsibilities) is now stable and fully tested within the libraries, with all associated unit tests passing.
+    (Other patterns like Type-Safe Packed Storage, Gas Optimization, Mathematical Precision, Error Handling, Naming Conventions, Library Architecture, Integration Patterns, Performance Optimization, and State Management are also stable, tested, and reflect the final state of the libraries.)
