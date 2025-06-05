@@ -3264,7 +3264,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Seg1: TrueFlat. P_init=1.2, P_inc=0, S_step=15, N_steps=1. (Price 1.2). Capacity 15.
         segments[1] =
             exposedLib.exposed_createSegment(1.2 ether, 0, 15 ether, 1);
-        PackedSegment seg1 = segments[1];
 
         // currentSupply = 25 ether (End of Seg0 (20) + 5 into Seg1). Seg1 has 1 step, 5/15 populated.
         uint supplySeg0 =
@@ -4404,14 +4403,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
                 └── Then it should pass
     */
 
-    function test_ValidateSegmentArray_Pass_SingleSegment() public pure {
+    function test_ValidateSegmentArray_Pass_SingleSegment() public view {
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1);
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
     function test_ValidateSegmentArray_Pass_MultipleValidSegments_CorrectProgression(
-    ) public pure {
+    ) public view {
         exposedLib.exposed_validateSegmentArray(
             twoSlopedSegmentsTestCurve.packedSegmentsArray
         );
@@ -4535,7 +4534,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint priceIncreaseTpl,
         uint supplyPerStepTpl,
         uint numberOfStepsTpl
-    ) public pure {
+    ) public view {
         vm.assume(
             numSegmentsToFuzz >= 1
                 && numSegmentsToFuzz <= DiscreteCurveMathLib_v1.MAX_SEGMENTS
@@ -4589,7 +4588,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_ExactMatch()
         public
-        pure
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] =
@@ -4601,7 +4600,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_FlatThenSloped()
         public
-        pure
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1);
@@ -4612,7 +4611,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_PriceProgression_SlopedThenFlat()
         public
-        pure
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         segments[0] =
@@ -4937,7 +4936,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint numberOfStepsTpl
     )
         internal
-        pure
+        view
         returns (
             PackedSegment newSegment,
             uint capacityOfThisSegment,
@@ -4987,7 +4986,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint numberOfStepsTpl
     )
         internal
-        pure
+        view
         returns (PackedSegment[] memory segments, uint totalCurveCapacity)
     {
         vm.assume(

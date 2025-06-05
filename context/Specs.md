@@ -669,21 +669,24 @@ Feature: Configuring the District Bonding Curve
 To centralize all complex mathematical logic associated with the discrete, segment-and-step-based bonding curve structure. This approach promotes accuracy, enhances gas efficiency (e.g., by using arithmetic series sums for sloped segments rather than iterating individual steps), and improves code maintainability and auditability by isolating mathematical complexity.
 
 **Key Functions (Illustrative Signatures):**
-The library should expose pure functions that take a segment configuration (`Segment[] memory segments`) as a primary input. These functions do not rely on or modify contract state.
+The library should expose pure functions that take a segment configuration (`PackedSegment[] memory segments`) as a primary input. These functions do not rely on or modify contract state.
 
-- `function calculatePurchaseReturn(Segment[] memory segments, uint256 collateralAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 issuanceAmountOut)`
-  - Calculates the amount of issuance tokens a user would receive for a given `collateralAmountIn`, based on the provided `segments` structure and the `currentTotalSupply` before the transaction. For sloped segments, this function iterates through steps linearly (`_linearSearchSloped`). This approach was chosen because:
-    - The maximum number of segments is limited (currently 10).
-    - While individual segments can have many steps, typical purchase transactions are expected to traverse a relatively small number of these steps.
-    - For such scenarios, a linear search can be more gas-efficient than a binary search due to lower computational overhead per step.
-- `function calculateSalesReturn(Segment[] memory segments, uint256 issuanceAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 collateralAmountOut)`
-  - Calculates the amount of collateral a user would receive for redeeming a given `issuanceAmountIn`, based on the provided `segments` and `currentTotalSupply`.
-- `function calculateReserveForSupply(Segment[] memory segments, uint256 targetSupply) internal pure returns (uint256 collateralReserve)`
+- `function calculatePurchaseReturn(PackedSegment[] memory segments, uint256 collateralAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 tokensToMint, uint256 collateralSpent)`
+  - Calculates the amount of issuance tokens a user would receive (`tokensToMint`) and the actual `collateralSpent` for a given `collateralAmountIn`, based on the provided `segments` structure and the `currentTotalSupply` before the transaction. The function iterates through segments and steps as needed.
+- `function calculateSaleReturn(PackedSegment[] memory segments, uint256 issuanceAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 collateralToReturn, uint256 tokensToBurn)`
+  - Calculates the amount of collateral a user would receive (`collateralToReturn`) and the actual `tokensToBurn` for redeeming a given `issuanceAmountIn`, based on the provided `segments` and `currentTotalSupply`.
+- `function calculateReserveForSupply(PackedSegment[] memory segments, uint256 targetSupply) internal pure returns (uint256 collateralReserve)`
   - Calculates the total collateral that _should_ back the `targetSupply` of issuance tokens, according to the given `segments` configuration (i.e., effectively the area under the curve up to `targetSupply`).
+- `function createSegment(uint256 initialPrice, uint256 priceIncrease, uint256 supplyPerStep, uint256 numberOfSteps) internal pure returns (PackedSegment)`
+  - Creates and returns a `PackedSegment` from its individual parameters, performing validation via `PackedSegmentLib`.
+- `function validateSegmentArray(PackedSegment[] memory segments) internal pure`
+  - Validates an array of `PackedSegment` for structural integrity (e.g., not empty, within `MAX_SEGMENTS`, correct price progression between segments).
+- `function findPositionForSupply(PackedSegment[] memory segments, uint256 targetSupply) internal pure returns (uint segmentIndex, uint stepIndexWithinSegment, uint priceAtCurrentStep)`
+  - Determines the current segment, step within that segment, and price at that step for a given `targetSupply`.
 
 **Intended Usage:**
 
-- **District Bonding Curve Funding Manager (DBC FM):** Will utilize these library functions for its core minting/redeeming logic (passing its current segment configuration) and for providing view functions that query potential transaction outcomes or current reserve states.
+- **District Bonding Curve Funding Manager (DBC FM):** Will utilize these library functions for its core minting/redeeming logic (passing its current `PackedSegment[]` configuration), for segment creation and validation during configuration, and for providing view functions that query potential transaction outcomes or current reserve states.
 - **Rebalancing Modules:** Will primarily use `calculateReserveForSupply` to perform invariance checks before proposing or applying changes to the DBC FM's segment configuration.
 - **Lending Facility:** Will use `calculateReserveForSupply` (likely by calling a helper view function on the DBC FM that uses the library with the DBC FM's current state) to determine parameters like borrowable capacity based on the curve's current reserves.
 
@@ -695,18 +698,18 @@ A critical application of `DiscreteCurveMathLib.calculateReserveForSupply` is to
 Feature: Reserve Invariance Check for Curve Reconfiguration
 
   Background:
-    Given the system uses `DiscreteCurveMathLib.calculateReserveForSupply(segments, supply)` to determine collateral reserve for any given curve structure and supply.
+    Given the system uses `DiscreteCurveMathLib.calculateReserveForSupply(PackedSegment[] memory segments, uint256 supply)` to determine collateral reserve for any given curve structure and supply.
 
   Scenario: Proposed segment configuration maintains reserve value
-    Given a District Bonding Curve with `currentSegmentConfig` and `currentTotalSupply`
-    And a `proposedSegmentConfig` for the curve, intended to be applied at the `currentTotalSupply`
+    Given a District Bonding Curve with `currentSegmentConfig` (a `PackedSegment[]`) and `currentTotalSupply`
+    And a `proposedSegmentConfig` (a `PackedSegment[]`) for the curve, intended to be applied at the `currentTotalSupply`
     When `currentReserve` is calculated using `DiscreteCurveMathLib.calculateReserveForSupply(currentSegmentConfig, currentTotalSupply)`
     And `proposedReserve` is calculated using `DiscreteCurveMathLib.calculateReserveForSupply(proposedSegmentConfig, currentTotalSupply)`
     Then, for a reserve-invariant reconfiguration, `proposedReserve` must be equal to `currentReserve`.
 
   Scenario: Proposed segment configuration alters reserve value (and is rejected if invariance is mandated)
-    Given a District Bonding Curve with `currentSegmentConfig` and `currentTotalSupply`
-    And a `proposedSegmentConfig` for the curve
+    Given a District Bonding Curve with `currentSegmentConfig` (a `PackedSegment[]`) and `currentTotalSupply`
+    And a `proposedSegmentConfig` (a `PackedSegment[]`) for the curve
     And the specific rebalancing mechanism being invoked requires that the total collateral reserve remains unchanged
     When `currentReserve` is calculated using `DiscreteCurveMathLib.calculateReserveForSupply(currentSegmentConfig, currentTotalSupply)`
     And `proposedReserve` is calculated using `DiscreteCurveMathLib.calculateReserveForSupply(proposedSegmentConfig, currentTotalSupply)`
