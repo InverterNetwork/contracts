@@ -8,8 +8,12 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
 // Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
+import {Testnet_ModuleFactory_v1} from
+    "script/testnetContracts/Testnet_ModuleFactory_v1.sol";
 
 // Interfaces
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Mocks
@@ -88,5 +92,64 @@ contract TestnetDeploymentScript is DeploymentScript {
         proxyAndBeaconDeployer.setFactory(deterministicFactory);
 
         super.run();
+    }
+
+    function createModuleFactorySingleton(address transactionForwarder)
+        internal
+        override
+    {
+        // Replace the implementation of the ModuleFactory with its
+        // testnet version.
+        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
+            "Testnet_ModuleFactory_v1",
+            abi.encodePacked(
+                vm.getCode(
+                    "Testnet_ModuleFactory_v1.sol:Testnet_ModuleFactory_v1"
+                ),
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
+            )
+        );
+    }
+
+    // Overriding the parent function to verify that the module factory is not
+    // permissioned for testnets.
+    function verifyModuleFactoryPermissions() public override {
+        (IInverterBeacon_v1 testBeacon,) = Testnet_ModuleFactory_v1(
+            moduleFactory
+        ).getBeaconAndId(initialMetadataRegistration[0]);
+
+        IModule_v1.Metadata memory testMetadata = IModule_v1.Metadata(
+            type(uint).max,
+            type(uint).max,
+            type(uint).max,
+            "Test_Module_Name",
+            "https://github.com/Test/test"
+        );
+
+        // We do not actually want to send this transaction, just simulate it,
+        // which is why there is no startBroadcast() here.
+        try Testnet_ModuleFactory_v1(moduleFactory).registerMetadata(
+            testMetadata, testBeacon
+        ) {
+            return;
+        } catch (bytes memory reason) {
+            // If the OwnableUnauthorizedAccount error is thrown, we know that
+            // the wrong factory is deployed.
+            if (
+                keccak256(reason)
+                    == keccak256(
+                        abi.encodeWithSignature(
+                            "OwnableUnauthorizedAccount(address)", address(this)
+                        )
+                    )
+            ) {
+                revert("Deployment failed - Module Factory is permissioned.");
+            }
+
+            // If any other error is thrown, we know that the factory has some other
+            // issue, even if it's not the permissioning - and we still revert because of
+            // that.
+            revert("Deployment failed - Module Factory can't be used properly.");
+        }
     }
 }
