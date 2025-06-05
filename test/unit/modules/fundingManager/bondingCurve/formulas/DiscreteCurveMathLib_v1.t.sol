@@ -3768,51 +3768,53 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
-    function test_ValidateSegmentArray_FirstSegmentWithZeroSteps_Reverts() public {
-    PackedSegment[] memory segments = new PackedSegment[](2);
+    function test_ValidateSegmentArray_FirstSegmentWithZeroSteps_Reverts()
+        public
+    {
+        PackedSegment[] memory segments = new PackedSegment[](2);
 
-    // Manually construct segments[0] with numberOfSteps = 0
-    // According to PackedSegmentLib bit layout:
-    // - initialPrice: offset 0
-    // - priceIncrease: offset 72
-    // - supplyPerStep: offset 144
-    // - numberOfSteps: offset 240
-    uint initialPrice0 = 1 ether;
-    uint priceIncrease0 = 0;
-    uint supplyPerStep0 = 100 ether;
-    uint numberOfSteps0 = 0;
-    
-    uint packedValue0 = initialPrice0 
-        | (priceIncrease0 << 72) 
-        | (supplyPerStep0 << 144)
-        | (numberOfSteps0 << 240);
-    
-    segments[0] = PackedSegment.wrap(bytes32(packedValue0));
+        // Manually construct segments[0] with numberOfSteps = 0
+        // According to PackedSegmentLib bit layout:
+        // - initialPrice: offset 0
+        // - priceIncrease: offset 72
+        // - supplyPerStep: offset 144
+        // - numberOfSteps: offset 240
+        uint initialPrice0 = 1 ether;
+        uint priceIncrease0 = 0;
+        uint supplyPerStep0 = 100 ether;
+        uint numberOfSteps0 = 0;
 
-    // Create a valid segments[1] whose initial price is less than segments[0]'s initial price
-    // This will trigger InvalidPriceProgression because finalPrice of segment[0] (with 0 steps)
-    // will be its initialPrice.
-    uint initialPrice1 = 0.5 ether; // Less than initialPrice0
-    uint priceIncrease1 = 0;
-    uint supplyPerStep1 = 10 ether;
-    uint numberOfSteps1 = 1;
-    segments[1] = exposedLib.exposed_createSegment(
-        initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1
-    );
+        uint packedValue0 = initialPrice0 | (priceIncrease0 << 72)
+            | (supplyPerStep0 << 144) | (numberOfSteps0 << 240);
 
-    // The error will occur for segment index 0 (not 1) because the loop checks 
-    // segment i against segment i+1, so when i=0, it's checking segment 0 against segment 1
-    vm.expectRevert(
-        abi.encodeWithSelector(
-            IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression.selector,
-            0,  // segmentIndex is 0 (not 1) - this is the current segment being checked
-            initialPrice0,  // finalPricePreviousSegment (final price of segment 0)
-            initialPrice1   // initialPriceCurrentSegment (initial price of segment 1)
-        )
-    );
-    
-    exposedLib.exposed_validateSegmentArray(segments);
-}
+        segments[0] = PackedSegment.wrap(bytes32(packedValue0));
+
+        // Create a valid segments[1] whose initial price is less than segments[0]'s initial price
+        // This will trigger InvalidPriceProgression because finalPrice of segment[0] (with 0 steps)
+        // will be its initialPrice.
+        uint initialPrice1 = 0.5 ether; // Less than initialPrice0
+        uint priceIncrease1 = 0;
+        uint supplyPerStep1 = 10 ether;
+        uint numberOfSteps1 = 1;
+        segments[1] = exposedLib.exposed_createSegment(
+            initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1
+        );
+
+        // The error will occur for segment index 0 (not 1) because the loop checks
+        // segment i against segment i+1, so when i=0, it's checking segment 0 against segment 1
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__InvalidPriceProgression
+                    .selector,
+                0, // segmentIndex is 0 (not 1) - this is the current segment being checked
+                initialPrice0, // finalPricePreviousSegment (final price of segment 0)
+                initialPrice1 // initialPriceCurrentSegment (initial price of segment 1)
+            )
+        );
+
+        exposedLib.exposed_validateSegmentArray(segments);
+    }
 
     function test_ValidateSegmentArray_SegmentWithZeroSteps() public {
         PackedSegment[] memory segments = new PackedSegment[](2);

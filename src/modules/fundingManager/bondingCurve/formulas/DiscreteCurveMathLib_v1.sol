@@ -6,6 +6,7 @@ import {IDiscreteCurveMathLib_v1} from
 import {PackedSegmentLib} from "../libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "../types/PackedSegment_v1.sol";
 import {Math} from "@oz/utils/math/Math.sol";
+import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
 
 import {console2} from "forge-std/console2.sol";
 
@@ -207,7 +208,7 @@ library DiscreteCurveMathLib_v1 {
                 if (priceIncreasePerStep_ == 0) {
                     // Flat segment
                     if (initialPrice_ > 0) {
-                        collateralForPortion_ += _mulDivUp(
+                        collateralForPortion_ += FixedPointMathLib._mulDivUp(
                             fullStepsToProcess_ * supplyPerStep_,
                             initialPrice_,
                             SCALING_FACTOR
@@ -221,7 +222,7 @@ library DiscreteCurveMathLib_v1 {
                     uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
                     uint totalPriceForAllSteps_ =
                         Math.mulDiv(fullStepsToProcess_, sumOfPrices_, 2);
-                    collateralForPortion_ += _mulDivUp(
+                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
                         supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
                     );
                 }
@@ -232,7 +233,7 @@ library DiscreteCurveMathLib_v1 {
                 uint partialStepPrice_ = initialPrice_
                     + (fullStepsToProcess_ * priceIncreasePerStep_);
                 if (partialStepPrice_ > 0) {
-                    collateralForPortion_ += _mulDivUp(
+                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
                         partialStepSupply_, partialStepPrice_, SCALING_FACTOR
                     );
                 }
@@ -354,7 +355,8 @@ library DiscreteCurveMathLib_v1 {
 
             // Try to complete current step if partially filled
             if (remainingStepIssuanceSupply_ > 0) {
-                uint remainingStepCollateralCapacity_ = _mulDivUp(
+                uint remainingStepCollateralCapacity_ = FixedPointMathLib
+                    ._mulDivUp(
                     remainingStepIssuanceSupply_, stepPrice_, SCALING_FACTOR
                 );
 
@@ -370,7 +372,7 @@ library DiscreteCurveMathLib_v1 {
                     );
                     tokensToMint_ += additionalIssuanceAmount_; // tokensToMint_ was 0 before this line in this specific path
                     // Calculate actual collateral spent for this partial amount
-                    collateralSpentByPurchaser_ = _mulDivUp(
+                    collateralSpentByPurchaser_ = FixedPointMathLib._mulDivUp(
                         additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR
                     );
                     return (tokensToMint_, collateralSpentByPurchaser_);
@@ -398,8 +400,9 @@ library DiscreteCurveMathLib_v1 {
 
             // Calculate step price (works for both flat and sloped segments)
             uint stepPrice_ = initialPrice_ + (priceIncrease_ * stepIndex_);
-            uint stepCollateralCapacity_ =
-                _mulDivUp(supplyPerStep_, stepPrice_, SCALING_FACTOR);
+            uint stepCollateralCapacity_ = FixedPointMathLib._mulDivUp(
+                supplyPerStep_, stepPrice_, SCALING_FACTOR
+            );
 
             if (remainingBudget_ >= stepCollateralCapacity_) {
                 // Purchase full step
@@ -412,8 +415,9 @@ library DiscreteCurveMathLib_v1 {
                 uint partialIssuance_ =
                     Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
                 tokensToMint_ += partialIssuance_;
-                remainingBudget_ -=
-                    _mulDivUp(partialIssuance_, stepPrice_, SCALING_FACTOR);
+                remainingBudget_ -= FixedPointMathLib._mulDivUp(
+                    partialIssuance_, stepPrice_, SCALING_FACTOR
+                );
 
                 break;
             }
@@ -423,68 +427,6 @@ library DiscreteCurveMathLib_v1 {
             collateralToSpendProvided_ - remainingBudget_;
         return (tokensToMint_, collateralSpentByPurchaser_);
     }
-
-    // /**
-    //  * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
-    //  * /**
-    //  * @notice Helper function to calculate purchase return for a single segment.
-    //  * /**
-    //  * @notice Calculates the amount of partial issuance and its cost given budget_ and various constraints.
-    //  * /**
-    //  * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
-    //  * @dev Uses the difference in reserve at current supply and supply after sale.
-    //  * @param segments_ Array of PackedSegment configurations for the curve.
-    //  * @param tokensToSell_ The amount of issuance tokens being sold.
-    //  * @param currentTotalIssuanceSupply_ The current total supply before this sale.
-    //  * @return collateralToReturn_ The total amount of collateral returned to the seller.
-    //  * @return tokensToBurn_ The actual amount of issuance tokens burned (capped at current supply).
-    //  */
-    // function _calculateSaleReturn(
-    //     PackedSegment[] memory segments_,
-    //     uint tokensToSell_, // Renamed from issuanceAmountIn
-    //     uint currentTotalIssuanceSupply_
-    // ) internal pure returns (uint collateralToReturn_, uint tokensToBurn_) {
-    //     // Renamed return values
-    //     _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_); // Validation occurs
-    //     // If totalCurveCapacity_ is needed later, _validateSupplyAgainstSegments can be called again.
-
-    //     if (tokensToSell_ == 0) {
-    //         revert
-    //             IDiscreteCurveMathLib_v1
-    //             .DiscreteCurveMathLib__ZeroIssuanceInput();
-    //     }
-
-    //     uint numSegments_ = segments_.length; // Renamed from segLen
-    //     if (numSegments_ == 0) {
-    //         // This implies currentTotalIssuanceSupply_ must be 0.
-    //         // Selling from 0 supply on an unconfigured curve. tokensToBurn_ will be 0.
-    //     }
-
-    //     tokensToBurn_ = tokensToSell_ > currentTotalIssuanceSupply_
-    //         ? currentTotalIssuanceSupply_
-    //         : tokensToSell_;
-
-    //     if (tokensToBurn_ == 0) {
-    //         return (0, 0);
-    //     }
-
-    //     uint finalSupplyAfterSale_ = currentTotalIssuanceSupply_ - tokensToBurn_;
-
-    //     uint collateralAtCurrentSupply_ =
-    //         _calculateReserveForSupply(segments_, currentTotalIssuanceSupply_);
-    //     uint collateralAtFinalSupply_ =
-    //         _calculateReserveForSupply(segments_, finalSupplyAfterSale_);
-
-    //     if (collateralAtCurrentSupply_ < collateralAtFinalSupply_) {
-    //         // This should not happen with a correctly defined bonding curve (prices are non-negative).
-    //         return (0, tokensToBurn_);
-    //     }
-
-    //     collateralToReturn_ =
-    //         collateralAtCurrentSupply_ - collateralAtFinalSupply_;
-
-    //     return (collateralToReturn_, tokensToBurn_);
-    // }
 
     /**
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
@@ -667,7 +609,7 @@ library DiscreteCurveMathLib_v1 {
             if (priceIncreasePerStep_ == 0) {
                 // Flat segment
                 if (initialPrice_ > 0) {
-                    collateral_ += _mulDivUp(
+                    collateral_ += FixedPointMathLib._mulDivUp(
                         fullSteps_ * supplyPerStep_,
                         initialPrice_,
                         SCALING_FACTOR
@@ -681,7 +623,7 @@ library DiscreteCurveMathLib_v1 {
                 uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
                 uint totalPriceForAllSteps_ =
                     Math.mulDiv(fullSteps_, sumOfPrices_, 2);
-                collateral_ += _mulDivUp(
+                collateral_ += FixedPointMathLib._mulDivUp(
                     supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
                 );
             }
@@ -692,7 +634,7 @@ library DiscreteCurveMathLib_v1 {
             uint partialStepPrice_ =
                 initialPrice_ + (fullSteps_ * priceIncreasePerStep_);
             if (partialStepPrice_ > 0) {
-                collateral_ += _mulDivUp(
+                collateral_ += FixedPointMathLib._mulDivUp(
                     partialStepSupply_, partialStepPrice_, SCALING_FACTOR
                 );
             }
@@ -796,64 +738,5 @@ library DiscreteCurveMathLib_v1 {
                 );
             }
         }
-    }
-
-    // =========================================================================
-    // Custom Math Helpers
-
-    /**
-     * @dev Calculates (a_ * b_) % modulus_.
-     * @notice Solidity 0.8.x's default behavior for `(a_ * b_) % modulus_` computes the product `a_ * b_`
-     * using full 256x256 bit precision before applying the modulus_, preventing overflow of `a_ * b_`
-     * from affecting the result of the modulo operation itself (as long as modulus_ is not zero).
-     * @param a_ The first operand.
-     * @param b_ The second operand.
-     * @param modulus_ The modulus.
-     * @return (a_ * b_) % modulus_.
-     */
-    function _mulmod(uint a_, uint b_, uint modulus_)
-        private
-        pure
-        returns (uint)
-    {
-        require(
-            modulus_ > 0,
-            "DiscreteCurveMathLib_v1: modulus_ cannot be zero in _mulmod"
-        );
-        return (a_ * b_) % modulus_;
-    }
-
-    /**
-     * @dev Calculates (a_ * b_) / denominator_, rounding up.
-     * @param a_ The first operand for multiplication.
-     * @param b_ The second operand for multiplication.
-     * @param denominator_ The denominator for division.
-     * @return result_ ceil((a_ * b_) / denominator_).
-     */
-    function _mulDivUp(uint a_, uint b_, uint denominator_)
-        private
-        pure
-        returns (uint result_)
-    {
-        require(
-            denominator_ > 0,
-            "DiscreteCurveMathLib_v1: division by zero in _mulDivUp"
-        );
-        result_ = Math.mulDiv(a_, b_, denominator_); // Standard OpenZeppelin Math.mulDiv rounds down (floor division)
-
-        // If there's any remainder from (a_ * b_) / denominator_, we need to add 1 to round up.
-        // A remainder exists if (a_ * b_) % denominator_ is not 0.
-        // We use the local _mulmod function which safely computes (a_ * b_) % denominator_.
-        if (_mulmod(a_, b_, denominator_) > 0) {
-            // Before incrementing, check if 'result_' is already at max_uint256 to prevent overflow.
-            // This scenario (overflowing after adding 1 due to rounding) is extremely unlikely if a_, b_, denominator_
-            // are such that mulDiv itself doesn't revert, but it's a good safety check.
-            require(
-                result_ < type(uint).max,
-                "DiscreteCurveMathLib_v1: _mulDivUp overflow on increment"
-            );
-            result_++;
-        }
-        return result_;
     }
 }
