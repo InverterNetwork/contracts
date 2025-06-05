@@ -11,6 +11,8 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param  action The action data to execute on the target contract.
     /// @param  startTimestamp The timestamp at which the motion starts.
     /// @param  endTimestamp The timestamp at which the motion ends.
+    /// @param  requiredThreshold The required threshold of votes to pass the
+    ///         motion.
     /// @param  forVotes The number of votes in favor of the motion.
     /// @param  againstVotes The number of votes against the motion.
     /// @param  abstainVotes The number of votes abstaining from the motion.
@@ -23,6 +25,7 @@ interface IAUT_EXT_VotingRoles_v1 {
         bytes action;
         uint startTimestamp;
         uint endTimestamp;
+        uint requiredThreshold;
         uint forVotes;
         uint againstVotes;
         uint abstainVotes;
@@ -228,20 +231,34 @@ interface IAUT_EXT_VotingRoles_v1 {
     // Mutating - Voter Management Functions
 
     /// @notice Adds a voter.
+    /// @dev    Beware that adding a voter has implications for already
+    ///         existing motions and might change how easy a threshold can be
+    ///         reached / a motion can be executed.
     /// @param  who_ The address to add.
     function addVoter(address who_) external;
 
     /// @notice Adds a voter and updates the threshold.
+    /// @dev    Beware that adding a voter has implications for already
+    ///         existing motions and might change how easy a threshold can be
+    ///         reached / a motion can be executed.
     /// @param  who_ The address to add.
     /// @param  newThreshold_ The new threshold.
     function addVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external;
 
     /// @notice Removes a voter.
+    /// @dev    Beware that removing a voter has implications for already
+    ///         existing motions and might change how easy a threshold can be
+    ///         reached / a motion can be executed. This can even lead to a
+    ///         threshold in which a motion can't be executed anymore.
     /// @param  who_ The address to remove.
     function removeVoter(address who_) external;
 
     /// @notice Removes a voter and updates the threshold.
+    /// @dev    Beware that removing a voter has implications for already
+    ///         existing motions and might change how easy a threshold can be
+    ///         reached / a motion can be executed. This can even lead to a
+    ///         threshold in which a motion can't be executed anymore.
     /// @param  who_ The address to remove.
     /// @param  newThreshold_ The new threshold.
     function removeVoterAndUpdateThreshold(address who_, uint newThreshold_)

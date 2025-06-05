@@ -212,7 +212,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             motion_.action,
             motion_.startTimestamp,
             motion_.endTimestamp,
-            _threshold,
+            motion_.requiredThreshold,
             motion_.forVotes,
             motion_.againstVotes,
             motion_.abstainVotes,
@@ -355,6 +355,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
 
         motion_.startTimestamp = block.timestamp;
         motion_.endTimestamp = block.timestamp + _voteDuration;
+        motion_.requiredThreshold = _threshold;
 
         emit MotionCreated(motionId);
 
@@ -431,7 +432,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
 
         // Revert if necessary threshold was not reached.
-        if (motion_.forVotes < _threshold) {
+        if (motion_.forVotes < motion_.requiredThreshold) {
             revert Module__VotingRoleManager__ThresholdNotReached();
         }
 
