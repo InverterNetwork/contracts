@@ -25,6 +25,7 @@
 - ✅ The library and its test suite are now considered stable, internally documented (NatSpec), and production-ready.
 - ✅ Emitted `SegmentsSet` event in `_setSegments` function in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
+- ✅ NatSpec comments added to `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 
 **Key Achievements (Overall Library)**:
 

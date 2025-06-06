@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Adding a test for the `SegmentsSet` event emitted in the internal setter for segments in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+**Primary**: Added NatSpec to `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 **Secondary**: Updating Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1` (all tests passing, 100% coverage achieved post-refactor) and the new test added.
 
-**Reason for Update**: The user requested to add a test for the `SegmentsSet` event. This required emitting the event in `_setSegments` and adding a new test case.
+**Reason for Update**: The user requested to add NatSpec to the interface.
 
 ## Recent Progress
 
@@ -25,6 +25,7 @@
 - ✅ Fixed type mismatch in `test_ValidateSegmentArray_SegmentWithZeroSteps` in `DiscreteCurveMathLib_v1.t.sol` by casting `uint256` `packedValue` to `bytes32` for `PackedSegment.wrap()`.
 - ✅ Emitted `SegmentsSet` event in `_setSegments` function in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
+- ✅ NatSpec comments added to `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 

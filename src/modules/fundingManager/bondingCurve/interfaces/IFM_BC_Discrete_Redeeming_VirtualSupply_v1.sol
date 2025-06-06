@@ -4,8 +4,41 @@ pragma solidity 0.8.23;
 import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 
+/**
+ * @title   IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+ *
+ * @notice  Interface for the Discrete Bonding Curve Funding Manager,
+ *          managing token minting and redeeming based on discrete segments
+ *          and tracking virtual supply.
+ *
+ * @dev     This interface defines the external functions and events for
+ *          interacting with a discrete bonding curve funding manager that
+ *          utilizes a virtual supply mechanism for redeeming.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.0.0
+ *
+ * @author  Inverter Network
+ */
 interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
+    // =========================================================================
+    // Events
+
+    /// @notice Emitted when the bonding curve segments are set or updated.
+    /// @param  segments The array of PackedSegment structs defining the bonding curve.
     event SegmentsSet(PackedSegment[] segments);
 
-    function getSegments() external view returns (PackedSegment[] memory);
+    // =========================================================================
+    // Public - Getters
+
+    /// @notice Returns the current configuration of the bonding curve segments.
+    /// @return segments_ The array of PackedSegment structs defining the bonding curve.
+    function getSegments()
+        external
+        view
+        returns (PackedSegment[] memory segments_);
 }
