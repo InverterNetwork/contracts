@@ -1048,12 +1048,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
 
     /// @inheritdoc BondingCurveBase_v1
     /// @dev    Implementation transfer collateral tokens to the project treasury.
-    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+    function _processCollateralTokensForBuyOperation(uint _amount)
         internal
         virtual
         override
     {
-        IERC20(token()).safeTransferFrom(_provider, _projectTreasury, _amount);
+        IERC20(token()).safeTransfer(_projectTreasury, _amount);
     }
 
     /// @inheritdoc RedeemingBondingCurveBase_v1
