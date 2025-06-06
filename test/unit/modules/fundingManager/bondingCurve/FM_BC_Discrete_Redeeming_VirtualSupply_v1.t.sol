@@ -34,9 +34,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Setup
     function setUp() public {
-        address impl = address(new FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed());
-        fmBcDiscrete =
-            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed(Clones.clone(impl));
+        address impl =
+            address(new FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed());
+        fmBcDiscrete = FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed(
+            Clones.clone(impl)
+        );
 
         orchestratorToken = new ERC20Mock("Orchestrator Token", "OTK", 18);
 
@@ -55,6 +57,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // Test: Initialization
     function testInit() public override(ModuleTest) {
         assertEq(address(fmBcDiscrete.orchestrator()), address(_orchestrator));
+        assertEq(address(fmBcDiscrete.token()), address(orchestratorToken));
     }
 
     function testReinitFails() public override(ModuleTest) {

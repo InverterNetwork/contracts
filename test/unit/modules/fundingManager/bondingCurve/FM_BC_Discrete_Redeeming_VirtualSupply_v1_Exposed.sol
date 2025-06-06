@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {FM_BC_Discrete_Redeeming_VirtualSupply_v1} from "src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 
 // Access Mock of the FM_BC_Discrete_Redeeming_VirtualSupply_v1 contract for Testing.
-contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is FM_BC_Discrete_Redeeming_VirtualSupply_v1 {
+contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
+    FM_BC_Discrete_Redeeming_VirtualSupply_v1
+{
     // Use the `exposed_` prefix for functions to expose internal functions for testing purposes only.
 
     function exposed_redeemTokensFormulaWrapper(uint _depositAmount)
@@ -22,15 +25,17 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is FM_BC_Discrete_Red
         _handleCollateralTokensAfterSell(_receiver, _collateralTokenAmount);
     }
 
-    function exposed_handleCollateralTokensBeforeBuy(address _provider, uint _amount)
-        external
-    {
+    function exposed_handleCollateralTokensBeforeBuy(
+        address _provider,
+        uint _amount
+    ) external {
         _handleCollateralTokensBeforeBuy(_provider, _amount);
     }
 
-    function exposed_handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
-        external
-    {
+    function exposed_handleIssuanceTokensAfterBuy(
+        address _receiver,
+        uint _amount
+    ) external {
         _handleIssuanceTokensAfterBuy(_receiver, _amount);
     }
 
