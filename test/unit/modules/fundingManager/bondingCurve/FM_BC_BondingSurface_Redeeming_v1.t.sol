@@ -830,42 +830,6 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     }
 
     /*
-    Test: _handleIssuanceTokensBeforeBuy
-    └── When: the function _handleCollateralTokensBeforeBuy is called
-        └── Then: it should transfer the correct amount of collateral tokens from the provider address to the bonding curve contract
-    */
-
-    function test_internalHandleCollateralTokensBeforeBuy(
-        address _provider,
-        uint _amount
-    ) public {
-        // Setup
-        vm.assume(
-            _provider != address(0)
-                && _provider != address(bondingCurveFundingManager)
-        );
-        _amount = bound(_amount, 1, type(uint).max / 2);
-
-        uint amountBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-
-        _token.mint(_provider, _amount);
-        vm.prank(_provider);
-        _token.approve(address(bondingCurveFundingManager), _amount);
-
-        // Execute
-        bondingCurveFundingManager.exposed_handleCollateralTokensBeforeBuy(
-            _provider, _amount
-        );
-
-        // Assert
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            _amount + amountBefore
-        );
-    }
-
-    /*
     Test: _handleIssuanceTokensAfterBuy
     └── When: the function _handleIssuanceTokensAfterBuy is called
         └── Then: it should mint the correct amount of tokens to the receiver address

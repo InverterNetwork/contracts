@@ -258,9 +258,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(amount > 0);
 
         address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
-        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(_token.balanceOf(buyer), amount);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Emit event
@@ -274,7 +275,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
-        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(
@@ -283,7 +284,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(
             bondingCurveFundingManager
-                .distributeCollateralTokenBeforeBuyFunctionCalled(),
+                .processCollateralTokensForBuyOperationFunctionCalled(),
             1
         );
     }
@@ -323,11 +324,12 @@ contract BondingCurveBaseV1Test is ModuleTest {
         }
 
         address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(_token.balanceOf(buyer), amount);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
@@ -351,9 +353,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
 
         //Pepare fee amount that will betaken from bondingCurveManager
-        _token.mint(
-            address(bondingCurveFundingManager), protocolCollateralFeeAmount
-        );
+        // _token.mint(
+        //     address(bondingCurveFundingManager), protocolCollateralFeeAmount
+        // );
 
         if (projectCollateralFeeAmount != 0) {
             // Emit event
@@ -385,7 +387,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)), balanceBefore
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            balanceBefore + amount - protocolCollateralFeeAmount
         );
         assertEq(_token.balanceOf(buyer), 0);
 

@@ -1248,27 +1248,23 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function _handleCollateralTokensBeforeBuy()
-        └── When the function _handleCollateralTokensBeforeBuy() is called
-            └── Then it should mint tokens to the recipient
+    /* Test: Function _processCollateralTokensForBuyOperation()
+        └── When the function _processCollateralTokensForBuyOperation() is called
+            └── Then it should transfer the amount of tokens to the project treasury
     */
-    function testInternalHandleCollateralTokensBeforeBuy_worksGivenMintedTokens(
-        address recipient_,
+    function testInternalProcessCollateralTokensForBuyOperation_worksGivenMintedTokens(
         uint amount_
     ) public {
         // Setup
-        vm.assume(recipient_ != address(0));
-        vm.assume(recipient_ != address(projectTreasury));
         vm.assume(amount_ > 0);
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, recipient_, address(fundingManager)
-        );
+
+        deal(address(_token), address(fundingManager), amount_);
 
         // Assert
         assertEq(
-            _token.balanceOf(recipient_),
+            _token.balanceOf(address(fundingManager)),
             amount_,
-            "Recipient should the right amount of tokens"
+            "Funding manager should have the right amount of tokens"
         );
         assertEq(
             _token.balanceOf(projectTreasury),
@@ -1277,13 +1273,11 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
 
         // Test
-        fundingManager.exposed_handleCollateralTokensBeforeBuy(
-            recipient_, amount_
-        );
+        fundingManager.exposed_processCollateralTokensForBuyOperation(amount_);
 
         // Assert
         assertEq(
-            _token.balanceOf(recipient_),
+            _token.balanceOf(address(fundingManager)),
             0,
             "Tokens should be transferred to the project treasury"
         );

@@ -32,11 +32,10 @@ contract FM_PC_Oracle_Redeeming_v1_Exposed is FM_PC_Oracle_Redeeming_v1 {
         _handleIssuanceTokensAfterBuy(recipient_, amount_);
     }
 
-    function exposed_handleCollateralTokensBeforeBuy(
-        address recipient_,
-        uint amount_
-    ) public {
-        _handleCollateralTokensBeforeBuy(recipient_, amount_);
+    function exposed_processCollateralTokensForBuyOperation(uint amount_)
+        public
+    {
+        _processCollateralTokensForBuyOperation(amount_);
     }
 
     function exposed_setIsDirectOperationsOnly(bool isDirectional_) public {
