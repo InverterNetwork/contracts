@@ -65,7 +65,7 @@ function _createSegment( // This is a convenience function in DiscreteCurveMathL
     uint numberOfSteps_
 ) internal pure returns (PackedSegment); // Calls PackedSegmentLib._create() which has stricter, fully tested validation.
 
-function _validateSegmentArray(PackedSegment[] memory segments_) internal pure; // STABLE & FULLY TESTED. Utility for callers like FM_BC_DBC. Validates array properties and price progression.
+function _validateSegmentArray(PackedSegment[] memory segments_) internal pure; // STABLE & FULLY TESTED. Utility for callers like FM_BC_Discrete. Validates array properties and price progression.
 
 // Position tracking functions
 function _findPositionForSupply(
@@ -117,7 +117,7 @@ function _findPositionForSupply(
 ### Economic Safety Rules - ✅ CONFIRMED & FULLY TESTED (New segment rules integrated and covered by tests)
 
 1.  **No free segments**: Enforced by `PackedSegmentLib._create`.
-2.  **Non-decreasing progression**: Enforced by `_validateSegmentArray` (called by `FM_BC_DBC`).
+2.  **Non-decreasing progression**: Enforced by `_validateSegmentArray` (called by `FM_BC_Discrete`).
 3.  **Positive step values (supplyPerStep, numberOfSteps)**: Enforced by `PackedSegmentLib._create`.
 4.  **Valid Segment Types**: "True Flat" (`steps==1, increase==0`) and "True Sloped" (`steps>1, increase>0`) enforced by `PackedSegmentLib._create`.
 5.  **Bounded iterations**: Refactored `_calculatePurchaseReturn` uses direct iteration; gas safety relies on `segments_.length` (checked by `_validateSegmentArray` via caller, implicitly by `MAX_SEGMENTS`) and number of steps within segments (checked by `PackedSegmentLib._create` via `STEPS_MASK`).
@@ -157,13 +157,13 @@ function _findPositionForSupply(
 
 The integration patterns, particularly the caller's responsibility for validating segment arrays and supply capacity before using `_calculatePurchaseReturn`, are clearly defined, understood, and stable.
 
-### ✅ Development Readiness (Libraries are Production-Ready; Poised for `FM_BC_DBC` Integration)
+### ✅ Development Readiness (Libraries are Production-Ready; Poised for `FM_BC_Discrete` Integration)
 
 - **Architectural patterns**: All refactorings and architectural adjustments for the libraries are implemented, fully tested, and stable.
 - **Performance and Security**: Confirmed through comprehensive successful testing.
 - **Next**:
   1. Synchronize all external documentation (Memory Bank - this task, Markdown docs) to reflect the libraries' final, stable, production-ready state.
   2. Perform enhanced fuzz testing on `DiscreteCurveMathLib_v1.t.sol` as a final quality assurance step.
-  3. Proceed with `FM_BC_DBC` module implementation.
+  3. Proceed with `FM_BC_Discrete` module implementation.
 
 **Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and their respective test suites (`DiscreteCurveMathLib_v1.t.sol`, `PackedSegmentLib.t.sol`) are stable, internally documented (NatSpec), fully tested (all unit tests passing with 100% coverage for the main library, compiler warning fixes complete), and production-ready. External documentation is currently being updated to reflect this.

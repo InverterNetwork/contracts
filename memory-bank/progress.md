@@ -75,12 +75,12 @@ _findPositionForSupply() // Is pure
 
 1. Update `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`. (External Documentation)
 2. Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`, and `_calculateSaleReturn`).
-   The library is then fully prepared for `FM_BC_DBC` integration.
+   The library is then fully prepared for `FM_BC_Discrete` integration.
 
-### 🎯 `FM_BC_DBC` (Funding Manager - Discrete Bonding Curve) [READY TO START - PENDING FINAL LIBRARY DOC SYNC & FUZZ TESTING QA]
+### 🎯 `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [READY TO START - PENDING FINAL LIBRARY DOC SYNC & FUZZ TESTING QA]
 
 **Dependencies**: `DiscreteCurveMathLib_v1` (now stable and fully tested).
-**Integration Pattern Defined**: `FM_BC_DBC` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
+**Integration Pattern Defined**: `FM_BC_Discrete` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 
@@ -88,7 +88,7 @@ _findPositionForSupply() // Is pure
 
 ### ⏳ Dependent on Core Modules
 
-(Content remains largely the same, dependencies on FM_BC_DBC imply dependency on refactored lib)
+(Content remains largely the same, dependencies on FM_BC_Discrete imply dependency on refactored lib)
 
 ## Implementation Architecture Progress
 
@@ -109,10 +109,10 @@ DiscreteCurveMathLib_v1 ✅ (Stable, all tests green)
 ### ⏳ Core Module Layer (Next Phase - Blocked by Foundation Layer Stability)
 
 ```
-FM_BC_DBC 🎯 ← DynamicFeeCalculator 🔄 (Can be developed in parallel if interface is stable)
+FM_BC_Discrete 🎯 ← DynamicFeeCalculator 🔄 (Can be developed in parallel if interface is stable)
 ├── Uses DiscreteCurveMathLib (stable version available) ✅
 ├── Established integration patterns (caller validation for segment array/capacity is critical) ✅
-├── Validation strategy defined (FM_BC_DBC must validate segments/capacity) ✅
+├── Validation strategy defined (FM_BC_Discrete must validate segments/capacity) ✅
 ├── Error handling patterns ready ✅
 ├── Implements configureCurve function ⏳
 ├── Virtual supply management ⏳
@@ -132,11 +132,11 @@ FM_BC_DBC 🎯 ← DynamicFeeCalculator 🔄 (Can be developed in parallel if in
 #### 1. **Validation Pattern** (Revised for `_calculatePurchaseReturn` callers)
 
 ```solidity
-// In FM_BC_DBC - configureCurve
+// In FM_BC_Discrete - configureCurve
 // MUST call _validateSegmentArray (or equivalent) on newSegments
-// In FM_BC_DBC - mint
+// In FM_BC_Discrete - mint
 function mint(uint256 collateralIn) external {
-    if (collateralIn == 0) revert FM_BC_DBC__ZeroCollateralInput();
+    if (collateralIn == 0) revert FM_BC_Discrete__ZeroCollateralInput();
     // NO internal segment validation in _calculatePurchaseReturn.
     // Assumes _segments is already validated by configureCurve.
     (uint256 tokensOut, uint256 collateralSpent) =
@@ -176,8 +176,8 @@ function mint(uint256 collateralIn) external {
 
 #### Phase 1: Core Infrastructure (⏳ Next, after Test Strengthening & Doc Sync)
 
-1.  Start `FM_BC_DBC` implementation using the stable and robustly tested `DiscreteCurveMathLib_v1`.
-    - Ensure `FM_BC_DBC` correctly handles segment array validation (using `_validateSegmentArray`) and supply capacity validation before calling `_calculatePurchaseReturn`.
+1.  Start `FM_BC_Discrete` implementation using the stable and robustly tested `DiscreteCurveMathLib_v1`.
+    - Ensure `FM_BC_Discrete` correctly handles segment array validation (using `_validateSegmentArray`) and supply capacity validation before calling `_calculatePurchaseReturn`.
 2.  Implement `DynamicFeeCalculator`.
 3.  Basic minting/redeeming functionality with fee integration.
 4.  `configureCurve` function with invariance validation.
@@ -205,7 +205,7 @@ function mint(uint256 collateralIn) external {
 - **Fee Formula Precision**: Dynamic calculations need accurate implementation.
 - **Virtual vs Actual Balance Management**: Requires careful state synchronization.
 - **Refactoring Risk (`DiscreteCurveMathLib_v1` including `_calculatePurchaseReturn`)**: ✅ Mitigated. All refactorings complete, and all unit tests (100% coverage) are passing.
-- **Validation Responsibility Shift**: ✅ Mitigated. Clearly documented; `FM_BC_DBC` design will incorporate this.
+- **Validation Responsibility Shift**: ✅ Mitigated. Clearly documented; `FM_BC_Discrete` design will incorporate this.
 - **Test Coverage for New Segment Rules & Library Changes**: ✅ Mitigated. `PackedSegmentLib.t.sol` tests cover new rules. `DiscreteCurveMathLib_v1.t.sol` fully updated and passing, covering all changes.
 - **Test Suite Refactoring Risk (`DiscreteCurveMathLib_v1.t.sol`)**: ✅ Mitigated. Test file successfully refactored, and all 65 tests pass.
 
@@ -216,7 +216,7 @@ function mint(uint256 collateralIn) external {
 - **Test Suite Updated & Refactored**: ✅ Completed. Tests adapted for all code changes, including new rules and structural refactors. All 65 tests in `DiscreteCurveMathLib_v1.t.sol` and 10 tests in `PackedSegmentLib.t.sol` are passing.
 - **Conservative Approach**: Continue protocol-favorable rounding where appropriate.
 - **Clear Documentation**: Ensure Memory Bank accurately reflects all changes, especially validation responsibilities.
-- **Focused Testing on `FM_BC_DBC.configureCurve`**: Crucial for segment and supply validation by the caller.
+- **Focused Testing on `FM_BC_Discrete.configureCurve`**: Crucial for segment and supply validation by the caller.
 
 ## Next Milestone Targets (Revised)
 
@@ -241,7 +241,7 @@ function mint(uint256 collateralIn) external {
 
 ### Milestone 1: Core Infrastructure (⏳ Next, after M0.5)
 
-- 🎯 `FM_BC_DBC` implementation complete.
+- 🎯 `FM_BC_Discrete` implementation complete.
 - 🎯 `DynamicFeeCalculator` implementation complete.
   (Rest of milestones follow)
 
@@ -257,7 +257,7 @@ function mint(uint256 collateralIn) external {
 
 ### ✅ High Confidence (for readiness to proceed post-QA)
 
-- The overall plan for `FM_BC_DBC` integration is clear.
+- The overall plan for `FM_BC_Discrete` integration is clear.
 - Once final documentation sync and fuzz testing QA are complete, the library will be definitively production-ready for integration.
 
-**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, internally documented (NatSpec), fully tested (unit tests and compiler warning fixes), and production-ready. All external documentation (Memory Bank, Markdown) is currently being updated to reflect these improvements. Once documentation is synchronized, the next step is to enhance fuzz testing before proceeding with `FM_BC_DBC` implementation.
+**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, internally documented (NatSpec), fully tested (unit tests and compiler warning fixes), and production-ready. All external documentation (Memory Bank, Markdown) is currently being updated to reflect these improvements. Once documentation is synchronized, the next step is to enhance fuzz testing before proceeding with `FM_BC_Discrete` implementation.

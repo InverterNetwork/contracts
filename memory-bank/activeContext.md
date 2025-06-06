@@ -3,7 +3,7 @@
 ## Current Work Focus
 
 **Primary**: Updating Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1` (all tests passing, 100% coverage achieved post-refactor).
-**Secondary**: Outlining next steps: synchronize all documentation (Memory Bank, Markdown docs), perform final enhanced fuzz testing for `DiscreteCurveMathLib_v1.t.sol`, and then transition to `FM_BC_DBC` (Funding Manager) development.
+**Secondary**: Outlining next steps: synchronize all documentation (Memory Bank, Markdown docs), perform final enhanced fuzz testing for `DiscreteCurveMathLib_v1.t.sol`, and then transition to `FM_BC_Discrete` (Funding Manager) development.
 
 **Reason for Update**: User confirms `DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are fully stable, all tests are passing, and all refactorings are complete. Memory Bank needs to reflect this final state of the library.
 
@@ -44,7 +44,7 @@
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
     - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
 3.  **Update Memory Bank** again after fuzz tests are implemented and passing, confirming ultimate readiness.
-4.  **Transition to `FM_BC_DBC` Implementation Planning & Development**.
+4.  **Transition to `FM_BC_Discrete` Implementation Planning & Development**.
 
 ## Implementation Insights Discovered (And Being Revised)
 
@@ -63,7 +63,7 @@
 // 2. Array validation for curve configuration (DiscreteCurveMathLib_v1._validateSegmentArray()):
 //    - Validates segment array properties (not empty, not too many segments).
 //    - Validates price progression between segments.
-//    - Responsibility of the calling contract (e.g., FM_BC_DBC) to call this.
+//    - Responsibility of the calling contract (e.g., FM_BC_Discrete) to call this.
 // 3. State validation before calculations (e.g., DiscreteCurveMathLib_v1._validateSupplyAgainstSegments()):
 //    - Validates current state (like supply) against curve capacity.
 //    - Responsibility of calling contracts or specific library functions (but not _calculatePurchaseReturn for segment array structure or supply capacity).
@@ -73,7 +73,7 @@
 **Approach for `_calculatePurchaseReturn` (Post-Refactor)**:
 
 - **No Internal Segment Array/Capacity Validation**: `_calculatePurchaseReturn` does NOT internally validate the `segments_` array structure (e.g., price progression, segment limits) nor does it validate `currentTotalIssuanceSupply_` against curve capacity.
-- **Caller Responsibility**: The calling contract (e.g., `FM_BC_DBC`) is responsible for ensuring the `segments_` array is valid (using `_validateSegmentArray`) and that `currentTotalIssuanceSupply_` is consistent before calling `_calculatePurchaseReturn`.
+- **Caller Responsibility**: The calling contract (e.g., `FM_BC_Discrete`) is responsible for ensuring the `segments_` array is valid (using `_validateSegmentArray`) and that `currentTotalIssuanceSupply_` is consistent before calling `_calculatePurchaseReturn`.
 - **Input Trust**: `_calculatePurchaseReturn` trusts its input parameters.
 - **Basic Input Checks**: The refactored `_calculatePurchaseReturn` includes checks for `collateralToSpendProvided_ > 0` and `segments_.length > 0`.
 
@@ -94,7 +94,7 @@
 // ... (existing errors)
 DiscreteCurveMathLib__InvalidFlatSegment() // NEW: For multi-step flat segments
 DiscreteCurveMathLib__InvalidPointSegment() // NEW: For single-step sloped segments
-// Note: Errors like InvalidPriceProgression will now primarily be reverted by the caller's validation (e.g., FM_BC_DBC).
+// Note: Errors like InvalidPriceProgression will now primarily be reverted by the caller's validation (e.g., FM_BC_Discrete).
 // _calculatePurchaseReturn now has its own checks for ZeroCollateralInput and NoSegmentsConfigured.
 // PackedSegmentLib._create() now throws InvalidFlatSegment and InvalidPointSegment.
 ```
@@ -165,13 +165,13 @@ The refactored `_calculatePurchaseReturn` will need its own robust edge case han
 
 ## Integration Requirements - DEFINED FROM CODE (Caller validation is now key)
 
-### FM_BC_DBC Integration Interface ✅
+### FM_BC_Discrete Integration Interface ✅
 
-The interface remains, but the _assumption_ about `_calculatePurchaseReturn`'s internal validation changes. `FM_BC_DBC` must ensure `_segments` is valid before calling.
+The interface remains, but the _assumption_ about `_calculatePurchaseReturn`'s internal validation changes. `FM_BC_Discrete` must ensure `_segments` is valid before calling.
 
 ### configureCurve Function Pattern ✅
 
-This function in `FM_BC_DBC` becomes even more critical as it's the point where `_segments.validateSegmentArray()` (or equivalent logic) _must_ be called to ensure the integrity of the curve configuration before it's used by `_calculatePurchaseReturn`.
+This function in `FM_BC_Discrete` becomes even more critical as it's the point where `_segments.validateSegmentArray()` (or equivalent logic) _must_ be called to ensure the integrity of the curve configuration before it's used by `_calculatePurchaseReturn`.
 
 ## Implementation Standards Established ✅ (Still Applicable)
 
@@ -191,7 +191,7 @@ This function in `FM_BC_DBC` becomes even more critical as it's the point where 
 - ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing.
 - ✅ **NatSpec**: Added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
 - ✅ **State Mutability**: `_calculateReserveForSupply` and `_calculatePurchaseReturn` confirmed/updated to `pure`.
-- 🎯 **Next**: Synchronize all documentation, then finalize with enhanced fuzz testing before moving to `FM_BC_DBC`.
+- 🎯 **Next**: Synchronize all documentation, then finalize with enhanced fuzz testing before moving to `FM_BC_Discrete`.
 
 ## Next Development Priorities - REVISED
 
@@ -203,8 +203,8 @@ This function in `FM_BC_DBC` becomes even more critical as it's the point where 
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
     - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
 3.  **Update Memory Bank** again after fuzz tests are implemented and passing.
-4.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
-5.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
+4.  **Plan `FM_BC_Discrete` Implementation**: Outline the structure, functions, and integration points.
+5.  **Implement `FM_BC_Discrete`**: Begin coding the core logic.
 
 ## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Fully Stable)
 

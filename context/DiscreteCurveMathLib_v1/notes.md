@@ -1,20 +1,6 @@
 # Notes
 
-## FUZZ ERROR
+## DBC_FM_BC Implementation Plan
 
-Ran 132 tests for test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol:DiscreteCurveMathLib_v1_Test
-[FAIL; counterexample: calldata=0xd210ac6b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e60b441ad0ebd2badc7ccde6e580b0f47eb000000000000000000000000000000000000000000000000000000000000000000000000000477aae6e1ce65c5f7969afa900604354f30193e1a287ef42232b2000000000011d66cf2f750e24d1b04e7b6702819bd5e5811aa6710ce1b289fcd000000000000000014f34e4167fe31230dae85df70dadde2d155804188c9ddf900000000000000000000000ae549d83e1836855d1c2b585d2aae2167fac199e9 args=[0, 1252478712317615236344397322783316274792427 [1.252e42], 0, 1837802953094573042776113998380869009054590735044185536533246642 [1.837e63], 7337962994584867797583322439806753512116308056731365458464776141 [7.337e63], 513702627959980490794510705201967269889505532780858695161 [5.137e56], 15924022051610633738753644030616485291821608573417 [1.592e49]]] testFuzz_CalculatePurchaseReturn_Properties(uint8,uint256,uint256,uint256,uint256,uint256,uint256) (runs: 0, μ: 0, ~: 0)
-Logs:
-Bound Result 1
-Bound Result 4171363899559724893138
-Bound Result 0
-Bound Result 388663989884906154506573
-Bound Result 1
-Bound Result 80
-Bound Result 100
-Bound Result 100
-Bound Result 80
-P4: tokensToMint (at full capacity): 0
-P4: collateralSpentByPurchaser (at full capacity): 0
-Error: FCPR_P9: At step boundary should not be at curve start
-Error: Assertion Failed
+1. agent: understand the interface of a redeeming BC FM; which functions need to be implemented? => list of functions
+2. fabi: go through list of functions and make annotations

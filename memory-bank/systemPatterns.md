@@ -42,7 +42,7 @@ Built on Inverter stack using modular approach with clear separation of concerns
 // Layer 2: Array validation for curve configuration (DiscreteCurveMathLib_v1._validateSegmentArray()):
 //    - Validates segment array properties (not empty, not too many segments).
 //    - Validates price progression between segments.
-//    - This is the responsibility of the calling contract (e.g., FM_BC_DBC) to invoke.
+//    - This is the responsibility of the calling contract (e.g., FM_BC_Discrete) to invoke.
 // Layer 3: State validation before calculations (e.g., DiscreteCurveMathLib_v1._validateSupplyAgainstSegments()):
 //    - Validates current state (like supply) against curve capacity.
 //    - Responsibility of calling contracts or specific library functions.
@@ -52,13 +52,13 @@ Built on Inverter stack using modular approach with clear separation of concerns
 **Validation Approach for `_calculatePurchaseReturn` (Post-Refactor)**:
 
 - **No Internal Segment Array/Capacity Validation**: `_calculatePurchaseReturn` does NOT internally validate the `segments_` array structure (e.g., price progression, segment limits) nor does it validate `currentTotalIssuanceSupply_` against curve capacity.
-- **Caller Responsibility**: The calling contract (e.g., `FM_BC_DBC`) is responsible for ensuring the `segments_` array is valid (using `_validateSegmentArray`) and that `currentTotalIssuanceSupply_` is consistent before calling `_calculatePurchaseReturn`.
+- **Caller Responsibility**: The calling contract (e.g., `FM_BC_Discrete`) is responsible for ensuring the `segments_` array is valid (using `_validateSegmentArray`) and that `currentTotalIssuanceSupply_` is consistent before calling `_calculatePurchaseReturn`.
 - **Input Trust**: `_calculatePurchaseReturn` trusts its input parameters regarding segment validity and supply consistency.
 - **Basic Input Checks**: The refactored `_calculatePurchaseReturn` includes its own checks for `collateralToSpendProvided_ > 0` and `segments_.length > 0`, reverting with specific errors.
 
 **Application to Future Modules:**
 
-- `FM_BC_DBC` **must** validate segment arrays (using `DiscreteCurveMathLib_v1._validateSegmentArray`) and supply capacity (e.g., using `DiscreteCurveMathLib_v1._validateSupplyAgainstSegments`) during configuration and before calling `_calculatePurchaseReturn`.
+- `FM_BC_Discrete` **must** validate segment arrays (using `DiscreteCurveMathLib_v1._validateSegmentArray`) and supply capacity (e.g., using `DiscreteCurveMathLib_v1._validateSupplyAgainstSegments`) during configuration and before calling `_calculatePurchaseReturn`.
 - `DynamicFeeCalculator` should validate its own fee parameters and calculation inputs.
 - `Credit facility` should validate its own loan parameters and system state.
 
@@ -100,19 +100,19 @@ interface IDiscreteCurveMathLib_v1 {
 
 ## Integration Patterns - ✅ READY FOR IMPLEMENTATION (Caller validation emphasized)
 
-### Library → FM_BC_DBC Integration Pattern
+### Library → FM_BC_Discrete Integration Pattern
 
 **Established function signatures (with new validation context for `mint`):**
 
 ```solidity
-contract FM_BC_DBC is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_v1 {
+contract FM_BC_Discrete is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_v1 {
     using DiscreteCurveMathLib_v1 for PackedSegment[];
 
     PackedSegment[] private _segments;
 
     function mint(uint256 collateralIn, uint256 minTokensOut) external {
         // Apply basic input validation
-        if (collateralIn == 0) revert FM_BC_DBC__ZeroCollateralInput(); // Or similar FM-level error
+        if (collateralIn == 0) revert FM_BC_Discrete__ZeroCollateralInput(); // Or similar FM-level error
 
         // CRITICAL: _segments array is assumed to be pre-validated by configureCurve.
         // _calculatePurchaseReturn will not re-validate segment progression, etc.
@@ -120,7 +120,7 @@ contract FM_BC_DBC is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_
             _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
 
         // Validate user expectations
-        if (tokensOut < minTokensOut) revert FM_BC_DBC__InsufficientOutput(); // Or similar FM-level error
+        if (tokensOut < minTokensOut) revert FM_BC_Discrete__InsufficientOutput(); // Or similar FM-level error
         // ...
     }
 }
@@ -146,7 +146,7 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
     // Invariance check with descriptive error
     if (newCalculatedReserve != expectedNewReserve) {
-        revert FM_BC_DBC__ReserveInvarianeMismatch(newCalculatedReserve, expectedNewReserve); // FM-level error
+        revert FM_BC_Discrete__ReserveInvarianeMismatch(newCalculatedReserve, expectedNewReserve); // FM-level error
     }
 
     // Apply changes atomically
@@ -170,7 +170,7 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
 ## Implementation Readiness Assessment
 
-### ✅ Patterns Confirmed, Stable & Fully Tested (Ready for `FM_BC_DBC` Application)
+### ✅ Patterns Confirmed, Stable & Fully Tested (Ready for `FM_BC_Discrete` Application)
 
 1.  **Defensive programming**: Multi-layer validation approach (stricter `PackedSegmentLib._create` rules, revised `_calculatePurchaseReturn` caller responsibilities) is now stable and fully tested within the libraries, with all associated unit tests passing.
     (Other patterns like Type-Safe Packed Storage, Gas Optimization, Mathematical Precision, Error Handling, Naming Conventions, Library Architecture, Integration Patterns, Performance Optimization, and State Management are also stable, tested, and reflect the final state of the libraries.)

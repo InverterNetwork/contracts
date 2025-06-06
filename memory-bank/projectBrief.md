@@ -35,7 +35,7 @@ Unlike traditional smooth bonding curves, House Protocol uses **step-function pr
 
 ### Core Modules to Build
 
-1. **FM_BC_DBC** (Funding Manager - Discrete Bonding Curve)
+1. **FM_BC_Discrete** (Funding Manager - Discrete Bonding Curve)
 
    - Manages token minting and redeeming based on curve mathematics
    - Handles collateral reserves and virtual supply tracking
@@ -182,7 +182,7 @@ Fees adjust based on real-time system conditions:
 ### Phase 1: Core Infrastructure ✅ **FOUNDATION COMPLETE**
 
 - [x] **DiscreteCurveMathLib_v1**: Production-ready mathematical foundation
-- [ ] **FM_BC_DBC**: Core funding manager with minting/redeeming
+- [ ] **FM_BC_Discrete**: Core funding manager with minting/redeeming
 - [ ] **DynamicFeeCalculator**: Configurable fee calculation module
 
 ### Phase 2: Advanced Features

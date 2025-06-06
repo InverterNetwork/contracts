@@ -33,8 +33,8 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM_BC_DBC["
-        <strong>FM_BC_DBC</strong>
+    FM_BC_Discrete["
+        <strong>FM_BC_Discrete</strong>
         - Manages issuance token <br> minting/redeeming
         - Stores and manages curve<br>segments configuration
         - Allows for reconfiguration <br> w/ invariance check
@@ -49,7 +49,7 @@ flowchart TD
         <strong>LM_PC_Credit_Facility</strong>
         - Manages user loans against<br>staked issuance tokens
         - Enforces loan limits<br>(system & individual)
-        - Interacts with FM_BC_DBC for<br>collateral transfers
+        - Interacts with FM_BC_Discrete for<br>collateral transfers
         - Liaises with DFC for<br>origination fee calculation"]
 
     %% Auxiliary
@@ -80,22 +80,22 @@ flowchart TD
     classDef ex fill:#FFE4B5
     classDef todo fill:#E6DCFD
     class Existing,AUT ex
-    class Todo,FM_BC_DBC,LM_PC_CF,DCML,DFC todo
+    class Todo,FM_BC_Discrete,LM_PC_CF,DCML,DFC todo
 
     %% Relationships
     %% ------------
     %% User Actions
     User <--> |takes loan| LM_PC_CF
-    Admin --> |configures curve /<br>triggers rebalancing| FM_BC_DBC
-    User <--> |mints/redeems| FM_BC_DBC
+    Admin --> |configures curve /<br>triggers rebalancing| FM_BC_Discrete
+    User <--> |mints/redeems| FM_BC_Discrete
     Admin --> |configures fees| DFC
 
     %% Module Interactions
-    FM_BC_DBC --> DCML
+    FM_BC_Discrete --> DCML
     LM_PC_CF --> DCML
-    LM_PC_CF <--> |requests collateral| FM_BC_DBC
+    LM_PC_CF <--> |requests collateral| FM_BC_Discrete
 
-    FM_BC_DBC <--> |gets issuance/redemption<br>fee| DFC
+    FM_BC_Discrete <--> |gets issuance/redemption<br>fee| DFC
     LM_PC_CF <--> |gets origination fee| DFC
 ```
 
@@ -149,7 +149,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
+    FM_BC_Discrete["<strong>FM_BC_Discrete</strong>"]
     LM_PC_FP["<strong>LM_PC_Funding_Pot</strong>"]
     PP["<strong>PP_Streaming</strong>"]
     AUT["<strong>AUT_Roles</strong>"]
@@ -172,18 +172,18 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
+    class Todo,FM_BC_Discrete,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
     class Prog,LM_PC_FP prog
 
     %% Relationships
     %% ------------
     %% User Actions
-    User <--> |mints/redeems| FM_BC_DBC
+    User <--> |mints/redeems| FM_BC_Discrete
     User --> |contributes<br>collateral tokens| LM_PC_FP
     User --> |claims presale tokens| PP
     LM_PC_FP --> |vests issuance<br>tokens| PP
-    LM_PC_FP <--> |mints issuance<br>tokens| FM_BC_DBC
-    AUT --> | checks permission | FM_BC_DBC
+    LM_PC_FP <--> |mints issuance<br>tokens| FM_BC_Discrete
+    AUT --> | checks permission | FM_BC_Discrete
 ```
 
 ## 5.2. The issuance token follows a discrete price-supply relationship (after pre-sale)
@@ -205,7 +205,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
+    FM_BC_Discrete["<strong>FM_BC_Discrete</strong>"]
 
     %% Actors
     User(("End User"))
@@ -225,12 +225,12 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
+    class Todo,FM_BC_Discrete,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
 
     %% Relationships
     %% ------------
     %% User Actions
-    User <--> |mints & redeems| FM_BC_DBC
+    User <--> |mints & redeems| FM_BC_Discrete
 ```
 
 ## 5.3. The floor price rises over time
@@ -267,7 +267,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
+    FM_BC_Discrete["<strong>FM_BC_Discrete</strong>"]
     LM_PC_EL["<strong>LM_PC_Shift</strong><br>4 invariance checks"]
     AUT["<strong>AUT_Roles</strong>"]
 
@@ -289,15 +289,15 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
+    class Todo,FM_BC_Discrete,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
 
     %% Relationships
     %% ------------
     %% User Actions
     User --> |1 triggers elevation<br>mechanism| LM_PC_EL
     AUT --> |2 checks permission| LM_PC_EL
-    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_DBC
-    LM_PC_EL --> |5 changes<br>curve state| FM_BC_DBC
+    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_Discrete
+    LM_PC_EL --> |5 changes<br>curve state| FM_BC_Discrete
 ```
 
 ### 5.3.2. Revenue Injection
@@ -315,7 +315,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
+    FM_BC_Discrete["<strong>FM_BC_Discrete</strong>"]
     LM_PC_EL["<strong>LM_PC_Elevator</strong><br>4 invariance checks"]
     AUT["<strong>AUT_Roles</strong>"]
 
@@ -337,15 +337,15 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
+    class Todo,FM_BC_Discrete,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
 
     %% Relationships
     %% ------------
     %% User Actions
     User --> |1 transfers<br>collateral tokens| LM_PC_EL
     AUT --> |2 checks permission| LM_PC_EL
-    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_DBC
-    LM_PC_EL --> |5 sends tokens<br> & changes curve state| FM_BC_DBC
+    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_Discrete
+    LM_PC_EL --> |5 sends tokens<br> & changes curve state| FM_BC_Discrete
 ```
 
 ## 5.4 Users can borrow against their Issuance Tokens

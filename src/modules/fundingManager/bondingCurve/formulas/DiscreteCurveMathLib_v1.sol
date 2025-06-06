@@ -499,7 +499,7 @@ library DiscreteCurveMathLib_v1 {
             return (reserve_, reserve_);
         }
 
-        // Caller (e.g., FM_BC_DBC via _calculateSaleReturn) is responsible for ensuring segments_ array
+        // Caller (e.g., FM_BC_Discrete via _calculateSaleReturn) is responsible for ensuring segments_ array
         // is valid (not empty, within MAX_SEGMENTS, correct price progression) before calling functions
         // that use _calculateReservesForTwoSupplies.
         // Thus, direct checks for segments_.length == 0 or segments_.length > MAX_SEGMENTS are omitted here.
