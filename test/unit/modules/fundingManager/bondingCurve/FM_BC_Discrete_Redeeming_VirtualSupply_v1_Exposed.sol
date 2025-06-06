@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 import {FM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {PackedSegment} from
+    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 
 // Access Mock of the FM_BC_Discrete_Redeeming_VirtualSupply_v1 contract for Testing.
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
@@ -45,5 +47,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
         returns (uint)
     {
         return _issueTokensFormulaWrapper(_depositAmount);
+    }
+
+    function exposed_setSegments(PackedSegment[] memory newSegments_)
+        external
+    {
+        _setSegments(newSegments_);
     }
 }
