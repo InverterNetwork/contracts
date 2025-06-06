@@ -291,14 +291,9 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function addVoter(address who_) public onlySelf isValidVoterAddress(who_) {
         if (!_isVoter[who_]) {
-            _isVoter[who_] = true;
-            unchecked {
-                ++_voterCount;
-            }
+            _addVoter(who_);
             // Validate threshold after adding voter.
             _validateThreshold(_voterCount, _threshold);
-
-            emit VoterAdded(who_);
         }
     }
 
@@ -306,9 +301,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function addVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external
     {
-        // Add the new voter.
-        addVoter(who_);
-
+        if (!_isVoter[who_]) {
+            // Add the new voter.
+            _addVoter(who_);
+        }
         // Set the new threshold (also validates it).
         setThreshold(newThreshold_);
     }
@@ -490,5 +486,17 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         ) {
             revert Module__VotingRoleManager__InvalidThreshold();
         }
+    }
+
+    /// @notice	Internal function to add a voter to the list of voters.
+    /// @dev    This function does not validate the threshold.
+    /// @param  voter_ The address of the voter to add.
+    function _addVoter(address voter_) internal {
+        _isVoter[voter_] = true;
+        unchecked {
+            ++_voterCount;
+        }
+
+        emit VoterAdded(voter_);
     }
 }
