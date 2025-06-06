@@ -132,4 +132,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             PackedSegment.unwrap(testSegments[0])
         );
     }
+
+    function testInternal_SetSegments_EmitsEvent() public {
+        PackedSegment[] memory testSegments = new PackedSegment[](1);
+        testSegments[0] = PackedSegmentLib._create(2e18, 2e17, 200, 20);
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1.SegmentsSet(
+            testSegments
+        );
+        fmBcDiscrete.exposed_setSegments(testSegments);
+    }
 }

@@ -144,7 +144,7 @@ function _findPositionForSupply(
 
 ## Implementation Status Summary (Fully Stable, All Tests Green, Production-Ready)
 
-### ✅ `DiscreteCurveMathLib_v1` (Fully Stable, All Tests Green, 100% Coverage)
+### ✅ `DiscreteCurveMathLib_v1` (Fully Stable, All Tests Green, 100% Coverage, New Test Added)
 
 - **All Functions**: All core functions (including `_calculatePurchaseReturn`, `_calculateSaleReturn`, `_calculateReserveForSupply`, `_findPositionForSupply`, `_createSegment`, `_validateSegmentArray`) are successfully refactored, fixed where necessary, and confirmed `pure`. All calculation/rounding issues resolved. Validation strategies confirmed and fully tested. NatSpec added to key functions.
 - **PackedSegmentLib**: `_create` function's stricter validation for "True Flat" and "True Sloped" segments is implemented and fully tested (10/10 tests passing).
@@ -152,6 +152,7 @@ function _findPositionForSupply(
 - **Interface**: `IDiscreteCurveMathLib_v1.sol` new error types integrated and fully tested.
 - **Testing**: All 65 unit tests in `DiscreteCurveMathLib_v1.t.sol` (after all refactoring, including removal of `_getCurrentPriceAndStep` and compiler warning fixes) are passing, achieving 100% test coverage. All 10 unit tests in `PackedSegmentLib.t.sol` are passing.
 - **Documentation**: NatSpec added for key functions. Internal documentation is complete.
+- **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
 
 ### ✅ Integration Interfaces Confirmed & Stable (Caller validation is key)
 

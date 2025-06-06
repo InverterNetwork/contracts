@@ -23,6 +23,8 @@
 - ✅ `PackedSegmentLib.sol`'s stricter validation for "True Flat" and "True Sloped" segments is confirmed and fully tested (previous session).
 - ✅ All unit tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` (10 tests) are passing (previous session).
 - ✅ The library and its test suite are now considered stable, internally documented (NatSpec), and production-ready.
+- ✅ Emitted `SegmentsSet` event in `_setSegments` function in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+- ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
 
 **Key Achievements (Overall Library)**:
 
@@ -53,7 +55,7 @@ _findPositionForSupply() // Is pure
 - Validation strategy significantly revised: `PackedSegmentLib` is stricter at creation; `_calculatePurchaseReturn` trusts inputs more, relies on caller for segment array/capacity validation.
 - Conservative protocol-favorable rounding patterns generally maintained.
 - Refactored `_calculatePurchaseReturn` uses direct iteration, removing old helpers.
-- Comprehensive error handling, including new segment validation errors.
+- Comprehensive error handling, including new segment errors.
 
 **Remaining Tasks**:
 
@@ -168,11 +170,11 @@ function mint(uint256 collateralIn) external {
 #### Phase 0.5: Final QA - Enhanced Fuzz Testing (⏳ Next, after Documentation Sync)
 
 1.  Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`.
-    - Review existing fuzz tests.
+    - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
     - Add a new fuzz test for `_calculateSaleReturn`.
 2.  Ensure all tests, including new/enhanced fuzz tests, are passing.
-3.  Update Memory Bank (`activeContext.md`, `progress.md`) to reflect completion of enhanced fuzz testing and ultimate library readiness.
+3.  Update Memory Bank (`activeContext.md`, `progress.md`) to confirm completion of enhanced fuzz testing and ultimate library readiness.
 
 #### Phase 1: Core Infrastructure (⏳ Next, after Test Strengthening & Doc Sync)
 

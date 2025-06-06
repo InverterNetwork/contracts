@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Updating Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1` (all tests passing, 100% coverage achieved post-refactor).
-**Secondary**: Outlining next steps: synchronize all documentation (Memory Bank, Markdown docs), perform final enhanced fuzz testing for `DiscreteCurveMathLib_v1.t.sol`, and then transition to `FM_BC_Discrete` (Funding Manager) development.
+**Primary**: Adding a test for the `SegmentsSet` event emitted in the internal setter for segments in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+**Secondary**: Updating Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1` (all tests passing, 100% coverage achieved post-refactor) and the new test added.
 
-**Reason for Update**: User confirms `DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are fully stable, all tests are passing, and all refactorings are complete. Memory Bank needs to reflect this final state of the library.
+**Reason for Update**: The user requested to add a test for the `SegmentsSet` event. This required emitting the event in `_setSegments` and adding a new test case.
 
 ## Recent Progress
 
@@ -23,6 +23,8 @@
 - ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` are passing (previous session).
 - ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are considered stable, internally well-documented (NatSpec), and fully tested.
 - ✅ Fixed type mismatch in `test_ValidateSegmentArray_SegmentWithZeroSteps` in `DiscreteCurveMathLib_v1.t.sol` by casting `uint256` `packedValue` to `bytes32` for `PackedSegment.wrap()`.
+- ✅ Emitted `SegmentsSet` event in `_setSegments` function in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+- ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
@@ -37,7 +39,7 @@
 ## Next Immediate Steps
 
 1.  **Synchronize Documentation (Current Task)**:
-    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status.
+    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status, and the new test added.
     - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md` to align with the latest code changes and stable test status.
 2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.
@@ -191,13 +193,14 @@ This function in `FM_BC_Discrete` becomes even more critical as it's the point w
 - ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing.
 - ✅ **NatSpec**: Added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
 - ✅ **State Mutability**: `_calculateReserveForSupply` and `_calculatePurchaseReturn` confirmed/updated to `pure`.
+- ✅ **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
 - 🎯 **Next**: Synchronize all documentation, then finalize with enhanced fuzz testing before moving to `FM_BC_Discrete`.
 
 ## Next Development Priorities - REVISED
 
 1.  **Synchronize Documentation (Current Task)**:
-    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status.
-    - Update `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
+    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status, and the new test added.
+    - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
 2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.

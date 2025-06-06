@@ -180,6 +180,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     function _setSegments(PackedSegment[] memory newSegments_) internal {
         DiscreteCurveMathLib_v1._validateSegmentArray(newSegments_);
         _segments = newSegments_;
+        emit SegmentsSet(newSegments_);
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)

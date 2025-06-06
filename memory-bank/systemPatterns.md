@@ -14,12 +14,13 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 (Content remains the same)
 
-### Library Pattern - ✅ STABLE, FULLY TESTED & DOCUMENTED (All Refactoring Complete)
+### Library Pattern - ✅ STABLE, FULLY TESTED & DOCUMENTED (All Refactoring Complete, New Test Added)
 
 - **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. All refactorings (including `_calculatePurchaseReturn` and removal of `_getCurrentPriceAndStep`) are complete. NatSpec comments added to key functions. State mutability of core functions confirmed as `pure`. The `DiscreteCurveMathLib_v1.t.sol` test suite has been fully refactored, all compiler warnings fixed, and all 65 tests are passing (100% coverage), confirming library stability and production-readiness.
 - **PackedSegmentLib**: Helper library for bit manipulation and validation. (`_create` function's stricter validation for "True Flat" and "True Sloped" segments confirmed and fully tested with 10/10 tests passing).
 - Stateless (all core math functions are `pure`), reusable across multiple modules.
 - Type-safe with custom PackedSegment type.
+- **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
 
 ### Auxiliary Module Pattern
 
@@ -170,7 +171,8 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
 ## Implementation Readiness Assessment
 
-### ✅ Patterns Confirmed, Stable & Fully Tested (Ready for `FM_BC_Discrete` Application)
+### ✅ Patterns Confirmed, Stable & Fully Tested (Ready for `FM_BC_Discrete` Application, New Test Added)
 
 1.  **Defensive programming**: Multi-layer validation approach (stricter `PackedSegmentLib._create` rules, revised `_calculatePurchaseReturn` caller responsibilities) is now stable and fully tested within the libraries, with all associated unit tests passing.
     (Other patterns like Type-Safe Packed Storage, Gas Optimization, Mathematical Precision, Error Handling, Naming Conventions, Library Architecture, Integration Patterns, Performance Optimization, and State Management are also stable, tested, and reflect the final state of the libraries.)
+2.  **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
