@@ -578,82 +578,43 @@ This is a (noncomprehensive) list of relevant cases that should be considered. T
 2. IIFS and FIS are on adjacent steps
 3. IIFS and FIS are on non-adjacent steps
 
-### 6.1.4. Unified Curve Configuration Function
+### 6.1.4. Curve Segment Reconfiguration
 
-The DBC FM exposes a single, powerful function, `configureCurve(Segment[] memory newSegments, int256 collateralChangeAmount)`, to allow an authorized entity (e.g., "CurveGovernorRole" or "DBCManagerRole") to atomically modify its segment configuration and, if applicable, its virtual collateral supply, while also handling the actual collateral token transfers. This approach consolidates rebalancing logic into the FM itself. It is assumed the DBC FM inherits from `VirtualIssuanceSupplyBase_v1` and `VirtualCollateralSupplyBase_v1` and has access to the `collateralToken`'s ERC20 interface.
+The DBC FM exposes a function, `reconfigureSegments(PackedSegment[] memory newSegments)`, to allow an authorized entity (e.g., "CurveGovernorRole" or "DBCManagerRole") to modify its segment configuration. This function includes an invariance check to ensure the new curve shape is consistent with the current virtual collateral supply.
+
+**Note on Collateral Management**: Explicit functions for collateral injection or withdrawal are not provided within the DBC FM. Instead, collateral can be injected by directly transferring tokens to the FM contract and then updating the `virtualCollateralSupply` via `setVirtualCollateralSupply`. Similarly, collateral can be withdrawn by calling `transferOrchestratorToken` and subsequently updating `virtualCollateralSupply` via `setVirtualCollateralSupply`. Callers can use multisend or EIP7702 batch functionality for atomic operations if needed.
 
 ```gherkin
-Feature: Configuring the District Bonding Curve
+Feature: Reconfiguring the District Bonding Curve Segments
 
   Background:
-    Given the DBC FM is initialized with a `collateralToken` address, `virtualIssuanceSupply`, `virtualCollateralSupply`, and `segments` configuration
+    Given the DBC FM is initialized with a `virtualIssuanceSupply`, `virtualCollateralSupply`, and `segments` configuration
     And `DiscreteCurveMathLib.calculateReserveForSupply(segments, supply)` is available for reserve calculations
     And the caller (e.g., a DAO contract or admin EOA) has the "CurveGovernorRole"
 
-  Scenario: Successful curve reconfiguration with collateral INJECTION
+  Scenario: Successful curve segment reconfiguration (reserve-invariant)
     Given the caller prepares `newSegments` for the curve
-    And the caller wishes to inject `collateralInjectionAmount` (a positive value)
-    And the caller has approved the DBC FM to spend at least `collateralInjectionAmount` of `collateralToken`
-    And `newCalculatedReserve = DiscreteCurveMathLib.calculateReserveForSupply(newSegments, currentVirtualIssuanceSupply)`
-    And `expectedNewVirtualCollateral = currentVirtualCollateralSupply + collateralInjectionAmount`
-    And `newCalculatedReserve` is equal to `expectedNewVirtualCollateral`
-    When the caller calls `configureCurve(newSegments, collateralInjectionAmount)`
-    Then the DBC FM should successfully transfer `collateralInjectionAmount` of `collateralToken` from the caller to itself
-    And update its `segments` to `newSegments`
-    And update its `virtualCollateralSupply` to `expectedNewVirtualCollateral`
-    And emit `SegmentsConfigurationUpdated(newSegments)` and `VirtualCollateralSupplyUpdated(expectedNewVirtualCollateral)` events.
-
-  Scenario: Successful curve reconfiguration with collateral WITHDRAWAL
-    Given the caller prepares `newSegments` for the curve
-    And the caller wishes to withdraw `collateralWithdrawalAmount` (expressed as a negative int256 value, e.g., -1000)
-    And `newCalculatedReserve = DiscreteCurveMathLib.calculateReserveForSupply(newSegments, currentVirtualIssuanceSupply)`
-    And `expectedNewVirtualCollateral = currentVirtualCollateralSupply + collateralWithdrawalAmount` (which is a subtraction)
-    And `newCalculatedReserve` is equal to `expectedNewVirtualCollateral`
-    And `uint256(expectedNewVirtualCollateral)` is not zero (to prevent emptying virtual collateral via this function if not desired by design)
-    And the DBC FM has sufficient `collateralToken` balance to cover `abs(collateralWithdrawalAmount)`
-    When the caller calls `configureCurve(newSegments, collateralWithdrawalAmount)`
-    Then the DBC FM should successfully transfer `abs(collateralWithdrawalAmount)` of `collateralToken` from itself to the caller (or designated recipient)
-    And update its `segments` to `newSegments`
-    And update its `virtualCollateralSupply` to `expectedNewVirtualCollateral`
-    And emit `SegmentsConfigurationUpdated(newSegments)` and `VirtualCollateralSupplyUpdated(expectedNewVirtualCollateral)` events.
-
-  Scenario: Successful reserve-invariant curve REALLOCATION (no collateral change)
-    Given the caller prepares `newSegments` for the curve
-    And the caller sets `collateralChangeAmount` to 0
     And `newCalculatedReserve = DiscreteCurveMathLib.calculateReserveForSupply(newSegments, currentVirtualIssuanceSupply)`
     And `newCalculatedReserve` is equal to `currentVirtualCollateralSupply`
-    When the caller calls `configureCurve(newSegments, 0)`
+    When the caller calls `reconfigureSegments(newSegments)`
     Then the DBC FM should update its `segments` to `newSegments`
     And its `virtualCollateralSupply` should remain unchanged
     And emit `SegmentsConfigurationUpdated(newSegments)` event.
 
-  Scenario: Failed curve reconfiguration due to INVARIANCE CHECK failure
-    Given the caller prepares `newSegments` and a `collateralChangeAmount`
+  Scenario: Failed curve segment reconfiguration due to INVARIANCE CHECK failure
+    Given the caller prepares `newSegments`
     And `newCalculatedReserve = DiscreteCurveMathLib.calculateReserveForSupply(newSegments, currentVirtualIssuanceSupply)`
-    And `expectedNewVirtualCollateral = currentVirtualCollateralSupply + collateralChangeAmount`
-    And `newCalculatedReserve` is NOT equal to `expectedNewVirtualCollateral`
-    When the caller calls `configureCurve(newSegments, collateralChangeAmount)`
+    And `newCalculatedReserve` is NOT equal to `currentVirtualCollateralSupply`
+    When the caller calls `reconfigureSegments(newSegments)`
     Then the transaction should revert, indicating a reserve mismatch.
 
-  Scenario: Failed curve reconfiguration due to collateral INJECTION TRANSFER failure (e.g., insufficient allowance or balance)
-    Given the caller prepares `newSegments` and wishes to inject `collateralInjectionAmount`
-    But the caller has NOT approved the DBC FM to spend `collateralInjectionAmount` OR the caller has insufficient balance
-    And the proposed `newSegments` and `collateralInjectionAmount` would otherwise pass the invariance check
-    When the caller calls `configureCurve(newSegments, collateralInjectionAmount)`
-    Then the transaction should revert, typically due to the ERC20 transfer failure.
-
-  Scenario: Failed curve reconfiguration due to collateral WITHDRAWAL TRANSFER failure (e.g., insufficient FM balance)
-    Given the caller prepares `newSegments` and wishes to withdraw `collateralWithdrawalAmount` (negative value)
-    And the proposed `newSegments` and `collateralWithdrawalAmount` would otherwise pass the invariance check
-    But the DBC FM has insufficient `collateralToken` balance to cover `abs(collateralWithdrawalAmount)`
-    When the caller calls `configureCurve(newSegments, collateralWithdrawalAmount)`
-    Then the transaction should revert, due to the ERC20 transfer failure (if transfer is attempted before state update) or an explicit balance check.
-
-  Scenario: Failed curve reconfiguration due to UNAUTHORIZED caller
+  Scenario: Failed curve segment reconfiguration due to UNAUTHORIZED caller
     Given the caller does NOT have the "CurveGovernorRole"
-    When the caller attempts to call `configureCurve(newSegments, collateralChangeAmount)`
+    When the caller attempts to call `reconfigureSegments(newSegments)`
     Then the transaction should revert due to lack of authorization.
 ```
+
+````
 
 ## 6.2. Library: DiscreteCurveMathLib & Invariance Tools
 
@@ -715,7 +676,7 @@ Feature: Reserve Invariance Check for Curve Reconfiguration
     And `proposedReserve` is calculated using `DiscreteCurveMathLib.calculateReserveForSupply(proposedSegmentConfig, currentTotalSupply)`
     And `proposedReserve` is not equal to `currentReserve`
     Then the proposed segment configuration change should be reverted by the rebalancing mechanism.
-```
+````
 
 <img src="./assets/DBC_curve_area.png" width="400" alt="Discrete Bonding Curve Visualization"/>
 

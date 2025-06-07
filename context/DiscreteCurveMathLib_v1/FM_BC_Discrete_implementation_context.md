@@ -66,6 +66,13 @@ All functions are interface declarations and **must be implemented** by `FM_BC_D
 
 _(Note: `RedeemingBondingCurveBase_v1` inherits from `BondingCurveBase_v1`, which may contain other functions not listed here if they are not directly overridden or made abstract in `RedeemingBondingCurveBase_v1` itself. This list focuses on functions explicitly present or declared abstract in the specified inheritance chain.)_
 
+### 5. `FM_BC_Discrete_Redeeming_VirtualSupply_v1` Specific Functions
+
+The `FM_BC_Discrete_Redeeming_VirtualSupply_v1` contract will implement the following key functions, which are central to its role in managing the discrete bonding curve:
+
+- `reconfigureSegments(PackedSegment[] memory newSegments) external`: This function allows an authorized entity to update the curve's segment configuration. It includes an invariance check to ensure the new curve shape is consistent with the current virtual collateral supply.
+  - **Note on Collateral Management**: Unlike previous designs, this function does not directly handle collateral token transfers (injection or withdrawal). Collateral injection is achieved by directly transferring tokens to the FM contract and then updating the `virtualCollateralSupply` via `setVirtualCollateralSupply`. Collateral withdrawal is achieved by calling `transferOrchestratorToken` and subsequently updating `virtualCollateralSupply` via `setVirtualCollateralSupply`.
+
 ## Inheritance implementation comparison `FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol`
 
 The `FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol` contract implements the same inheritance chain as `FM_BC_Discrete_Redeeming_VirtualSupply_v1`. Here's how it handles the functions we've been discussing:

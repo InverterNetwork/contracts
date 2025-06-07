@@ -107,8 +107,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         │   └── When _setSegments is called with an empty array
         │       └── Then it should revert with DiscreteCurveMathLib__NoSegmentsConfigured
         └── Given a valid segments array
+            ├── When _setSegments is called with a valid array
+            │   └── Then the segments should be set correctly
             └── When _setSegments is called with a valid array
-                └── Then the segments should be set correctly
+                └── Then it should emit a SegmentsSet event
     */
     function testInternal_SetSegments_FailsEmptyArray() public {
         vm.expectRevert(
