@@ -145,4 +145,95 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
         fmBcDiscrete.exposed_setSegments(testSegments);
     }
+
+    /* Test transferOrchestratorToken
+        ├── Given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
+        │   └── And the conditions of the modifier are not met
+        │       └── When the function transferOrchestratorToken() gets called
+        │           └── Then it should revert
+        ├── Given the caller is a PaymentClient module
+        │   └── And the PaymentClient module is registered in the Orchestrator
+        │       ├── And the withdraw amount + project collateral fee > FM collateral token balance
+        │       │   └── When the function transferOrchestratorToken() gets called
+        │       │       └── Then it should revert
+        │       └── And the FM has enough collateral token for amount to be transferred
+        │           └── When the function transferOrchestratorToken() gets called
+        │               └── Then it should send the funds to the specified address
+        │                   └── And it should emit an event
+    */
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+        address caller,
+        address to,
+        uint amount
+    ) public {
+        vm.prank(caller);
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        fmBcDiscrete.transferOrchestratorToken(to, amount);
+    }
+
+    // This test is commented out because it relies on setting `projectCollateralFeeCollected`
+    // which is not directly settable in the SuT without a helper function, and we do not
+    // want to add a helper function for this. This test can be re-enabled once there is
+    // a way to get a non-zero fee in the SuT.
+    /*
+    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
+        address to,
+        uint amount,
+        uint projectCollateralFeeCollected
+    ) public {
+        vm.assume(to != address(0) && to != address(fmBcDiscrete));
+
+        amount = bound(amount, 1, type(uint128).max);
+        projectCollateralFeeCollected =
+            bound(projectCollateralFeeCollected, 1, type(uint128).max);
+
+        // Add collateral fee collected to create fail scenario
+        fmBcDiscrete.setProjectCollateralFeeCollectedHelper(
+            projectCollateralFeeCollected
+        );
+        assertEq(
+            fmBcDiscrete.projectCollateralFeeCollected(),
+            projectCollateralFeeCollected
+        );
+        amount = amount + projectCollateralFeeCollected; // Withdraw amount which includes the fee
+
+        orchestratorToken.mint(address(fmBcDiscrete), amount);
+        assertEq(orchestratorToken.balanceOf(address(fmBcDiscrete)), amount);
+
+        vm.startPrank(address(paymentClient));
+        {
+            vm.expectRevert(
+                IFundingManager_v1
+                    .InvalidOrchestratorTokenWithdrawAmount
+                    .selector
+            );
+            fmBcDiscrete.transferOrchestratorToken(to, amount);
+        }
+        vm.stopPrank();
+    }
+    */
+
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public {
+        vm.assume(to != address(0) && to != address(fmBcDiscrete));
+
+        orchestratorToken.mint(address(fmBcDiscrete), amount);
+
+        assertEq(orchestratorToken.balanceOf(to), 0);
+        assertEq(orchestratorToken.balanceOf(address(fmBcDiscrete)), amount);
+
+        vm.startPrank(address(paymentClient));
+        {
+            vm.expectEmit(true, true, true, true);
+            emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
+
+            fmBcDiscrete.transferOrchestratorToken(to, amount);
+        }
+        vm.stopPrank();
+
+        assertEq(orchestratorToken.balanceOf(to), amount);
+        assertEq(orchestratorToken.balanceOf(address(fmBcDiscrete)), 0);
+    }
 }

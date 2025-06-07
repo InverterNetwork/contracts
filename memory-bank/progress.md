@@ -81,10 +81,11 @@ _findPositionForSupply() // Is pure
 2. Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`, and `_calculateSaleReturn`).
    The library is then fully prepared for `FM_BC_Discrete` integration.
 
-### 🎯 `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [READY TO START - PENDING FINAL LIBRARY DOC SYNC & FUZZ TESTING QA]
+### ✅ `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [IN PROGRESS - `transferOrchestratorToken` IMPLEMENTED & FULLY TESTED]
 
 **Dependencies**: `DiscreteCurveMathLib_v1` (now stable and fully tested).
 **Integration Pattern Defined**: `FM_BC_Discrete` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
+**Recent Progress**: `transferOrchestratorToken` function implemented and fully tested (excluding one test case that requires a non-zero `projectCollateralFeeCollected` which is not directly settable in the SuT).
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 

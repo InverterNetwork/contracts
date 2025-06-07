@@ -56,6 +56,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     }
 
     using DiscreteCurveMathLib_v1 for PackedSegment[];
+    using SafeERC20 for IERC20;
 
     // ========================================================================
     // Storage
@@ -138,8 +139,21 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // =========================================================================
     // Public - Mutating
 
-    function transferOrchestratorToken(address to, uint amount) external {
-        revert("NOT IMPLEMENTED");
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to_, uint amount_)
+        external
+        virtual
+        onlyPaymentClient
+    {
+        if (
+            amount_
+                > _token.balanceOf(address(this)) - projectCollateralFeeCollected
+        ) {
+            revert InvalidOrchestratorTokenWithdrawAmount();
+        }
+        _token.safeTransfer(to_, amount_);
+
+        emit TransferOrchestratorToken(to_, amount_);
     }
 
     // VirtualIssuanceSupplyBase_v1 implementations
