@@ -162,9 +162,10 @@ The integration patterns, particularly the caller's responsibility for validatin
 
 - **Architectural patterns**: All refactorings and architectural adjustments for the libraries are implemented, fully tested, and stable.
 - **Performance and Security**: Confirmed through comprehensive successful testing.
+- **`FM_BC_Discrete` Progress**: `setVirtualCollateralSupply` has been successfully implemented and tested.
 - **Next**:
   1. Synchronize all external documentation (Memory Bank - this task, Markdown docs) to reflect the libraries' final, stable, production-ready state.
   2. Perform enhanced fuzz testing on `DiscreteCurveMathLib_v1.t.sol` as a final quality assurance step.
-  3. Proceed with `FM_BC_Discrete` module implementation.
+  3. Proceed with the next `FM_BC_Discrete` module implementation step.
 
 **Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and their respective test suites (`DiscreteCurveMathLib_v1.t.sol`, `PackedSegmentLib.t.sol`) are stable, internally documented (NatSpec), fully tested (all unit tests passing with 100% coverage for the main library, compiler warning fixes complete), and production-ready. External documentation is currently being updated to reflect this.

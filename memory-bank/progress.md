@@ -81,11 +81,14 @@ _findPositionForSupply() // Is pure
 2. Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`, and `_calculateSaleReturn`).
    The library is then fully prepared for `FM_BC_Discrete` integration.
 
-### ✅ `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [IN PROGRESS - `transferOrchestratorToken` IMPLEMENTED & FULLY TESTED]
+### ✅ `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [IN PROGRESS - `setVirtualCollateralSupply` IMPLEMENTED & FULLY TESTED]
 
 **Dependencies**: `DiscreteCurveMathLib_v1` (now stable and fully tested).
 **Integration Pattern Defined**: `FM_BC_Discrete` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
-**Recent Progress**: `transferOrchestratorToken` function implemented and fully tested (excluding one test case that requires a non-zero `projectCollateralFeeCollected` which is not directly settable in the SuT).
+**Recent Progress**:
+
+- `transferOrchestratorToken` function implemented and fully tested (excluding one test case that requires a non-zero `projectCollateralFeeCollected` which is not directly settable in the SuT).
+- `setVirtualCollateralSupply` function implemented and fully tested.
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 
@@ -195,7 +198,7 @@ function mint(uint256 collateralIn) external {
 | --------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | Pre-sale fixed price        | ✅ DONE                                   | Using existing Inverter components                                                                                                                                                                                                                                                            | High        |
 | Discrete bonding curve math | ✅ STABLE, ALL TESTS GREEN, 100% COVERAGE | All refactoring complete, including `_calculatePurchaseReturn` and removal of `_getCurrentPriceAndStep`. `PackedSegmentLib` stricter validation. `DiscreteCurveMathLib_v1.t.sol` fully refactored, all 65 tests passing. NatSpec added. Functions `pure`. Ready for final doc sync & fuzz QA. | Very High   |
-| Discrete bonding curve FM   | 🔄 IN PROGRESS                            | Basic contract structure and inheritance set up. All compilation errors resolved. Initial tests from template added and passing.                                                                                                                                                              | High        |
+| Discrete bonding curve FM   | 🔄 IN PROGRESS                            | Basic contract structure and inheritance set up. All compilation errors resolved. `transferOrchestratorToken` and `setVirtualCollateralSupply` implemented and fully tested.                                                                                                                  | High        |
 | Dynamic fees                | 🔄 READY                                  | Independent implementation, patterns defined.                                                                                                                                                                                                                                                 | Medium-High |
 
 (Other features remain the same)

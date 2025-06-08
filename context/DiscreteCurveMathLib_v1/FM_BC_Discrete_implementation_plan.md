@@ -38,7 +38,7 @@
 - Should be tested
   - success case requires some setup; use `testTransferOrchestratorToken_WorksGivenFunctionGetsCalled` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol` as reference
 
-### 2.3. setVirtualCollateralSupply
+### 2.3. setVirtualCollateralSupply [DONE]
 
 - first implement `setVirtualCollateralSupply` same as in `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol`
   - add tests (you can use `FM_BC_Bancor_Redeeming_VirtualSupplyV1Test` l.1264 as reference):
