@@ -136,6 +136,17 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         revert("NOT IMPLEMENTED");
     }
 
+    // RedeemingBondingCurveBase_v1 implementations
+    function getStaticPriceForSelling()
+        external
+        view
+        virtual
+        override
+        returns (uint)
+    {
+        revert("NOT IMPLEMENTED");
+    }
+
     // =========================================================================
     // Public - Mutating
 
@@ -166,23 +177,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     }
 
     // VirtualCollateralSupplyBase_v1 implementations
-    function setVirtualCollateralSupply(uint _virtualSupply)
+    function setVirtualCollateralSupply(uint virtualSupply_)
         external
         virtual
-        override
+        override(VirtualCollateralSupplyBase_v1)
+        onlyOrchestratorAdmin
     {
-        revert("NOT IMPLEMENTED");
-    }
-
-    // RedeemingBondingCurveBase_v1 implementations
-    function getStaticPriceForSelling()
-        external
-        view
-        virtual
-        override
-        returns (uint)
-    {
-        revert("NOT IMPLEMENTED");
+        _setVirtualCollateralSupply(virtualSupply_);
     }
 
     // =========================================================================
@@ -195,6 +196,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         DiscreteCurveMathLib_v1._validateSegmentArray(newSegments_);
         _segments = newSegments_;
         emit SegmentsSet(newSegments_);
+    }
+
+    /// @dev    Internal function to directly set the virtual collateral supply to a new value.
+    /// @param  virtualSupply_ The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint virtualSupply_)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        super._setVirtualCollateralSupply(virtualSupply_);
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)

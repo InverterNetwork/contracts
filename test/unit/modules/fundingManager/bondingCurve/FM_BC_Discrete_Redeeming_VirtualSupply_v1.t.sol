@@ -31,6 +31,8 @@ import {IDiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from
     "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
+import {IVirtualCollateralSupplyBase_v1} from
+    "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
@@ -39,6 +41,8 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     ERC20Mock public orchestratorToken;
     ERC20PaymentClientBaseV2Mock public paymentClient;
     PackedSegment[] public initialTestSegments;
+
+    address internal non_admin_address = address(0xB0B);
 
     // =========================================================================
     // Setup
@@ -54,6 +58,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
         _setUpOrchestrator(fmBcDiscrete);
         _authorizer.setIsAuthorized(address(this), true);
+        _authorizer.grantRole(_authorizer.getAdminRole(), address(this)); // Grant admin role to the test contract
 
         initialTestSegments = new PackedSegment[](1);
         initialTestSegments[0] = PackedSegmentLib._create(1e18, 1e17, 100, 10); // Example segment
@@ -235,5 +240,57 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
         assertEq(orchestratorToken.balanceOf(to), amount);
         assertEq(orchestratorToken.balanceOf(address(fmBcDiscrete)), 0);
+    }
+
+    /* Test setVirtualCollateralSupply function
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function setVirtualCollateralSupply() is called
+        │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
+        └── given the caller is the Orchestrator_v1 admin
+            ├── and the new token supply is zero
+            │   └── when the setVirtualCollateralSupply() is called
+            │       └── then it should revert
+            └── and the new token supply is > zero
+                └── when the function setVirtualCollateralSupply() is called
+                    └── then it should set the new token supply
+                        └── and it should emit an event
+    */
+
+    function testSetVirtualCollateralSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address); // Use non_admin_address as non-admin caller
+        fmBcDiscrete.setVirtualCollateralSupply(_newSupply);
+    }
+
+    function testSetVirtualCollateralSupply_FailsIfZero() public {
+        uint _newSupply = 0;
+        vm.expectRevert(
+            IVirtualCollateralSupplyBase_v1
+                .Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero
+                .selector
+        );
+        fmBcDiscrete.setVirtualCollateralSupply(_newSupply);
+    }
+
+    function testSetVirtualCollateralSupply(uint _newSupply) public {
+        vm.assume(_newSupply != 0);
+        uint oldSupply = fmBcDiscrete.getVirtualCollateralSupply();
+
+        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralSupplySet(
+            _newSupply, oldSupply
+        );
+
+        fmBcDiscrete.setVirtualCollateralSupply(_newSupply);
+        assertEq(fmBcDiscrete.getVirtualCollateralSupply(), _newSupply);
     }
 }
