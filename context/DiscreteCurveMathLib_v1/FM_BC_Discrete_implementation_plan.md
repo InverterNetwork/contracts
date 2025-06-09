@@ -91,4 +91,33 @@
   - the virtualIssuanceSupply and
   - amountIn of collateral tokens
 - tests (via exposed function)
-  - returns expected value for given input
+  - returns expected value for given input (multiple curve scenarios)
+
+### 2.8. `_redeemTokensFormulaWrapper` [NEXT]
+
+- return value of `_calculateSaleReturn` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
+  - passed current curve configuration and
+  - the virtualIssuanceSupply and
+  - amountIn of issuance tokens
+- tests (via exposed function)
+  - returns expected value for given input (multiple curve scenarios)
+
+### 2.9. handle functions: token transfers & mints
+
+#### 2.9.1. `_handleCollateralTokensBeforeBuy`
+
+- transfers issuance tokens from provider to this module
+  - tests (via exposed function)
+    - transfers tokens from provider to this module
+
+#### 2.9.2. `_handleIssuanceTokensAfterBuy`
+
+- mints issuance tokens to receiver
+  - tests (via exposed function)
+    - mints tokens to receiver
+
+#### 2.9.3. `_handleCollateralTokensAfterSell`
+
+- transfers collateral tokens to receiver
+  - tests (via exposed function)
+    - transfers tokens to receiver
