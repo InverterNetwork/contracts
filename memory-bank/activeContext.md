@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended.
-**Secondary**: Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
+**Primary**: Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, updated `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, and added tests in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
+**Secondary**: Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended. Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
 
-**Reason for Update**: Resolution of a critical failing test related to `reconfigureSegments` and its invariance check.
+**Reason for Update**: Completion of `getStaticPriceForBuying` and `getStaticPriceForSelling` implementation and testing.
 
 ## Recent Progress
 
@@ -27,6 +27,9 @@
 - ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
 - ✅ NatSpec comments added to `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - ✅ Implemented `setVirtualCollateralSupply` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added unit tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. All tests for this function are passing.
+- ✅ Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+- ✅ Updated `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` with `getStaticPriceForBuying` and `getStaticPriceForSelling` function signatures.
+- ✅ Added tests for `getStaticPriceForBuying` and `getStaticPriceForSelling` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, specifically testing the transition point as requested.
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
@@ -48,7 +51,7 @@
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
     - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
 3.  **Update Memory Bank** again after fuzz tests are implemented and passing, confirming ultimate readiness.
-4.  **Transition to next `FM_BC_Discrete` Implementation step** (e.g., `setVirtualIssuanceSupply`).
+4.  **Transition to next `FM_BC_Discrete` Implementation step** (e.g., `_redeemTokensFormulaWrapper`).
 
 ## Implementation Insights Discovered (And Being Revised)
 

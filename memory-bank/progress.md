@@ -90,6 +90,7 @@ _findPositionForSupply() // Is pure
 - `transferOrchestratorToken` function implemented and fully tested (excluding one test case that requires a non-zero `projectCollateralFeeCollected` which is not directly settable in the SuT).
 - `setVirtualCollateralSupply` function implemented and fully tested.
 - `reconfigureSegments` invariance check test (`testReconfigureSegments_FailsGivenInvarianceCheckFailure`) fixed and passing.
+- Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions and added tests.
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 

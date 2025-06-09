@@ -133,7 +133,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
         returns (uint)
     {
-        revert("NOT IMPLEMENTED");
+        // getStaticPriceForBuying is the return value of _findPositionForSupply
+        // it needs to be passed the current curve configuration and
+        // the virtualCollateralSupply + 1
+        (,, uint priceAtCurrentStep) =
+            _segments._findPositionForSupply(virtualCollateralSupply + 1);
+        return priceAtCurrentStep;
     }
 
     // RedeemingBondingCurveBase_v1 implementations
@@ -141,10 +146,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         external
         view
         virtual
-        override
+        override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        revert("NOT IMPLEMENTED");
+        // getStaticPriceForSelling is the return value of _findPositionForSupply
+        // it needs to be passed the current curve configuration and
+        // the virtualIssuanceSupply
+        (,, uint priceAtCurrentStep) =
+            _segments._findPositionForSupply(virtualIssuanceSupply);
+        return priceAtCurrentStep;
     }
 
     // =========================================================================

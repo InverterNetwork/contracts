@@ -553,6 +553,36 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test getStaticPriceForSelling
+        ├── Given the default curve configuration
+        │   └── And virtualIssuanceSupply is at the last unit of the first segment (50 ether)
+        │       └── When getStaticPriceForSelling is called
+        │           └── Then it should return the price of the last unit of the first segment (0.5 ether)
+    */
+    function testGetStaticPriceForSelling_AtTransitionPoint() public {
+        uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether, last unit of first segment
+
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
+        assertEq(
+            fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG0_INITIAL_PRICE
+        );
+    }
+
+    /* Test getStaticPriceForBuying
+        ├── Given the default curve configuration
+        │   └── And virtualCollateralSupply is at the last unit of the first segment (50 ether)
+        │       └── When getStaticPriceForBuying is called
+        │           └── Then it should return the price of the first unit of the second segment (0.8 ether)
+    */
+    function testGetStaticPriceForBuying_AtTransitionPoint() public {
+        uint virtualCollateralSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether, last unit of first segment
+
+        fmBcDiscrete.exposed_setVirtualCollateralSupply(virtualCollateralSupply);
+        assertEq(
+            fmBcDiscrete.getStaticPriceForBuying(), DEFAULT_SEG1_INITIAL_PRICE
+        );
+    }
+
     // =========================================================================
     // Helpers
 
