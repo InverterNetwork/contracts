@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, updated `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, and added tests in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
-**Secondary**: Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended. Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
+**Primary**: Implemented `_issueTokensFormulaWrapper` in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added comprehensive unit tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. The failing test `testIssueTokensFormulaWrapper_ReturnsCorrectTokensToMint()` was fixed by adjusting the test setup to avoid setting `virtualIssuanceSupply` to zero via `exposed_setVirtualIssuanceSupply` when it's not necessary, and explicitly resetting it to zero for scenarios that start from zero supply.
+**Secondary**: Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, updated `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, and added tests in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended. Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
 
-**Reason for Update**: Completion of `getStaticPriceForBuying` and `getStaticPriceForSelling` implementation and testing.
+**Reason for Update**: Completion of `_issueTokensFormulaWrapper` implementation and testing, including fixing the associated failing test.
 
 ## Recent Progress
 
@@ -30,6 +30,8 @@
 - ✅ Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - ✅ Updated `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` with `getStaticPriceForBuying` and `getStaticPriceForSelling` function signatures.
 - ✅ Added tests for `getStaticPriceForBuying` and `getStaticPriceForSelling` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, specifically testing the transition point as requested.
+- ✅ Implemented `_issueTokensFormulaWrapper` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+- ✅ Added tests for `_issueTokensFormulaWrapper` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, including Gherkin comments, and fixed the test setup to pass.
 
 ## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
@@ -44,7 +46,7 @@
 ## Next Immediate Steps
 
 1.  **Synchronize Documentation**:
-    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status, and the new test added, as well as the completion of `setVirtualCollateralSupply`.
+    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status, and the new test added, as well as the completion of `setVirtualCollateralSupply` and `_issueTokensFormulaWrapper`.
     - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
 2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
     - Review existing fuzz tests and identify gaps.

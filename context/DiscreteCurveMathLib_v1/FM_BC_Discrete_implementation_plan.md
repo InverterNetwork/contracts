@@ -29,7 +29,7 @@
 
 ### 2. Implementation
 
-### 2.1. \_setSegments [DONE]
+### 2.1. `_setSegments` [DONE]
 
 - Create a function that takes in an array of `PackedSegment` structs and sets the segments of the bonding curve
   - location: src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol
@@ -39,18 +39,18 @@
 - Should be tested via exposed function
 - Should be called in the `init` function (and tested)
 
-### 2.2. transferOrchestratorToken [DONE]
+### 2.2. `transferOrchestratorToken` [DONE]
 
 - Function implementation should be identical to the one in `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol`
 - Should be tested
   - success case requires some setup; use `testTransferOrchestratorToken_WorksGivenFunctionGetsCalled` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol` as reference
 
-### 2.3. setVirtualCollateralSupply [DONE]
+### 2.3. `setVirtualCollateralSupply` [DONE]
 
 - first implement `setVirtualCollateralSupply` same as in `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol`
   - add tests (you can use `FM_BC_Bancor_Redeeming_VirtualSupplyV1Test` l.1264 as reference):
 
-### 2.4. reconfigureSegments [DONE]
+### 2.4. `reconfigureSegments` [DONE]
 
 - should take in an array of `PackedSegment`
 - invariance check: should revert if the new curve shape breaks the 100% backing constraint
@@ -62,9 +62,7 @@
   - happy path: deletes previous segments and sets new segments
   - event emission: segments, virtualIssuanceSupply
 
-### 2.5. Implement setVirtualIssuanceSupply [DONE]
-
-### 2.5. Implement getStaticPriceForBuying and getStaticPriceForSelling [DONE]
+### 2.5. `setVirtualIssuanceSupply` [DONE]
 
 - Implement `_setVirtualIssuanceSupply` in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` (similar to `_setVirtualCollateralSupply`).
 - Implement `setVirtualIssuanceSupply` (external, `onlyOrchestratorAdmin`) in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
@@ -73,7 +71,7 @@
 - Add tests for `_setVirtualIssuanceSupply` (success with event).
 - Add tests for `setVirtualIssuanceSupply` (success, reverts if not authorized).
 
-### 2.5. Implement getStaticPriceForBuying and getStaticPriceForSelling [DONE]
+### 2.6. `getStaticPriceForBuying` and `getStaticPriceForSelling` [DONE]
 
 - `getStaticPriceForSelling` is the return value of `_findPositionForSupply` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
   - it needs to be passed the current curve configuration and
@@ -83,3 +81,14 @@
   - the virtualCollateralSupply + 1
 - tests for both functions:
   - test that they return the correct values
+    - at segment transition
+    - at segment transition
+
+### 2.7. `_issueTokensFormulaWrapper` [DONE]
+
+- return value of `_calculatePurchaseReturn` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
+  - passed current curve configuration and
+  - the virtualIssuanceSupply and
+  - amountIn of collateral tokens
+- tests (via exposed function)
+  - returns expected value for given input

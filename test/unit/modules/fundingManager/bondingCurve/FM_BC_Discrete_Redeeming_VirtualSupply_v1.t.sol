@@ -623,6 +623,71 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     // =========================================================================
+    // Test: _issueTokensFormulaWrapper
+
+    /* Test _issueTokensFormulaWrapper
+        ├── Given a flat segment and zero initial supply
+        │   └── When collateral is provided to buy within the flat segment
+        │       └── Then it should return the correct amount of tokens for the flat price
+        ├── Given a curve spanning multiple segments and zero initial supply
+        │   └── When collateral is provided to buy across segment boundaries
+        │       └── Then it should return the correct total amount of tokens
+        └── Given a sloped segment and an initial supply at the start of that segment
+            └── When collateral is provided to buy within the sloped segment
+                └── Then it should return the correct amount of tokens considering the price slope
+    */
+
+    function testIssueTokensFormulaWrapper_FlatSegment_FromZeroSupply()
+        public
+    {
+        uint collateralToSpend = 25 ether;
+        uint expectedTokensToMint = 50 ether; // 25 / 0.5 = 50
+
+        assertEq(
+            fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
+            expectedTokensToMint,
+            "Failed: Buying on flat segment from zero supply"
+        );
+    }
+
+    function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply_RoundNumbers(
+    ) public {
+        // Test buying across Seg0 (flat) and into Seg1,Step0 (sloped)
+        uint collateralToSpend = 45 ether;
+        // Expected:
+        // Seg0 (price 0.5): 50 tokens for 25 ether.
+        // Seg1,Step0 (price 0.8): 25 tokens for 20 ether.
+        // Total: 75 tokens for 45 ether.
+        uint expectedTokensToMint = 75 ether;
+
+        assertEq(
+            fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
+            expectedTokensToMint,
+            "Failed: Buying across segments from zero supply (round numbers)"
+        );
+    }
+
+    function testIssueTokensFormulaWrapper_SlopedSegment_FromMidSupply()
+        public
+    {
+        // Set initial supply to be at the start of the sloped segment
+        uint startingIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(startingIssuanceSupply);
+
+        uint collateralToSpend = 20 ether;
+        // Expected (starting at supply 50, spending 20 ether):
+        // This buys all of Seg1,Step0 (price 0.8), which has a capacity of 25 tokens and costs 20 ether.
+        // Total tokens: 25.
+        uint expectedTokensToMint = 25 ether;
+
+        assertEq(
+            fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
+            expectedTokensToMint,
+            "Failed: Buying on sloped segment from mid supply"
+        );
+    }
+
+    // =========================================================================
     // Helpers
 
     /// @notice Helper function to create a single PackedSegment.

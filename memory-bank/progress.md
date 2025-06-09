@@ -91,6 +91,7 @@ _findPositionForSupply() // Is pure
 - `setVirtualCollateralSupply` function implemented and fully tested.
 - `reconfigureSegments` invariance check test (`testReconfigureSegments_FailsGivenInvarianceCheckFailure`) fixed and passing.
 - Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions and added tests.
+- Implemented `_issueTokensFormulaWrapper` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added comprehensive unit tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, including fixing the associated failing test.
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 
@@ -181,7 +182,7 @@ function mint(uint256 collateralIn) external {
     - Review existing fuzz tests and identify gaps.
     - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
     - Add a new fuzz test for `_calculateSaleReturn`.
-2.  Ensure all tests, including new/enhanced fuzz tests, are passing.
+2.  Ensure all fuzz tests pass.
 3.  Update Memory Bank (`activeContext.md`, `progress.md`) to confirm completion of enhanced fuzz testing and ultimate library readiness.
 
 #### Phase 1: Core Infrastructure (⏳ Next, after Test Strengthening & Doc Sync)
@@ -241,14 +242,17 @@ function mint(uint256 collateralIn) external {
 
 ### Milestone 0.25: Full Documentation Synchronization (🎯 Current Focus)
 
-- 🎯 Update all Memory Bank files (`progress.md` - this step, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status.
-- 🎯 Update external Markdown documentation: `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
+1.  Update all Memory Bank files (`progress.md` - this step, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status.
+2.  Update external Markdown documentation: `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
 
-### Milestone 0.5: Final QA - Enhanced Fuzz Testing (⏳ Next, after M0.25)
+#### Phase 0.5: Final QA - Enhanced Fuzz Testing (⏳ Next, after M0.25)
 
-- 🎯 Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (covering `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`, `_calculateSaleReturn`).
-- 🎯 Ensure all fuzz tests pass.
-- 🎯 Update Memory Bank to confirm completion of fuzz testing.
+1.  Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`.
+    - Review existing fuzz tests and identify gaps.
+    - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
+    - Add a new fuzz test for `_calculateSaleReturn`.
+2.  Ensure all fuzz tests pass.
+3.  Update Memory Bank (`activeContext.md`, `progress.md`) to confirm completion of enhanced fuzz testing and ultimate library readiness.
 
 ### Milestone 1: Core Infrastructure (⏳ Next, after M0.5)
 
