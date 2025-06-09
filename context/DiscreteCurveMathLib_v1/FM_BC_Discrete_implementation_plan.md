@@ -20,6 +20,12 @@
 - FM_BC_Discrete_Redeeming_VirtualSupply_v1 should inherit from a bunch of other contracts specified in context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_context.md
 - override all _required_ functions from the inheritance contracts with empty implementations, so that in the end we have a contract that holds all the required functions, but these functions dont do anything
 
+### 1.3. Default Curve Conguration in test
+
+- use the same curve as `flatSlopedTestCurve` defined in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` as a default curve configuration to be defined in the top of the testfile `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`
+- then make sure that all tests that make use of a curve configuration are using the default curve configuration (where possible); the following tests should be updated to use the default curve configuration:
+  **PLANNED**: The `flatSlopedTestCurve` from `DiscreteCurveMathLib_v1.t.sol` will be defined as `defaultCurve` in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. The `setUp()` function will be updated to initialize `initialTestSegments` with this `defaultCurve`. Additionally, `testReconfigureSegments_FailsGivenInvarianceCheckFailure` and `testReconfigureSegments_WorksAndEmitsEvent` will be updated to utilize this `defaultCurve` for their initial segment setup.
+
 ### 2. Implementation
 
 ### 2.1. \_setSegments [DONE]
@@ -63,3 +69,14 @@
 - Update `FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol` to expose `_setVirtualIssuanceSupply` (as `exposed_setVirtualIssuanceSupply`).
 - Add tests for `_setVirtualIssuanceSupply` (success with event).
 - Add tests for `setVirtualIssuanceSupply` (success, reverts if not authorized).
+
+### 2.5. Implement getStaticPriceForBuying and getStaticPriceForSelling [BLOCKED by 1.3]
+
+- `getStaticPriceForSelling` is the return value of `_findPositionForSupply` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
+  - it needs to be passed the current curve configuration and
+  - the virtualIssuanceSupply
+- `getStaticPriceForBuying` is the return value of `_findPositionForSupply` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
+  - it needs to be passed the current curve configuration and
+  - the virtualCollateralSupply + 1
+- tests for both functions:
+  - test that they return the correct values

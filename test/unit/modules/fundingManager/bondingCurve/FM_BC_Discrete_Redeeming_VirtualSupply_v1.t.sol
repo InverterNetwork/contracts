@@ -42,12 +42,53 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
     using DiscreteCurveMathLib_v1 for PackedSegment[];
 
+    // Structs for organizing test data
+    struct CurveTestData {
+        PackedSegment[] packedSegmentsArray; // Array of PackedSegments for the library
+        uint totalCapacity; // Calculated: sum of segment capacities
+        uint totalReserve; // Calculated: sum of segment reserves
+        string description; // Optional: for logging or comments
+    }
+
     FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
     ERC20Mock public orchestratorToken;
     ERC20PaymentClientBaseV2Mock public paymentClient;
     PackedSegment[] public initialTestSegments;
+    CurveTestData internal defaultCurve; // Declare defaultCurve variable
 
     address internal non_admin_address = address(0xB0B);
+
+    // Default Curve Parameters (as defined in DiscreteCurveMathLib_v1.t.sol)
+    // Based on flatSlopedTestCurve initialized in setUp() in DiscreteCurveMathLib_v1.t.sol:
+    // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1  (Price: 0.50)
+    // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2 (Prices: 0.80, 0.82)
+    //
+    //     Price (ether)
+    //       ^
+    //     0.82|                     +------+ (Supply: 100)
+    //         |                     |      |
+    //     0.80|             +-------+      | (Supply: 75)
+    //         |             |              |
+    //         |             |              |
+    //         |             |              |
+    //         |             |              |
+    //     0.50|-------------+              | (Supply: 50)
+    //         +-------------+--------------+--> Supply (ether)
+    //         0             50     75     100
+    //
+    //          Step Prices:
+    //          Supply  0-50:  Price 0.50 (Segment 0, Step 0)
+    //          Supply 50-75:  Price 0.80 (Segment 1, Step 0)
+    //          Supply 75-100: Price 0.82 (Segment 1, Step 1)
+    uint public constant DEFAULT_SEG0_INITIAL_PRICE = 0.5 ether;
+    uint public constant DEFAULT_SEG0_PRICE_INCREASE = 0;
+    uint public constant DEFAULT_SEG0_SUPPLY_PER_STEP = 50 ether;
+    uint public constant DEFAULT_SEG0_NUMBER_OF_STEPS = 1;
+
+    uint public constant DEFAULT_SEG1_INITIAL_PRICE = 0.8 ether;
+    uint public constant DEFAULT_SEG1_PRICE_INCREASE = 0.02 ether;
+    uint public constant DEFAULT_SEG1_SUPPLY_PER_STEP = 25 ether;
+    uint public constant DEFAULT_SEG1_NUMBER_OF_STEPS = 2;
 
     // =========================================================================
     // Setup
@@ -65,8 +106,33 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
         _authorizer.grantRole(_authorizer.getAdminRole(), address(this)); // Grant admin role to the test contract
 
-        initialTestSegments = new PackedSegment[](1);
-        initialTestSegments[0] = PackedSegmentLib._create(1e18, 1e17, 100, 10); // Example segment
+        // --- Initialize defaultCurve ---
+        defaultCurve.description = "Flat segment followed by a sloped segment";
+
+        uint[] memory initialPrices = new uint[](2);
+        initialPrices[0] = DEFAULT_SEG0_INITIAL_PRICE;
+        initialPrices[1] = DEFAULT_SEG1_INITIAL_PRICE;
+
+        uint[] memory priceIncreases = new uint[](2);
+        priceIncreases[0] = DEFAULT_SEG0_PRICE_INCREASE;
+        priceIncreases[1] = DEFAULT_SEG1_PRICE_INCREASE;
+
+        uint[] memory suppliesPerStep = new uint[](2);
+        suppliesPerStep[0] = DEFAULT_SEG0_SUPPLY_PER_STEP;
+        suppliesPerStep[1] = DEFAULT_SEG1_SUPPLY_PER_STEP;
+
+        uint[] memory numbersOfSteps = new uint[](2);
+        numbersOfSteps[0] = DEFAULT_SEG0_NUMBER_OF_STEPS;
+        numbersOfSteps[1] = DEFAULT_SEG1_NUMBER_OF_STEPS;
+
+        defaultCurve.packedSegmentsArray = helper_createSegments(
+            initialPrices, priceIncreases, suppliesPerStep, numbersOfSteps
+        );
+        defaultCurve.totalCapacity = (
+            DEFAULT_SEG0_SUPPLY_PER_STEP * DEFAULT_SEG0_NUMBER_OF_STEPS
+        ) + (DEFAULT_SEG1_SUPPLY_PER_STEP * DEFAULT_SEG1_NUMBER_OF_STEPS);
+
+        initialTestSegments = defaultCurve.packedSegmentsArray;
 
         fmBcDiscrete.init(
             _orchestrator,
@@ -409,9 +475,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     function testReconfigureSegments_FailsGivenInvarianceCheckFailure()
         public
     {
-        uint initialIssuanceSupply = 100e18;
-        PackedSegment[] memory currentSegments = new PackedSegment[](1);
-        currentSegments[0] = PackedSegmentLib._create(1e18, 0, 100e18, 1);
+        uint initialIssuanceSupply = defaultCurve.totalCapacity;
+        PackedSegment[] memory currentSegments =
+            defaultCurve.packedSegmentsArray;
         uint initialCollateralReserve = DiscreteCurveMathLib_v1
             ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
 
@@ -439,9 +505,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testReconfigureSegments_WorksAndEmitsEvent() public {
-        uint initialIssuanceSupply = 100e18;
-        PackedSegment[] memory currentSegments = new PackedSegment[](1);
-        currentSegments[0] = PackedSegmentLib._create(1e18, 0, 100e18, 1);
+        uint initialIssuanceSupply = defaultCurve.totalCapacity;
+        PackedSegment[] memory currentSegments =
+            defaultCurve.packedSegmentsArray;
         uint initialCollateralReserve = DiscreteCurveMathLib_v1
             ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
 
@@ -451,9 +517,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             initialCollateralReserve
         );
 
-        PackedSegment[] memory newSegments = new PackedSegment[](2);
-        newSegments[0] = PackedSegmentLib._create(0.5e18, 0, 50e18, 1);
-        newSegments[1] = PackedSegmentLib._create(1.5e18, 0, 50e18, 1);
+        // New configuration: single flat segment
+        // Price = 0.655 ether, SupplyPerStep = 100 ether, NumberOfSteps = 1
+        // This should result in a reserve of 0.655 * 100 = 65.5 ether for the initialIssuanceSupply of 100 ether
+        PackedSegment[] memory newSegments = new PackedSegment[](1);
+        newSegments[0] = helper_createSegment(0.655 ether, 0, 100 ether, 1);
 
         uint expectedNewReserve = DiscreteCurveMathLib_v1
             ._calculateReserveForSupply(newSegments, initialIssuanceSupply);
@@ -472,16 +540,68 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         PackedSegment[] memory retrievedSegments = fmBcDiscrete.getSegments();
         assertEq(retrievedSegments.length, newSegments.length);
         assertEq(
+            retrievedSegments.length,
+            1,
+            "Expected newSegments to have a length of 1"
+        );
+        assertEq(
             PackedSegment.unwrap(retrievedSegments[0]),
             PackedSegment.unwrap(newSegments[0])
         );
         assertEq(
-            PackedSegment.unwrap(retrievedSegments[1]),
-            PackedSegment.unwrap(newSegments[1])
-        );
-
-        assertEq(
             fmBcDiscrete.getVirtualCollateralSupply(), initialCollateralReserve
         );
+    }
+
+    // =========================================================================
+    // Helpers
+
+    /// @notice Helper function to create a single PackedSegment.
+    /// @param _initialPrice The initial price of the segment.
+    /// @param _priceIncrease The price increase per step.
+    /// @param _supplyPerStep The supply per step.
+    /// @param _numberOfSteps The number of steps in the segment.
+    /// @return A PackedSegment struct.
+    function helper_createSegment(
+        uint _initialPrice,
+        uint _priceIncrease,
+        uint _supplyPerStep,
+        uint _numberOfSteps
+    ) internal pure returns (PackedSegment) {
+        return PackedSegmentLib._create(
+            _initialPrice, _priceIncrease, _supplyPerStep, _numberOfSteps
+        );
+    }
+
+    /// @notice Helper function to create a segments array from arrays of parameters.
+    /// @param _initialPrices An array of initial prices for each segment.
+    /// @param _priceIncreases An array of price increases for each segment.
+    /// @param _suppliesPerStep An array of supplies per step for each segment.
+    /// @param _numbersOfSteps An array of number of steps for each segment.
+    /// @return An array of PackedSegment.
+    function helper_createSegments(
+        uint[] memory _initialPrices,
+        uint[] memory _priceIncreases,
+        uint[] memory _suppliesPerStep,
+        uint[] memory _numbersOfSteps
+    ) internal pure returns (PackedSegment[] memory) {
+        require(
+            _initialPrices.length == _priceIncreases.length
+                && _initialPrices.length == _suppliesPerStep.length
+                && _initialPrices.length == _numbersOfSteps.length,
+            "Input arrays must have same length"
+        );
+
+        PackedSegment[] memory segments =
+            new PackedSegment[](_initialPrices.length);
+        for (uint i = 0; i < _initialPrices.length; i++) {
+            segments[i] = helper_createSegment(
+                _initialPrices[i],
+                _priceIncreases[i],
+                _suppliesPerStep[i],
+                _numbersOfSteps[i]
+            );
+        }
+        return segments;
     }
 }
