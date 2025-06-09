@@ -29,13 +29,18 @@ import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {IDiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
+import {DiscreteCurveMathLib_v1} from
+    "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from
     "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
 import {IVirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {IVirtualIssuanceSupplyBase_v1} from
+    "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
+    using DiscreteCurveMathLib_v1 for PackedSegment[];
 
     FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
     ERC20Mock public orchestratorToken;
@@ -292,5 +297,191 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
         fmBcDiscrete.setVirtualCollateralSupply(_newSupply);
         assertEq(fmBcDiscrete.getVirtualCollateralSupply(), _newSupply);
+    }
+
+    /* Test _setVirtualIssuanceSupply function (exposed)
+        ├── Given a new virtual issuance supply
+        │   └── When exposed_setVirtualIssuanceSupply is called
+        │       └── Then it should set the new supply
+        │           └── And it should emit a VirtualIssuanceSupplySet event
+    */
+    function testInternal_SetVirtualIssuanceSupply_WorksAndEmitsEvent(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        uint oldSupply = fmBcDiscrete.getVirtualIssuanceSupply();
+
+        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
+            _newSupply, oldSupply
+        );
+
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(_newSupply);
+        assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
+    }
+
+    /* Test setVirtualIssuanceSupply function
+        ├── Given caller is not the Orchestrator_v1 admin
+        │   └── When the function setVirtualIssuanceSupply() is called
+        │       └── Then it should revert
+        └── Given the caller is the Orchestrator_v1 admin
+            ├── And the new token supply is zero
+            │   └── When the setVirtualIssuanceSupply() is called
+            │       └── Then it should revert
+            └── And the new token supply is > zero
+                └── When the function setVirtualIssuanceSupply() is called
+                    └── Then it should set the new token supply
+                        └── And it should emit an event
+    */
+    function testSetVirtualIssuanceSupply_FailsGivenCallerNotOrchestratorAdmin(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testSetVirtualIssuanceSupply_FailsIfZero() public {
+        uint _newSupply = 0;
+        vm.expectRevert(
+            IVirtualIssuanceSupplyBase_v1
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
+                .selector
+        );
+        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testSetVirtualIssuanceSupply_Works(uint _newSupply) public {
+        vm.assume(_newSupply != 0);
+        uint oldSupply = fmBcDiscrete.getVirtualIssuanceSupply();
+
+        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
+            _newSupply, oldSupply
+        );
+
+        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
+        assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
+    }
+
+    // =========================================================================
+    // Test: reconfigureSegments
+
+    /* Test reconfigureSegments function
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function reconfigureSegments() is called
+        │       └── then it should revert
+        ├── given the caller is the Orchestrator_v1 admin
+        │   ├── and the new segments break the invariance check
+        │   │   └── when the function reconfigureSegments() is called
+        │   │       └── then it should revert with InvarianceCheckFailed
+        │   └── and the new segments maintain the invariance check
+        │       └── when the function reconfigureSegments() is called
+        │           └── then it should update the segments
+        │               └── and it should emit a SegmentsSet event
+        │               └── and the virtualCollateralSupply should remain unchanged
+    */
+
+    function testReconfigureSegments_FailsGivenCallerNotOrchestratorAdmin()
+        public
+    {
+        PackedSegment[] memory newSegments = new PackedSegment[](1);
+        newSegments[0] = PackedSegmentLib._create(1e18, 1e17, 100, 10);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        fmBcDiscrete.reconfigureSegments(newSegments);
+    }
+
+    function testReconfigureSegments_FailsGivenInvarianceCheckFailure()
+        public
+    {
+        uint initialIssuanceSupply = 100e18;
+        PackedSegment[] memory currentSegments = new PackedSegment[](1);
+        currentSegments[0] = PackedSegmentLib._create(1e18, 0, 100e18, 1);
+        uint initialCollateralReserve = DiscreteCurveMathLib_v1
+            ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
+
+        fmBcDiscrete.exposed_setSegments(currentSegments);
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(initialIssuanceSupply);
+        fmBcDiscrete.exposed_setVirtualCollateralSupply(
+            initialCollateralReserve
+        );
+
+        PackedSegment[] memory breakingSegments = new PackedSegment[](1);
+        breakingSegments[0] = PackedSegmentLib._create(1.1e18, 0, 100e18, 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+                    .InvarianceCheckFailed
+                    .selector,
+                DiscreteCurveMathLib_v1._calculateReserveForSupply(
+                    breakingSegments, initialIssuanceSupply
+                ),
+                initialCollateralReserve
+            )
+        );
+        fmBcDiscrete.reconfigureSegments(breakingSegments);
+    }
+
+    function testReconfigureSegments_WorksAndEmitsEvent() public {
+        uint initialIssuanceSupply = 100e18;
+        PackedSegment[] memory currentSegments = new PackedSegment[](1);
+        currentSegments[0] = PackedSegmentLib._create(1e18, 0, 100e18, 1);
+        uint initialCollateralReserve = DiscreteCurveMathLib_v1
+            ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
+
+        fmBcDiscrete.exposed_setSegments(currentSegments);
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(initialIssuanceSupply);
+        fmBcDiscrete.exposed_setVirtualCollateralSupply(
+            initialCollateralReserve
+        );
+
+        PackedSegment[] memory newSegments = new PackedSegment[](2);
+        newSegments[0] = PackedSegmentLib._create(0.5e18, 0, 50e18, 1);
+        newSegments[1] = PackedSegmentLib._create(1.5e18, 0, 50e18, 1);
+
+        uint expectedNewReserve = DiscreteCurveMathLib_v1
+            ._calculateReserveForSupply(newSegments, initialIssuanceSupply);
+
+        assertEq(
+            expectedNewReserve,
+            initialCollateralReserve,
+            "Invariant check setup failed: new segments do not match old reserve"
+        );
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1.SegmentsSet(newSegments);
+
+        fmBcDiscrete.reconfigureSegments(newSegments);
+
+        PackedSegment[] memory retrievedSegments = fmBcDiscrete.getSegments();
+        assertEq(retrievedSegments.length, newSegments.length);
+        assertEq(
+            PackedSegment.unwrap(retrievedSegments[0]),
+            PackedSegment.unwrap(newSegments[0])
+        );
+        assertEq(
+            PackedSegment.unwrap(retrievedSegments[1]),
+            PackedSegment.unwrap(newSegments[1])
+        );
+
+        assertEq(
+            fmBcDiscrete.getVirtualCollateralSupply(), initialCollateralReserve
+        );
     }
 }

@@ -168,12 +168,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     }
 
     // VirtualIssuanceSupplyBase_v1 implementations
-    function setVirtualIssuanceSupply(uint _virtualSupply)
+    function setVirtualIssuanceSupply(uint virtualSupply_)
         external
         virtual
-        override
+        override(VirtualIssuanceSupplyBase_v1)
+        onlyOrchestratorAdmin
     {
-        revert("NOT IMPLEMENTED");
+        _setVirtualIssuanceSupply(virtualSupply_);
     }
 
     // VirtualCollateralSupplyBase_v1 implementations
@@ -184,6 +185,26 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         onlyOrchestratorAdmin
     {
         _setVirtualCollateralSupply(virtualSupply_);
+    }
+
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+    function reconfigureSegments(PackedSegment[] memory newSegments_)
+        external
+        override
+        onlyOrchestratorAdmin
+    {
+        uint currentVirtualCollateralSupply = virtualCollateralSupply;
+
+        uint newCalculatedReserve =
+            newSegments_._calculateReserveForSupply(virtualIssuanceSupply);
+
+        if (newCalculatedReserve != currentVirtualCollateralSupply) {
+            revert InvarianceCheckFailed(
+                newCalculatedReserve, currentVirtualCollateralSupply
+            );
+        }
+
+        _setSegments(newSegments_);
     }
 
     // =========================================================================
@@ -205,6 +226,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         override(VirtualCollateralSupplyBase_v1)
     {
         super._setVirtualCollateralSupply(virtualSupply_);
+    }
+
+    /// @dev    Internal function to directly set the virtual issuance supply to a new value.
+    /// @param  virtualSupply_ The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint virtualSupply_)
+        internal
+        override(VirtualIssuanceSupplyBase_v1)
+    {
+        super._setVirtualIssuanceSupply(virtualSupply_);
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)

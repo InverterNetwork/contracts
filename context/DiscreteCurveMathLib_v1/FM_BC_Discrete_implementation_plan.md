@@ -42,3 +42,24 @@
 
 - first implement `setVirtualCollateralSupply` same as in `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol`
   - add tests (you can use `FM_BC_Bancor_Redeeming_VirtualSupplyV1Test` l.1264 as reference):
+
+### 2.4. reconfigureSegments [DONE]
+
+- should take in an array of `PackedSegment`
+- invariance check: should revert if the new curve shape breaks the 100% backing constraint
+- should emit an event: segments, virtualIssuanceSupply
+- only callable by orchestrator admin
+- tests:
+  - access control
+  - invariant check => if invariant breaks should revert
+  - happy path: deletes previous segments and sets new segments
+  - event emission: segments, virtualIssuanceSupply
+
+### 2.5. Implement setVirtualIssuanceSupply [DONE]
+
+- Implement `_setVirtualIssuanceSupply` in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` (similar to `_setVirtualCollateralSupply`).
+- Implement `setVirtualIssuanceSupply` (external, `onlyOrchestratorAdmin`) in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+- Update `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` to include `setVirtualIssuanceSupply`.
+- Update `FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol` to expose `_setVirtualIssuanceSupply` (as `exposed_setVirtualIssuanceSupply`).
+- Add tests for `_setVirtualIssuanceSupply` (success with event).
+- Add tests for `setVirtualIssuanceSupply` (success, reverts if not authorized).

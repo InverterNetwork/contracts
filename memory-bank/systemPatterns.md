@@ -177,3 +177,4 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
     (Other patterns like Type-Safe Packed Storage, Gas Optimization, Mathematical Precision, Error Handling, Naming Conventions, Library Architecture, Integration Patterns, Performance Optimization, and State Management are also stable, tested, and reflect the final state of the libraries.)
 2.  **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
 3.  **`setVirtualCollateralSupply` Implementation**: The pattern for setting virtual collateral supply has been successfully applied and tested within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+4.  **`reconfigureSegments` Invariance Check**: The invariance check for `reconfigureSegments` has been confirmed to be working correctly, with the associated test now passing.

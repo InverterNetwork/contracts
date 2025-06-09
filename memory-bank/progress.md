@@ -81,7 +81,7 @@ _findPositionForSupply() // Is pure
 2. Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol` (for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`, and `_calculateSaleReturn`).
    The library is then fully prepared for `FM_BC_Discrete` integration.
 
-### ✅ `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [IN PROGRESS - `setVirtualCollateralSupply` IMPLEMENTED & FULLY TESTED]
+### ✅ `FM_BC_Discrete` (Funding Manager - Discrete Bonding Curve) [IN PROGRESS - `reconfigureSegments` Invariance Check Fixed]
 
 **Dependencies**: `DiscreteCurveMathLib_v1` (now stable and fully tested).
 **Integration Pattern Defined**: `FM_BC_Discrete` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
@@ -89,6 +89,7 @@ _findPositionForSupply() // Is pure
 
 - `transferOrchestratorToken` function implemented and fully tested (excluding one test case that requires a non-zero `projectCollateralFeeCollected` which is not directly settable in the SuT).
 - `setVirtualCollateralSupply` function implemented and fully tested.
+- `reconfigureSegments` invariance check test (`testReconfigureSegments_FailsGivenInvarianceCheckFailure`) fixed and passing.
 
 #### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 
@@ -184,11 +185,12 @@ function mint(uint256 collateralIn) external {
 
 #### Phase 1: Core Infrastructure (⏳ Next, after Test Strengthening & Doc Sync)
 
-1.  Start `FM_BC_Discrete` implementation using the stable and robustly tested `DiscreteCurveMathLib_v1`.
+1.  Continue `FM_BC_Discrete` implementation using the stable and robustly tested `DiscreteCurveMathLib_v1`.
+    - The `reconfigureSegments` invariance check is now confirmed to be working correctly.
     - Ensure `FM_BC_Discrete` correctly handles segment array validation (using `_validateSegmentArray`) and supply capacity validation before calling `_calculatePurchaseReturn`.
 2.  Implement `DynamicFeeCalculator`.
 3.  Basic minting/redeeming functionality with fee integration.
-4.  `configureCurve` function with invariance validation.
+4.  Complete `configureCurve` function with full invariance validation and segment update logic.
 
 #### Phase 2 & 3: (Remain largely the same, but depend on completion of revised Phase 1)
 
@@ -198,7 +200,7 @@ function mint(uint256 collateralIn) external {
 | --------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | Pre-sale fixed price        | ✅ DONE                                   | Using existing Inverter components                                                                                                                                                                                                                                                            | High        |
 | Discrete bonding curve math | ✅ STABLE, ALL TESTS GREEN, 100% COVERAGE | All refactoring complete, including `_calculatePurchaseReturn` and removal of `_getCurrentPriceAndStep`. `PackedSegmentLib` stricter validation. `DiscreteCurveMathLib_v1.t.sol` fully refactored, all 65 tests passing. NatSpec added. Functions `pure`. Ready for final doc sync & fuzz QA. | Very High   |
-| Discrete bonding curve FM   | 🔄 IN PROGRESS                            | Basic contract structure and inheritance set up. All compilation errors resolved. `transferOrchestratorToken` and `setVirtualCollateralSupply` implemented and fully tested.                                                                                                                  | High        |
+| Discrete bonding curve FM   | 🔄 IN PROGRESS                            | Basic contract structure and inheritance set up. All compilation errors resolved. `transferOrchestratorToken` and `setVirtualCollateralSupply` implemented and fully tested. `reconfigureSegments` invariance check test fixed and passing.                                                   | High        |
 | Dynamic fees                | 🔄 READY                                  | Independent implementation, patterns defined.                                                                                                                                                                                                                                                 | Medium-High |
 
 (Other features remain the same)

@@ -26,6 +26,16 @@ import {PackedSegment} from
  */
 interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
     // =========================================================================
+    // Errors
+
+    /// @notice Thrown when a curve reconfiguration fails the invariance check.
+    /// @param  newCalculatedReserve The collateral reserve calculated for the new segments.
+    /// @param  currentVirtualCollateralSupply The current virtual collateral supply.
+    error InvarianceCheckFailed(
+        uint newCalculatedReserve, uint currentVirtualCollateralSupply
+    );
+
+    // =========================================================================
     // Events
 
     /// @notice Emitted when the bonding curve segments are set or updated.
@@ -41,4 +51,12 @@ interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
         external
         view
         returns (PackedSegment[] memory segments_);
+
+    // =========================================================================
+    // Public - Mutating
+
+    /// @notice Reconfigures the segments of the discrete bonding curve.
+    /// @param  newSegments_ The new array of PackedSegment structs.
+    function reconfigureSegments(PackedSegment[] memory newSegments_)
+        external;
 }

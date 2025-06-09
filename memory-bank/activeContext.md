@@ -2,10 +2,10 @@
 
 ## Current Work Focus
 
-**Primary**: Implemented `setVirtualCollateralSupply` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added comprehensive test coverage.
-**Secondary**: Previously implemented `transferOrchestratorToken` and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
+**Primary**: Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended.
+**Secondary**: Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
 
-**Reason for Update**: Completion of `setVirtualCollateralSupply` implementation and full test coverage.
+**Reason for Update**: Resolution of a critical failing test related to `reconfigureSegments` and its invariance check.
 
 ## Recent Progress
 

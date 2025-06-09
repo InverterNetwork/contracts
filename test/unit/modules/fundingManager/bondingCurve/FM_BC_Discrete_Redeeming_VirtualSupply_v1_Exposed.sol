@@ -54,4 +54,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
     {
         _setSegments(newSegments_);
     }
+
+    function exposed_setVirtualCollateralSupply(uint virtualSupply_) external {
+        _setVirtualCollateralSupply(virtualSupply_);
+    }
+
+    function exposed_setVirtualIssuanceSupply(uint virtualSupply_) external {
+        _setVirtualIssuanceSupply(virtualSupply_);
+    }
 }
