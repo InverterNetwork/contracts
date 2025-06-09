@@ -122,9 +122,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     // -------------------------------------------------------------------------
     // Constants
 
-    /// @notice    Flag position in the flags byte.
-    uint8 internal constant FLAG_ORDER_ID = 0;
-
     /// @notice Role identifier for queue operations.
     /// @dev    This role cancels payments in the queue.
     bytes32 internal constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
@@ -138,6 +135,11 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     /// @notice BPS value.
     uint internal constant BPS = 10_000;
+
+    /// @dev    The flags that this PaymentProcessor uses.
+    ///         Contains the value 10001 (bits 0 and 4 set).
+    bytes32 internal constant PROCESSOR_FLAGS =
+        0x0000000000000000000000000000000000000000000000000000000000000011;
 
     // ---------------------------------------------------------------------
     // Storage
@@ -511,7 +513,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order.client_,
             _cancelledOrdersTreasury,
             order.order_.amount,
-            false // don't collect protocol fee when cancelling order
+            false, // don't collect protocol fee when cancelling order
+            0 // no project fee needed for calculations as no fee is collected
         );
         if (!success_) {
             // If tranfer to the treasury fails than this would mean that the treasury
@@ -572,13 +575,18 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         internal
         virtual
     {
+        (, uint projectFee) = _getOrderDetailsFromFlagsAndData(
+            order_.order_.flags, order_.order_.data
+        );
+
         // Try to transfer payment from client to recipient
         bool success_ = _tryPaymentTransfer(
             order_.order_.paymentToken,
             order_.client_,
             order_.order_.recipient,
             order_.order_.amount,
-            true // collect protocol fee when processing order
+            true, // collect protocol fee when processing order
+            projectFee
         );
 
         // Update order state based on transfer success
@@ -643,20 +651,23 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @param	recipient_ The recipient address.
     /// @param	amount_ The amount to transfer.
     /// @param	collectProtocolFee_ Whether to collect the protocol fee.
+    /// @param	projectFee_ The project fee amount set in the payment client.
     /// @return	success_ True if the transfer was successful.
     function _tryPaymentTransfer(
         address token_,
         address client_,
         address recipient_,
         uint amount_,
-        bool collectProtocolFee_
+        bool collectProtocolFee_,
+        uint projectFee_
     ) internal virtual returns (bool success_) {
         // Get the protocol fee amount, net amount and treasury address to sent the fee.
         (uint protocolFeeAmount, uint netAmount, address treasury_) =
-        _getProtocolFeeDetails(
+        _calculateProtocolFeeAmount(
             amount_,
             bytes4(keccak256(bytes("processPayments(address)"))),
-            collectProtocolFee_
+            collectProtocolFee_,
+            projectFee_
         );
 
         // Try direct transfer to recipient
@@ -742,7 +753,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         }
 
         // Get queue ID from flags and data, or generate new one
-        queueId_ = _getPaymentQueueId(order_.flags, order_.data);
+        (queueId_,) =
+            _getOrderDetailsFromFlagsAndData(order_.flags, order_.data);
 
         // Create new order
         _orders[client_][queueId_] = QueuedOrder({
@@ -841,23 +853,68 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         return queueId_ > 0 && queueId_ == _currentOrderId[client_] + 1;
     }
 
-    /// @notice Gets payment queue ID from flags and data.
-    /// @param  flags_ The payment order flags.
-    /// @param  data_ Additional payment order data.
-    /// @return queueId_ The queue ID from the data or a newly generated one.
-    function _getPaymentQueueId(bytes32 flags_, bytes32[] memory data_)
+    /// @notice Validates that the order flags contain all the required flags for the processor.
+    /// @param  orderFlags_ The order flags to validate.
+    /// @return isValid_ True if the order flags are valid.
+    function _validateOrderFlags(bytes32 orderFlags_)
         internal
-        view
-        virtual
-        returns (uint queueId_)
+        pure
+        returns (bool)
     {
-        // Check if orderID flag is set (bit 0)
-        bool hasOrderId = uint(flags_) & (1 << FLAG_ORDER_ID) != 0;
+        return
+            (uint(orderFlags_) & uint(PROCESSOR_FLAGS)) == uint(PROCESSOR_FLAGS);
+    }
 
-        // If flag is set and data is provided, use that ID
-        if (hasOrderId && data_.length > FLAG_ORDER_ID) {
-            queueId_ = uint(data_[FLAG_ORDER_ID]);
+    /// @notice Gets the order details from the flags and data.
+    /// @param  flags_ The flags to get the order details from.
+    /// @param  data_ The data to get the order details from.
+    /// @return orderId_ The order ID.
+    /// @return projectFee_ The project fee.
+    function _getOrderDetailsFromFlagsAndData(
+        bytes32 flags_,
+        bytes32[] memory data_
+    ) internal view virtual returns (uint orderId_, uint projectFee_) {
+        uint[2] memory returnData;
+
+        uint8 positionInOrderData = 0;
+        uint8 positionInReturnData = 0;
+
+        for (uint i = 0; i < 256; i++) {
+            if (positionInReturnData == returnData.length) {
+                // we have either:
+                // - reached the end of the orderData_ array
+                // - already checked for all the values this P_P will need
+                //      ==> exit loop
+                break;
+            }
+
+            bool orderBit = (uint(flags_) & (1 << i)) != 0;
+            bool processorBit = (uint(PROCESSOR_FLAGS) & (1 << i)) != 0;
+
+            if (orderBit == true && processorBit == false) {
+                // the P_P does not use that value
+                //      ==> skip that data slot in the order
+                positionInOrderData++;
+            }
+            if (orderBit == false && processorBit == true) {
+                // the P_P needs the value, but it's missing in the order
+                //      ==> set value of OrderId to 0 to signal that the order
+                // is broken
+                returnData[0] = 0;
+                positionInOrderData++;
+                break;
+            }
+            if (orderBit == true && processorBit == true) {
+                // the P_P needs the value, and the order supplies it
+                //      ==> use the value from the order
+                returnData[positionInReturnData] =
+                    uint(data_[positionInOrderData]);
+                positionInOrderData++;
+                positionInReturnData++;
+            }
         }
+
+        return (returnData[0], returnData[1]);
     }
 
     /// @notice Validate total input amount.
@@ -903,6 +960,18 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         return chainId_ == block.chainid;
     }
 
+    /// @notice Validates the project fee.
+    /// @param  projectFee_ The project fee to validate.
+    /// @return valid_ True if the project fee is valid.
+    function _validProjectFee(uint projectFee_)
+        internal
+        pure
+        virtual
+        returns (bool valid_)
+    {
+        return projectFee_ < BPS;
+    }
+
     /// @notice Validates the payment token.
     /// @param  token_ Token address to validate.
     /// @return valid_ True if token is valid.
@@ -930,17 +999,17 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function _validPaymentOrder(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal view virtual returns (bool valid_) {
-        // Extract queue ID from order data.
-        uint queueId_ = _getPaymentQueueId(order_.flags, order_.data);
+        (uint orderId_, uint projectFee_) =
+            _getOrderDetailsFromFlagsAndData(order_.flags, order_.data);
 
         // Validate payment receiver, amount and queue ID.
         return _validPaymentReceiver(order_.recipient)
             && _validTotalAmount(order_.amount)
-            && _validQueueId(queueId_, address(msg.sender))
+            && _validQueueId(orderId_, address(msg.sender))
             && _validPaymentToken(order_.paymentToken)
             && _validChainId(order_.originChainId)
-            && _validChainId(order_.targetChainId)
-            && _validateFlagsAndData(order_.flags, order_.data);
+            && _validChainId(order_.targetChainId) && _validProjectFee(projectFee_)
+            && _validateOrderFlags(order_.flags);
     }
 
     /// @notice Validates a state transition.
@@ -993,29 +1062,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         emit PaymentOrderStateChanged(
             orderId_, state_, order.client_, _msgSender()
         );
-    }
-
-    /// @notice Validates flags and corresponding data array.
-    /// @param  flags_ The flags to validate.
-    /// @param  data_ The data array to validate.
-    function _validateFlagsAndData(bytes32 flags_, bytes32[] memory data_)
-        internal
-        pure
-        virtual
-        returns (bool valid_)
-    {
-        uint flagsValue = uint(flags_);
-        uint requiredDataLength = 0;
-
-        // Count how many flags are set.
-        for (uint8 i; i < 8; ++i) {
-            if (flagsValue & (1 << i) != 0) {
-                requiredDataLength++;
-            }
-        }
-
-        return data_.length == requiredDataLength
-            && (flagsValue & (1 << FLAG_ORDER_ID)) != 0;
     }
 
     /// @notice Internal function to check whether the client is valid.
@@ -1075,17 +1121,21 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     ///         selector, then calculates the actual fee amount based on the
     ///         provided total amount. If the flag is false, it returns 0 for
     ///         the fee amount and net amount is equal to total amount.
+    /// @dev    The function uses the project fee from the Payment Client to
+    ///         reproduce the same protocol fee amount calculation.
     /// @param  totalAmount_ The base amount on which to calculate the fee.
     /// @param  functionSelector_ The function selector used to look up the
     ///         appropriate fee data.
     /// @param  collectProtocolFee_ Whether to collect the protocol fee.
+    /// @param  projectFee_ The project fee used to calculate the protocol fee.
     /// @return feeAmount_ The calculated protocol fee amount.
     /// @return netAmount_ The net amount after deducting the protocol fee.
     /// @return treasury_ The treasury address where the fee should be sent.
-    function _getProtocolFeeDetails(
+    function _calculateProtocolFeeAmount(
         uint totalAmount_,
         bytes4 functionSelector_,
-        bool collectProtocolFee_
+        bool collectProtocolFee_,
+        uint projectFee_
     )
         internal
         view
@@ -1098,7 +1148,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             return (0, totalAmount_, address(0));
         }
 
-        // Get the fee percentage and treasury address for the specified function selector.
+        // Get the fee percentage and treasury address for the specified
+        //function selector.
         (uint protocolFeePercentage, address treasuryAddress_) =
             _getFeeManagerCollateralFeeData(functionSelector_);
         treasury_ = treasuryAddress_;
@@ -1108,9 +1159,14 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             revert Module__PP_Queue_FeeAmountToHigh(protocolFeePercentage);
         }
 
+        // This adjustment ensures the protocol fee collected here matches the one
+        // calculated in the sell order, despite being calculated from a base amount
+        // that has already had the project fee (conceptually) removed.
+        uint denominator = BPS - projectFee_;
+
         // Calculate protocol fee amount if applicable
         if (protocolFeePercentage > 0) {
-            feeAmount_ = totalAmount_ * protocolFeePercentage / BPS;
+            feeAmount_ = totalAmount_ * protocolFeePercentage / denominator;
         }
 
         // Calculate the net amount after deducting the protocol fee.
