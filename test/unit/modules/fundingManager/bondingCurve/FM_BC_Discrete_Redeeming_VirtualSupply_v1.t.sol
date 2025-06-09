@@ -650,7 +650,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
-    function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply_RoundNumbers(
+    function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply(
     ) public {
         // Test buying across Seg0 (flat) and into Seg1,Step0 (sloped)
         uint collateralToSpend = 45 ether;
