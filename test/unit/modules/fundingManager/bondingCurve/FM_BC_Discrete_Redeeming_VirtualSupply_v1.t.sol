@@ -553,34 +553,73 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    // =========================================================================
+    // Test: Getters - Price
+
     /* Test getStaticPriceForSelling
         ├── Given the default curve configuration
-        │   └── And virtualIssuanceSupply is at the last unit of the first segment (50 ether)
-        │       └── When getStaticPriceForSelling is called
-        │           └── Then it should return the price of the last unit of the first segment (0.5 ether)
+        │   ├── At Segment Transition:
+        │   │   └── And virtualIssuanceSupply is at the last unit of the first segment (50 ether)
+        │   │       └── When getStaticPriceForSelling is called
+        │   │           └── Then it should return the price of the last unit of the first segment (0.5 ether)
+        │   └── At Step Transition (within Segment 1, supply at 75 ether):
+        │       └── And virtualIssuanceSupply is at the end of the first step of Segment 1 (75 ether)
+        │           └── When getStaticPriceForSelling is called
+        │               └── Then it should return the price of that step (0.8 ether)
     */
-    function testGetStaticPriceForSelling_AtTransitionPoint() public {
+    function testGetStaticPriceForSelling_AtSegmentTransitionPoint() public {
         uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether, last unit of first segment
-
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
         assertEq(
-            fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG0_INITIAL_PRICE
+            fmBcDiscrete.getStaticPriceForSelling(),
+            DEFAULT_SEG0_INITIAL_PRICE // 0.5 ether
+        );
+    }
+
+    function testGetStaticPriceForSelling_AtExactStepTransitionPoint() public {
+        // Supply is 75 ether, which is the last unit of the first step in Segment 1.
+        // Price of this step (and thus this token) is 0.8 ether.
+        uint virtualIssuanceSupply =
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP; // 50 + 25 = 75 ether
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
+        assertEq(
+            fmBcDiscrete.getStaticPriceForSelling(),
+            DEFAULT_SEG1_INITIAL_PRICE // 0.8 ether
         );
     }
 
     /* Test getStaticPriceForBuying
         ├── Given the default curve configuration
-        │   └── And virtualCollateralSupply is at the last unit of the first segment (50 ether)
-        │       └── When getStaticPriceForBuying is called
-        │           └── Then it should return the price of the first unit of the second segment (0.8 ether)
+        │   ├── At Segment Transition:
+        │   │   └── And virtualCollateralSupply is at the last unit of the first segment (50 ether)
+        │   │       └── When getStaticPriceForBuying is called (for supply 50+1=51)
+        │   │           └── Then it should return the price of the first unit of the second segment (0.8 ether)
+        │   └── At Step Transition (within Segment 1, supply at 75 ether):
+        │       └── And virtualCollateralSupply is at the end of the first step of Segment 1 (75 ether)
+        │           └── When getStaticPriceForBuying is called (for supply 75+1=76)
+        │               └── Then it should return the price of the next step (0.82 ether)
     */
-    function testGetStaticPriceForBuying_AtTransitionPoint() public {
-        uint virtualCollateralSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether, last unit of first segment
-
+    function testGetStaticPriceForBuying_AtSegmentTransitionPoint() public {
+        // virtualCollateralSupply is 50 ether. getStaticPriceForBuying looks at supply 50 + 1 = 51.
+        // The 51st unit is the first unit of Segment 1, Step 0. Price is 0.8 ether.
+        uint virtualCollateralSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether
         fmBcDiscrete.exposed_setVirtualCollateralSupply(virtualCollateralSupply);
         assertEq(
-            fmBcDiscrete.getStaticPriceForBuying(), DEFAULT_SEG1_INITIAL_PRICE
+            fmBcDiscrete.getStaticPriceForBuying(),
+            DEFAULT_SEG1_INITIAL_PRICE // 0.8 ether
         );
+    }
+
+    function testGetStaticPriceForBuying_AtExactStepTransitionPoint() public {
+        // virtualCollateralSupply is 75 ether. getStaticPriceForBuying looks at supply 75 + 1 = 76.
+        // The 76th unit is the first unit of Segment 1, Step 1.
+        // Price of this step is 0.8 + 0.02 = 0.82 ether.
+        uint virtualCollateralSupply =
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP; // 50 + 25 = 75 ether
+        fmBcDiscrete.exposed_setVirtualCollateralSupply(virtualCollateralSupply);
+        uint expectedPrice =
+            DEFAULT_SEG1_INITIAL_PRICE + DEFAULT_SEG1_PRICE_INCREASE; // 0.82 ether
+        assertEq(fmBcDiscrete.getStaticPriceForBuying(), expectedPrice);
     }
 
     // =========================================================================
