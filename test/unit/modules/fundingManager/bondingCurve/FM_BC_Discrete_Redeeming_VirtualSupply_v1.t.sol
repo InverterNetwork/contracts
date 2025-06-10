@@ -24,7 +24,7 @@ import {
 import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed} from
-    "./FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
+    "test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
 import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {IDiscreteCurveMathLib_v1} from
@@ -650,8 +650,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
-    function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply(
-    ) public {
+    function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply()
+        public
+    {
         // Test buying across Seg0 (flat) and into Seg1,Step0 (sloped)
         uint collateralToSpend = 45 ether;
         // Expected:
@@ -685,6 +686,132 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             expectedTokensToMint,
             "Failed: Buying on sloped segment from mid supply"
         );
+    }
+
+    // =========================================================================
+    // Test: _redeemTokensFormulaWrapper
+
+    /* Test _redeemTokensFormulaWrapper
+        ├── Given a flat segment (Seg0) and virtual issuance supply within that segment
+        │   └── When tokens are redeemed entirely within that flat segment
+        │       └── Then it should return the correct collateral based on the flat price
+        ├── Given the default curve and virtual issuance supply in Seg1
+        │   └── When tokens are redeemed spanning across Seg1 and into Seg0
+        │       └── Then it should return the correct total collateral from both segments
+        ├── Given the default curve and virtual issuance supply at the end of the curve (Seg1, Step1)
+        │   └── When tokens are redeemed from the sloped part of Seg1
+        │       └── Then it should return the correct collateral considering the price slope
+        ├── Given the default curve and virtual issuance supply in Seg1, Step0
+        │   └── When tokens are redeemed partially from a step in Seg1
+        │       └── Then it should return the correct collateral for that partial step
+        ├── When redeeming zero tokens
+        │   └── Then it should revert with DiscreteCurveMathLib__ZeroIssuanceInput
+        └── Given a virtual issuance supply
+            └── When attempting to redeem more tokens than the virtual issuance supply
+                └── Then it should revert with DiscreteCurveMathLib__InsufficientIssuanceToSell
+    */
+
+    function testRedeemTokensFormulaWrapper_FlatSegment() public {
+        // Scenario 1: Redeeming from a flat segment (Seg0)
+        // virtualIssuanceSupply is 50 ether (end of Seg0). Price is 0.5.
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+            DEFAULT_SEG0_SUPPLY_PER_STEP
+        );
+
+        uint tokensToRedeem = 20 ether;
+        uint expectedCollateral = 10 ether; // 20 tokens * 0.5 price = 10 ether
+
+        assertEq(
+            fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
+            expectedCollateral,
+            "Scenario 1 Failed: Redeeming from flat segment"
+        );
+    }
+
+    function testRedeemTokensFormulaWrapper_SpanningSegments() public {
+        // Scenario 2: Redeeming across segment boundaries (from Seg1 into Seg0)
+        // virtualIssuanceSupply is 75 ether (end of Seg1, Step0).
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
+        );
+
+        uint tokensToRedeem = 35 ether; // Redeem 25 from Seg1,Step0 (price 0.8) + 10 from Seg0 (price 0.5)
+        // Collateral from Seg1,Step0: 25 tokens * 0.8 price = 20 ether
+        // Collateral from Seg0: 10 tokens * 0.5 price = 5 ether
+        uint expectedCollateral = 20 ether + 5 ether; // 25 ether
+
+        assertEq(
+            fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
+            expectedCollateral,
+            "Scenario 2 Failed: Redeeming across segments"
+        );
+    }
+
+    function testRedeemTokensFormulaWrapper_SlopedSegment() public {
+        // Scenario 3: Redeeming from a sloped segment (Seg1, Step1)
+        // virtualIssuanceSupply is 100 ether (end of Seg1, Step1).
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+            defaultCurve.totalCapacity
+        );
+
+        uint tokensToRedeem = 30 ether;
+        // Redeem 25 from Seg1,Step1 (price 0.82) = 20.5 ether
+        // Redeem 5 from Seg1,Step0 (price 0.80) = 4 ether
+        uint expectedCollateral = (25 ether * 82) / 100 + (5 ether * 80) / 100; // 20.5 + 4 = 24.5 ether
+
+        assertEq(
+            fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
+            expectedCollateral,
+            "Scenario 3 Failed: Redeeming from sloped segment"
+        );
+    }
+
+    function testRedeemTokensFormulaWrapper_PartialStep() public {
+        // Scenario 4: Redeeming partially from a step
+        // virtualIssuanceSupply is 75 ether (end of Seg1,Step0). Price is 0.8.
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
+        );
+
+        uint tokensToRedeem = 10 ether; // Redeem 10 tokens from Seg1,Step0 (price 0.8)
+        uint expectedCollateral = 8 ether; // 10 tokens * 0.8 price = 8 ether
+
+        assertEq(
+            fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
+            expectedCollateral,
+            "Scenario 4 Failed: Redeeming partially from a step"
+        );
+    }
+
+    function testRedeemTokensFormulaWrapper_RevertsOnZeroTokens() public {
+        // Scenario 5: Revert on redeeming zero tokens
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(50 ether); // Arbitrary non-zero supply
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__ZeroIssuanceInput
+                .selector
+        );
+        fmBcDiscrete.exposed_redeemTokensFormulaWrapper(0);
+    }
+
+    function testRedeemTokensFormulaWrapper_RevertsOnInsufficientSupply()
+        public
+    {
+        // Scenario 6: Revert on redeeming more tokens than available supply
+        uint currentSupply = 50 ether;
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(currentSupply);
+        uint tokensToRedeem = 51 ether; // More than current supply
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__InsufficientIssuanceToSell
+                    .selector,
+                tokensToRedeem,
+                currentSupply
+            )
+        );
+        fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem);
     }
 
     // =========================================================================

@@ -254,7 +254,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         override
         returns (uint)
     {
-        revert("NOT IMPLEMENTED");
+        (uint collateralToReturn, /* uint tokensToBurn_ */ ) = _segments
+            ._calculateSaleReturn(_depositAmount, virtualIssuanceSupply);
+        return collateralToReturn;
     }
 
     function _handleCollateralTokensAfterSell(

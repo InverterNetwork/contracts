@@ -93,7 +93,7 @@
 - tests (via exposed function)
   - returns expected value for given input (multiple curve scenarios)
 
-### 2.8. `_redeemTokensFormulaWrapper` [NEXT]
+### 2.8. `_redeemTokensFormulaWrapper` [DONE]
 
 - return value of `_calculateSaleReturn` in `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol`
   - passed current curve configuration and
