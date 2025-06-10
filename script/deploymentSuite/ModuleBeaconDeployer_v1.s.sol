@@ -133,28 +133,6 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        // RestrictedBancorRedeemingVirtualSupplyFundingManager
-        initialMetadataRegistration.push(
-            restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
-        );
-        initialBeaconRegistration.push(
-            IInverterBeacon_v1(
-                proxyAndBeaconDeployer.deployInverterBeacon(
-                    restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
-                        .title,
-                    reverter,
-                    governor,
-                    impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1,
-                    restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
-                        .majorVersion,
-                    restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
-                        .minorVersion,
-                    restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
-                        .patchVersion
-                )
-            )
-        );
-
         // BondingSurfaceRedeemingFundingManager
         initialMetadataRegistration.push(
             bondingSurfaceRedeemingFundingManagerMetadata

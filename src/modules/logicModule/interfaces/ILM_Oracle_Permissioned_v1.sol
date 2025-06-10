@@ -34,41 +34,21 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
  *                - To price redeeming 1 token at 0.5 collateral with 6 decimal
  *                  collateral: 500_000
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Price Setter Role:
  *                    - Purpose: The price setter role is authorized to set
  *                               prices for issuance and redemption operations.
- *                    - How:     The OrchestratorAdmin (or PRICE_SETTER_ROLE_ADMIN
- *                               if configured) must:
- *                               1. Retrieve the price setter role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getPriceSetterRole(),
- *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Price Setter Role Admin:
- *                    - Purpose: Enables delegation of price setter role
- *                               management to a dedicated admin role instead of
- *                               relying on the OrchestratorAdmin. This allows
- *                               for more granular access control and operational
- *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRoleAdmin()
- *                                )
- *                               );
+ *                                1. Create a price setter role
+ *                                2. Add access permission for the
+ *                                   setIssuancePrice(), setRedemptionPrice()
+ *                                   and setIssuanceAndRedemptionPrice()
+ *                                   functions to the price setter role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -94,6 +74,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice Sets the issuance price for token issuance (buying tokens)
     ///         Price represents how much collateral is paid for 1 issuance token.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    Must be non-zero and denominated in collateral token decimals.
     ///         For example: With 6 decimal collateral token,
     ///         - To price 1 issuance token at 1.5 collateral, use 1_500_000
@@ -103,6 +84,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice Sets the redemption price for token redemption (selling tokens)
     ///         Price represents how much collateral is returned for 1 issuance token.
+    /// @dev    Function only callable by claim contributors
     /// @dev    Must be non-zero and denominated in collateral token decimals.
     ///         For example: With 6 decimal collateral token,
     ///         - To price 1 issuance token at 1.5 collateral, use 1_500_000
@@ -112,6 +94,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice	Sets both issuance and redemption prices atomically, denominated
     ///         in the collateral token decimals.
+    /// @dev    Function only callable by claim contributors
     /// @dev    Both prices must be non-zero. Both the issuance and redemption
     ///         prices should be denominated in the collateral token decimals.
     ///         For example, if the collateral token has 6 decimals and the
@@ -131,12 +114,4 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
     ///         are denominated.
     /// @return	decimals_ The decimals of the collateral token.
     function getCollateralTokenDecimals() external view returns (uint8);
-
-    /// @notice Gets the price setter role identifier.
-    /// @return bytes32 The PRICE_SETTER_ROLE identifier
-    function getPriceSetterRole() external pure returns (bytes32);
-
-    /// @notice Gets the price setter role admin identifier.
-    /// @return bytes32 The PRICE_SETTER_ROLE_ADMIN identifier
-    function getPriceSetterRoleAdmin() external pure returns (bytes32);
 }

@@ -7,6 +7,9 @@ import "forge-std/console.sol";
 import {OptimisticOracleIntegratorMock} from
     "@mocks/modules/logicModule/oracle/OptimisiticOracleIntegratorMock.sol";
 
+import {OptimisticOracleV3CallbackRecipientInterface} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+
 import {OptimisticOracleV3Mock} from
     "@mocks/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
 
@@ -120,6 +123,19 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.init(_orchestrator, _METADATA, bytes(""));
     }
 
+    function testSupportsInterface() public override(ModuleTest) {
+        assertTrue(
+            ooIntegrator.supportsInterface(
+                type(IOptimisticOracleIntegrator).interfaceId
+            )
+        );
+        assertTrue(
+            ooIntegrator.supportsInterface(
+                type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+            )
+        );
+    }
+
     // Tests
 
     /*
@@ -161,8 +177,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Setter Functions
 
     /*
-        When the caller is not the admin
-            reverts (tested in module tests)
+    Test: setDefaultCurrencyAndBond
+        When the caller is not permissioned
+            It should revert (modifier in position check)
         When the caller is the admin
             when the address is 0
                 reverts
@@ -176,6 +193,20 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         // Note: checks if the token is whitelisted in the OptimisticOracleV3 are performed when creating an assertion, not when setting the default currency
 
     */
+
+    function testSetDefaultCurrencyAndBond_modifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        ooIntegrator.setDefaultCurrencyAndBond(address(0), 0);
+    }
 
     function testsetDefaultCurrencyAndBondFails_whenNewCurrencyIsZero()
         public
@@ -221,8 +252,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     /*
-        When the caller is not the admin
-            reverts (tested in module tests)
+    Test: setOptimisticOracle
+        When the caller is not permissioned
+            It should revert (modifier in position check)
         When the caller is the admin
             when the address is 0
                 reverts
@@ -232,6 +264,21 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 sets the new address as optimistic oracle
                 emits an event
     */
+
+    function testSetOptimisticOracle_modifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        ooIntegrator.setOptimisticOracle(address(0));
+    }
+
     function testSetOptimisticOracleFails_WhenNewOracleIsZero() public {
         vm.expectRevert(
             IOptimisticOracleIntegrator
@@ -259,8 +306,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     /*
-        When the caller is not the admin
-            reverts (tested in module tests)
+    Test: setDefaultAssertionLiveness
+        When the caller is not permissioned
+            It should revert (modifier in position check)
         When the caller is the admin
             when the liveness is below 6 hours
                 reverts
@@ -268,6 +316,19 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 sets the new liveness
                 emits an event
     */
+    function testSetDefaultAssertionLiveness_modifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        ooIntegrator.setDefaultAssertionLiveness(0);
+    }
 
     function testSetDefaultAssertionLivenessFails_whenLivenessLessThanSixHours(
         uint64 newLiveness
@@ -288,8 +349,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     /*
-        When the caller does not have asserter role
-            reverts 
+    Test: assertDataFor
+        When the caller is not permissioned
+            It should revert (modifier in position check)
         when the caller has the asserter role
             when the asserter address is 0
                 it uses msgSender as asserter address
@@ -311,21 +373,17 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    function testAssertDataForFails_whenCallerDoesNotHaveAsserterRole()
-        public
-    {
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(ooIntegrator), ooIntegrator.ASSERTER_ROLE()
-        );
+    function testAssertDataFor_modifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
-        vm.prank(address(0xBEEF));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                address(0xBEEF)
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
+        vm.prank(address(0xB0B));
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS
         );

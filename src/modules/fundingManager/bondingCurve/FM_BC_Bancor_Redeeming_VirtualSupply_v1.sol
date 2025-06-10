@@ -217,8 +217,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        validReceiver(_receiver)
+        permissioned
         buyingIsEnabled
+        validReceiver(_receiver)
     {
         (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
@@ -239,9 +240,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        permissioned
         buyingIsEnabled
     {
-        buyFor(_msgSender(), _depositAmount, _minAmountOut);
+        (uint amountIssued, uint collateralFeeAmount) =
+            _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        _addVirtualIssuanceAmount(amountIssued);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @notice Redeem tokens and direct the proceeds to a specified receiver address. This function is subject
@@ -258,8 +263,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
-        validReceiver(_receiver)
+        permissioned
         sellingIsEnabled
+        validReceiver(_receiver)
     {
         (uint redeemAmount, uint issuanceFeeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
@@ -280,9 +286,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
+        permissioned
         sellingIsEnabled
     {
-        sellTo(_msgSender(), _depositAmount, _minAmountOut);
+        (uint redeemAmount, uint issuanceFeeAmount) =
+            _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     // -------------------------------------------------------------------------
@@ -366,7 +376,55 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
+    // Permissioned Functions
+
+    /// @inheritdoc IVirtualIssuanceSupplyBase_v1
+    /// @dev    Function access controlled by authorizer.
+    function setVirtualIssuanceSupply(uint virtualSupply_)
+        external
+        virtual
+        override(VirtualIssuanceSupplyBase_v1)
+        permissioned
+        onlyWhenCurveInteractionsAreClosed
+    {
+        _setVirtualIssuanceSupply(virtualSupply_);
+    }
+
+    /// @inheritdoc IVirtualCollateralSupplyBase_v1
+    /// @dev    Function access controlled by authorizer.
+    function setVirtualCollateralSupply(uint virtualSupply_)
+        external
+        virtual
+        override(VirtualCollateralSupplyBase_v1)
+        permissioned
+        onlyWhenCurveInteractionsAreClosed
+    {
+        _setVirtualCollateralSupply(virtualSupply_);
+    }
+
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    function setReserveRatioForBuying(uint32 reserveRatio_)
+        external
+        virtual
+        permissioned
+        onlyWhenCurveInteractionsAreClosed
+    {
+        _setReserveRatioForBuying(reserveRatio_);
+    }
+
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @dev    Function access controlled by authorizer.
+    function setReserveRatioForSelling(uint32 reserveRatio_)
+        external
+        virtual
+        permissioned
+        onlyWhenCurveInteractionsAreClosed
+    {
+        _setReserveRatioForSelling(reserveRatio_);
+    }
+
+    // -------------------------------------------------------------------------
+    // PaymentClient Functions
 
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to_, uint amount_)
@@ -383,48 +441,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         token().safeTransfer(to_, amount_);
 
         emit TransferOrchestratorToken(to_, amount_);
-    }
-
-    /// @inheritdoc IVirtualIssuanceSupplyBase_v1
-    function setVirtualIssuanceSupply(uint virtualSupply_)
-        external
-        virtual
-        override(VirtualIssuanceSupplyBase_v1)
-        onlyOrchestratorAdmin
-        onlyWhenCurveInteractionsAreClosed
-    {
-        _setVirtualIssuanceSupply(virtualSupply_);
-    }
-
-    /// @inheritdoc IVirtualCollateralSupplyBase_v1
-    function setVirtualCollateralSupply(uint virtualSupply_)
-        external
-        virtual
-        override(VirtualCollateralSupplyBase_v1)
-        onlyOrchestratorAdmin
-        onlyWhenCurveInteractionsAreClosed
-    {
-        _setVirtualCollateralSupply(virtualSupply_);
-    }
-
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-    function setReserveRatioForBuying(uint32 reserveRatio_)
-        external
-        virtual
-        onlyOrchestratorAdmin
-        onlyWhenCurveInteractionsAreClosed
-    {
-        _setReserveRatioForBuying(reserveRatio_);
-    }
-
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-    function setReserveRatioForSelling(uint32 reserveRatio_)
-        external
-        virtual
-        onlyOrchestratorAdmin
-        onlyWhenCurveInteractionsAreClosed
-    {
-        _setReserveRatioForSelling(reserveRatio_);
     }
 
     // -------------------------------------------------------------------------

@@ -47,7 +47,6 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
 
         // Setup orchestrator once
         _setUpOrchestrator(queueManualExecution);
-        _authorizer.setIsAuthorized(address(this), true);
 
         // Initialize queue manual execution
         queueManualExecution.init(
@@ -68,6 +67,9 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
         paymentClient.setIsAuthorized(address(queueManualExecution), true);
         paymentClient.setToken(_token);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
     }
 
     /* Test testPublicProcessPayments_succeedsGivenValidSetupAndPaymentOrder() function

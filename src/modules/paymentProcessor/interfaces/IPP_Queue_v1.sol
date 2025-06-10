@@ -37,42 +37,22 @@ import {IERC20PaymentClientBase_v2} from
  *                  - FAILED: The order has failed due to the transfer failing
  *                    (blacklisted address).
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Queue Operators:
  *                    - Purpose: Queue operators are authorized to cancel payment
  *                               orders in the queue, and claim collateral for
  *                               failed payments.
- *                    - How:     The OrchestratorAdmin (or
- *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
- *                               1. Retrieve the queue operator role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getQueueOperatorRole(),
- *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Queue Operator Admin:
- *                    - Purpose: Enables delegation of queue operator management
- *                               to a dedicated admin role instead of relying on
- *                               the OrchestratorAdmin. This allows for more
- *                               granular access control and operational
- *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRoleAdmin()
- *                                )
- *                               );
+ *                                1. Create a Queue operator role
+ *                                2. Add access permission for the
+ *                                   claimPreviouslyUnclaimableToTreasury() and
+ *                                   cancelPaymentOrderThroughQueueId()
+ *                                   functions to the Queue operator role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -316,23 +296,12 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
         view
         returns (uint size_);
 
-    /// @notice  Gets the role identifier for the queue operator role.
-    /// @return  role_ The queue operator role identifier.
-    function getQueueOperatorRole() external pure returns (bytes32 role_);
-
-    /// @notice  Gets the role identifier for queue operator admin.
-    /// @return  role_ The queue operator role admin identifier.
-    function getQueueOperatorRoleAdmin()
-        external
-        pure
-        returns (bytes32 role_);
-
     /// @notice Cancels a payment order by its queue ID and sends the funds
     ///         from the cancelled order to the canceled orders treasury.
+    /// @dev    Function only callable by claim contributors
     /// @dev    This function can only be excuted if the payment client
     ///         has enough collateral to transfer the funds to the
-    ///         canceled orders treasury. Additionally, the caller
-    ///         must have the queue operator role. If the transfer fails,
+    ///         canceled orders treasury. If the transfer fails,
     ///         then the amount is added to the unclaimable amounts for
     ///         the canceled orders treasury.
     /// @param	orderId_ The ID of the order to cancel.
@@ -359,17 +328,19 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
 
     /// @notice Set the treasury address which receives the collateral
     ///         of canceled orders.
+    /// @dev    Function only callable by claim contributors
     /// @param treasury_ The treasury address for canceled orders.
     function setCanceledOrdersTreasury(address treasury_) external;
 
     /// @notice Set the treasury address which receives the collateral
     ///         of failed orders.
+    /// @dev    Function only callable by claim contributors
     /// @param treasury_ The treasury address for failed orders.
     function setFailedOrdersTreasury(address treasury_) external;
 
     /// @notice Claim previously unclaimable amounts from a receiver to
     ///         the failed orders treasury.
-    /// @dev    This function is only callable by the queue operator.
+    /// @dev    Function only callable by claim contributors
     /// @param client_ The client address.
     /// @param token_ The token address.
     /// @param receiver_ The receiver address.

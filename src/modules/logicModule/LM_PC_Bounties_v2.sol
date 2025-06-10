@@ -234,13 +234,6 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
-    /// @dev	Role for the bounty issuer.
-    bytes32 public constant BOUNTY_ISSUER_ROLE = "BOUNTY_ISSUER";
-    /// @dev	Role for the claimant.
-    bytes32 public constant CLAIMANT_ROLE = "CLAIMANT";
-    /// @dev	Role for the verifier.
-    bytes32 public constant VERIFIER_ROLE = "VERIFIER";
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -344,7 +337,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -358,7 +351,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes[] calldata detailArray
     )
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned
         validArrayLengths(
             minimumPayoutAmounts.length,
             maximumPayoutAmounts.length,
@@ -384,7 +377,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -396,7 +389,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function lockBounty(uint bountyId)
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -412,7 +405,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        onlyModuleRole(CLAIMANT_ROLE)
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
         returns (uint id)
@@ -452,10 +445,10 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         Contributor[] calldata contributors
     )
         external
+        permissioned
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
-        onlyModuleRole(CLAIMANT_ROLE)
     {
         _validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
@@ -503,7 +496,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
-        onlyModuleRole(VERIFIER_ROLE)
+        permissioned
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)

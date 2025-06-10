@@ -103,12 +103,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _authorizer.grantRole(adminRole, address(_votingRoles));
         // _authorizer.setIsAuthorized(address(_votingRoles), true);
 
-        // Initialize the votingRoles with 3 users
+        // Initialize the votingRoles with 2 users
 
-        initialVoters = new address[](3);
+        initialVoters = new address[](2);
         initialVoters[0] = ALBA;
         initialVoters[1] = BOB;
-        initialVoters[2] = COBIE;
 
         uint _startingThreshold = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
@@ -121,12 +120,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         currentVoters.push(ALBA);
         currentVoters.push(BOB);
-        currentVoters.push(COBIE);
 
         // validation of the initial state happens in testInit()
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             _votingRoles.supportsInterface(
                 type(IAUT_EXT_VotingRoles_v1).interfaceId
@@ -140,8 +138,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         public
         returns (bytes32)
     {
-        bytes32 countID =
-            keccak256(abi.encodePacked(_addr, _msg, _votingRoles.motionCount()));
+        bytes32 countID = keccak256(
+            abi.encodePacked(_addr, _msg, _votingRoles.getMotionCount())
+        );
         vm.prank(callingUser);
 
         vm.expectEmit(true, true, true, true);
@@ -205,7 +204,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         }
 
         // the voting time passes
-        vm.warp(block.timestamp + _votingRoles.voteDuration() + 1);
+        vm.warp(block.timestamp + _votingRoles.getVoteDuration() + 1);
 
         return _voteID;
     }
@@ -220,7 +219,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         }
         bytes32 _voteID = createVote(_voters[0], _target, _action);
 
-        for (uint i = 1; i < _votingRoles.threshold(); ++i) {
+        for (uint i = 1; i < _votingRoles.getThreshold(); ++i) {
             if (i < _voters.length) {
                 vm.expectEmit(true, true, true, true);
                 emit VoteCast(_voteID, _voters[(i - 1)], 0);
@@ -229,7 +228,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         }
 
         // the voting time passes
-        vm.warp(block.timestamp + _votingRoles.voteDuration() + 1);
+        vm.warp(block.timestamp + _votingRoles.getVoteDuration() + 1);
 
         return _voteID;
     }
@@ -257,7 +256,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             uint _excAt,
             bool _excRes,
             bytes memory _excData
-        ) = _votingRoles.motions(voteId);
+        ) = _votingRoles.getMotion(voteId);
 
         _bufMotion.target = _addr;
         _bufMotion.action = _act;
@@ -290,13 +289,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         assertEq(_authorizer.hasRole(admin, address(_votingRoles)), true); // Admin role
         assertEq(_votingRoles.isVoter(ALBA), true);
         assertEq(_votingRoles.isVoter(BOB), true);
-        assertEq(_votingRoles.isVoter(COBIE), true);
         assertEq(_authorizer.hasRole(admin, address(this)), true);
         assertEq(_authorizer.hasRole(admin, address(_orchestrator)), false);
         assertEq(_votingRoles.isVoter(address(this)), false);
         assertEq(_votingRoles.isVoter(address(_orchestrator)), false);
 
-        assertEq(_votingRoles.voterCount(), 3);
+        assertEq(_votingRoles.getVoterCount(), 2);
     }
 
     function testInitWithInitialVoters(address[] memory testVoters) public {
@@ -328,7 +326,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             assertEq(testAuthorizer.isVoter(testVoters[i]), true);
         }
         assertEq(testAuthorizer.isVoter(address(this)), false);
-        assertEq(testAuthorizer.voterCount(), testVoters.length);
+        assertEq(testAuthorizer.getVoterCount(), testVoters.length);
     }
 
     function testInitWithDuplicateInitialVotersFails(
@@ -440,7 +438,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         );
 
         assertEq(address(testAuthorizer.orchestrator()), address(0));
-        assertEq(testAuthorizer.voterCount(), 0);
+        assertEq(testAuthorizer.getVoterCount(), 0);
     }
 
     //--------------------------------------------------------------------------
@@ -495,11 +493,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not Module
             if (i % 3 == 0) {
@@ -516,11 +512,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not Module
             if (i % 3 == 0) {
@@ -911,13 +905,13 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         // 3) The vote gets executed (by anybody)
 
         vm.expectEmit(true, true, true, true);
-        uint _oldDuration = _votingRoles.voteDuration();
+        uint _oldDuration = _votingRoles.getVoteDuration();
         emit VoteDurationUpdated(_oldDuration, _newDuration);
         emit MotionExecuted(_voteID);
         _votingRoles.executeMotion(_voteID);
 
         // 4) The module state has changed
-        assertEq(_votingRoles.voteDuration(), _newDuration);
+        assertEq(_votingRoles.getVoteDuration(), _newDuration);
     }
     // Fail to execute vote that didn't pass
 
@@ -969,7 +963,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _votingRoles.executeMotion(_voteID);
 
         // we wait and try again in the last block of voting time
-        vm.warp(block.timestamp + _votingRoles.voteDuration());
+        vm.warp(block.timestamp + _votingRoles.getVoteDuration());
 
         vm.expectRevert(
             abi.encodePacked(
@@ -995,7 +989,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _votingRoles.executeMotion(_voteID);
 
         // 3) the module state has changed
-        assertEq(_votingRoles.voteDuration(), _newDuration);
+        assertEq(_votingRoles.getVoteDuration(), _newDuration);
 
         // 4) Now we test that we can't execute again:
         vm.expectRevert(
@@ -1015,7 +1009,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         vm.startPrank(address(_votingRoles));
         for (uint i; i < users.length; ++i) {
-            uint before = _votingRoles.threshold();
+            uint before = _votingRoles.getThreshold();
 
             vm.expectEmit();
             emit VoterAdded(users[i]);
@@ -1025,10 +1019,10 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                 vm.expectEmit();
                 emit ThresholdUpdated(before, before + 1);
                 _votingRoles.addVoterAndUpdateThreshold(users[i], before + 1);
-                assertEq(_votingRoles.threshold(), before + 1);
+                assertEq(_votingRoles.getThreshold(), before + 1);
             } else {
                 _votingRoles.addVoter(users[i]);
-                assertEq(_votingRoles.threshold(), before);
+                assertEq(_votingRoles.getThreshold(), before);
             }
         }
 
@@ -1045,6 +1039,34 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         }
 
         vm.stopPrank();
+    }
+
+    function testAddVoters_ValidatesThreshold() public {
+        // To check the validate threshold function we lower the threshold to 1
+        vm.prank(address(_votingRoles));
+        _votingRoles.setThreshold(1);
+
+        // Afterwards we remove one of the voters
+        // As the threshold check is tied to having the specific amount of voters of 2
+        // after the addVoter function call
+        vm.prank(address(_votingRoles));
+        _votingRoles.removeVoter(BOB);
+
+        // Now we add two voters again, as the condition only triggers on 3+ voters
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(BOB);
+
+        // Here we expect the revert
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__InvalidThreshold
+                    .selector
+            )
+        );
+
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(address(0xBEEF));
     }
 
     function testRemoveVoter(address[] memory users) public {
@@ -1105,14 +1127,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                 .selector
         );
         _votingRoles.removeVoter(BOB);
-        assertEq(_votingRoles.threshold(), 2);
+        assertEq(_votingRoles.getThreshold(), 2);
 
         // try to remove again, this time including a reduction
         // of the threshold to 1
         vm.expectEmit();
         emit ThresholdUpdated(2, 1);
         _votingRoles.removeVoterAndUpdateThreshold(BOB, 1);
-        assertEq(_votingRoles.threshold(), 1);
+        assertEq(_votingRoles.getThreshold(), 1);
 
         // this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
@@ -1129,14 +1151,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // TEST: QUORUM
 
     // Get correct threshold
-    function testGetThreshold() public {
-        assertEq(_votingRoles.threshold(), DEFAULT_QUORUM);
+    function testGetgetThreshold() public {
+        assertEq(_votingRoles.getThreshold(), DEFAULT_QUORUM);
     }
 
     // Set a new threshold
-    function testMotionSetThreshold() public {
-        uint oldThreshold = _votingRoles.threshold();
-        uint newThreshold = 3;
+    function testMotionSetgetThreshold() public {
+        uint oldThreshold = _votingRoles.getThreshold();
+        uint newThreshold = 2;
 
         vm.prank(address(_votingRoles));
 
@@ -1145,13 +1167,13 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         _votingRoles.setThreshold(newThreshold);
 
-        assertEq(_votingRoles.threshold(), newThreshold);
+        assertEq(_votingRoles.getThreshold(), newThreshold);
     }
 
     // Fail to set a threshold that's too damn high or too damn low
     function testSetInvalidThreshold(uint newThreshold) public {
         // Test too high
-        vm.assume(newThreshold > _votingRoles.voterCount());
+        vm.assume(newThreshold > 3);
 
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
@@ -1161,16 +1183,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.prank(address(_votingRoles));
         _votingRoles.setThreshold(newThreshold);
 
-        // Test too low
-        vm.expectRevert(
-            IAUT_EXT_VotingRoles_v1
-                .Module__VotingRoleManager__InvalidThreshold
-                .selector
-        );
-        vm.prank(address(_votingRoles));
-        _votingRoles.setThreshold(1);
-
-        // Test too low with zero
+        // Test too if amount of voters is less than 3
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__InvalidThreshold
@@ -1178,6 +1191,20 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         );
         vm.prank(address(_votingRoles));
         _votingRoles.setThreshold(0);
+
+        // Should fail if voters are equal or more than 3 and threshold is less than 2
+
+        // Add voter
+        vm.prank(address(_votingRoles));
+        _votingRoles.addVoter(address(makeAddr("voter")));
+
+        vm.expectRevert(
+            IAUT_EXT_VotingRoles_v1
+                .Module__VotingRoleManager__InvalidThreshold
+                .selector
+        );
+        vm.prank(address(_votingRoles));
+        _votingRoles.setThreshold(1);
     }
 
     // Fail to change threshold when not the module itself
@@ -1188,11 +1215,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
             _votingRoles.setThreshold(_newQ);
@@ -1201,7 +1226,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     // Change the threshold by going through governance
     function testGovernanceThresholdChange() public {
-        uint _newThreshold = 3;
+        uint _newThreshold = 2;
 
         // 1) Create and approve a vote
         bytes memory _encodedAction =
@@ -1212,7 +1237,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         // 2) The vote gets executed by anybody
 
-        uint _oldThreshold = _votingRoles.threshold();
+        uint _oldThreshold = _votingRoles.getThreshold();
 
         vm.expectEmit(true, true, true, true);
         emit ThresholdUpdated(_oldThreshold, _newThreshold);
@@ -1221,20 +1246,20 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _votingRoles.executeMotion(_voteID);
 
         // 3) The orchestrator state has changed
-        assertEq(_votingRoles.threshold(), _newThreshold);
+        assertEq(_votingRoles.getThreshold(), _newThreshold);
     }
 
     //--------------------------------------------------------------------------
     // TEST: VOTE DURATION
 
     // Get correct vote duration
-    function testGetVoteDuration() public {
-        assertEq(_votingRoles.voteDuration(), DEFAULT_DURATION);
+    function testGetgetVoteDuration() public {
+        assertEq(_votingRoles.getVoteDuration(), DEFAULT_DURATION);
     }
 
     // Set new vote duration
-    function testMotionSetVoteDuration() public {
-        uint _oldDuration = _votingRoles.voteDuration();
+    function testMotionSetgetVoteDuration() public {
+        uint _oldDuration = _votingRoles.getVoteDuration();
         uint _newDuration = 3 days;
 
         vm.prank(address(_votingRoles));
@@ -1244,12 +1269,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         _votingRoles.setVotingDuration(_newDuration);
 
-        assertEq(_votingRoles.voteDuration(), _newDuration);
+        assertEq(_votingRoles.getVoteDuration(), _newDuration);
     }
 
     // Fail to set vote durations out of bounds
-    function testMotionSetInvalidVoteDuration() public {
-        uint _oldDur = _votingRoles.voteDuration();
+    function testMotionSetInvalidgetVoteDuration() public {
+        uint _oldDur = _votingRoles.getVoteDuration();
         uint _newDur = 3 weeks;
 
         vm.expectRevert(
@@ -1274,7 +1299,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.prank(address(_votingRoles));
         _votingRoles.setVotingDuration(_newDur);
 
-        assertEq(_votingRoles.voteDuration(), _oldDur);
+        assertEq(_votingRoles.getVoteDuration(), _oldDur);
     }
 
     // Set new duration bygoing through governance
@@ -1293,11 +1318,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
             _votingRoles.setVotingDuration(_newDuration);

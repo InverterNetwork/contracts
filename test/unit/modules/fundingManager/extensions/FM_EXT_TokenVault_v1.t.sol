@@ -40,11 +40,13 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
         vault = FM_EXT_TokenVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         vault.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             vault.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
         );
@@ -62,7 +64,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     // Modifiers
 
     /* Test withdraw() function modifiers in place 
-        ├── Given the caller is not the Orchestrator Admin
+        ├── Given the caller is not permissioned
         │   └── And the modifier onlyOrchestratorAdmin is in position
         │       └── When the function withdraw() is called
         │           └── Then it should revert
@@ -80,15 +82,17 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
                     └── Then it should revert
     */
 
-    function testWithdraw_onlyOrchestratorAdminModifierInPosition() public {
+    function testWithdraw_permissionedModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0)
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        vm.prank(address(0));
+        vm.prank(address(0xB0B));
         vault.withdraw(address(0), 0, address(0));
     }
 

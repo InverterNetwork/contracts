@@ -203,6 +203,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
+        permissioned
     {
         address sender = _msgSender();
 
@@ -219,6 +220,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
+        permissioned
     {
         address sender = _msgSender();
         // Update rewardValue, updatedTimestamp and earned values
@@ -250,15 +252,12 @@ contract LM_PC_Staking_v2 is
     }
 
     /// @inheritdoc ILM_PC_Staking_v2
-    function setRewards(uint amount, uint duration)
-        external
-        onlyOrchestratorAdmin
-    {
+    function setRewards(uint amount, uint duration) external permissioned {
         _setRewards(amount, duration);
     }
 
     //--------------------------------------------------------------------------
-    // Private Functions
+    // Internal Functions
 
     /// @dev	Stakes tokens.
     /// @param  depositFor The address of the user.

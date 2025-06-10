@@ -71,9 +71,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     bool private constant BUY_AND_SELL_IS_RESTRICTED = false;
     uint32 private constant BPS = 10_000;
 
-    bytes32 private constant RISK_MANAGER_ROLE = "RISK_MANAGER";
-    bytes32 private constant COVER_MANAGER_ROLE = "COVER_MANAGER";
-
     uint private MIN_RESERVE = 10 ** _token.decimals();
     uint64 private constant MAX_SEIZE = 100;
     uint64 private constant MAX_SELL_FEE = 100;
@@ -92,10 +89,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     address buyer = makeAddr("buyer");
     address seller = makeAddr("seller");
     address burner = makeAddr("burner");
-    address coverManager = address(0xa1bc);
-    address riskManager = address(0xb0b);
     address tokenVault = makeAddr("tokenVault");
-    bytes32 CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     function setUp() public {
         // Deploy contracts
@@ -132,7 +126,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
 
         _setUpOrchestrator(bondingCurveFundingManager);
-        _authorizer.setIsAuthorized(address(this), true);
+
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         // Set Minter
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
@@ -154,14 +150,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _token.mint(
             address(bondingCurveFundingManager),
             bondingCurveFundingManager.MIN_RESERVE()
-        );
-
-        address[] memory targets = new address[](2);
-        targets[0] = buyer;
-        targets[1] = seller;
-
-        bondingCurveFundingManager.grantModuleRoleBatched(
-            CURVE_INTERACTION_ROLE, targets
         );
     }
 
@@ -349,8 +337,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    // -------------------------------------------------------------------------
-    // Public Functions
+    // ========================================================================
+    // Init Functions
 
     /*
     Test: Init fails for invalid formula
@@ -401,7 +389,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     // -------------------------------------------------------------------------
     // Tests: Supports Interface
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(
@@ -416,183 +404,70 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
+    // ========================================================================
+    // Public Getter Functions
+
     // -------------------------------------------------------------------------
-    // Public Functions
+    // Implementation Specific Public Functions
 
-    /*  Test buy() & buyFor() functions
-        Please Note: The functions have been extensively tested in the BondingCurveBase_v1.t contract. These
-        tests only check for the placement of the onlyIfNotBuyAndSellRestricted() modifier
-        ├── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
-        tests only check for the placement of the onlyIfNotBuyAndSellRestricted() modifier
-        ├── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
-        │   └── And the modifier condition isn't met
-        │       ├── When the function buy() is called
-        │       └── Then it should revert
-        └── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
-        └── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
-            └── And the modifier condition isn't met
-                └── When the function buyFor() is called
-                    └── Then it should revert
+    /*  Test seizable()
+        └── When: the function seizable() gets called
+            └── Then: it should return the correct seizable amount
     */
 
-    function testBuy_modifierInPlace() public {
-        // Set buyAndSellIsRestricted to true
-        bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
-
-        // Check for modifier
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bondingCurveFundingManager),
-                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
-                ),
-                nonAuthorizedBuyer
-            )
-        );
-        vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.buy(1, 1);
-    }
-
-    function testBuyFor_modifierInPlace() public {
-        // Set buyAndSellIsRestricted to true
-        bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
-
-        // Check for modifier
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bondingCurveFundingManager),
-                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
-                ),
-                nonAuthorizedBuyer
-            )
-        );
-        vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.buyFor(seller, 1, 1);
-    }
-
-    /*  Test unrestrictBuyAndSell() function
-        ├── Given the onlyModuleRole(COVER_MANAGER_ROLE) modifier is in place
-        │   └── And the modifier condition isn't met
-        │       └── When the function unrestrictBuyAndSell() is called
-        │           └── Then it should revert
-        └── Given the msg.sender is the COVER_MANAGER_ROLE
-            └── When the function unrestrictBuyAndSell() is called
-                └── Then it should set the buyAndSellIsRestricted to false
-                    └── And it should emit an event
-    */
-
-    function testBuyAndSellIsUnrestricted_modifierInPlace() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bondingCurveFundingManager),
-                    bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                ),
-                nonAuthorizedBuyer
-            )
-        );
-        vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.unrestrictBuyAndSell();
-    }
-
-    function testBuyAndSellIsUnrestricted_worksGivenCallerHasCoverManagerRole()
-        public
-    {
+    function testSeizable_works(uint tokenBalance_, uint64 seize_) public {
+        tokenBalance_ =
+            bound(tokenBalance_, 1, (UINT256_MAX - MIN_RESERVE) / 1000); // to protect agains overflow if max balance * max seize
+        seize_ =
+            uint64(bound(seize_, 1, bondingCurveFundingManager.MAX_SEIZE()));
         // Setup
-        bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
-
-        // Test condition
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
+        // Get balance before test
+        uint tokenBalanceFundingMangerBaseline =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        // mint collateral to funding manager
+        _mintCollateralTokenToAddressHelper(
+            address(bondingCurveFundingManager), tokenBalance_
         );
-        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .BuyAndSellIsUnrestricted();
-        bondingCurveFundingManager.unrestrictBuyAndSell();
+        // set seize in contract
+        bondingCurveFundingManager.adjustSeize(seize_);
+
+        // calculate return value
+        uint expectedReturnValue =
+            ((tokenBalance_ + tokenBalanceFundingMangerBaseline) * seize_) / BPS;
+
+        // Execute tx
+        uint returnValue = bondingCurveFundingManager.getSeizableAmount();
+
+        // Assert right return value
+        assertEq(returnValue, expectedReturnValue);
     }
 
-    /*  Test restrictBuyAndSell() function
-        ├── Given the onlyModuleRole(COVER_MANAGER_ROLE) modifier is in place
-        │   └── And the modifier condition isn't met
-        │       └── When the function restrictBuyAndSell() is called
-        │           └── Then it should revert
-        └── Given the msg.sender is the COVER_MANAGER_ROLE
-            └── When the function restrictBuyAndSell() is called
-                └── Then it should set the buyAndSellIsRestricted to true
-                    └── And it should emit an event
+    /*  Test getRepayableAmount()
+        └── When: the function getRepayableAmount() gets called
+            └── Then: it should return the return value of _getRepayableAmount()
     */
 
-    function testRestrictBuyAndSell_modifierInPlace() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bondingCurveFundingManager),
-                    bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                ),
-                nonAuthorizedBuyer
-            )
-        );
-        vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.restrictBuyAndSell();
+    function testPublicGetRepayableAmount_works() public {
+        // get return value from internal function
+        uint internalFunctionResult =
+            bondingCurveFundingManager.exposed_getRepayableAmount();
+        // Get return value from public function
+        uint publicFunctionResult =
+            bondingCurveFundingManager.getRepayableAmount();
+        // Assert they are equal
+        assertEq(internalFunctionResult, publicFunctionResult);
     }
 
-    function testUnrestrictBuyAndSell_worksGivenCallerHasCoverManagerRole()
-        public
-    {
-        // Setup
-        bondingCurveFundingManager.unrestrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), false);
+    // ========================================================================
+    // Public Mutating Functions
 
-        // Test condition
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .BuyAndSellIsRestricted();
-        bondingCurveFundingManager.restrictBuyAndSell();
-    }
-
-    /*  Test internal _onlyIfNotBuyAndSellRestrictedModifier() function
-    /*  Test internal _onlyIfNotBuyAndSellRestrictedModifier() function
-        └── Given buy and selling is restricted
-            └── And the msg.sender does not have the CURVE_INTERACTION_ROLE
-                └── When the function _onlyIfNotBuyAndSellRestrictedModifier() is called
-                └── When the function _onlyIfNotBuyAndSellRestrictedModifier() is called
-                    └── Then it should revert
-    */
-
-    function testInternalonlyIfNotBuyAndSellRestrictedModifier_revertGivenCallerHasNotCoverManagerRole(
-    ) public {
-        // Setup
-        bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
-
-        // Test condition
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bondingCurveFundingManager),
-                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
-                ),
-                nonAuthorizedBuyer
-            )
-        );
-        vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.exposed_onlyIfNotBuyAndSellRestrictedModifier(
-        );
-        bondingCurveFundingManager.exposed_onlyIfNotBuyAndSellRestrictedModifier(
-        );
-    }
+    // ------------------------------------------------------------------------
+    // Mutating - Permissioned Functions
 
     /*  Test burnIssuanceToken()
+        ├── Given: caller is not permissioned
+        │   └── When: the function burnIssuanceToken() gets called
+        │       └── Then: it should revert (modifier in position)
         ├── Given: amount_ > msg.sender balance of issuance token
         │   └── When: the function burnIssuanceToken() gets called
         │       └── Then: it should revert
@@ -600,6 +475,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             └── When: the function burnIssuanceToken() gets called
                 └── Then: it should burn amount_ from msg.sender's balance
     */
+    function testBurnIssuanceToken_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.burnIssuanceToken(0);
+    }
 
     function testBurnIssuanceToken_revertGivenAmountBiggerThanMsgSenderBalance(
         uint amount_
@@ -643,6 +531,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     /*  Test burnIssuanceTokenFor()
+        ├── Given: caller is not permissioned
+        │   └── When: the function burnIssuanceToken() gets called
+        │       └── Then: it should revert (modifier in position)
         ├── Given: _owner != msg.sender
         │   ├── And: the allowance < amount_
         │   │   └── When: the function burnIssuanceTokenFor() gets called
@@ -662,6 +553,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 └── When: the function burnIssuanceToken() gets called
                     └── Then: it should burn amount_ from _owner's balance
     */
+    function testBurnIssuanceTokenFor_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.burnIssuanceTokenFor(address(0), 0);
+    }
 
     function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(
         uint amount_
@@ -780,55 +684,327 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - amount_);
     }
 
-    // -------------------------------------------------------------------------
-    // Implementation Specific Public Functions
-
-    /*  Test seizable()
-        └── When: the function seizable() gets called
-            └── Then: it should return the correct seizable amount
+    /*  Test seize()
+        ├── Given: the calleris not permissioned
+        │   └── When: the function seize() gets called
+        │       └── Then: it should revert (modifier in position)
+        └── Given: the caller_ is permissioned
+            ├── And: the parameter amount_ > the seizable amount
+            │   └── When: the function seize() gets called
+            │       └── Then: it should revert
+            ├── And: the lastSeizeTimestamp + SEIZE_DELAY > block.timestamp
+            │   └── When: the function seize() gets called
+            │       └── Then: it should revert
+            ├── And: the capital available - amount_ < MIN_RESERVE
+            │   └── When: the function seize() gets called
+            │       └── Then: it should transfer the value of capitalAvailable - MIN_RESERVE tokens to the msg.sender
+            │           ├── And: it should set the current timeStamp to lastSeizeTimestamp
+            │           └── And: it should emit an event
+            └── And: the capital available - amount_ > MIN_RESERVE
+                └── And: the lastSeizeTimestamp + SEIZE_DELAY < block.timestamp
+                    └── When: the function seize() gets called
+                        └── Then: it should transfer the value of amount_ tokens to the msg.sender
+                            ├── And: it should set the current timeStamp to lastSeizeTimestamp
+                            └── And: it should emit an event
     */
+    function testSeize_ModifierInPosition() public {
+        // permissioned
 
-    function testSeizable_works(uint tokenBalance_, uint64 seize_) public {
-        tokenBalance_ =
-            bound(tokenBalance_, 1, (UINT256_MAX - MIN_RESERVE) / 1000); // to protect agains overflow if max balance * max seize
-        seize_ =
-            uint64(bound(seize_, 1, bondingCurveFundingManager.MAX_SEIZE()));
-        // Setup
-        // Get balance before test
-        uint tokenBalanceFundingMangerBaseline =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        // mint collateral to funding manager
-        _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), tokenBalance_
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
-        // set seize in contract
-        bondingCurveFundingManager.adjustSeize(seize_);
-
-        // calculate return value
-        uint expectedReturnValue =
-            ((tokenBalance_ + tokenBalanceFundingMangerBaseline) * seize_) / BPS;
-
-        // Execute tx
-        uint returnValue = bondingCurveFundingManager.getSeizableAmount();
-
-        // Assert right return value
-        assertEq(returnValue, expectedReturnValue);
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.seize(0);
     }
 
-    /*  Test getRepayableAmount()
-        └── When: the function getRepayableAmount() gets called
-            └── Then: it should return the return value of _getRepayableAmount()
+    function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint amount_)
+        public
+    {
+        uint currentSeizable = bondingCurveFundingManager.getSeizableAmount();
+        vm.assume(amount_ > currentSeizable);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount
+                    .selector,
+                currentSeizable
+            )
+        );
+        bondingCurveFundingManager.seize(amount_);
+    }
+
+    function testSeize_revertGivenLastSeizeTimerNotReset() public {
+        uint seizeAmount = 1 ether;
+        // Setup
+        // Mint collateral for enough capital available
+        _mintCollateralTokenToAddressHelper(
+            address(bondingCurveFundingManager), seizeAmount * 100
+        );
+        // Check Seize timestamp before calling function
+        uint seizeTimestampBefore =
+            bondingCurveFundingManager.getLastSeizeTimestamp();
+
+        // Assert expected fail. block.timestamp == 1 without setting it in vm.warp
+        assertGt((seizeTimestampBefore + SEIZE_DELAY), block.timestamp);
+
+        // Execute Tx expecting it to revert
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout
+                    .selector,
+                (
+                    seizeTimestampBefore
+                        + bondingCurveFundingManager.SEIZE_DELAY()
+                )
+            )
+        );
+        bondingCurveFundingManager.seize(seizeAmount);
+    }
+
+    function testSeize_worksGivenCapitalAvailableMinusMinReserveIsReturned()
+        public
+    {
+        // Setup
+        // Set block.timestamp to valid time
+        vm.warp(SEIZE_DELAY + 1);
+        // Amount has to be smaller than seizable amount which is (currentBalance * currentSeize) / BPS
+        // i.e. (1 ether * 200 ) / 10_000
+        uint amount = 1e16; // 0.01 ether
+        // Return value check for emit. Expected return is 0. Capital available - MIN_RESERVE
+        uint expectedReturnValue = bondingCurveFundingManager
+            .exposed_getCapitalAvailable() - MIN_RESERVE;
+        assertEq(expectedReturnValue, 0);
+
+        //Get balance before seize
+        uint balanceBeforeBuy = _token.balanceOf(address(this));
+
+        // Execute Tx
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+            .CollateralSeized(expectedReturnValue);
+        bondingCurveFundingManager.seize(amount);
+
+        // Assert that no tokens have been sent
+        assertEq(balanceBeforeBuy, balanceBeforeBuy);
+    }
+
+    function testSeize_worksGivenCapitalAmountIsReturnd(uint amount_) public {
+        // Setup
+        // Set block.timestamp to valid time
+        vm.warp(SEIZE_DELAY + 1);
+        // Bound seizable value
+        amount_ = bound(amount_, 1, type(uint128).max);
+        // Mint enough surplus so seizing can happen
+        _mintCollateralTokenToAddressHelper(
+            address(bondingCurveFundingManager), amount_ * 10_000
+        );
+        //Get balance before seize
+        uint balanceBeforeBuy = _token.balanceOf(address(this));
+
+        // Execute Tx
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+            .CollateralSeized(amount_);
+        bondingCurveFundingManager.seize(amount_);
+
+        // Get balance after buying
+        uint balanceAfterBuy = _token.balanceOf(address(this));
+        // Assert that no tokens have been sent
+        assertEq(balanceAfterBuy, balanceBeforeBuy + amount_);
+    }
+
+    /*    Test adjust size
+        ├── Given: the caller_ is not permissioned
+        │   └── When: the function adjustSeize() gets called
+        │       └── Then: it should revert (modifier in position)
+        └── Given: the caller_ is permissioned
+                └── When: the function adjustSeize() gets called
+                    └── Then: it should call the internal function and set the state
     */
 
-    function testPublicGetRepayableAmount_works() public {
-        // get return value from internal function
-        uint internalFunctionResult =
-            bondingCurveFundingManager.exposed_getRepayableAmount();
-        // Get return value from public function
-        uint publicFunctionResult =
-            bondingCurveFundingManager.getRepayableAmount();
-        // Assert they are equal
-        assertEq(internalFunctionResult, publicFunctionResult);
+    function testAdjustSeize_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+
+        bondingCurveFundingManager.adjustSeize(0);
+    }
+
+    function testAdjustSeize_permissioned(uint64 seize_) public {
+        vm.assume(seize_ != bondingCurveFundingManager.getCurrentSeize());
+        seize_ = uint64(bound(seize_, 1, MAX_SEIZE));
+
+        // Execute Tx
+        bondingCurveFundingManager.adjustSeize(seize_);
+
+        assertEq(bondingCurveFundingManager.getCurrentSeize(), seize_);
+    }
+
+    /*  Test setliquidityVaultControllerContract()
+        ├── Given: the caller_ is not permissioned
+        │   └── When: the function setliquidityVaultControllerContract() gets called
+        │       └── Then: it should revert (modifier in position)
+        └── Given: the caller_ is permissioned
+            ├── And: _lp == address(0)
+            │   └── When: the function setliquidityVaultController() gets called
+            │       └── Then: it should revert
+            └── And: _lp != address(0)
+                └── When: the function setliquidityVaultController() gets called
+                    └── Then: it should set the state liquidityVaultController to _lp
+                        └── And: it should emit an event
+    */
+    function testSetliquidityVaultControllerContract_ModifierInPosition()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(
+            address(0)
+        );
+    }
+
+    function testSetliquidityVaultControllerContract_revertGivenAddressIsZero()
+        public
+    {
+        address lvc_ = address(0);
+
+        // Expect Revert
+        vm.expectRevert(
+            IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
+                .selector
+        );
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
+    }
+
+    function testSetliquidityVaultControllerContract_revertGivenAddressIsEqualToFM(
+    ) public {
+        address lvc = address(bondingCurveFundingManager);
+
+        // Expect Revert
+        vm.expectRevert(
+            IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
+                .selector
+        );
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc);
+    }
+
+    function testSetliquidityVaultControllerContract_permissioned(address lvc_)
+        public
+    {
+        vm.assume(
+            lvc_ != address(0) && lvc_ != address(bondingCurveFundingManager)
+        );
+
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+            .LiquidityVaultControllerChanged(
+            address(lvc_), liquidityVaultController
+        );
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
+    }
+
+    /*  Test setRepayableAmount()
+        ├── Given: the caller_ is not permissioned
+        │   └── When: the function setRepayableAmount() gets called
+        │       └── Then: it should revert (modifier in position)
+        └── Given: the caller_ is permissioned
+            ├── And: amount_ > either capitalAvailable or capitalRequirements
+            │   └── When: the function setRepayableAmount() gets called
+            │       └── Then: it should revert
+            └── And: amount_ <= either capitalAvailable or capitalRequirements
+                └── When: the function setRepayableAmount() gets called
+                    └── Then: it should set the state of repayableAmount to amount_
+                        └── And: it should emit an event
+    */
+    function testSetRepayableAmount_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setRepayableAmount(0);
+    }
+
+    function testSetRepayableAmount_permissioned(uint amount_) public {
+        amount_ = bound(
+            amount_,
+            bondingCurveFundingManager.exposed_getSmallerCaCr() + 1,
+            type(uint).max
+        );
+
+        // Execute Tx
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.setRepayableAmount(amount_);
+    }
+
+    /* Test: setTokenVault() modifier in position
+        └── Given: the caller_ is permissioned
+            └── When: the function setTokenVault() gets called
+                └── Then: it should revert (modifier in position)
+        └── Given: the caller_ is permissioned
+            └── When: the function setTokenVault() gets called
+                └── Then: it should change the _tokenVault address to the given address
+    */
+    function testSetTokenVault_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setTokenVault(address(0));
+    }
+
+    function testSetTokenVault_permissioned(address _tokenVault) public {
+        vm.assume(_tokenVault != address(0));
+        vm.assume(_tokenVault != address(bondingCurveFundingManager));
+        bondingCurveFundingManager.setTokenVault(_tokenVault);
+
+        assertEq(_tokenVault, bondingCurveFundingManager.getTokenVault());
     }
 
     // -------------------------------------------------------------------------
@@ -1020,502 +1196,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     // -------------------------------------------------------------------------
-    // OnlyCoverManager Functions
-
-    /*  Test seize()
-        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
-        │   └── When: the function seize() gets called
-        │       └── Then: it should revert
-        └── Given: the caller_ has the COVER_MANAGER_ROLE
-            ├── And: the parameter amount_ > the seizable amount
-            │   └── When: the function seize() gets called
-            │       └── Then: it should revert
-            ├── And: the lastSeizeTimestamp + SEIZE_DELAY > block.timestamp
-            │   └── When: the function seize() gets called
-            │       └── Then: it should revert
-            ├── And: the capital available - amount_ < MIN_RESERVE
-            │   └── When: the function seize() gets called
-            │       └── Then: it should transfer the value of capitalAvailable - MIN_RESERVE tokens to the msg.sender
-            │           ├── And: it should set the current timeStamp to lastSeizeTimestamp
-            │           └── And: it should emit an event
-            └── And: the capital available - amount_ > MIN_RESERVE
-                └── And: the lastSeizeTimestamp + SEIZE_DELAY < block.timestamp
-                    └── When: the function seize() gets called
-                        └── Then: it should transfer the value of amount_ tokens to the msg.sender
-                            ├── And: it should set the current timeStamp to lastSeizeTimestamp
-                            └── And: it should emit an event
-    */
-
-    function testSeize_revertGivenCallerHasNotCoverManagerRole() public {
-        uint amount_ = 1;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.seize(amount_);
-        }
-    }
-
-    function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint amount_)
-        public
-    {
-        uint currentSeizable = bondingCurveFundingManager.getSeizableAmount();
-        vm.assume(amount_ > currentSeizable);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount
-                    .selector,
-                currentSeizable
-            )
-        );
-        bondingCurveFundingManager.seize(amount_);
-    }
-
-    function testSeize_revertGivenLastSeizeTimerNotReset() public {
-        uint seizeAmount = 1 ether;
-        // Setup
-        // Mint collateral for enough capital available
-        _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), seizeAmount * 100
-        );
-        // Check Seize timestamp before calling function
-        uint seizeTimestampBefore =
-            bondingCurveFundingManager.getLastSeizeTimestamp();
-
-        // Assert expected fail. block.timestamp == 1 without setting it in vm.warp
-        assertGt((seizeTimestampBefore + SEIZE_DELAY), block.timestamp);
-
-        // Execute Tx expecting it to revert
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout
-                    .selector,
-                (
-                    seizeTimestampBefore
-                        + bondingCurveFundingManager.SEIZE_DELAY()
-                )
-            )
-        );
-        bondingCurveFundingManager.seize(seizeAmount);
-    }
-
-    function testSeize_worksGivenCapitalAvailableMinusMinReserveIsReturned()
-        public
-    {
-        // Setup
-        // Set block.timestamp to valid time
-        vm.warp(SEIZE_DELAY + 1);
-        // Amount has to be smaller than seizable amount which is (currentBalance * currentSeize) / BPS
-        // i.e. (1 ether * 200 ) / 10_000
-        uint amount = 1e16; // 0.01 ether
-        // Return value check for emit. Expected return is 0. Capital available - MIN_RESERVE
-        uint expectedReturnValue = bondingCurveFundingManager
-            .exposed_getCapitalAvailable() - MIN_RESERVE;
-        assertEq(expectedReturnValue, 0);
-
-        //Get balance before seize
-        uint balanceBeforeBuy = _token.balanceOf(address(this));
-
-        // Execute Tx
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .CollateralSeized(expectedReturnValue);
-        bondingCurveFundingManager.seize(amount);
-
-        // Assert that no tokens have been sent
-        assertEq(balanceBeforeBuy, balanceBeforeBuy);
-    }
-
-    function testSeize_worksGivenCapitalAmountIsReturnd(uint amount_) public {
-        // Setup
-        // Set block.timestamp to valid time
-        vm.warp(SEIZE_DELAY + 1);
-        // Bound seizable value
-        amount_ = bound(amount_, 1, type(uint128).max);
-        // Mint enough surplus so seizing can happen
-        _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), amount_ * 10_000
-        );
-        //Get balance before seize
-        uint balanceBeforeBuy = _token.balanceOf(address(this));
-
-        // Execute Tx
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .CollateralSeized(amount_);
-        bondingCurveFundingManager.seize(amount_);
-
-        // Get balance after buying
-        uint balanceAfterBuy = _token.balanceOf(address(this));
-        // Assert that no tokens have been sent
-        assertEq(balanceAfterBuy, balanceBeforeBuy + amount_);
-    }
-
-    /*    Test adjust
-        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
-        │   └── When: the function adjustSeize() gets called
-        │       └── Then: it should revert
-        └── Given: the caller_ has the COVER_MANAGER_ROLE
-                └── When: the function adjustSeize() gets called
-                    └── Then: it should call the internal function and set the state
-    */
-
-    function testAdjustSeize_revertGivenCallerHasNotCoverManagerRole() public {
-        uint64 seize_ = 10_000;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.adjustSeize(seize_);
-        }
-    }
-
-    function testAdjustSeize_worksGivenCallerHasCoverManagerRole(uint64 seize_)
-        public
-    {
-        vm.assume(seize_ != bondingCurveFundingManager.getCurrentSeize());
-        seize_ = uint64(bound(seize_, 1, MAX_SEIZE));
-
-        // Execute Tx
-        bondingCurveFundingManager.adjustSeize(seize_);
-
-        assertEq(bondingCurveFundingManager.getCurrentSeize(), seize_);
-    }
-
-    /*  Test setSellFee()
-        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
-        │   └── When: the function setSellFee() gets called
-        │       └── Then: it should revert
-        └── Given: the caller_ has the COVER_MANAGER_ROLE
-            ├── And: fee_ > MAX_SELL_FEE
-            │   └── When: the function setSellFee() getrs called
-            │       └── Then: it should revert
-            └── And: fee_ <= MAX_SELL_FEE
-                └── When: the function setSellFee() gets called
-                    └── Then: it should set the state of sellFee to fee_
-    */
-
-    function testSetSellFee_revertGivenCallerHasNotCoverManagerRole() public {
-        uint sellFee = 100;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setSellFee(sellFee);
-        }
-    }
-
-    function testSetSellFee_revertGivenSeizeBiggerThanMaxSeize(uint fee_)
-        public
-    {
-        vm.assume(fee_ > MAX_SELL_FEE);
-
-        // Execute Tx
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IBondingCurveBase_v1
-                    .Module__BondingCurveBase__InvalidFeePercentage
-                    .selector
-            )
-        );
-        bondingCurveFundingManager.setSellFee(fee_);
-    }
-
-    function testAdjustSeize_worksGivenCallerHasRoleAndSeizeIsValid(uint fee_)
-        public
-    {
-        vm.assume(fee_ != bondingCurveFundingManager.sellFee());
-        fee_ = bound(fee_, 1, MAX_SELL_FEE);
-
-        // Execute Tx
-        bondingCurveFundingManager.setSellFee(fee_);
-
-        assertEq(bondingCurveFundingManager.sellFee(), fee_);
-    }
-
-    /*  Test setRepayableAmount()
-        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
-        │   └── When: the function setRepayableAmount() gets called
-        │       └── Then: it should revert
-        └── Given: the caller_ has the COVER_MANAGER_ROLE
-            ├── And: amount_ > either capitalAvailable or capitalRequirements
-            │   └── When: the function setRepayableAmount() gets called
-            │       └── Then: it should revert
-            └── And: amount_ <= either capitalAvailable or capitalRequirements
-                └── When: the function setRepayableAmount() gets called
-                    └── Then: it should set the state of repayableAmount to amount_
-                        └── And: it should emit an event
-    */
-
-    function testSetRepayableAmount_revertGivenCallerHasNotCoverManagerRole()
-        public
-    {
-        uint amount = 1000;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setRepayableAmount(amount);
-        }
-    }
-
-    function testSetRepayableAmount_revertGivenCallerHasNotCoverManagerRole(
-        uint amount_
-    ) public {
-        amount_ = bound(
-            amount_,
-            bondingCurveFundingManager.exposed_getSmallerCaCr() + 1,
-            type(uint).max
-        );
-
-        // Execute Tx
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v1
-                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
-                    .selector
-            )
-        );
-        bondingCurveFundingManager.setRepayableAmount(amount_);
-    }
-
-    /*  Test setliquidityVaultControllerContract()
-        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
-        │   └── When: the function setliquidityVaultControllerContract() gets called
-        │       └── Then: it should revert
-        └── Given: the caller_ has the COVER_MANAGER_ROLE
-            ├── And: _lp == address(0)
-            │   └── When: the function setliquidityVaultController() gets called
-            │       └── Then: it should revert
-            └── And: _lp != address(0)
-                └── When: the function setliquidityVaultController() gets called
-                    └── Then: it should set the state liquidityVaultController to _lp
-                        └── And: it should emit an event
-    */
-
-    function testSetliquidityVaultControllerContract_revertGivenCallerHasNotCoverManagerRole(
-        address lvc_
-    ) public {
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.COVER_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
-        }
-    }
-
-    function testSetliquidityVaultControllerContract_revertGivenAddressIsZero()
-        public
-    {
-        address lvc_ = address(0);
-
-        // Expect Revert
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
-                .selector
-        );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
-    }
-
-    function testSetliquidityVaultControllerContract_revertGivenAddressIsEqualToFM(
-    ) public {
-        address lvc = address(bondingCurveFundingManager);
-
-        // Expect Revert
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
-                .selector
-        );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc);
-    }
-
-    function testSetliquidityVaultControllerContract_worksGivenCallerHasRoleAndAddressValid(
-        address lvc_
-    ) public {
-        vm.assume(
-            lvc_ != address(0) && lvc_ != address(bondingCurveFundingManager)
-        );
-
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .LiquidityVaultControllerChanged(
-            address(lvc_), liquidityVaultController
-        );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
-    }
-
-    // -------------------------------------------------------------------------
-    // OnlyCoverManager Functions
-
-    /*  Test setCapitalRequired()
-        ├── Given: the caller_ has not the RISK_MANAGER_ROLE
-        │   └── When: the function setCapitalRequired() is called
-        │       └── Then: it should revert
-    */
-    function testSetCapitalRequired_modifierInPosition() public {
-        uint newCapitalRequired = 1 ether;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.RISK_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setCapitalRequired(newCapitalRequired);
-        }
-    }
-
-    /*  Test setBaseMultiplier() 
-        ├── Given: the caller_ has not the RISK_MANAGER_ROLE
-        │   └── When: the function setBaseMultiplier() is called
-        │       └── Then: it should revert
-    */
-
-    function testSetBasePriceMultiplier_modifierInPosition() public {
-        uint newBaseMultiplier = 1;
-
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.generateRoleId(
-                        address(bondingCurveFundingManager),
-                        bondingCurveFundingManager.RISK_MANAGER_ROLE()
-                    ),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setBasePriceMultiplier(newBaseMultiplier);
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // OnlyOrchestratorAdmin Functions
-
-    /* Test: setTokenVault() modifier in position
-        └── Given: the caller_ is not the OrchestratorAdmin
-            └── When: the function setTokenVault() gets called
-                └── Then: it should revert
-        └── Given: the caller_ is the OrchestratorAdmin
-            └── When: the function setTokenVault() gets called
-                └── Then: it should change the _tokenVault address to the given address
-    */
-    function testSetTokenVault_ModifierInPosition() public {
-        // onlyOrchestratorAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0)
-            )
-        );
-        vm.prank(address(0));
-        bondingCurveFundingManager.setTokenVault(address(0));
-    }
-
-    function testSetTokenVault_worksGivenCallerIsOrchestratorAdmin(
-        address _tokenVault
-    ) public {
-        vm.assume(_tokenVault != address(0));
-        vm.assume(_tokenVault != address(bondingCurveFundingManager));
-        bondingCurveFundingManager.setTokenVault(_tokenVault);
-
-        assertEq(_tokenVault, bondingCurveFundingManager.getTokenVault());
-    }
+    // Mutating - Out of Order
 
     /* Test: withdrawProjectCollateralFee
-         └── Given: the caller_ is not the OrchestratorAdmin
-            └── When: the function withdrawProjectCollateralFee() gets called
-                └── Then: it should revert
-        └── Given: the caller_ is the OrchestratorAdmin
-            └── When: the function withdrawProjectCollateralFee() gets called
-                └── Then: it should revert
+        └── When: the function withdrawProjectCollateralFee() gets called
+            └── Then: it should revert
+
     */
-
-    function testWithdrawProjectCollateralFee_ModifierInPosition() public {
-        // onlyOrchestratorAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0)
-            )
-        );
-        vm.prank(address(0));
-        bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
-    }
-
-    function testWithdrawProjectCollateralFee_revertsGivenCallerIsOrchestratorAdmin(
-    ) public {
+    function testWithdrawProjectCollateralFee_reverts() public {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1

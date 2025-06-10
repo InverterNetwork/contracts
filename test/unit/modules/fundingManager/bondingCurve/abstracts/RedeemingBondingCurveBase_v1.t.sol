@@ -51,16 +51,6 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     address admin_address = address(0xA1BA);
     address non_admin_address = address(0xB0B);
 
-    event SellingEnabled();
-    event SellingDisabled();
-    event SellFeeUpdated(uint newSellFee, uint oldSellFee);
-    event TokensSold(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address seller
-    );
-
     function setUp() public {
         // Deploy contracts
         address impl = address(new RedeemingBondingCurveBaseV1Mock());
@@ -78,7 +68,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         // Set max fee of feeManager to 100% for testing purposes
         vm.prank(address(governor));
@@ -98,7 +89,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IRedeemingBondingCurveBase_v1).interfaceId
@@ -212,6 +203,105 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), 0);
+    }
+
+    /*
+    Test: sellTo Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: buysellinging is not enabled
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: selling is enabled
+    └── And: receiver is invalid
+        └── When: sellTo is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testsellTo_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openSell();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+    }
+
+    /*
+    Test: sell Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sell is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    └── And: buysellinging is not enabled
+        └── When: sell is called
+            └── Then: it should revert (modifier in position check)
+    
+    */
+
+    function testsell_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sell(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sell(0, 0);
     }
 
     /* Test sell and _sellOrder function
@@ -377,7 +467,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensSold(seller, amount, finalAmount, seller);
+        emit IRedeemingBondingCurveBase_v1.TokensSold(
+            seller, amount, finalAmount, seller
+        );
 
         // Execution
         vm.prank(seller);
@@ -405,8 +497,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test openSell function
-        ├── when caller is not the Orchestrator admin
-        │      └── it should revert (tested in base Module modifier tests)
+        ├── when caller is not permissioned
+        │      └── it should revert (modifier in position check)
         └── when caller is the Orchestrator admin
                └── when sell functionality is already open
                 │      └── it should stay as is
@@ -415,10 +507,25 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         ├── it should open the sell functionality
                         └── it should emit an event
     */
+
+    function testOpenSell_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.openSell();
+    }
+
     function testOpenSell_Idempotence() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit SellingEnabled();
+        emit IRedeemingBondingCurveBase_v1.SellingEnabled();
 
         bondingCurveFundingManager.openSell();
     }
@@ -431,7 +538,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit SellingEnabled();
+        emit IRedeemingBondingCurveBase_v1.SellingEnabled();
 
         bondingCurveFundingManager.openSell();
 
@@ -439,8 +546,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeSell function
-        ├── when caller is not the Orchestrator admin
-        │      └── it should revert (tested in base Module tests)
+        ├── when caller is permissioned
+        │      └── it should revert (modifier in position check)
         └── when caller is the Orchestrator admin
                └── when sell functionality is already closed
                 │      └── it should stay as is
@@ -449,6 +556,19 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         ├── it should close the sell functionality
                         └── it should emit an event
     */
+    function testCloseSell_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.closeSell();
+    }
 
     function testCloseSell_FailsIfAlreadyClosed()
         public
@@ -457,13 +577,13 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit SellingDisabled();
+        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit SellingDisabled();
+        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
@@ -473,15 +593,15 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit SellingDisabled();
+        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
     }
 
     /* Test setSellFee and _setSellFee function
-        ├── when caller is not the Orchestrator admin
-        │      └── it should revert (tested in base Module tests)
+        ├── when caller is not permissioned
+        │      └── it should revert (modifier in position check)
         └── when caller is the Orchestrator admin
                └── when fee is over 100% 
                 │      └── it should revert
@@ -492,6 +612,20 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         ├── it should set the new fee
                         └── it should emit an event?
     */
+
+    function testSetSellFee_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setSellFee(0);
+    }
 
     function testSetSellFee_FailsIfFeeIsOver100Percent(uint _fee)
         public
@@ -514,7 +648,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit SellFeeUpdated(_fee, oldSellFee);
+        emit IRedeemingBondingCurveBase_v1.SellFeeUpdated(_fee, oldSellFee);
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);

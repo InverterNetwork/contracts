@@ -135,13 +135,15 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // Public Mutating Functions
 
     // ------------------------------------------------------------------------
-    // Mutating - OnlyOrchestratorAdmin Functions
+    // Mutating - Permissioned Functions
 
     /// @notice Update the capital required used for the bonding curve.
+    /// @dev    Function access controlled by authorizer.
     /// @param  newCapitalRequired_ The new capital required.
     function setCapitalRequired(uint newCapitalRequired_) external;
 
     /// @notice Update the base price multiplier used for the bonding curve.
+    /// @dev    Function access controlled by authorizer.
     /// @param  newBasePriceMultiplier_ The new base price multiplier.
     function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
 }

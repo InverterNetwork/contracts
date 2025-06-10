@@ -104,7 +104,7 @@ contract PP_Template_v1_Test is ModuleTest {
     }
 
     // Test the interface support
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentProcessor.supportsInterface(
                 type(IPaymentProcessor_v2).interfaceId

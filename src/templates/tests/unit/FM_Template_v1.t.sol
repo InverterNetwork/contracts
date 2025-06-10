@@ -101,7 +101,7 @@ contract FM_Template_v1_Test is ModuleTest {
     }
 
     // Test the interface support
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             fundingManager.supportsInterface(
                 type(IFundingManager_v1).interfaceId

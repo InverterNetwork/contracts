@@ -32,7 +32,7 @@ import {ERC165Upgradeable} from
  *                and redemption operations.
  *
  *              - Manual price setting.
- *                Prices are manually set by the price setter role and must be
+ *                Prices are manually set and must be
  *                non-zero values.
  *
  *              - Price decimal denominations.
@@ -44,41 +44,21 @@ import {ERC165Upgradeable} from
  *                - To price redeeming 1 token at 0.5 collateral with 6 decimal
  *                  collateral: 500_000
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Price Setter Role:
  *                    - Purpose: The price setter role is authorized to set
  *                               prices for issuance and redemption operations.
- *                    - How:     The OrchestratorAdmin (or PRICE_SETTER_ROLE_ADMIN
- *                               if configured) must:
- *                               1. Retrieve the price setter role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getPriceSetterRole(),
- *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Price Setter Role Admin:
- *                    - Purpose: Enables delegation of price setter role
- *                               management to a dedicated admin role instead of
- *                               relying on the OrchestratorAdmin. This allows
- *                               for more granular access control and operational
- *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRoleAdmin()
- *                                )
- *                               );
+ *                                1. Create a price setter role
+ *                                2. Add access permission for the
+ *                                   setIssuancePrice(), setRedemptionPrice()
+ *                                   and setIssuanceAndRedemptionPrice()
+ *                                   functions to the price setter role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -106,20 +86,6 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
             || interfaceId == type(IOraclePrice_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
-
-    // -------------------------------------------------------------------------
-    // Constants
-
-    /// @notice Role identifier for accounts authorized to set prices.
-    /// @dev    This role should be granted to trusted price feeders only.
-    bytes32 internal constant PRICE_SETTER_ROLE = "PRICE_SETTER_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the price
-    ///         setter role.
-    /// @dev    This role should be set as the role admin within the Authorizer
-    ///         module.
-    bytes32 internal constant PRICE_SETTER_ROLE_ADMIN =
-        "PRICE_SETTER_ROLE_ADMIN";
 
     // -------------------------------------------------------------------------
     // State Variables
@@ -184,39 +150,16 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         return _redemptionPrice;
     }
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function getPriceSetterRole() external pure virtual returns (bytes32) {
-        return PRICE_SETTER_ROLE;
-    }
-
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function getPriceSetterRoleAdmin()
-        external
-        pure
-        virtual
-        returns (bytes32)
-    {
-        return PRICE_SETTER_ROLE_ADMIN;
-    }
-
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
     /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setIssuancePrice(uint price_)
-        external
-        virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
-    {
+    function setIssuancePrice(uint price_) external virtual permissioned {
         _setIssuancePrice(price_);
     }
 
     /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setRedemptionPrice(uint price_)
-        external
-        virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
-    {
+    function setRedemptionPrice(uint price_) external virtual permissioned {
         _setRedemptionPrice(price_);
     }
 
@@ -224,7 +167,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     function setIssuanceAndRedemptionPrice(
         uint issuancePrice_,
         uint redemptionPrice_
-    ) external virtual onlyModuleRole(PRICE_SETTER_ROLE) {
+    ) external virtual permissioned {
         _setIssuancePrice(issuancePrice_);
         _setRedemptionPrice(redemptionPrice_);
     }

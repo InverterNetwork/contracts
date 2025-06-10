@@ -108,17 +108,6 @@ contract MetadataCollection_v1 {
             "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
         );
 
-    // RestrictedBancorRedeemingVirtualSupplyFundingManager
-    IModule_v1.Metadata public
-        restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            "https://github.com/InverterNetwork/contracts",
-            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
-        );
-
     // BondingSurfaceRedeemingFundingManager
     IModule_v1.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
     IModule_v1.Metadata(

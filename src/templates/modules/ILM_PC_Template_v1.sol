@@ -80,10 +80,6 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     /// @return token_ The address of the payment token.
     function getPaymentToken() external view returns (address token_);
 
-    /// @notice Returns the deposit admin role.
-    /// @return role_ The address of the deposit admin role.
-    function getDepositAdminRole() external view returns (bytes32 role_);
-
     /// @notice Returns the maximum deposit amount.
     /// @return amount_ The maximum deposit amount.
     function getMaxDepositAmount() external view returns (uint amount_);
@@ -96,6 +92,7 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     function deposit(uint amount_) external;
 
     /// @notice Processes a user's deposit.
+    /// @dev    Function access controlled by authorizer.
     /// @param  user_ The address of the user whose deposit to process.
     /// @param  start_ The start timestamp for the payment schedule.
     /// @param  cliff_ The cliff timestamp for the payment schedule.

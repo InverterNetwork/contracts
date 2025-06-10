@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
@@ -92,14 +93,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint64 public constant MAX_FEE = 100;
     /// @notice Time interval between seizes.
     uint64 public constant SEIZE_DELAY = 7 days;
-    /// @notice Role associated with the managing of the bonding curve values.
-    bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER";
-    /// @notice Role associated with the managing of setting withdraw addresses
-    ///         and setting the fee.
-    bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
-    /// @notice Role that can use buy and sell regardless wether these
-    ///         functions are restricted or not
-    bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     // ========================================================================
     // Storage
@@ -118,20 +111,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint internal _lastSeizeTimestamp;
     /// @notice Address of the reserve pool.
     address internal _tokenVault;
-    /// @notice Restricts buying and selling functionalities to specific role.
-    bool internal _buyAndSellIsRestricted;
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
     // ========================================================================
     // Modifiers
-
-    /// @notice Modifier to ensure buy and sell restrictions are met.
-    modifier onlyIfNotBuyAndSellRestricted() {
-        _onlyIfNotBuyAndSellRestrictedModifier();
-        _;
-    }
 
     /// @notice Modifier to ensure only the LiquidityVaultController can call
     ///         the function.
@@ -156,27 +141,23 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         BondingCurveProperties memory bondingCurveProperties;
         address liquidityVaultController;
         uint64 newSeize;
-        // Indicates whether buying and selling is restricted to the
-        // CURVE_INTERACTION_ROLE or open to anyone.
-        bool buyAndSellIsRestricted;
 
         (
             issuanceToken,
             acceptedToken,
             bondingCurveProperties,
             liquidityVaultController,
-            newSeize,
-            buyAndSellIsRestricted
+            newSeize
         ) = abi.decode(
             configData_,
-            (address, address, BondingCurveProperties, address, uint64, bool)
+            (address, address, BondingCurveProperties, address, uint64)
         );
         __Module_init(orchestrator_, metadata_);
         __FM_BC_BondingSurface_Redeeming_v1_Init(
             issuanceToken, acceptedToken, bondingCurveProperties
         );
         __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
-            liquidityVaultController, newSeize, buyAndSellIsRestricted
+            liquidityVaultController, newSeize
         );
     }
 
@@ -186,17 +167,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @param  liquidityVaultController_ The address of the
     ///         LiquidityVaultController.
     /// @param  newSeize_ The new seize value.
-    /// @param  buyAndSellIsRestricted_ Whether buy and sell is restricted.
     function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
         address liquidityVaultController_,
-        uint64 newSeize_,
-        bool buyAndSellIsRestricted_
+        uint64 newSeize_
     ) internal onlyInitializing {
         _liquidityVaultController = liquidityVaultController_;
-
-        // Set buy and sell restriction to restricted if true. By default buy
-        // and sell are unrestricted.
-        _buyAndSellIsRestricted = buyAndSellIsRestricted_;
 
         _setSeize(newSeize_);
     }
@@ -239,15 +214,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return address(_tokenVault);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function isBuyAndSellRestricted()
-        public
-        view
-        returns (bool buyAndSellIsRestricted_)
-    {
-        return _buyAndSellIsRestricted;
-    }
-
     /// @inheritdoc IRepayer_v1
     function getRepayableAmount()
         external
@@ -261,61 +227,18 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Public Mutating Functions
 
     // ------------------------------------------------------------------------
-    // Mutating - Token Manipulation Functions
-
-    /// @inheritdoc IBondingCurveBase_v1
-    /// @dev    The buy functionality can be restricted to the
-    ///         CURVE_INTERACTION_ROLE.
-    function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyIfNotBuyAndSellRestricted
-    {
-        super.buyFor(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc IBondingCurveBase_v1
-    /// @dev    The buy functionality can be restricted to the
-    ///         CURVE_INTERACTION_ROLE.
-    function buy(uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-    {
-        buyFor(_msgSender(), depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    /// @dev    The sell functionality can be restricted to the
-    ///         CURVE_INTERACTION_ROLE.
-    function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyIfNotBuyAndSellRestricted
-    {
-        super.sellTo(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    /// @dev    The sell functionality can be restricted to the
-    ///         CURVE_INTERACTION_ROLE.
-    function sell(uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-    {
-        sellTo(_msgSender(), depositAmount_, minAmountOut_);
-    }
+    // Mutating - Permissioned Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function burnIssuanceToken(uint amount_) external {
+    function burnIssuanceToken(uint amount_) external permissioned {
         _burn(_msgSender(), amount_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function burnIssuanceTokenFor(address owner_, uint amount_) external {
+    function burnIssuanceTokenFor(address owner_, uint amount_)
+        external
+        permissioned
+    {
         if (owner_ != _msgSender()) {
             // Does not update allowance if set to infinite.
             _spendAllowance(owner_, _msgSender(), amount_);
@@ -324,48 +247,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _burn(owner_, amount_);
     }
 
-    // ------------------------------------------------------------------------
-    // Mutating - OnlyLiquidityVaultController Functions
-
-    /// @inheritdoc IRepayer_v1
-    function transferRepayment(address to_, uint amount_)
-        external
-        validReceiver(to_)
-        onlyLiquidityVaultController
-    {
-        if (amount_ > _getRepayableAmount()) {
-            revert Repayer__InsufficientCollateralForRepayerTransfer();
-        }
-        __Module_orchestrator.fundingManager().token().safeTransfer(
-            to_, amount_
-        );
-        if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
-        }
-
-        emit RepaymentTransfer(to_, amount_);
-    }
-
-    // ------------------------------------------------------------------------
-    // Mutating - OnlyCoverManager Functions
-
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function restrictBuyAndSell() external onlyModuleRole(COVER_MANAGER_ROLE) {
-        _buyAndSellIsRestricted = true;
-        emit BuyAndSellIsRestricted();
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function unrestrictBuyAndSell()
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
-        _buyAndSellIsRestricted = false;
-        emit BuyAndSellIsUnrestricted();
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function seize(uint amount_) public onlyModuleRole(COVER_MANAGER_ROLE) {
+    function seize(uint amount_) public permissioned {
         uint seizableAmount = getSeizableAmount();
         if (amount_ > seizableAmount) {
             revert
@@ -394,17 +277,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function adjustSeize(uint64 seize_)
-        public
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
+    function adjustSeize(uint64 seize_) public permissioned {
         _setSeize(seize_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function setLiquidityVaultControllerContract(address lvc_)
         external
-        onlyModuleRole(COVER_MANAGER_ROLE)
+        permissioned
     {
         if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
             revert
@@ -418,10 +298,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IRepayer_v1
-    function setRepayableAmount(uint amount_)
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
+    function setRepayableAmount(uint amount_) external permissioned {
         if (amount_ > _getSmallerCaCr()) {
             revert
                 IFM_BC_BondingSurface_Redeeming_v1
@@ -431,65 +308,41 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _repayableAmount = amount_;
     }
 
-    // ------------------------------------------------------------------------
-    // Mutating - RedeemingBondingCurveBase_v1 Overrides
-
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint fee_)
-        external
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
-        _setSellFee(fee_);
-    }
-
-    // ------------------------------------------------------------------------
-    // Mutating - OnlyRiskManager Functions
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setCapitalRequired(uint newCapitalRequired_)
-        public
-        override(
-            FM_BC_BondingSurface_Redeeming_v1, IFM_BC_BondingSurface_Redeeming_v1
-        )
-        onlyModuleRole(RISK_MANAGER_ROLE)
-    {
-        _setCapitalRequired(newCapitalRequired_);
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setBasePriceMultiplier(uint newBasePriceMultiplier_)
-        public
-        override(
-            FM_BC_BondingSurface_Redeeming_v1, IFM_BC_BondingSurface_Redeeming_v1
-        )
-        onlyModuleRole(RISK_MANAGER_ROLE)
-    {
-        _setBasePriceMultiplier(newBasePriceMultiplier_);
-    }
-
-    // ------------------------------------------------------------------------
-    // Mutating - OnlyOrchestratorAdmin Functions
-
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function setTokenVault(address tokenVault_)
-        external
-        onlyOrchestratorAdmin
-    {
+    function setTokenVault(address tokenVault_) external permissioned {
         _setTokenVault(tokenVault_);
     }
+
+    // ------------------------------------------------------------------------
+    // Mutating - OnlyLiquidityVaultController Functions
+
+    /// @inheritdoc IRepayer_v1
+    function transferRepayment(address to_, uint amount_)
+        external
+        validReceiver(to_)
+        onlyLiquidityVaultController
+    {
+        if (amount_ > _getRepayableAmount()) {
+            revert Repayer__InsufficientCollateralForRepayerTransfer();
+        }
+        __Module_orchestrator.fundingManager().token().safeTransfer(
+            to_, amount_
+        );
+        if (MIN_RESERVE > token().balanceOf(address(this))) {
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+        }
+
+        emit RepaymentTransfer(to_, amount_);
+    }
+
+    // ------------------------------------------------------------------------
+    // Mutating - Out of Order
 
     /// @inheritdoc IBondingCurveBase_v1
     function withdrawProjectCollateralFee(
         address, /* receiver_ */
         uint /* amount_ */
-    )
-        public
-        view
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyOrchestratorAdmin
-    {
+    ) public view override(BondingCurveBase_v1, IBondingCurveBase_v1) {
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
         );
@@ -570,19 +423,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         if (_msgSender() != address(_liquidityVaultController)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
-                _msgSender()
-            );
-        }
-    }
-
-    /// @notice Validate if buy and sell is restricted, and if so
-    ///         check if the caller has the CURVE_INTERACTION_ROLE.
-    function _onlyIfNotBuyAndSellRestrictedModifier() internal view {
-        if (_buyAndSellIsRestricted) {
-            _checkRoleModifier(
-                __Module_orchestrator.authorizer().generateRoleId(
-                    address(this), CURVE_INTERACTION_ROLE
-                ),
                 _msgSender()
             );
         }

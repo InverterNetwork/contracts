@@ -107,22 +107,26 @@ interface ILM_PC_Staking_v2 {
     // Mutating Functions
 
     /// @notice Stake a specified amount of tokens to earn rewards.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Should tokens already be staked, then the sending address will collect the rewards up until this point.
     /// @dev	Fee on transfer tokens are currently not supported.
     /// @param  amount How much token should be staked.
     function stake(uint amount) external;
 
     /// @notice Unstake a specified amount of tokens and collect rewards.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reaps the rewards collected up to this point for the msg.Sender().
     /// @dev	Fee on transfer tokens are currently not supported.
     /// @param  amount How much token should be unstaked.
     function unstake(uint amount) external;
 
     /// @notice Collects the rewards that are earned up until now.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reaps the rewards collected up to this point for the msg.Sender().
     function claimRewards() external;
 
     /// @notice Sets the rewards that are to be distributed.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Equally distributes the reward amount over the given time period.
     /// @param  amount How much token should be distributed.
     /// @param  duration How much time it will take to distribute the token.

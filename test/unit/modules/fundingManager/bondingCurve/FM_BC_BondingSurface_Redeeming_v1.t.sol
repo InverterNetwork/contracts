@@ -104,7 +104,9 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
             FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(bondingCurveFundingManager);
-        _authorizer.setIsAuthorized(address(this), true);
+
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         // Set Minter
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
@@ -294,7 +296,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Tests: Supports Interface
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId
@@ -411,35 +413,30 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     // OnlyOrchestratorAdmin Functions
 
     /*  Test setCapitalRequired()
-        ├── Given: the caller_ is not the OrchestratorAdmin
+        ├── Given: the caller_ is permissioned
         │   └── When: the function setCapitalRequired() is called
-        │       └── Then: it should revert
+        │       └── Then: it should revert (modifier in position test)
         ├── Given: the amount is invalid
         │   └── When: the function setCapitalRequired() is called
-        │       └── Then: it should revert
-        └── Given: the caller_ is the OrchestratorAdmin
+        │       └── Then: it should revert 
+        └── Given: the caller_ is permissioned
             └── When: the function setCapitalRequired() is called
                 └── Then: it should call the internal function and set the state
 
     */
 
-    function testSetCapitalRequired_revertGivenCallerHasNotRiskManagerRole()
-        public
-    {
-        uint newCapitalRequired = 1 ether;
+    function testSetCapitalRequired_ModifierInPosition() public {
+        // permissioned
 
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.getAdminRole(),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setCapitalRequired(newCapitalRequired);
-        }
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setCapitalRequired(0);
     }
 
     function testSetCapitalRequired_revertGivenAmountIsInvalid() public {
@@ -481,31 +478,26 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     }
 
     /*  Test setBaseMultiplier()
-        ├── Given: the caller_ is not the OrchestratorAdmin
+        ├── Given: the caller_ is not permissioned
         │   └── When: the function setBaseMultiplier() is called
-        │       └── Then: it should revert
-        └── Given: the caller_ is the OrchestratorAdmin
+        │       └── Then: it should revert (modifier in position test)
+        └── Given: the caller_ is permissioned
             └── When: the function setBaseMultiplier() is called
                 └── Then: it should call the internal function and set the state
     */
 
-    function testSetBaseMultiplier_revertGivenCallerHasNotRiskManagerRole()
-        public
-    {
-        uint newBaseMultiplier = 1;
+    function testSetBaseMultiplier_modifierInPosition() public {
+        // permissioned
 
-        // Execute Tx
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _authorizer.getAdminRole(),
-                    seller
-                )
-            );
-            bondingCurveFundingManager.setBasePriceMultiplier(newBaseMultiplier);
-        }
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setBasePriceMultiplier(0);
     }
 
     function testSetBaseMultiplier_worksGivenCallerHasRiskManagerRole(

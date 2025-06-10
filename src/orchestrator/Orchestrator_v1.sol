@@ -67,14 +67,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev	Modifier to guarantee function is only callable by the admin of the workflow
-    ///         address.
-    modifier onlyOrchestratorAdmin() {
-        bytes32 adminRole = authorizer.getAdminRole();
-
-        if (!authorizer.hasRole(adminRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(adminRole, _msgSender());
-        }
+    modifier permissioned() {
+        _checkAuthorization(_msgSender(), _msgData());
         _;
     }
 
@@ -184,7 +178,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 newAuthorizer)
         external
-        onlyOrchestratorAdmin
+        permissioned
     {
         address newAuthorizerAddress = address(newAuthorizer);
         _enforcePrivilegedModuleInterfaceCheck(
@@ -198,7 +192,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetAuthorizer(IAuthorizer_v1 newAuthorizer)
         external
-        onlyOrchestratorAdmin
+        permissioned
         updatingModuleAlreadyStarted(address(newAuthorizer))
         timelockExpired(address(newAuthorizer))
     {
@@ -221,7 +215,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_)
         external
-        onlyOrchestratorAdmin
+        permissioned
     {
         _cancelModuleUpdate(address(authorizer));
         _cancelModuleUpdate(address(authorizer_));
@@ -230,7 +224,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetFundingManagerWithTimelock(
         IFundingManager_v1 newFundingManager
-    ) external onlyOrchestratorAdmin {
+    ) external permissioned {
         address newFundingManagerAddress = address(newFundingManager);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -251,7 +245,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetFundingManager(IFundingManager_v1 newFundingManager)
         external
-        onlyOrchestratorAdmin
+        permissioned
     {
         address newFundingManagerAddress = address(newFundingManager);
 
@@ -267,7 +261,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
         external
-        onlyOrchestratorAdmin
+        permissioned
     {
         _cancelModuleUpdate(address(fundingManager));
         _cancelModuleUpdate(address(fundingManager_));
@@ -276,7 +270,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetPaymentProcessorWithTimelock(
         IPaymentProcessor_v2 newPaymentProcessor
-    ) external onlyOrchestratorAdmin {
+    ) external permissioned {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -290,7 +284,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetPaymentProcessor(
         IPaymentProcessor_v2 newPaymentProcessor
-    ) external onlyOrchestratorAdmin {
+    ) external permissioned {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -306,43 +300,48 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v2 paymentProcessor_
-    ) external onlyOrchestratorAdmin {
+    ) external permissioned {
         _cancelModuleUpdate(address(paymentProcessor));
         _cancelModuleUpdate(address(paymentProcessor_));
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function cancelModuleUpdate(address module_) external {
+    function initiateAddModuleWithTimelock(address module_)
+        external
+        permissioned
+    {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
-        _cancelModuleUpdate(module_);
+        _initiateAddModuleWithTimelock(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function initiateAddModuleWithTimelock(address module_) external {
+    function executeAddModule(address module_) external permissioned {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
-        _initiateAddModuleWithTimelock(module_);
+        _executeAddModule(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
     function initiateRemoveModuleWithTimelock(address module_)
         external
         onlyLogicModules(module_)
+        permissioned
     {
         _initiateRemoveModuleWithTimelock(module_);
-    }
-
-    /// @inheritdoc IOrchestrator_v1
-    function executeAddModule(address module_) external {
-        _enforceNonPrivilegedModuleInterfaceCheck(module_);
-        _executeAddModule(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
     function executeRemoveModule(address module_)
         external
         onlyLogicModules(module_)
+        permissioned
     {
         _executeRemoveModule(module_);
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function cancelModuleUpdate(address module_) external permissioned {
+        _enforceNonPrivilegedModuleInterfaceCheck(module_);
+        _cancelModuleUpdate(module_);
     }
 
     //--------------------------------------------------------------------------
@@ -359,8 +358,26 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         return authorizer.hasRole(authorizer.getAdminRole(), who);
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Internal Functions
+
+    // ------------------------------------------------------------------------
+    // Internal - Authorization
+
+    /// @notice Checks if the caller can call the function that implements the locked modifier.
+    /// @param  caller_ The address of the caller.
+    /// @param  data_ The data of the call.
+    function _checkAuthorization(address caller_, bytes calldata data_)
+        internal
+        view
+    {
+        // If caller cannot call the function, revert.
+        if (
+            !authorizer.hasPermission(caller_, address(this), bytes4(data_[0:4]))
+        ) {
+            revert Orchestrator__NotPermissioned();
+        }
+    }
 
     /// @notice Enforces that the address is in fact a Module of the required type.
     /// @dev	The function reverts if the given address is not a module of the required type.

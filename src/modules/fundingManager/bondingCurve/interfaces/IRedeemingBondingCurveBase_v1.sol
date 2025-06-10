@@ -61,6 +61,7 @@ interface IRedeemingBondingCurveBase_v1 is IBondingCurveBase_v1 {
     // Functions
 
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    This function wraps the `_sellOrder` internal function with specified parameters to handle
     ///         the transaction and direct the proceeds.
     /// @param  _receiver The address that will receive the redeemed tokens.
@@ -70,24 +71,25 @@ interface IRedeemingBondingCurveBase_v1 is IBondingCurveBase_v1 {
         external;
 
     /// @notice Redeem collateral for the sender's address.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
     /// @param  _depositAmount The amount of issued token deposited.
     /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         Reverts if selling is already open.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    Reverts if selling is already open.
     function openSell() external;
 
     /// @notice Closes the selling functionality for the collateral.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         Reverts if selling is already closed.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    Reverts if selling is already closed.
     function closeSell() external;
 
     /// @notice Sets the fee percentage for selling collateral, payed in collateral.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param  _fee The fee in basis points.
     function setSellFee(uint _fee) external;
 

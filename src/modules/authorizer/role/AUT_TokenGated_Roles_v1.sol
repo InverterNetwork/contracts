@@ -21,275 +21,428 @@ import {AccessControlUpgradeable} from
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
+/**
+ * @title   Token Interface
+ *
+ * @notice  This Interface is an abstraction of token based contracts that is
+ *          referenced in the Token-Gated Role Authorizer.
+ *
+ * @dev     It only contains the balanceOf function, which should be
+ *          implemented by any of the following token contracts and their
+ *          derivatives:
+ *          - ERC20
+ *          - ERC721
+ *          This interface is used to ensure that the token-gated role
+ *          authorizer can be used with any token contract that implements
+ *          the balanceOf function.
+ *
+ * @author  Inverter Network
+ */
 interface TokenInterface {
-    function balanceOf(address _owner) external view returns (uint balance);
+    /// @notice Returns the balance of the given address.
+    /// @param  owner_ The address to check the balance of.
+    /// @return balance_ The balance of the given address.
+    function balanceOf(address owner_) external view returns (uint balance_);
 }
 
 /**
  * @title   Inverter Token-Gated Role Authorizer
  *
- * @notice  Extends the Inverter's role-based access control to include token gating,
- *          enabling roles to be conditionally assigned based on token ownership.
- *          This mechanism allows for dynamic permissioning tied to specific token
- *          holdings.
+ * @notice  Extends the Inverter's role-based access control to include token
+ *          gating, enabling roles to be conditionally assigned based on token
+ *          ownership. This mechanism allows for dynamic permissioning tied to
+ *          specific token holdings.
  *
- * @dev     Builds on {AUT_Roles_v1} by integrating token-based access checks before
- *          role assignment. Utilizes checks on token balances to gate access,
- *          supporting both {ERC20} and {ERC721} tokens as qualifiers for role eligibility.
+ * @dev     Inherits functionality from:
+ *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
+ *          - {AUT_Roles_v1}: Inverter's role-based access control.
+ *
+ *          Key feeatures:
+ *              - Token-based access checks before role assignment.
+ *              - Supports both {ERC20} and {ERC721} tokens.
+ *
+ * @custom:guide
+ *          The following guide explains in detail how to use the key features
+ *          of this module:
+ *
+ *              - TOKEN BASED ACCESS CONTROL:
+ *                  - Token Gated Role:
+ *                    With this contract it is possible to extend the base
+ *                    functionality of the {AUT_Roles_v1} contract to make a
+ *                    role token gated. A token gated role behaves in all
+ *                    respects like a regular role, but handles the membership
+ *                    of that role differently. A member of a token gated role
+ *                    is only allowed to access the role functionalities if
+ *                    they hold a certain amount of a token.
+ *                    The implementation of this contract uses a few tricks to
+ *                    achieve this. Without going into too much detail, this
+ *                    is the main part that is needed to understand the basic
+ *                    mechanism:
+ *                    In the contract, token gating is implemented by storing
+ *                    the token address in the role’s members property, instead
+ *                    of directly listing user addresses. This setup allows the
+ *                    contract to check the token balance of a user against a
+ *                    defined threshold when access is requested.
+ *                    Example: We want to restrict a role to users who hold a
+ *                    certain amount of Token A. Therefore, we configure the
+ *                    role to be token-gated and set a required token amount
+ *                    the user needs to hold as threshold. When we then call
+ *                    'grantRole' with the address of Token A, the role becomes
+ *                    accessible only to users whose wallet holds at least the
+ *                    specified amount of that token.
+ *
+ *                  - Making a role token gated:
+ *                    Making a role token gated is done by calling the
+ *                    `setTokenGated` function. This function takes the
+ *                    following parameters:
+ *                    - The role id of the role that we change the token gated
+ *                      status of.
+ *                    - The boolean that indicates if the role should be token
+ *                      gated or not.
+ *                    This function can only be called by a permissioned address
+ *                    (See permissioned section in the {AUT_Roles_v1} contract).
+ *                    Also the role can not contain any members, when it is
+ *                    switched to and from token gated.
+ *                    Example: Making the role "Whitelisted" token gated would
+ *                    look like this:
+ *                    authorizer.setTokenGated(whitelistedRoleId, true);
+ *
+ *                  - Setting the token threshold:
+ *                    Setting the token threshold needed to pass the token gate
+ *                    is done by calling the setTokenThreshold function. This
+ *                    function takes the following parameters:
+ *                    - The role id of the role to set the threshold for.
+ *                    - The address of the token to set the threshold for.
+ *                    - The threshold value to set.
+ *                    This function can only be called by a permissioned address
+ *                    (See permissioned section in the {AUT_Roles_v1} contract).
+ *                    This function can be called anytime, even if the role is
+ *                    not token gated yet.
+ *                    Example: Setting the threshold for the token "USDC" to
+ *                    100 would look like this:
+ *                    authorizer.setTokenThreshold(
+ *                      whitelistedRoleId, USDC, 100);
+ *
+ *                  - Adding a token to the token gate:
+ *                    Adding a token to the token gate is done by calling the
+ *                    grantRole function. This function takes the following
+ *                    parameters:
+ *                    - The role id of the role to grant.
+ *                    - The address of the token to grant the role to.
+ *                    The grantRole function can only be called by according
+ *                    admin of the role. In addition, the given address needs
+ *                    to be a contract, already have a threshold set and
+ *                    contain the balanceOf function.
+ *                    If the role is not token gated then grantRole will
+ *                    behave like the regular grantRole function.
+ *                    Example: Adding a token gate to the token gated role
+ *                    "Whitelisted" would look like this:
+ *                    authorizer.grantRole(whitelistedRoleId, address(USDC));
+ *
+ *                  - Removing a token from the token gate:
+ *                    Removing a token from the token gate is done by calling
+ *                    the revokeRole function. This function behaves like the
+ *                    regular revokeRole function, except that it sets the
+ *                    threshold for the role and token combination to 0 as
+ *                    well.
+ *                    Example: Removing the token from the role "Whitelisted"
+ *                    would look like this:
+ *                    authorizer.revokeRole(whitelistedRoleId, address(USDC));
+ *
+ *                  - Reversing a token gate:
+ *                    In case the token gated status of a role needs to be
+ *                    reverted, the setTokenGated function can be used. The
+ *                    same restrictions as for the setTokenGated function apply
+ *                    here as well (see above).
+ *                    Example: Reversing the token gated status of the role
+ *                    "Whitelisted" would look like this:
+ *                    authorizer.setTokenGated(whitelistedRoleId, false);
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version  v1.0.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
 contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(AUT_Roles_v1)
-        returns (bool)
+        returns (bool isInterfaceId_)
     {
-        return interfaceId == type(IAUT_TokenGated_Roles_v1).interfaceId
-            || super.supportsInterface(interfaceId);
+        return interfaceId_ == type(IAUT_TokenGated_Roles_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     /*
-    * This Module expands on the AUT_Roles_v1 by adding the possibility to set a role as "Token-Gated"
-    * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on
-    * authorization the contract will check on ownership of one of the specifed tokens.
+    * This Module expands on the AUT_Roles_v1 by adding the possibility to set
+    * a role as "Token-Gated". Instead of whitelisting a user address, the
+    * whitelisted addresses will correspond to a token address, and on 
+    * authorization the contract will check on ownership of one of the specifed
+    * tokens.
     */
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
 
-    /// @dev     Modifier to guarantee function is only callable when the role is empty.
-    /// @param  roleId The ID of the role to be checked.
-    modifier onlyEmptyRole(bytes32 roleId) {
-        // Check that the role is empty
-        if (getRoleMemberCount(roleId) != 0) {
+    /// @notice Modifier to guarantee function is only callable when the role is
+    ///         empty.
+    /// @param  roleId_ The ID of the role to be checked.
+    modifier onlyEmptyRole(bytes32 roleId_) {
+        // Check that the role is empty.
+        if (getRoleMemberCount(roleId_) != 0) {
             revert Module__AUT_TokenGated_Roles__RoleNotEmpty();
         }
 
         _;
     }
 
-    /// @dev     Modifier to guarantee function is only callable when the role is token-gated.
-    /// @param  roleId The ID of the role to be checked.
-    modifier onlyTokenGated(bytes32 roleId) {
-        if (!isTokenGated[roleId]) {
+    /// @notice Modifier to guarantee that the role is not the public role.
+    /// @param  roleId_ The ID of the role to be checked.
+    modifier notPublicRole(bytes32 roleId_) {
+        if (PUBLIC_ROLE == roleId_) {
+            revert Module__AUT_TokenGated_Roles__RoleIsPublic();
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable when the role
+    ///         is token-gated.
+    /// @param  roleId_ The ID of the role to be checked.
+    modifier onlyTokenGated(bytes32 roleId_) {
+        if (!_isTokenGated[roleId_]) {
             revert Module__AUT_TokenGated_Roles__RoleNotTokenGated();
         }
         _;
     }
 
-    /// @dev     Modifier to guarantee function is only callable when the threshold is valid.
-    /// @param  threshold The threshold to be checked.
-    modifier validThreshold(uint threshold) {
-        // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
-        if (threshold == 0) {
-            revert Module__AUT_TokenGated_Roles__InvalidThreshold(threshold);
+    /// @notice Modifier to guarantee function is only callable when the
+    ///         threshold is valid.
+    /// @param  threshold_ The threshold to be checked.
+    modifier validThreshold(uint threshold_) {
+        // Since base ERC721 does not have a total/max supply, we can only
+        // enforce that the value should be non-zero.
+        if (threshold_ == 0) {
+            revert Module__AUT_TokenGated_Roles__InvalidThreshold(threshold_);
         }
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Storage
 
     /// @dev	Stores if a role is token gated.
-    mapping(bytes32 => bool) public isTokenGated;
+    mapping(bytes32 => bool) internal _isTokenGated;
     /// @dev	Stores the threshold amount for each token in a role.
-    mapping(bytes32 => uint) public thresholdMap;
+    mapping(bytes32 => uint) internal _thresholdMap;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
-    // View functions
+    // ========================================================================
+    // Public Getter Functions
 
     /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function hasTokenRole(bytes32 role, address who)
+    function isTokenGated(bytes32 roleId_)
         external
         view
-        onlyTokenGated(role)
-        returns (bool)
+        returns (bool isTokenGated_)
     {
-        return _hasTokenRole(role, who);
+        return _isTokenGated[roleId_];
     }
 
     /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function getThresholdValue(bytes32 roleId, address token)
+    function hasTokenRole(bytes32 roleId_, address who_)
+        external
+        view
+        onlyTokenGated(roleId_)
+        returns (bool hasRole_)
+    {
+        return _hasTokenRole(roleId_, who_);
+    }
+
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    function getThresholdValue(bytes32 roleId_, address token_)
         public
         view
-        returns (uint)
+        returns (uint threshold_)
     {
-        bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
-        return thresholdMap[thresholdId];
+        bytes32 thresholdId = keccak256(abi.encodePacked(roleId_, token_));
+        return _thresholdMap[thresholdId];
     }
 
-    //--------------------------------------------------------------------------
-    // State-altering functions
+    // ========================================================================
+    // Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - TokenGated Settings
 
     /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function makeRoleTokenGatedFromModule(bytes32 role)
+    function setTokenGated(bytes32 roleId_, bool to_)
         public
-        onlyModule(_msgSender())
-        onlyEmptyRole(generateRoleId(_msgSender(), role))
+        permissioned
+        idExists(roleId_)
+        onlyEmptyRole(roleId_)
+        notPublicRole(roleId_)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-
-        isTokenGated[roleId] = true;
-        emit ChangedTokenGating(roleId, true);
+        _isTokenGated[roleId_] = to_;
+        emit ChangedTokenGating(roleId_, to_);
     }
 
     /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function grantTokenRoleFromModule(
-        bytes32 role,
-        address token,
-        uint threshold
-    ) external onlyModule(_msgSender()) {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _setThreshold(roleId, token, threshold);
-        _grantRole(roleId, token);
-    }
-
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function setThresholdFromModule(bytes32 role, address token, uint threshold)
+    function setThreshold(bytes32 roleId_, address token_, uint threshold_)
         public
-        onlyModule(_msgSender())
+        permissioned
+        idExists(roleId_)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _setThreshold(roleId, token, threshold);
-    }
-
-    //--------------------------------------------------------------------------
-    // Setters for the Admin
-
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function setTokenGated(bytes32 role, bool to)
-        public
-        onlyRole(getRoleAdmin(role))
-        onlyEmptyRole(role)
-    {
-        isTokenGated[role] = to;
-        emit ChangedTokenGating(role, to);
-    }
-
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
-    function setThreshold(bytes32 roleId, address token, uint threshold)
-        public
-        onlyRole(getRoleAdmin(roleId))
-    {
-        _setThreshold(roleId, token, threshold);
+        _setThreshold(roleId_, token_, threshold_);
     }
 
     //--------------------------------------------------------------------------
     // Overloaded and overridden functions
 
+    /// @inheritdoc IAccessControl
+    /// @notice In case the role is token gated, it will check if {who_} holds a
+    ///         balance above the threshold for at least one of the required
+    ///tokens.
+    /// @param  roleId_ The id number of the role.
+    /// @param  who_ The user we want to check on.
+    /// @return hasRole_ Returns if the account has the role.
+    function hasRole(bytes32 roleId_, address who_)
+        public
+        view
+        virtual
+        override(AccessControlUpgradeable, IAccessControl)
+        returns (bool hasRole_)
+    {
+        if (_isTokenGated[roleId_]) {
+            return _hasTokenRole(roleId_, who_);
+        } else {
+            return super.hasRole(roleId_, who_);
+        }
+    }
+
     /// @notice Grants a role to an address.
-    /// @param  role The role to grant.
-    /// @param  who The address to grant the role to.
-    /// @return bool Returns true if the role has been granted succesfully.
-    /// @dev	Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface implementation and threshold existence
-    ///         when role is token-gated.
-    /// @dev	Please note: current check for validating a valid token is not conclusive and could be
-    ///         circumvented through a `callback()` function.
-    function _grantRole(bytes32 role, address who)
+    /// @param  roleId_ The role to grant.
+    /// @param  who_ The address to grant the role to.
+    /// @return success_ Returns true if the role has been granted succesfully.
+    /// @dev	Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface
+    ///         implementation and threshold existence when role is token-gated.
+    /// @dev	Please note: current check for validating a valid token is not
+    ///         conclusive and could be circumvented through a `callback()`
+    ///         function.
+    function _grantRole(bytes32 roleId_, address who_)
         internal
         virtual
         override
-        returns (bool)
+        returns (bool success_)
     {
-        if (isTokenGated[role]) {
-            // Make sure that a threshold has been set before granting the role
-            if (getThresholdValue(role, who) == 0) {
+        if (_isTokenGated[roleId_]) {
+            // Check that address has code attached.
+            uint32 size;
+            assembly {
+                size := extcodesize(who_)
+            }
+            if (size == 0) {
+                revert Module__AUT_TokenGated_Roles__InvalidToken(who_);
+            }
+
+            // Make sure that a threshold has been set before granting the role.
+            if (getThresholdValue(roleId_, who_) == 0) {
                 revert Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold(
-                    role, who
+                    roleId_, who_
                 );
             }
 
-            // Check that address has code attached
-            uint32 size;
-            assembly {
-                size := extcodesize(who)
-            }
-            if (size == 0) {
-                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
-            }
-
-            // Execute a balanceOf call to the address
-            (bool success, bytes memory data) = who.call(
+            // Execute a balanceOf call to the address.
+            (bool success, bytes memory data) = who_.call(
                 abi.encodeWithSelector(
                     TokenInterface.balanceOf.selector, address(this)
                 )
             );
             // If the call was either unsuccessful or the return data is not
-            // 32 bytes long (i.e. not a uint256), it's deemed invalid
+            // 32 bytes long (i.e. not a uint256), it's deemed invalid.
             if (!success || data.length != 32) {
-                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
+                revert Module__AUT_TokenGated_Roles__InvalidToken(who_);
             }
         }
 
-        return super._grantRole(role, who);
+        return super._grantRole(roleId_, who_);
     }
 
-    /// @param  role The id number of the role.
-    /// @param  who The user we want to check on.
-    /// @return bool Returns if revoke has been succesful.
+    /// @notice Revokes a role from an address.
     /// @dev	Overrides {_revokeRole} to clean up threshold data on revoking.
-    function _revokeRole(bytes32 role, address who)
+    /// @param  roleId_ The id number of the role.
+    /// @param  who_ The user we want to check on.
+    /// @return success_ Returns if revoke has been succesful.
+
+    function _revokeRole(bytes32 roleId_, address who_)
         internal
         virtual
         override
-        returns (bool)
+        returns (bool success_)
     {
-        if (isTokenGated[role]) {
-            // Set the threshold to 0 before revoking the role from the token
-            bytes32 thresholdId = keccak256(abi.encodePacked(role, who));
-            thresholdMap[thresholdId] = 0;
-            emit ChangedTokenThreshold(role, who, 0);
+        if (_isTokenGated[roleId_]) {
+            // Set the threshold to 0 before revoking the role from the token.
+            bytes32 thresholdId = keccak256(abi.encodePacked(roleId_, who_));
+            _thresholdMap[thresholdId] = 0;
+            emit ChangedTokenThreshold(roleId_, who_, 0);
         }
-        return super._revokeRole(role, who);
+        return super._revokeRole(roleId_, who_);
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Sets the minimum threshold for a token-gated role.
-    /// @param  roleId  The ID of the role to be modified.
-    /// @param  token The token for which to the threshold.
-    /// @param  threshold The user will need to have at least this number to qualify for the role.
-    /// @dev	This function does not validate the threshold. It is technically possible to set a threshold above the
-    ///         total supply of the token.
-    function _setThreshold(bytes32 roleId, address token, uint threshold)
+    /// @dev	This function does not validate the threshold. It is
+    ///         technically possible to set a threshold above the total supply
+    ///         of the token.
+    /// @param  roleId_  The ID of the role to be modified.
+    /// @param  token_ The token for which to the threshold.
+    /// @param  threshold_ The user will need to have at least this number to
+    ///         qualify for the role.
+
+    function _setThreshold(bytes32 roleId_, address token_, uint threshold_)
         internal
-        onlyTokenGated(roleId)
-        validThreshold(threshold)
+        onlyTokenGated(roleId_)
+        validThreshold(threshold_)
     {
-        bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
-        thresholdMap[thresholdId] = threshold;
-        emit ChangedTokenThreshold(roleId, token, threshold);
+        bytes32 thresholdId = keccak256(abi.encodePacked(roleId_, token_));
+        _thresholdMap[thresholdId] = threshold_;
+        emit ChangedTokenThreshold(roleId_, token_, threshold_);
     }
 
-    /// @notice Internal function that checks if an account qualifies for a token-gated role.
-    /// @param  role The role to be checked.
-    /// @param  who The account to be checked.
-    function _hasTokenRole(bytes32 role, address who)
+    /// @notice Internal function that checks if an account qualifies for a
+    ///         token-gated role.
+    /// @param  roleId_ The id of the role to be checked.
+    /// @param  who_ The account to be checked.
+    /// @return hasRokenRole_ Returns if the account has the role.
+    function _hasTokenRole(bytes32 roleId_, address who_)
         internal
         view
-        returns (bool)
+        returns (bool hasRokenRole_)
     {
-        uint numberOfAllowedTokens = getRoleMemberCount(role);
+        uint numberOfAllowedTokens = getRoleMemberCount(roleId_);
 
+        address tokenAddr;
+        bytes32 thresholdId;
+        uint tokenThreshold;
         for (uint i; i < numberOfAllowedTokens; ++i) {
-            address tokenAddr = getRoleMember(role, i);
-            bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
-            uint tokenThreshold = thresholdMap[thresholdId];
+            tokenAddr = getRoleMember(roleId_, i);
+            thresholdId = keccak256(abi.encodePacked(roleId_, tokenAddr));
+            tokenThreshold = _thresholdMap[thresholdId];
 
-            // Should work with both ERC20 and ERC721
-            try TokenInterface(tokenAddr).balanceOf(who) returns (
+            // Should work with both ERC20 and ERC721.
+            try TokenInterface(tokenAddr).balanceOf(who_) returns (
                 uint tokenBalance
             ) {
                 if (tokenBalance >= tokenThreshold) {
@@ -297,28 +450,13 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
                 }
             } catch {
                 // If the call fails, we continue to the next token.
-                // Emitting an event here would make this function (and the functions calling it) non-view.
-                // note we already enforce Interface implementation when granting the role.
+                // Emitting an event here would make this function
+                // (and the functions calling it) non-view.
+                // note we already enforce Interface implementation when
+                // granting the role.
             }
         }
 
         return false;
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    /// @notice In case the role is token gated, it will check if {who} holds a balance
-    ///         above the threshold for at least one of the required tokens.
-    function checkForRole(bytes32 role, address who)
-        external
-        view
-        virtual
-        override(AUT_Roles_v1, IAuthorizer_v1)
-        returns (bool)
-    {
-        if (isTokenGated[role]) {
-            return _hasTokenRole(role, who);
-        } else {
-            return hasRole(role, who);
-        }
     }
 }

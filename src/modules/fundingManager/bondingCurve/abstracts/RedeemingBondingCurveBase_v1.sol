@@ -85,6 +85,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
+        permissioned
         sellingIsEnabled
         validReceiver(_receiver)
     {
@@ -92,27 +93,32 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function sell(uint _depositAmount, uint _minAmountOut) public virtual {
-        sellTo(_msgSender(), _depositAmount, _minAmountOut);
+    function sell(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        permissioned
+        sellingIsEnabled
+    {
+        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
+    // Permissioned Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function openSell() external virtual onlyOrchestratorAdmin {
+    function openSell() external virtual permissioned {
         sellIsOpen = true;
         emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function closeSell() external virtual onlyOrchestratorAdmin {
+    function closeSell() external virtual permissioned {
         sellIsOpen = false;
         emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee) external virtual onlyOrchestratorAdmin {
+    function setSellFee(uint _fee) external virtual permissioned {
         _setSellFee(_fee);
     }
 

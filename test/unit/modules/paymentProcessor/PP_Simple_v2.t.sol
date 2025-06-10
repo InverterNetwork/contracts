@@ -83,17 +83,17 @@ contract PP_SimpleV2Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testReinitFails() public override(ModuleTest) {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
+    }
+
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentProcessor.supportsInterface(
                 type(IPaymentProcessor_v2).interfaceId
             )
         );
-    }
-
-    function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
