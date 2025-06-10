@@ -38,6 +38,10 @@ import {FM_PC_Oracle_Redeeming_v1} from
     "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1.sol";
 import {LM_Oracle_Permissioned_v1} from
     "src/modules/logicModule/LM_Oracle_Permissioned_v1.sol";
+import {PP_Everclear_CrossChain_v1} from
+    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
+import {Mock_LM_PC_PaymentRouter_Everclear_v1} from
+    "test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
 
 // Beacon
 import {
@@ -601,6 +605,78 @@ contract E2EModuleRegistry is Test {
         );
     }
 
+    // PP_Everclear_CrossChain_v1
+    PP_Everclear_CrossChain_v1 ppEverclearCrossChainImpl;
+    InverterBeacon_v1 ppEverclearCrossChainBeacon;
+    IModule_v1.Metadata public ppEverclearCrossChainMetadata = IModule_v1
+        .Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol", // Using file path as URL for local ref
+        "PP_Everclear_CrossChain_v1"
+    );
+    /*
+    // Example Config for PP_Everclear_CrossChain_v1:
+    // Assumes 'address everclearSpokeAddress' is defined in the test's setUp.
+    IOrchestratorFactory_v1.ModuleConfig ppEverclearConfig = IOrchestratorFactory_v1.ModuleConfig(
+        ppEverclearCrossChainMetadata,
+        abi.encode(everclearSpokeAddress) 
+    );
+    */
+
+    function setUpPPEverclearCrossChain() internal {
+        console.log("setUpPPEverclearCrossChain: gov address", address(gov));
+        console.log(
+            "setUpPPEverclearCrossChain: moduleFactory address",
+            address(moduleFactory)
+        );
+        console.log(
+            "setUpPPEverclearCrossChain: DEFAULT_BEACON_OWNER",
+            DEFAULT_BEACON_OWNER
+        );
+        console.log(
+            "setUpPPEverclearCrossChain: teamMultisig address", teamMultisig
+        );
+
+        // Deploy module implementation.
+        ppEverclearCrossChainImpl = new PP_Everclear_CrossChain_v1();
+
+        // Deploy module beacon.
+        ppEverclearCrossChainBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            ppEverclearCrossChainMetadata.majorVersion,
+            address(ppEverclearCrossChainImpl),
+            ppEverclearCrossChainMetadata.minorVersion,
+            ppEverclearCrossChainMetadata.patchVersion
+        );
+
+        // Register module at moduleFactory.
+        // Assumes 'gov' and 'teamMultisig' are set up by the calling test context (e.g., E2ETest.sol)
+        vm.prank(teamMultisig);
+        try gov.registerMetadataInModuleFactory(
+            ppEverclearCrossChainMetadata,
+            IInverterBeacon_v1(ppEverclearCrossChainBeacon)
+        ) {
+            console.log(
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 SUCCESS"
+            );
+        } catch Error(string memory reason) {
+            console.log(
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 FAILED - Error:",
+                reason
+            );
+            revert(reason);
+        } catch (bytes memory lowLevelData) {
+            console.log(
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 FAILED - LowLevelData:",
+                string(lowLevelData)
+            );
+            revert("LowLevelData failure");
+        }
+    }
+
     //--------------------------------------------------------------------------
     // logicModules
     //--------------------------------------------------------------------------
@@ -850,6 +926,81 @@ contract E2EModuleRegistry is Test {
             LM_PC_KPIRewarder_v2Metadata,
             IInverterBeacon_v1(LM_PC_KPIRewarder_v2Beacon)
         );
+    }
+
+    // Mock_LM_PC_PaymentRouter_Everclear_v1
+    Mock_LM_PC_PaymentRouter_Everclear_v1 mockLmPcPaymentRouterEverclearImpl;
+    InverterBeacon_v1 mockLmPcPaymentRouterEverclearBeacon;
+    IModule_v1.Metadata public mockLmPcPaymentRouterEverclearMetadata =
+    IModule_v1.Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol", // Using file path as URL
+        "Mock_LM_PC_PaymentRouter_Everclear_v1"
+    );
+    /*
+    // Example Config for Mock_LM_PC_PaymentRouter_Everclear_v1:
+    // This mock's init function does not require specific configData beyond orchestrator and metadata.
+    IOrchestratorFactory_v1.ModuleConfig mockPaymentClientConfig = IOrchestratorFactory_v1.ModuleConfig(
+        mockLmPcPaymentRouterEverclearMetadata,
+        bytes("") 
+    );
+    */
+
+    function setUpMockLmPcPaymentRouterEverclear() internal {
+        console.log(
+            "setUpMockLmPcPaymentRouterEverclear: gov address", address(gov)
+        );
+        console.log(
+            "setUpMockLmPcPaymentRouterEverclear: moduleFactory address",
+            address(moduleFactory)
+        );
+        console.log(
+            "setUpMockLmPcPaymentRouterEverclear: DEFAULT_BEACON_OWNER",
+            DEFAULT_BEACON_OWNER
+        );
+        console.log(
+            "setUpMockLmPcPaymentRouterEverclear: teamMultisig address",
+            teamMultisig
+        );
+
+        // Deploy module implementation.
+        mockLmPcPaymentRouterEverclearImpl =
+            new Mock_LM_PC_PaymentRouter_Everclear_v1();
+
+        // Deploy module beacon.
+        mockLmPcPaymentRouterEverclearBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            mockLmPcPaymentRouterEverclearMetadata.majorVersion,
+            address(mockLmPcPaymentRouterEverclearImpl),
+            mockLmPcPaymentRouterEverclearMetadata.minorVersion,
+            mockLmPcPaymentRouterEverclearMetadata.patchVersion
+        );
+
+        // Register module at moduleFactory.
+        vm.prank(teamMultisig);
+        try gov.registerMetadataInModuleFactory(
+            mockLmPcPaymentRouterEverclearMetadata,
+            IInverterBeacon_v1(mockLmPcPaymentRouterEverclearBeacon)
+        ) {
+            console.log(
+                "setUpMockLmPcPaymentRouterEverclear: registerMetadataInModuleFactory for Mock_LM_PC_PaymentRouter_Everclear_v1 SUCCESS"
+            );
+        } catch Error(string memory reason) {
+            console.log(
+                "setUpMockLmPcPaymentRouterEverclear: registerMetadataInModuleFactory for Mock_LM_PC_PaymentRouter_Everclear_v1 FAILED - Error:",
+                reason
+            );
+            revert(reason);
+        } catch (bytes memory lowLevelData) {
+            console.log(
+                "setUpMockLmPcPaymentRouterEverclear: registerMetadataInModuleFactory for Mock_LM_PC_PaymentRouter_Everclear_v1 FAILED - LowLevelData:",
+                string(lowLevelData)
+            );
+            revert("LowLevelData failure");
+        }
     }
 
     //--------------------------------------------------------------------------
