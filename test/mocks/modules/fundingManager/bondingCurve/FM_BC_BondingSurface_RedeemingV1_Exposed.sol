@@ -54,11 +54,10 @@ contract FM_BC_BondingSurface_RedeemingV1_Exposed is
         return _redeemTokensFormulaWrapper(depositAmount_);
     }
 
-    function exposed_handleCollateralTokensBeforeBuy(
-        address _provider,
-        uint _amount
-    ) external {
-        _handleCollateralTokensBeforeBuy(_provider, _amount);
+    function exposed_processCollateralTokensForBuyOperation(uint _amount)
+        external
+    {
+        _processCollateralTokensForBuyOperation(_amount);
     }
 
     function exposed_handleIssuanceTokensAfterBuy(
