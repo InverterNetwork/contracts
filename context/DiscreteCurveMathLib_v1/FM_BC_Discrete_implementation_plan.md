@@ -134,3 +134,15 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 - transfers collateral tokens to receiver
   - tests (via exposed function)
     - transfers tokens to receiver
+
+### 2.10. Fees [NEXT]
+
+#### 2.10.1. Project Fees
+
+- here we will use a stub for now: we define a hardcoded constant on the top of the contract which defines the project fee
+- later on we will add dynamic fee logic as per the spec
+
+#### 2.10.2. Protocol Fees
+
+- cached and stored upon initialization
+- update logic triggered when project fees are withdrawn

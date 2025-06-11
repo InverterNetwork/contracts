@@ -106,3 +106,18 @@ The `FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol` contract implements the same i
 - **Implementation**: It uses `token().safeTransfer(_receiver, _collateralTokenAmount);` to transfer collateral tokens to the receiver.
 
 This analysis confirms that our current approach of adding empty `revert("NOT IMPLEMENTED")` functions for all abstract functions in the inheritance chain is correct for the initial setup. The explicit `override(...)` syntax is also validated by this example.
+
+## Fees
+
+There are two types of fees: protocol fees and project fees.
+
+### Protocol Fees
+
+- is retrieved from the `FeeManager` contract via `_getFunctionFeesAndTreasuryAddresses` defined in `src/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.sol`
+
+#### Status Quo
+
+### Project Fees
+
+- `buyFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.sol`
+- `sellFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol`

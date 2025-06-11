@@ -1,221 +1,64 @@
-# Active Context
+# Active Context: House Protocol
 
-## Current Work Focus
+## 1. Current Work Focus
 
-**Primary**: Implemented `_issueTokensFormulaWrapper` in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added comprehensive unit tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. The failing test `testIssueTokensFormulaWrapper_ReturnsCorrectTokensToMint()` was fixed by adjusting the test setup to avoid setting `virtualIssuanceSupply` to zero via `exposed_setVirtualIssuanceSupply` when it's not necessary, and explicitly resetting it to zero for scenarios that start from zero supply.
-**Secondary**: Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` functions in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, updated `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`, and added tests in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. Fixed `testReconfigureSegments_FailsGivenInvarianceCheckFailure()` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, confirming the invariance check for `reconfigureSegments` is working as intended. Previously implemented `setVirtualCollateralSupply` and `transferOrchestratorToken`, and updated Memory Bank to reflect full stability of `DiscreteCurveMathLib_v1`.
+- **Primary Task:** Implementation of fee mechanisms within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+  - According to `context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_plan.md`, this is step "2.10. Fees".
+  - Initial phase: Implement project fees using a hardcoded constant.
+  - Subsequent phase: Implement protocol fee caching and update logic.
+  - Future: Integration with a dedicated `DynamicFeeCalculator` contract.
 
-**Reason for Update**: Completion of `_issueTokensFormulaWrapper` implementation and testing, including fixing the associated failing test.
+## 2. Recent Changes & Accomplishments
 
-## Recent Progress
+Based on `context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_plan.md` (up to step 2.9):
 
-- ✅ NatSpec comments added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
-- ✅ State mutability for `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` confirmed/updated to `pure`.
-- ✅ Compiler warnings in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (related to unused variables in destructuring and try-catch returns) have been fixed.
-- ✅ `DiscreteCurveMathLib_v1.t.sol` refactored to remove `segmentsData` and use `packedSegmentsArray` directly.
-- ✅ `_getCurrentPriceAndStep` function removed from `DiscreteCurveMathLib_v1.sol`.
-- ✅ Tests in `DiscreteCurveMathLib_v1.t.sol` previously using `_getCurrentPriceAndStep` refactored to use `_findPositionForSupply`.
-- ✅ `exposed_getCurrentPriceAndStep` function removed from mock contract `DiscreteCurveMathLibV1_Exposed.sol`.
-- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (65 tests) are now passing after refactoring and fixes.
-- ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` refactored by user (previous session).
-- ✅ `IDiscreteCurveMathLib_v1.sol` updated with new error types (`InvalidFlatSegment`, `InvalidPointSegment`) (previous session).
-- ✅ `PackedSegmentLib.sol`'s `_create` function confirmed to contain stricter validation rules (previous session).
-- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` are passing (previous session).
-- ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are considered stable, internally well-documented (NatSpec), and fully tested.
-- ✅ Fixed type mismatch in `test_ValidateSegmentArray_SegmentWithZeroSteps` in `DiscreteCurveMathLib_v1.t.sol` by casting `uint256` `packedValue` to `bytes32` for `PackedSegment.wrap()`.
-- ✅ Emitted `SegmentsSet` event in `_setSegments` function in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-- ✅ Added `testInternal_SetSegments_EmitsEvent` to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to assert the `SegmentsSet` event.
-- ✅ NatSpec comments added to `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-- ✅ Implemented `setVirtualCollateralSupply` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and added unit tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`. All tests for this function are passing.
-- ✅ Implemented `getStaticPriceForBuying` and `getStaticPriceForSelling` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-- ✅ Updated `src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` with `getStaticPriceForBuying` and `getStaticPriceForSelling` function signatures.
-- ✅ Added tests for `getStaticPriceForBuying` and `getStaticPriceForSelling` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, specifically testing the transition point as requested.
-- ✅ Implemented `_issueTokensFormulaWrapper` in `src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-- ✅ Added tests for `_issueTokensFormulaWrapper` in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`, including Gherkin comments, and fixed the test setup to pass.
+- **File Structure & Inheritance:** `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` created with necessary inheritance and overridden functions.
+- **Token Initialization:** Issuance and collateral tokens set in `init`.
+- **Segment Management:**
+  - `_setSegments` internal function implemented and used in `init`.
+  - `reconfigureSegments` external function implemented with invariance checks and admin control.
+- **Supply Management:**
+  - `setVirtualCollateralSupply` and `setVirtualIssuanceSupply` (and their internal counterparts) implemented with admin control.
+- **Price Retrieval:** `getStaticPriceForBuying` and `getStaticPriceForSelling` implemented, using `_findPositionForSupply` from `DiscreteCurveMathLib_v1`.
+- **Core Formula Wrappers:**
+  - `_issueTokensFormulaWrapper` (uses `_calculatePurchaseReturn`).
+  - `_redeemTokensFormulaWrapper` (uses `_calculateSaleReturn`).
+- **Token Handling Hooks:**
+  - `_handleCollateralTokensBeforeBuy` (transfers collateral from provider).
+  - `_handleIssuanceTokensAfterBuy` (mints issuance tokens to receiver).
+  - `_handleCollateralTokensAfterSell` (transfers collateral to receiver).
+- **Orchestrator Token Transfer:** `transferOrchestratorToken` implemented.
 
-## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
+## 3. Next Steps
 
-**`DiscreteCurveMathLib_v1` has been successfully refactored (including removal of `_getCurrentPriceAndStep`) and its test suite `DiscreteCurveMathLib_v1.t.sol` adapted and stabilized. All tests are passing, and 100% coverage is achieved.** Core library and tests maintain:
+- **Implement Project Fees (Hardcoded):**
+  - Define a constant for project fee percentage/amount in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+  - Modify `_issueTokensFormulaWrapper` and/or `_handleCollateralTokensBeforeBuy` to collect this fee from the collateral paid by the user.
+  - Modify `_redeemTokensFormulaWrapper` and/or `_handleCollateralTokensAfterSell` to collect this fee from the collateral returned to the user.
+  - Store collected project fees in a dedicated state variable (e.g., `projectCollateralFeeCollected`).
+  - Add tests for fee collection during mint and redeem operations.
+- **Implement Protocol Fees (Cached):**
+  - Logic for caching and updating protocol fees (details to be clarified based on spec for how these are derived/set).
+- **Fee Withdrawal Mechanism:** Function for an authorized address to withdraw collected project fees.
 
-- Defensive programming patterns (validation strategy updated, see below).
-- Gas-optimized algorithms with safety bounds.
-- Clear separation of concerns between libraries.
-- Comprehensive edge case handling.
-- Type safety with custom types.
+## 4. Active Decisions & Considerations
 
-## Next Immediate Steps
+- **Fee Calculation Point:** Determine the exact point in the mint/redeem flow where fees are calculated and deducted to ensure atomicity and correctness.
+- **Rounding for Fees:** How fee amounts are rounded (likely in favor of the protocol).
+- **Gas Impact of Fees:** Assess any significant gas increase due to fee calculations.
+- **Clarity of Fee Variables:** Naming conventions for fee-related state variables and events.
 
-1.  **Synchronize Documentation**:
-    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability, 100% test coverage, and green test status, and the new test added, as well as the completion of `setVirtualCollateralSupply` and `_issueTokensFormulaWrapper`.
-    - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
-2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
-    - Review existing fuzz tests and identify gaps.
-    - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
-    - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
-3.  **Update Memory Bank** again after fuzz tests are implemented and passing, confirming ultimate readiness.
-4.  **Transition to next `FM_BC_Discrete` Implementation step** (e.g., `_redeemTokensFormulaWrapper`).
+## 5. Important Patterns & Preferences
 
-## Implementation Insights Discovered (And Being Revised)
+- **Virtual Supplies:** Continue to use `virtualIssuanceSupply` and `virtualCollateralSupply` as the primary supply figures for curve math. Actual balances are used for transfers.
+- **Invariance:** Maintain strict adherence to collateral backing invariants, especially if fee mechanisms interact with reserve calculations (though typically fees are skimmed from flows).
+- **Modularity:** Keep fee logic as contained as possible, anticipating future replacement/enhancement by `DynamicFeeCalculator`.
+- **Testing:** Thorough unit tests for all fee-related scenarios, including edge cases.
+- **`SafeERC20`:** Use for all token transfers.
+- **`FixedPointMathLib`:** Use for precise fee calculations if percentages are involved.
 
-### Defensive Programming Pattern 🔄 (Updated for `PackedSegmentLib` and `_calculatePurchaseReturn`)
+## 6. Learnings & Project Insights
 
-**Revised Multi-layer validation approach:**
-
-```solidity
-// 1. Parameter validation at creation (PackedSegmentLib._create()):
-//    - Validates individual parameter ranges (price, supply, steps within bit limits).
-//    - Prevents zero supplyPerStep, zero numberOfSteps.
-//    - Prevents entirely free segments (initialPrice == 0 && priceIncrease == 0).
-//    - NEW: Enforces "True Flat" (steps=1, increase=0) and "True Sloped" (steps>1, increase>0) segments.
-//      - Reverts on multi-step flat segments (InvalidFlatSegment).
-//      - Reverts on single-step sloped segments (InvalidPointSegment).
-// 2. Array validation for curve configuration (DiscreteCurveMathLib_v1._validateSegmentArray()):
-//    - Validates segment array properties (not empty, not too many segments).
-//    - Validates price progression between segments.
-//    - Responsibility of the calling contract (e.g., FM_BC_Discrete) to call this.
-// 3. State validation before calculations (e.g., DiscreteCurveMathLib_v1._validateSupplyAgainstSegments()):
-//    - Validates current state (like supply) against curve capacity.
-//    - Responsibility of calling contracts or specific library functions (but not _calculatePurchaseReturn for segment array structure or supply capacity).
-
-```
-
-**Approach for `_calculatePurchaseReturn` (Post-Refactor)**:
-
-- **No Internal Segment Array/Capacity Validation**: `_calculatePurchaseReturn` does NOT internally validate the `segments_` array structure (e.g., price progression, segment limits) nor does it validate `currentTotalIssuanceSupply_` against curve capacity.
-- **Caller Responsibility**: The calling contract (e.g., `FM_BC_Discrete`) is responsible for ensuring the `segments_` array is valid (using `_validateSegmentArray`) and that `currentTotalIssuanceSupply_` is consistent before calling `_calculatePurchaseReturn`.
-- **Input Trust**: `_calculatePurchaseReturn` trusts its input parameters.
-- **Basic Input Checks**: The refactored `_calculatePurchaseReturn` includes checks for `collateralToSpendProvided_ > 0` and `segments_.length > 0`.
-
-### Gas Optimization Strategies ✅ (Still Applicable, `_calculatePurchaseReturn` refactored)
-
-**Implemented optimizations:**
-
-- **Packed storage**: 4 parameters → 1 storage slot (256 bits total)
-- **Variable caching**: `uint numSegments_ = segments_.length` pattern throughout
-- **Batch unpacking**: `_unpack()` for multiple parameter access
-- **Conservative rounding**: `_mulDivUp()` favors protocol in calculations (used for step costs). `Math.mulDiv` (rounds down) used for token calculations from budget.
-
-### Error Handling Pattern ✅ (Updated for new segment errors)
-
-**Comprehensive custom errors with context:**
-
-```solidity
-// ... (existing errors)
-DiscreteCurveMathLib__InvalidFlatSegment() // NEW: For multi-step flat segments
-DiscreteCurveMathLib__InvalidPointSegment() // NEW: For single-step sloped segments
-// Note: Errors like InvalidPriceProgression will now primarily be reverted by the caller's validation (e.g., FM_BC_Discrete).
-// _calculatePurchaseReturn now has its own checks for ZeroCollateralInput and NoSegmentsConfigured.
-// PackedSegmentLib._create() now throws InvalidFlatSegment and InvalidPointSegment.
-```
-
-### Mathematical Precision Patterns ✅ (Still Applicable)
-
-**Protocol-favorable rounding:**
-
-```solidity
-// Conservative reserve calculations (favors protocol)
-// collateralForPortion_ = _mulDivUp(supplyPerStep_, totalPriceForAllStepsInPortion_, SCALING_FACTOR);
-// Purchase costs rounded up (favors protocol)
-// uint costForCurrentStep_ = _mulDivUp(supplyPerStep_, priceForCurrentStep_, SCALING_FACTOR);
-```
-
-The refactored `_calculatePurchaseReturn` will continue to use these established precision patterns.
-
-## Current Architecture Understanding - CONCRETE (with notes on refactoring impact)
-
-### Library Integration Pattern ✅ (Reflects refactored `_calculatePurchaseReturn`)
-
-```solidity
-// Clean syntax enabled by library usage
-using PackedSegmentLib for PackedSegment;
-
-// Actual function signatures for FM integration:
-(uint tokensToMint_, uint collateralSpentByPurchaser_) =
-    _calculatePurchaseReturn(segments_, collateralToSpendProvided_, currentTotalIssuanceSupply_); // This function has been refactored.
-
-(uint collateralToReturn_, uint tokensToBurn_) =
-    _calculateSaleReturn(segments_, tokensToSell_, currentTotalIssuanceSupply_);
-
-uint totalReserve_ = _calculateReserveForSupply(segments_, targetSupply_);
-```
-
-### Bit Allocation Reality ✅ (Unchanged)
-
-(Content remains the same)
-
-### Validation Chain Implementation 🔄 (Updated for `PackedSegmentLib` and `_calculatePurchaseReturn`)
-
-**Revised Three-tier validation system:**
-
-1.  **Creation time (`PackedSegmentLib._create()`):**
-    - Validates individual parameter ranges.
-    - Prevents zero `supplyPerStep_`, zero `numberOfSteps_`.
-    - Prevents entirely free segments (`initialPrice_ == 0 && priceIncrease_ == 0`).
-    - **NEW**: Enforces "True Flat" (`steps==1, increase==0`) via `DiscreteCurveMathLib__InvalidFlatSegment`.
-    - **NEW**: Enforces "True Sloped" (`steps>1, increase>0`) via `DiscreteCurveMathLib__InvalidPointSegment`.
-2.  **Configuration time (`DiscreteCurveMathLib_v1._validateSegmentArray()` by caller):**
-    - Validates array properties (not empty, `MAX_SEGMENTS`).
-    - Validates price progression between segments.
-3.  **Calculation time (various functions):**
-    - `_calculatePurchaseReturn`: Trusts pre-validated segment array and `currentTotalIssuanceSupply_`. Performs basic checks for zero collateral and empty segments array.
-    - Other functions like `_calculateReserveForSupply`, `_calculateSaleReturn`, `_findPositionForSupply` still use `_validateSupplyAgainstSegments` internally as appropriate for their logic.
-
-**New Model for `_calculatePurchaseReturn`**: Trusts pre-validated `segments_` array and `currentTotalIssuanceSupply_` relative to capacity.
-
-## Performance Characteristics Discovered (May change for `_calculatePurchaseReturn`)
-
-### Arithmetic Series Optimization ✅ (Still applicable for other functions like `_calculateReserveForSupply`)
-
-(Content remains the same)
-
-### Edge Case Handling ✅ (To be re-evaluated for refactored `_calculatePurchaseReturn`)
-
-The refactored `_calculatePurchaseReturn` will need its own robust edge case handling based on the new algorithm.
-
-## Integration Requirements - DEFINED FROM CODE (Caller validation is now key)
-
-### FM_BC_Discrete Integration Interface ✅
-
-The interface remains, but the _assumption_ about `_calculatePurchaseReturn`'s internal validation changes. `FM_BC_Discrete` must ensure `_segments` is valid before calling.
-
-### configureCurve Function Pattern ✅
-
-This function in `FM_BC_Discrete` becomes even more critical as it's the point where `_segments.validateSegmentArray()` (or equivalent logic) _must_ be called to ensure the integrity of the curve configuration before it's used by `_calculatePurchaseReturn`.
-
-## Implementation Standards Established ✅ (Still Applicable)
-
-(Naming Conventions, Function Organization Pattern, Security Patterns sections remain largely applicable, though Function Organization might see changes to helpers for `_calculatePurchaseReturn`)
-
-## Known Technical Constraints - QUANTIFIED ✅ (Still Applicable)
-
-(PackedSegment Bit Limitations, Linear Search Performance (for old logic), etc., remain relevant context for the library as a whole)
-
-## Testing & Validation Status ✅ (All Tests Green, 100% Coverage)
-
-- ✅ **`DiscreteCurveMathLib_v1.t.sol`**: Successfully refactored (including usage of `_findPositionForSupply` instead of `_getCurrentPriceAndStep`). All 65 tests are passing. 100% test coverage achieved.
-- ✅ `exposed_getCurrentPriceAndStep` removed from `DiscreteCurveMathLibV1_Exposed.sol`.
-- ✅ **`_calculatePurchaseReturn`**: Successfully refactored, fixed, and all related tests are passing.
-- ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested.
-- ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered.
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing.
-- ✅ **NatSpec**: Added to `_calculateReserveForSupply` and `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol`.
-- ✅ **State Mutability**: `_calculateReserveForSupply` and `_calculatePurchaseReturn` confirmed/updated to `pure`.
-- ✅ **New Test Added**: `testInternal_SetSegments_EmitsEvent` added to `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`.
-- 🎯 **Next**: Synchronize all documentation, then finalize with enhanced fuzz testing before moving to `FM_BC_Discrete`.
-
-## Next Development Priorities - REVISED
-
-1.  **Synchronize Documentation (Current Task)**:
-    - Update Memory Bank files (`activeContext.md` - this step, `progress.md`, `systemPatterns.md`, `techContext.md`) to reflect the library's full stability and green test status, and the new test added.
-    - Update the Markdown documentation file `src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.md`.
-2.  **Strengthen/Finalize Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
-    - Review existing fuzz tests and identify gaps.
-    - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_findPositionForSupply`.
-    - Add a new fuzz test for `_calculateSaleReturn` as a final quality assurance step.
-3.  **Update Memory Bank** again after fuzz tests are implemented and passing.
-4.  **Plan `FM_BC_Discrete` Implementation**: Outline the structure, functions, and integration points.
-5.  **Implement `FM_BC_Discrete`**: Begin coding the core logic.
-
-## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Fully Stable)
-
-**`DiscreteCurveMathLib_v1` has been successfully refactored (including removal of `_getCurrentPriceAndStep`), and its test suite `DiscreteCurveMathLib_v1.t.sol` adapted and stabilized. All tests are passing, and 100% coverage is achieved.** The library demonstrates high code quality, robust defensive programming patterns, gas optimization, and clear separation of concerns. The stricter validation in `PackedSegmentLib` further enhances its robustness.
+- The separation of math (`DiscreteCurveMathLib_v1`) from stateful logic (`FM_BC_Discrete_Redeeming_VirtualSupply_v1`) has proven effective for clarity and testing.
+- The `VirtualIssuanceSupplyBase_v1` and `VirtualCollateralSupplyBase_v1` provide a good foundation for managing these crucial state variables.
+- The step-by-step implementation plan is critical for managing complexity.
