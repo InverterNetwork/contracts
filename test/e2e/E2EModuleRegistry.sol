@@ -30,8 +30,8 @@ import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-import {AUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+import {AUT_EXT_VotingRoles_v2} from
+    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
 import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
 import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
 import {FM_PC_Oracle_Redeeming_v1} from
@@ -855,9 +855,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // utils
 
-    // AUT_EXT_VotingRoles_v1
+    // AUT_EXT_VotingRoles_v2
 
-    AUT_EXT_VotingRoles_v1 votingRolesImpl;
+    AUT_EXT_VotingRoles_v2 votingRolesImpl;
 
     InverterBeacon_v1 votingRolesBeacon;
 
@@ -866,7 +866,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/single-vote-governor",
-        "AUT_EXT_VotingRoles_v1"
+        "AUT_EXT_VotingRoles_v2"
     );
 
     /*    
@@ -882,7 +882,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpVotingRoles() internal {
         // Deploy module implementations.
-        votingRolesImpl = new AUT_EXT_VotingRoles_v1();
+        votingRolesImpl = new AUT_EXT_VotingRoles_v2();
 
         // Deploy module beacons.
         votingRolesBeacon = new InverterBeacon_v1(

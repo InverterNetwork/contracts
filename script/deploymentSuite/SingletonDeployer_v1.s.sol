@@ -49,7 +49,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     // Authorizer
     address public impl_mod_Aut_Roles_v1;
     address public impl_mod_Aut_TokenGated_Roles_v1;
-    address public impl_mod_Aut_Ext_VotingRoles_v1;
+    address public impl_mod_AUT_EXT_VotingRoles_v2;
 
     // Funding Managers
     address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
@@ -170,9 +170,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             "AUT_TokenGated_Roles_v1",
             vm.getCode("AUT_TokenGated_Roles_v1.sol:AUT_TokenGated_Roles_v1")
         );
-        impl_mod_Aut_Ext_VotingRoles_v1 = deployAndLogWithCreate2(
-            "AUT_EXT_VotingRoles_v1",
-            vm.getCode("AUT_EXT_VotingRoles_v1.sol:AUT_EXT_VotingRoles_v1")
+        impl_mod_AUT_EXT_VotingRoles_v2 = deployAndLogWithCreate2(
+            "AUT_EXT_VotingRoles_v2",
+            vm.getCode("AUT_EXT_VotingRoles_v2.sol:AUT_EXT_VotingRoles_v2")
         );
 
         // Funding Managers

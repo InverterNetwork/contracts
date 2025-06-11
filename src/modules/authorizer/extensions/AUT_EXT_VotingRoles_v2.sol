@@ -30,7 +30,7 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
  * @author  Inverter Network
  */
 
-contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v2, Module_v1 {
+contract AUT_EXT_VotingRoles_v2 is IAUT_EXT_VotingRoles_v2, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public

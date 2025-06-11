@@ -6,9 +6,9 @@ import "forge-std/console.sol";
 
 // SuT
 import {
-    AUT_EXT_VotingRoles_v1,
+    AUT_EXT_VotingRoles_v2,
     IAUT_EXT_VotingRoles_v2
-} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -40,9 +40,9 @@ import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
-contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
+contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
     // SuT
-    AUT_EXT_VotingRoles_v1 _votingRoles;
+    AUT_EXT_VotingRoles_v2 _votingRoles;
 
     // Orchestrator_v1 _orchestrator;
     address[] initialVoters;
@@ -93,8 +93,8 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     function setUp() public {
         // Set up a orchestrator
-        address authImpl = address(new AUT_EXT_VotingRoles_v1());
-        _votingRoles = AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v2());
+        _votingRoles = AUT_EXT_VotingRoles_v2(Clones.clone(authImpl));
 
         _setUpOrchestrator(_votingRoles);
 
@@ -304,9 +304,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.assume(testVoters.length >= 2);
         _validateUserList(testVoters);
 
-        address authImpl = address(new AUT_EXT_VotingRoles_v1());
-        AUT_EXT_VotingRoles_v1 testAuthorizer =
-            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v2());
+        AUT_EXT_VotingRoles_v2 testAuthorizer =
+            AUT_EXT_VotingRoles_v2(Clones.clone(authImpl));
 
         // Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
@@ -339,9 +339,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.assume(testVoters.length >= 2);
         position = uint8(bound(position, 1, testVoters.length - 1));
 
-        address authImpl = address(new AUT_EXT_VotingRoles_v1());
-        AUT_EXT_VotingRoles_v1 testAuthorizer =
-            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v2());
+        AUT_EXT_VotingRoles_v2 testAuthorizer =
+            AUT_EXT_VotingRoles_v2(Clones.clone(authImpl));
 
         _validateUserList(testVoters);
 
@@ -375,9 +375,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testInitWithInvalidInitialVotersFails() public {
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new AUT_EXT_VotingRoles_v1());
-        AUT_EXT_VotingRoles_v1 testAuthorizer =
-            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v2());
+        AUT_EXT_VotingRoles_v2 testAuthorizer =
+            AUT_EXT_VotingRoles_v2(Clones.clone(authImpl));
 
         address[] memory testVoters;
         vm.expectRevert(

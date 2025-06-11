@@ -101,7 +101,7 @@ contract ModuleBeaconDeployer_v1 is
                     votingRolesMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_Aut_Ext_VotingRoles_v1,
+                    impl_mod_AUT_EXT_VotingRoles_v2,
                     votingRolesMetadata.majorVersion,
                     votingRolesMetadata.minorVersion,
                     votingRolesMetadata.patchVersion

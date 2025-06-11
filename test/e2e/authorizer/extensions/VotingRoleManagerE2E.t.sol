@@ -16,9 +16,9 @@ import {
 
 // SuT
 import {
-    AUT_EXT_VotingRoles_v1,
+    AUT_EXT_VotingRoles_v2,
     IAUT_EXT_VotingRoles_v2
-} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
 
 contract VotingRoleManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -111,13 +111,13 @@ contract VotingRoleManagerE2E is E2ETest {
             }
         }
 
-        // Find AUT_EXT_VotingRoles_v1
-        AUT_EXT_VotingRoles_v1 votingRoles;
+        // Find AUT_EXT_VotingRoles_v2
+        AUT_EXT_VotingRoles_v2 votingRoles;
 
         for (uint i; i < modulesList.length; ++i) {
             try IAUT_EXT_VotingRoles_v2(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                votingRoles = AUT_EXT_VotingRoles_v1(modulesList[i]);
+                votingRoles = AUT_EXT_VotingRoles_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -196,7 +196,7 @@ contract VotingRoleManagerE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        AUT_EXT_VotingRoles_v1 votingRoles_,
+        AUT_EXT_VotingRoles_v2 votingRoles_,
         bytes32 motionId_
     ) internal view returns (bool, bytes memory) {
         (

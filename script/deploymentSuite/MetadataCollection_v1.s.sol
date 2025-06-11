@@ -92,7 +92,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "AUT_EXT_VotingRoles_v1"
+        "AUT_EXT_VotingRoles_v2"
     );
 
     // ------------------------------------------------------------------------
