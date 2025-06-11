@@ -2,31 +2,31 @@
 
 **Current Work Focus:**
 
-The immediate past focus was on resolving compilation errors in `test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol` to enable successful `forge build`. With the build now succeeding, the focus can return to implementing E2E tests for the `PP_Everclear_CrossChain_v1` contract or addressing the numerous build warnings.
+The focus was on debugging and fixing the E2E test for the `PP_Everclear_CrossChain_v1` contract, specifically `test/e2e/paymentProcessors/PPEverclearCrossChainE2E.t.sol`.
 
 **Recent Changes:**
 
-*   Successfully resolved compilation errors in `test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol`.
-    *   Initially, `FLAG_MAX_FEE` from `PP_Everclear_CrossChain_v1` was not found.
-    *   Solution involved:
-        1.  Defining local constants (`LOCAL_FLAG_MAX_FEE`, `LOCAL_FLAG_TTL`) in the mock contract.
-        2.  Explicitly casting bitwise flag operations to `bytes32`.
-        3.  Correcting the call to `_assemblePaymentConfig` (inherited from `ERC20PaymentClientBase_v2`) to use a single argument and correctly destructure its two return values.
-*   Created initial drafts for the core Memory Bank files (`projectBrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`).
+*   Successfully fixed the E2E test `test/e2e/paymentProcessors/PPEverclearCrossChainE2E.t.sol`.
+    *   The initial error was `ModuleFactory__UnregisteredMetadata()`. This was caused by `depositVaultMetadata` and `roleAuthorizerMetadata` not being registered in the `ModuleFactory` before use.
+        *   **Fix:** Added calls to `setUpDepositVaultFundingManager()` and `setUpRoleAuthorizer()` in the `setUp()` function of `PPEverclearCrossChainE2E.t.sol`.
+    *   A subsequent error `Module__CallerNotAuthorized()` occurred. This was because role-granting operations (`paymentClient.grantModuleRole(...)` and `orchestrator.authorizer().grantRole(...)`) were being called by the test contract's address instead of the `owner` address, which had the necessary admin permissions.
+        *   **Fix:** Ensured `vm.startPrank(owner)` was active during these role-granting calls in `PPEverclearCrossChainE2E.t.sol`.
+*   The `PP_Everclear_CrossChain_v1` E2E test now passes.
 
 **Important Patterns and Learnings:**
 
-*   When accessing constants from another contract (e.g., `PP_Everclear_CrossChain_v1.FLAG_MAX_FEE`), if direct access fails despite correct visibility and import, consider defining local copies of these constants in the consuming contract as a workaround.
-*   Bitwise operations on `uint8` flags (e.g., `(1 << FLAG_START) | (1 << LOCAL_FLAG_MAX_FEE)`) result in `uint256`. If assigning to `bytes32`, an explicit cast `bytes32(...)` is required.
-*   Carefully check the signature (arguments and return values) of inherited or external functions. In this case, `_assemblePaymentConfig` expected one argument and returned two values, which was initially mismatched in the mock.
+*   **E2E Test Setup Order:** When setting up E2E tests involving module factories and orchestrators:
+    1.  Ensure all module metadata (e.g., `depositVaultMetadata`, `roleAuthorizerMetadata`, `ppEverclearCrossChainMetadata`) are registered with the `ModuleFactory` *before* the orchestrator attempts to deploy them. This typically involves calling the respective `setUp<ModuleName>()` functions from `E2EModuleRegistry.sol`.
+    2.  Verify that `E2ETest.sol`'s `super.setUp()` correctly initializes shared components like `gov` and `moduleFactory` but does not necessarily register all module metadata required by specific E2E test files.
+*   **Role Management in Tests:** When testing functions that require specific roles (e.g., `grantModuleRole` which requires `DEFAULT_ADMIN_ROLE`):
+    1.  Identify which address holds the administrative/required role for the module or authorizer in question. In this case, `owner` (`vm.addr(1)`) was configured as the admin for the `AUT_Roles_v1` authorizer.
+    2.  Use `vm.startPrank(<admin_address>)` before calling the role-protected function and `vm.stopPrank()` afterwards.
+    3.  The `Module_v1.grantModuleRole()` function itself requires the caller to have `DEFAULT_ADMIN_ROLE` on that module.
+*   Previously identified learnings regarding mock contract constants, bitwise operations, and function signatures remain relevant.
 
 **Next Steps:**
 
-1.  Decide whether to proceed with E2E tests for `PP_Everclear_CrossChain_v1` or address the build warnings identified by `forge build`.
-2.  If proceeding with E2E tests:
-    *   Continue analyzing `src/modules/logicModule/LM_PC_PaymentRouter_v2.sol` (if further understanding is needed for the mock).
-    *   Complete the implementation of the mock payment client (`Mock_LM_PC_PaymentRouter_Everclear_v1.sol`).
-    *   Design and implement the E2E tests.
-3.  If addressing warnings:
-    *   Review the `forge build` output for warnings (e.g., function state mutability).
-    *   Prioritize and fix warnings as appropriate.
+1.  The immediate task of fixing the E2E test is complete.
+2.  Consider addressing the build warnings identified by `forge build` (e.g., function state mutability in `PPEverclearCrossChainE2E.t.sol`).
+3.  Proceed with implementing the actual test logic within `test_e2e_EverclearCrossChain_FullLifecycle()` in `PPEverclearCrossChainE2E.t.sol` (currently a placeholder).
+4.  Update other Memory Bank files (e.g., `progress.md`) to reflect the successful fix.

@@ -194,7 +194,8 @@ contract PP_Everclear_CrossChain_v1 is
                 order_.originChainId, order_.targetChainId
             ) && _validateFlagsAndData(order_.flags, order_.data);
 
-        (uint48 maxFee, uint48 ttl) = _getEverclearMaxFeeAndTTL(order_.data);
+        (uint24 maxFee, uint48 ttl) =
+            _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
         bool validParams = maxFee > 0 && ttl > 0;
 
         return validParams && valid_;
@@ -344,7 +345,8 @@ contract PP_Everclear_CrossChain_v1 is
         returns (bytes32 intentId_, IEverclear.Intent memory intent_)
     {
         // Get the max fee and TTL from the flags and data.
-        (uint24 maxFee, uint48 ttl) = _getEverclearMaxFeeAndTTL(order_.data);
+        (uint24 maxFee, uint48 ttl) =
+            _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
         // Properly capture both return values
@@ -362,17 +364,31 @@ contract PP_Everclear_CrossChain_v1 is
     }
 
     /// @notice Gets the Everclear max fee and TTL from the data.
+    /// @param  flags_ The flags indicating which data elements are present.
     /// @param  data_ The data to get the max fee and TTL from.
     /// @return maxFee_ The max fee.
     /// @return ttl_ The TTL.
-    function _getEverclearMaxFeeAndTTL(bytes32[] memory data_)
+    function _getEverclearMaxFeeAndTTL(bytes32 flags_, bytes32[] memory data_)
         internal
-        view
+        pure
         virtual
         returns (uint24 maxFee_, uint48 ttl_)
     {
-        maxFee_ = uint24(uint(data_[FLAG_MAX_FEE]));
-        ttl_ = uint48(uint(data_[FLAG_TTL]));
+        uint relativeIndex = 0;
+
+        for (uint8 i = 0; i <= FLAG_TTL; ++i) {
+            if ((uint(flags_) & (1 << i)) != 0) {
+                // If flag 'i' is set
+                if (i == FLAG_MAX_FEE) {
+                    maxFee_ = uint24(uint(data_[relativeIndex]));
+                }
+                if (i == FLAG_TTL) {
+                    ttl_ = uint48(uint(data_[relativeIndex]));
+                    break;
+                }
+                relativeIndex++;
+            }
+        }
     }
 
     /// @notice Validates the target chain ID.

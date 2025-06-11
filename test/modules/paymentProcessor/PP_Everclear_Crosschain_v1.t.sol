@@ -1061,12 +1061,14 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Create test data array with known values
         bytes32[] memory testData = new bytes32[](6);
-        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee_));
-        testData[FLAG_TTL] = bytes32(uint(ttl_));
+        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee_)); // This uses the global FLAG_MAX_FEE = 4
+        testData[FLAG_TTL] = bytes32(uint(ttl_)); // This uses the global FLAG_TTL = 5
+
+        bytes32 testFlags = bytes32(uint(0x3F)); // Corresponds to 6 flags (0-5) being set
 
         // Get values using exposed function
-        (uint24 returnedMaxFee, uint48 returnedTtl) =
-            paymentProcessor.exposed_getEverclearMaxFeeAndTTL(testData);
+        (uint24 returnedMaxFee, uint48 returnedTtl) = paymentProcessor
+            .exposed_getEverclearMaxFeeAndTTL(testFlags, testData);
 
         // Verify returned values match inputs
         assertEq(returnedMaxFee, maxFee_);
@@ -1082,8 +1084,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         public
     {
         bytes32[] memory shortData = new bytes32[](2); // Too short array
+        bytes32 testFlags = bytes32(uint(0x3F)); // Assume we intend to access flags 4 and 5
         vm.expectRevert(); // Should revert when accessing out of bounds
-        paymentProcessor.exposed_getEverclearMaxFeeAndTTL(shortData);
+        paymentProcessor.exposed_getEverclearMaxFeeAndTTL(testFlags, shortData);
     }
 
     /* Test exposed chain ID validation with valid IDs

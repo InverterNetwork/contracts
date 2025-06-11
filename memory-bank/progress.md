@@ -2,22 +2,22 @@
 
 **What Works:**
 
-*   The `forge build` command now completes successfully.
+*   The `forge build` command completes successfully.
 *   Compilation errors in `test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol` have been resolved.
-    *   The issue with accessing `FLAG_MAX_FEE` from `PP_Everclear_CrossChain_v1` was fixed by using local constants in the mock.
-    *   Type casting for flag operations (to `bytes32`) was corrected.
-    *   The call signature for the inherited `_assemblePaymentConfig` function was corrected.
-*   Initial drafts for the core Memory Bank files have been created and updated.
+*   The E2E test `setUp()` function in `test/e2e/paymentProcessors/PPEverclearCrossChainE2E.t.sol` now passes.
+    *   Resolved `ModuleFactory__UnregisteredMetadata()` error by ensuring all required module metadata (DepositVault, RoleAuthorizer, PP_Everclear_CrossChain, Mock_LM_PC_PaymentRouter_Everclear) are registered before orchestrator creation. This involved adding `setUpDepositVaultFundingManager()` and `setUpRoleAuthorizer()` calls to the test's `setUp()`.
+    *   Resolved `Module__CallerNotAuthorized()` error by ensuring role-granting operations are performed by the `owner` address (who has `DEFAULT_ADMIN_ROLE`) using `vm.startPrank(owner)`.
+*   Core Memory Bank files are being actively maintained.
 
 **What's Left to Build:**
 
-*   Address the numerous build warnings identified by `forge build` (mostly related to function state mutability).
-*   Complete the implementation of the mock payment client (`Mock_LM_PC_PaymentRouter_Everclear_v1.sol`) if it's not already fully functional for E2E testing needs.
-*   Implement E2E tests for the `PP_Everclear_CrossChain_v1` contract.
+*   Implement the actual test logic within `test_e2e_EverclearCrossChain_FullLifecycle()` in `PPEverclearCrossChainE2E.t.sol` (currently a placeholder that passes because the `setUp` passes and the test body is empty/conditional).
+*   Address the build warnings identified by `forge build` (e.g., function state mutability in `PPEverclearCrossChainE2E.t.sol`).
+*   Ensure `Mock_LM_PC_PaymentRouter_Everclear_v1.sol` is fully functional for the needs of the E2E test lifecycle.
 
 **Current Status:**
 
-The project compiles successfully. The immediate next steps involve deciding whether to tackle the build warnings or proceed with E2E test development for `PP_Everclear_CrossChain_v1`. The Memory Bank has been updated to reflect the recent troubleshooting and fixes.
+The project compiles, and the E2E test setup for `PP_Everclear_CrossChain_v1` is now functional. The next major step is to implement the detailed test cases for the cross-chain payment lifecycle.
 
 **Known Issues:**
 
