@@ -111,13 +111,40 @@ This analysis confirms that our current approach of adding empty `revert("NOT IM
 
 There are two types of fees: protocol fees and project fees.
 
-### Protocol Fees
+Both are used in `calculatePurchaseReturn` (`BondingCurveBase_v1.sol`) and `calculateSaleReturn` (`RedeemingBondingCurveBase_v1.sol`)
+
+### Status Quo
+
+#### Protocol Fees
 
 - is retrieved from the `FeeManager` contract via `_getFunctionFeesAndTreasuryAddresses` defined in `src/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.sol`
+- relies on `src/modules/base/Module_v1.sol`
+- `_getFunctionFeesAndTreasuryAddresses` is virtual function and can be overriden in the child contracts
 
-#### Status Quo
-
-### Project Fees
+#### Project Fees
 
 - `buyFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.sol`
 - `sellFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol`
+
+### New Expected Behavior
+
+#### Project Fees
+
+- here we will use a stub for now: we define a hardcoded constant on the top of the contract which defines the project fee
+- later on we will add dynamic fee logic as per the spec
+
+#### Protocol Fees
+
+Implementation:
+
+- project fees stubbed as constant state variables
+- in `init` get protocol fees & treasury address from `FeeManager` via `_getFunctionFeesAndTreasuryAddresses`
+- store issuance fee and collateral fee in state
+- override `calculatePurchaseReturn` and `calculateSaleReturn` to use cached protocol fees and stubbed project fees
+- update logic triggered when project fees are withdrawn
+
+Tests:
+
+- init gets protocol fees and treasury address from `FeeManager` and stores in state
+- protocol fees are correctly deducted and sent to treasury addresses
+- project fee withdrawal triggers protocol fee update

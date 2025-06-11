@@ -137,12 +137,8 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 
 ### 2.10. Fees [NEXT]
 
-#### 2.10.1. Project Fees
+#### 2.10.1. `calculatePurchaseReturn` and `calculateSaleReturn`
 
-- here we will use a stub for now: we define a hardcoded constant on the top of the contract which defines the project fee
-- later on we will add dynamic fee logic as per the spec
-
-#### 2.10.2. Protocol Fees
-
-- cached and stored upon initialization
-- update logic triggered when project fees are withdrawn
+- [ ] 1. set constant project fee `buyFee` and `sellFee` in contract (value = 100 (corresponds to 1%))
+- [ ] 2. init calls `_getFunctionFeesAndTreasuryAddresses` to get protocol fees and treasury address from `FeeManager` and stores in state
+- [ ] 3. override `calculatePurchaseReturn` and `calculateSaleReturn` to use cached protocol fees and stubbed project fees
