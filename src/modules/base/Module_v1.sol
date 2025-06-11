@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 

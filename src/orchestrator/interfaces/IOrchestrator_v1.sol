@@ -6,7 +6,7 @@ import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
@@ -86,9 +86,9 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @return The {IFundingManager_v1} implementation.
     function fundingManager() external view returns (IFundingManager_v1);
 
-    /// @notice The {IAuthorizer_v1} implementation used to authorize addresses.
-    /// @return The {IAuthorizer_v1} implementation.
-    function authorizer() external view returns (IAuthorizer_v1);
+    /// @notice The {IAuthorizer_v2} implementation used to authorize addresses.
+    /// @return The {IAuthorizer_v2} implementation.
+    function authorizer() external view returns (IAuthorizer_v2);
 
     /// @notice The {IPaymentProcessor_v2} implementation used to process module
     ///         payments.
@@ -115,7 +115,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         address moduleFactory_,
         address[] calldata modules,
         IFundingManager_v1 fundingManager,
-        IAuthorizer_v1 authorizer,
+        IAuthorizer_v2 authorizer,
         IPaymentProcessor_v2 paymentProcessor,
         IGovernor_v1 governor
     ) external;
@@ -126,7 +126,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Initiates replacing the current authorizer with `_authorizer` on a timelock.
     /// @dev    Function access controlled by authorizer.
     /// @param  authorizer_ The address of the new authorizer module.
-    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v2 authorizer_)
         external;
 
     /// @notice Initiates replaces the current funding manager with `fundingManager_` on a timelock.
@@ -146,7 +146,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Cancels the replacement of the current authorizer with `authorizer_`.
     /// @dev    Function access controlled by authorizer.
     /// @param  authorizer_ The address of the new authorizer module, for which the update is canceled.
-    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external;
+    function cancelAuthorizerUpdate(IAuthorizer_v2 authorizer_) external;
 
     /// @notice Cancels the replacement of the current funding manager with `fundingManager_`.
     /// @dev    Function access controlled by authorizer.
@@ -166,7 +166,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ///         Make sure initial owners are set properly.
     /// @dev    Function access controlled by authorizer.
     /// @param  authorizer_ The address of the new authorizer module.
-    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
+    function executeSetAuthorizer(IAuthorizer_v2 authorizer_) external;
 
     /// @notice Executes replaces the current funding manager with `fundingManager_`.
     /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might

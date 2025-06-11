@@ -11,7 +11,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
@@ -22,7 +22,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IFundingManager_v1 public fundingManager;
     IGovernor_v1 public governor;
 
-    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external {}
+    function cancelAuthorizerUpdate(IAuthorizer_v2 authorizer_) external {}
 
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v2 paymentProcessor_
@@ -64,12 +64,12 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         address,
         address[] calldata,
         IFundingManager_v1,
-        IAuthorizer_v1,
+        IAuthorizer_v2,
         IPaymentProcessor_v2,
         IGovernor_v1
     ) external {}
 
-    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v2 authorizer_)
         external
     {}
 
@@ -81,7 +81,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         IPaymentProcessor_v2 paymentProcessor_
     ) external {}
 
-    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external {}
+    function executeSetAuthorizer(IAuthorizer_v2 authorizer_) external {}
 
     function executeSetFundingManager(IFundingManager_v1 fundingManager_)
         external
@@ -97,7 +97,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
 
     function orchestratorId() external view returns (uint) {}
 
-    function authorizer() external view returns (IAuthorizer_v1) {}
+    function authorizer() external view returns (IAuthorizer_v2) {}
 
     function version() external pure returns (string memory) {}
 

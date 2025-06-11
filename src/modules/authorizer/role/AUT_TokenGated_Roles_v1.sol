@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IAUT_TokenGated_Roles_v1} from
     "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // Internal Dependencies
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";

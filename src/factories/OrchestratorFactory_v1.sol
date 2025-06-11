@@ -9,7 +9,7 @@ import {
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
     IFundingManager_v1,
-    IAuthorizer_v1,
+    IAuthorizer_v2,
     IPaymentProcessor_v2,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -188,7 +188,7 @@ contract OrchestratorFactory_v1 is
             workflowConfig
         );
 
-        // Deploy and cache {IAuthorizer_v1} module.
+        // Deploy and cache {IAuthorizer_v2} module.
         address authorizer = IModuleFactory_v1(moduleFactory)
             .createAndInitModule(
             authorizerConfig.metadata,
@@ -218,7 +218,7 @@ contract OrchestratorFactory_v1 is
             moduleFactory,
             modules,
             IFundingManager_v1(fundingManager),
-            IAuthorizer_v1(authorizer),
+            IAuthorizer_v2(authorizer),
             IPaymentProcessor_v2(paymentProcessor),
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );

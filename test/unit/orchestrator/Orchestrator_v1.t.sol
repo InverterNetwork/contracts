@@ -17,7 +17,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 // Internal Interfaces
 import {
     IOrchestrator_v1,
-    IAuthorizer_v1,
+    IAuthorizer_v2,
     IPaymentProcessor_v2
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
@@ -121,7 +121,7 @@ contract OrchestratorV1Test is Test {
             address(moduleFactory),
             modules,
             fundingManager,
-            IAuthorizer_v1(wrongModule),
+            IAuthorizer_v2(wrongModule),
             paymentProcessor,
             governor
         );
@@ -260,7 +260,7 @@ contract OrchestratorV1Test is Test {
 
         vm.prank(address(0xB0B));
         orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(address(0))
+            IAuthorizer_v2(address(0))
         );
     }
 
@@ -277,7 +277,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.executeSetAuthorizer(IAuthorizer_v1(address(0)));
+        orchestrator.executeSetAuthorizer(IAuthorizer_v2(address(0)));
     }
 
     /*
@@ -293,7 +293,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.cancelAuthorizerUpdate(IAuthorizer_v1(address(0)));
+        orchestrator.cancelAuthorizerUpdate(IAuthorizer_v2(address(0)));
     }
 
     function testInitiateAndExecuteSetAuthorizer(
@@ -366,7 +366,7 @@ contract OrchestratorV1Test is Test {
                 newAuthorizer
             )
         );
-        orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
+        orchestrator.executeSetAuthorizer(IAuthorizer_v2(newAuthorizer));
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
@@ -400,7 +400,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(newAuthorizer)
+            IAuthorizer_v2(newAuthorizer)
         );
         assertTrue(orchestrator.authorizer() == authorizer);
     }

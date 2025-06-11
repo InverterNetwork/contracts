@@ -20,7 +20,7 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
-import {IAuthorizer_v1} from "src/modules/authorizer/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "src/modules/authorizer/IAuthorizer_v2.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";

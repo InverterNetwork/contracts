@@ -25,7 +25,7 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IAUT_TokenGated_Roles_v1} from
     "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
 
@@ -89,10 +89,10 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         // Change Authorizer of Module Test to SuT
         _orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(_authSuT)
+            IAuthorizer_v2(_authSuT)
         );
         vm.warp(72 hours + 1);
-        _orchestrator.executeSetAuthorizer(IAuthorizer_v1(_authSuT));
+        _orchestrator.executeSetAuthorizer(IAuthorizer_v2(_authSuT));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
     /*
     Test: SupportsInterface
-    └── Given: The interfaceId is IAuthorizer_v1
+    └── Given: The interfaceId is IAuthorizer_v2
         └── When: the function supportsInterface is called
             └── Then: the function should return true
     */
@@ -358,7 +358,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         _authSuT.setTokenGated(bytes32(uint(2)), true);
@@ -428,7 +428,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         _authSuT.setThreshold(bytes32(uint(2)), address(0), 0);

@@ -94,7 +94,7 @@ classDiagram
 
 This contract is based on the following contracts and inherits their functionalities:
 
-- [IAuthorizer_v1](../IAuthorizer_v1.md): Implementation interface.
+- [IAuthorizer_v2](../IAuthorizer_v2.md): Implementation interface.
 - [Module_v1](../../base/Module_v1.md): Inverter network base module functionality.
 - [AccessControlEnumerableUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol): Access control functionality.
 

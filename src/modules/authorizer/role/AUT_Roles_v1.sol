@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
@@ -28,7 +28,7 @@ import {AccessControlEnumerableUpgradeable} from
  *          ensuring secure and controlled access to critical functionalities.
  *
  * @dev     Inherits functionality from:
- *          - IAuthorizer_v1: Implementation interface.
+ *          - IAuthorizer_v2: Implementation interface.
  *          - Module_v1: Inverter network base module functionality.
  *          - AccessControlEnumerableUpgradeable: Access control functionality.
  *
@@ -55,7 +55,7 @@ import {AccessControlEnumerableUpgradeable} from
  * @author  Inverter Network
  */
 contract AUT_Roles_v1 is
-    IAuthorizer_v1,
+    IAuthorizer_v2,
     Module_v1,
     AccessControlEnumerableUpgradeable
 {
@@ -67,7 +67,7 @@ contract AUT_Roles_v1 is
         override(Module_v1, AccessControlEnumerableUpgradeable)
         returns (bool isInterfaceId_)
     {
-        return interfaceId_ == type(IAuthorizer_v1).interfaceId
+        return interfaceId_ == type(IAuthorizer_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -173,7 +173,7 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Getter -  Role Management
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function getAdminRole() external pure returns (bytes32 defaultAdminId_) {
         return DEFAULT_ADMIN_ROLE;
     }
@@ -181,7 +181,7 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Getter -  Authorization
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function getPermissions(address target_, bytes4 selector_)
         external
         view
@@ -191,7 +191,7 @@ contract AUT_Roles_v1 is
         permissions_ = _permissions[target_][selector_];
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function getLastAssignedRoleId()
         external
         view
@@ -200,7 +200,7 @@ contract AUT_Roles_v1 is
         lastAssignedRoleId_ = _lastAssignedRoleId;
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function isRolePermissioned(
         address target_,
         bytes4 selector_,
@@ -215,7 +215,7 @@ contract AUT_Roles_v1 is
         return false;
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function hasPermission(address caller_, address target_, bytes4 selector_)
         external
         view
@@ -256,7 +256,7 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Mutating - Role Management
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function createRole(
         string memory roleName_,
         bytes32 respectiveAdminRole_,
@@ -280,7 +280,7 @@ contract AUT_Roles_v1 is
         }
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function labelRole(bytes32 roleId_, string memory newRoleName_)
         external
         permissioned
@@ -289,7 +289,7 @@ contract AUT_Roles_v1 is
         emit RoleLabeled(roleId_, newRoleName_);
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
         external
         onlyRole(getRoleAdmin(roleId_))
@@ -299,7 +299,7 @@ contract AUT_Roles_v1 is
         _setRoleAdmin(roleId_, newAdminRoleId_);
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function burnRoleAdmin(bytes32 roleId_)
         external
         onlyRole(getRoleAdmin(roleId_))
@@ -313,7 +313,7 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Mutating - Authorization
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function addAccessPermission(
         address target_,
         bytes4 selector_,
@@ -328,7 +328,7 @@ contract AUT_Roles_v1 is
         emit AccessPermissionAdded(target_, selector_, roleId_);
     }
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function removeAccessPermission(
         address target_,
         bytes4 selector_,
@@ -356,7 +356,7 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
 
-    /// @inheritdoc IAuthorizer_v1
+    /// @inheritdoc IAuthorizer_v2
     function createRoleAndAddAccessPermissions(
         string memory roleName_,
         bytes32 respectiveAdminRole_,

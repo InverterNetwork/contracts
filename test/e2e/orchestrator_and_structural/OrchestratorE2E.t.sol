@@ -19,7 +19,7 @@ import {
 import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {
     ILM_PC_Bounties_v2, LM_PC_Bounties_v2
 } from "@lm/LM_PC_Bounties_v2.sol";
@@ -170,11 +170,11 @@ contract OrchestratorE2E is E2ETest {
             IFundingManager_v1(newFundingManager)
         );
         orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(newAuthorizer)
+            IAuthorizer_v2(newAuthorizer)
         );
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
+        orchestrator.executeSetAuthorizer(IAuthorizer_v2(newAuthorizer));
 
         // Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules

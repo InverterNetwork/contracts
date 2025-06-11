@@ -6,7 +6,7 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {ModuleManagerBase_v1} from
     "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
 
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 contract Orchestrator_v1_Exposed is Orchestrator_v1 {
     //==========================================================================
@@ -14,7 +14,7 @@ contract Orchestrator_v1_Exposed is Orchestrator_v1 {
     constructor(address _trustedForwarder) Orchestrator_v1(_trustedForwarder) {}
 
     function setup_authorizer(address authorizer_) external {
-        authorizer = IAuthorizer_v1(authorizer_);
+        authorizer = IAuthorizer_v2(authorizer_);
     }
 
     //==========================================================================

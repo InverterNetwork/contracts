@@ -25,7 +25,7 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // SuT
 import {AUT_Roles_v1_Exposed} from
@@ -84,10 +84,10 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Change Authorizer of Module Test to SuT
         _orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(_authSuT)
+            IAuthorizer_v2(_authSuT)
         );
         vm.warp(72 hours + 1);
-        _orchestrator.executeSetAuthorizer(IAuthorizer_v1(_authSuT));
+        _orchestrator.executeSetAuthorizer(IAuthorizer_v2(_authSuT));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -95,12 +95,12 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: SupportsInterface
-    └── Given: The interfaceId is IAuthorizer_v1
+    └── Given: The interfaceId is IAuthorizer_v2
         └── When: the function supportsInterface is called
             └── Then: the function should return true
     */
     function testSupportsInterface() public override(ModuleTest) {
-        assertTrue(_authSuT.supportsInterface(type(IAuthorizer_v1).interfaceId));
+        assertTrue(_authSuT.supportsInterface(type(IAuthorizer_v2).interfaceId));
     }
 
     /*
@@ -136,7 +136,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         if (_givenRoleId == _authSuT.DEFAULT_ADMIN_ROLE()) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IAuthorizer_v1
+                    IAuthorizer_v2
                         .Module__Authorizer__CannotModifyAdminRoleAccess
                         .selector
                 )
@@ -162,7 +162,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         ) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IAuthorizer_v1
+                    IAuthorizer_v2
                         .Module__Authorizer__RoleIdNotExisting
                         .selector
                 )
@@ -376,7 +376,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idNotDefaultAdmin(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1
+                IAuthorizer_v2
                     .Module__Authorizer__CannotModifyAdminRoleAccess
                     .selector
             )
@@ -391,7 +391,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -453,7 +453,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Check that event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.AccessPermissionAdded(target, selector, roleId_);
+        emit IAuthorizer_v2.AccessPermissionAdded(target, selector, roleId_);
 
         // Add permission to roleId to function lock
         vm.prank(_initialAdmin);
@@ -548,7 +548,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Check that event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.AccessPermissionRemoved(
+        emit IAuthorizer_v2.AccessPermissionRemoved(
             target, selector, roleIdPermission
         );
 
@@ -602,7 +602,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -625,7 +625,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleCreated(expectedRoleId, roleName_);
+        emit IAuthorizer_v2.RoleCreated(expectedRoleId, roleName_);
 
         // Create role
         vm.prank(_initialAdmin);
@@ -670,7 +670,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -685,7 +685,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Check that event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleLabeled(id, newRoleName_);
+        emit IAuthorizer_v2.RoleLabeled(id, newRoleName_);
 
         // Label role
         vm.prank(_initialAdmin);
@@ -749,7 +749,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -758,7 +758,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(newAdminRoleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -841,7 +841,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -866,7 +866,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleAdminBurned(roleId_);
+        emit IAuthorizer_v2.RoleAdminBurned(roleId_);
 
         // Call transferAdminRole
         vm.prank(_bob);
@@ -920,7 +920,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         //idExists(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -943,7 +943,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Invalid Input Length
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__InvalidInputLength.selector
+                IAuthorizer_v2.Module__Authorizer__InvalidInputLength.selector
             )
         );
         vm.prank(_initialAdmin);
@@ -981,7 +981,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Check that the role is created
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleCreated(bytes32(uint(2)), roleName_);
+        emit IAuthorizer_v2.RoleCreated(bytes32(uint(2)), roleName_);
 
         vm.prank(_initialAdmin);
         bytes32 roleId = _authSuT.createRoleAndAddAccessPermissions(
@@ -1022,7 +1022,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // idExists(role)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);

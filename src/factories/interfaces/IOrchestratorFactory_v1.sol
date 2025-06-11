@@ -73,7 +73,7 @@ interface IOrchestratorFactory_v1 {
     /// @param  workflowConfig The workflow's config data.
     /// @param  fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
     ///                             instance.
-    /// @param  authorizerConfig The config data for the {Orchestrator_v1}'s {IAuthorizer_v1}
+    /// @param  authorizerConfig The config data for the {Orchestrator_v1}'s {IAuthorizer_v2}
     ///                         instance.
     /// @param  paymentProcessorConfig The config data for the orchestrator's
     ///                               {IPaymentProcessor_v1} instance.

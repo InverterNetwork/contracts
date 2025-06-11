@@ -12,7 +12,7 @@ import {IAccessControlEnumerable} from
  *          ensuring secure and controlled access to critical functionalities.
  *
  * @dev     Inherits functionality from:
- *          - IAuthorizer_v1: Implementation interface.
+ *          - IAuthorizer_v2: Implementation interface.
  *          - Module_v1: Inverter network base module functionality.
  *          - AccessControlEnumerableUpgradeable: Access control functionality.
  *
@@ -34,13 +34,13 @@ import {IAccessControlEnumerable} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.1.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IAuthorizer_v1 is IAccessControlEnumerable {
+interface IAuthorizer_v2 is IAccessControlEnumerable {
     // ========================================================================
     // Errors
 

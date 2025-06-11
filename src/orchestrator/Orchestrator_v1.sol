@@ -6,7 +6,7 @@ import {
     IOrchestrator_v1,
     IFundingManager_v1,
     IPaymentProcessor_v2,
-    IAuthorizer_v1,
+    IAuthorizer_v2,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
@@ -40,7 +40,7 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *
  *          The token being accepted for funding is non-changeable and set during
  *          initialization. Authorization is performed via calling a non-changeable
- *          {IAuthorizer_v1} instance. Payments, initiated by modules, are processed
+ *          {IAuthorizer_v2} instance. Payments, initiated by modules, are processed
  *          via a non-changeable {IPaymentProcessor_v2} instance.
  *
  *          Each orchestrator has a unique id set during initialization.
@@ -101,7 +101,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     IFundingManager_v1 public override(IOrchestrator_v1) fundingManager;
 
     /// @inheritdoc IOrchestrator_v1
-    IAuthorizer_v1 public override(IOrchestrator_v1) authorizer;
+    IAuthorizer_v2 public override(IOrchestrator_v1) authorizer;
 
     /// @inheritdoc IOrchestrator_v1
     IPaymentProcessor_v2 public override(IOrchestrator_v1) paymentProcessor;
@@ -127,7 +127,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         address moduleFactory_,
         address[] calldata modules,
         IFundingManager_v1 fundingManager_,
-        IAuthorizer_v1 authorizer_,
+        IAuthorizer_v2 authorizer_,
         IPaymentProcessor_v2 paymentProcessor_,
         IGovernor_v1 governor_
     ) external override(IOrchestrator_v1) initializer {
@@ -153,7 +153,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         __ModuleManager_addModule(address(fundingManager_));
 
         _enforcePrivilegedModuleInterfaceCheck(
-            address(authorizer_), type(IAuthorizer_v1).interfaceId
+            address(authorizer_), type(IAuthorizer_v2).interfaceId
         );
         __ModuleManager_addModule(address(authorizer_));
 
@@ -176,13 +176,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // onlyOrchestratorAdmin Functions
 
     /// @inheritdoc IOrchestrator_v1
-    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 newAuthorizer)
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v2 newAuthorizer)
         external
         permissioned
     {
         address newAuthorizerAddress = address(newAuthorizer);
         _enforcePrivilegedModuleInterfaceCheck(
-            newAuthorizerAddress, type(IAuthorizer_v1).interfaceId
+            newAuthorizerAddress, type(IAuthorizer_v2).interfaceId
         );
 
         _initiateAddModuleWithTimelock(newAuthorizerAddress);
@@ -190,7 +190,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function executeSetAuthorizer(IAuthorizer_v1 newAuthorizer)
+    function executeSetAuthorizer(IAuthorizer_v2 newAuthorizer)
         external
         permissioned
         updatingModuleAlreadyStarted(address(newAuthorizer))
@@ -198,7 +198,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     {
         address newAuthorizerAddress = address(newAuthorizer);
         _enforcePrivilegedModuleInterfaceCheck(
-            newAuthorizerAddress, type(IAuthorizer_v1).interfaceId
+            newAuthorizerAddress, type(IAuthorizer_v2).interfaceId
         );
 
         _executeRemoveModule(address(authorizer));
@@ -213,7 +213,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_)
+    function cancelAuthorizerUpdate(IAuthorizer_v2 authorizer_)
         external
         permissioned
     {
@@ -347,7 +347,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
-    /// @dev	Only addresses authorized via the {IAuthorizer_v1} instance can manage
+    /// @dev	Only addresses authorized via the {IAuthorizer_v2} instance can manage
     ///         modules.
     function __ModuleManager_isAuthorized(address who)
         internal
@@ -408,7 +408,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || ERC165Checker.supportsInterface(
-                    _contractAddr, type(IAuthorizer_v1).interfaceId
+                    _contractAddr, type(IAuthorizer_v2).interfaceId
                 )
                 || ERC165Checker.supportsInterface(
                     _contractAddr, type(IFundingManager_v1).interfaceId

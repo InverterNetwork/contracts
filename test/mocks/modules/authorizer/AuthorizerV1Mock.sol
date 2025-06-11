@@ -9,9 +9,9 @@ import {
     IOrchestrator_v1
 } from "src/modules/base/Module_v1.sol";
 
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
-contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
+contract AuthorizerV1Mock is IAuthorizer_v2, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -19,7 +19,7 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        bytes4 interfaceId_IAuthorizer = type(IAuthorizer_v1).interfaceId;
+        bytes4 interfaceId_IAuthorizer = type(IAuthorizer_v2).interfaceId;
         return interfaceId == interfaceId_IAuthorizer
             || super.supportsInterface(interfaceId);
     }

@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {ILM_PC_PaymentRouter_v2} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v2.sol";
 import {

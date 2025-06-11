@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 /**
  * @title   Inverter Token-Gated Role Authorizer Interface
@@ -32,7 +32,7 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
  *
  * @author  Inverter Network
  */
-interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
+interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v2 {
     //=======================================================================
     // Errors
 
