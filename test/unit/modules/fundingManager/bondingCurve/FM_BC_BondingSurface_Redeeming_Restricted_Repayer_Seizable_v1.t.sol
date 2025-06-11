@@ -12,8 +12,8 @@ import {
 } from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -35,8 +35,8 @@ import {
     IRedeemingBondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
@@ -255,7 +255,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         _token.setDecimals(decimals_);
 
         // Setup bondingCurve properties
-        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
             bc_properties;
 
         // Deploy formula and cast to address for encoding
@@ -347,7 +347,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
     */
 
     function testInitFailsForInvalidFormula() public {
-        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
             bc_properties;
         bc_properties.formula = address(
             new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
@@ -366,8 +366,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v1
-                    .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula
+                IFM_BC_BondingSurface_Redeeming_v2
+                    .FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula
                     .selector
             )
         );
@@ -969,8 +969,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         // Execute Tx
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v1
-                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                IFM_BC_BondingSurface_Redeeming_v2
+                    .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
                     .selector
             )
         );
@@ -1139,8 +1139,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         // Execute Tx
         vm.prank(liquidityVaultController);
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
+            IFM_BC_BondingSurface_Redeeming_v2
+                .FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
                 .selector
         );
         bondingCurveFundingManager.transferRepayment(to_, amount_ + MIN_RESERVE);

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 //Internal Dependencies
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 
 /**
@@ -26,7 +26,7 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
  * @author  Inverter Network
  */
 interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
-    IFM_BC_BondingSurface_Redeeming_v1,
+    IFM_BC_BondingSurface_Redeeming_v2,
     IRepayer_v1
 {
     // ========================================================================

@@ -17,13 +17,13 @@ import {IRedeemingBondingCurveBase_v1} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IFM_BC_BondingSurface_Redeeming_v1 is
+interface IFM_BC_BondingSurface_Redeeming_v2 is
     IFundingManager_v1,
     IRedeemingBondingCurveBase_v1
 {
@@ -31,16 +31,16 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // Errors
 
     /// @notice Invalid Bonding Surface Formula contract.
-    error FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
+    error FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula();
 
     /// @notice Amount does not match the requirements.
-    error FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+    error FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
 
     /// @notice No capital is available.
-    error FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
+    error FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
 
     /// @notice The minimum reserve has been reached.
-    error FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+    error FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
 
     // ========================================================================
     // Events

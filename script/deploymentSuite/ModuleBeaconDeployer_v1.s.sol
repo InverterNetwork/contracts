@@ -143,7 +143,7 @@ contract ModuleBeaconDeployer_v1 is
                     bondingSurfaceRedeemingFundingManagerMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_FM_BC_BondingSurface_Redeeming_v1,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_v2,
                     bondingSurfaceRedeemingFundingManagerMetadata.majorVersion,
                     bondingSurfaceRedeemingFundingManagerMetadata.minorVersion,
                     bondingSurfaceRedeemingFundingManagerMetadata.patchVersion

@@ -213,17 +213,17 @@ contract E2EModuleRegistry is Test {
         );
 
     /*
-        IFM_BC_BondingSurface_Redeeming_v1.IssuanceToken memory
-            issuanceToken = IFM_BC_BondingSurface_Redeeming_v1
+        IFM_BC_BondingSurface_Redeeming_v2.IssuanceToken memory
+            issuanceToken = IFM_BC_BondingSurface_Redeeming_v2
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties
+        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties
             memory bc_properties =
-            IFM_BC_BondingSurface_Redeeming_v1
+            IFM_BC_BondingSurface_Redeeming_v2
                 .BondingCurveProperties({
                  formula: address(bondingSurface),
                 capitalRequired: 1_000_000 * 1e18, // Taken from Topos repo test case

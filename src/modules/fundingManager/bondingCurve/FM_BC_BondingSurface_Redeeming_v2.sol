@@ -13,9 +13,9 @@ import {IBondingCurveBase_v1} from
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {
-    IFM_BC_BondingSurface_Redeeming_v1,
+    IFM_BC_BondingSurface_Redeeming_v2,
     IFundingManager_v1
-} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -51,15 +51,15 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-contract FM_BC_BondingSurface_Redeeming_v1 is
+contract FM_BC_BondingSurface_Redeeming_v2 is
     RedeemingBondingCurveBase_v1,
-    IFM_BC_BondingSurface_Redeeming_v1
+    IFM_BC_BondingSurface_Redeeming_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
@@ -70,7 +70,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         returns (bool supportsInterface_)
     {
         return interfaceId_
-            == type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId
+            == type(IFM_BC_BondingSurface_Redeeming_v2).interfaceId
             || interfaceId_ == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -118,7 +118,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             abi.decode(configData_, (address, address, BondingCurveProperties));
 
         __Module_init(orchestrator_, metadata_);
-        __FM_BC_BondingSurface_Redeeming_v1_Init(
+        __FM_BC_BondingSurface_Redeeming_v2_Init(
             issuanceToken, acceptedToken, bondingCurveProperties
         );
     }
@@ -128,7 +128,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  issuanceToken_ The token that is used to issue bonds.
     /// @param  acceptedToken_ The token that is accepted as collateral.
     /// @param  bondingCurveProperties_ The properties of the bonding curve.
-    function __FM_BC_BondingSurface_Redeeming_v1_Init(
+    function __FM_BC_BondingSurface_Redeeming_v2_Init(
         address issuanceToken_,
         address acceptedToken_,
         BondingCurveProperties memory bondingCurveProperties_
@@ -150,8 +150,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             )
         ) {
             revert
-                IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
+                IFM_BC_BondingSurface_Redeeming_v2
+                .FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula();
         }
         // Set formula contract.
         _formula = IBondingSurface(bondingCurveProperties_.formula);
@@ -202,7 +202,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function getBondingSurfaceFormula()
         external
         view
@@ -211,7 +211,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return address(_formula);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function getCapitalRequired()
         external
         view
@@ -220,7 +220,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _capitalRequired;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function getBasePriceMultiplier()
         external
         view
@@ -229,7 +229,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _basePriceMultiplier;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function getBasePriceToCapitalRatio()
         external
         view
@@ -238,7 +238,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _basePriceToCapitalRatio;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
         uint basePriceMultiplier_
@@ -267,7 +267,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Mutating - Permissioned Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function setCapitalRequired(uint newCapitalRequired_)
         public
         virtual
@@ -276,7 +276,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _setCapitalRequired(newCapitalRequired_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
     function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         virtual
@@ -305,7 +305,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         token().safeTransfer(to_, amount_);
 
         if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
         }
 
         emit TransferOrchestratorToken(to_, amount_);
@@ -331,7 +331,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  newCapitalRequired_ the new capital that is required.
     function _setCapitalRequired(uint newCapitalRequired_) internal {
         if (newCapitalRequired_ == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
         }
         emit CapitalRequiredChanged(_capitalRequired, newCapitalRequired_);
         _capitalRequired = newCapitalRequired_;
@@ -343,7 +343,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  newBasePriceMultiplier_ The new base price multiplier.
     function _setBasePriceMultiplier(uint newBasePriceMultiplier_) internal {
         if (newBasePriceMultiplier_ == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
         }
         emit BasePriceMultiplierChanged(
             _basePriceMultiplier, newBasePriceMultiplier_
@@ -377,7 +377,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             basePriceMultiplier_, capitalRequired_, FixedPointMathLib.WAD
         );
         if (basePriceToCapitalRatio_ > 1e36) {
-            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
         }
     }
 
@@ -399,7 +399,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     {
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
+            revert FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
         }
 
         mintAmount_ = _formula.tokenOut(
@@ -423,7 +423,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         // Subtract fee collected from capital held by contract.
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
+            revert FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
         }
         redeemAmount_ = _formula.tokenIn(
             depositAmount_, capitalAvailable, _basePriceToCapitalRatio
@@ -431,7 +431,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
         // The asset pool must never be empty.
         if (capitalAvailable - redeemAmount_ < MIN_RESERVE) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
         }
     }
 

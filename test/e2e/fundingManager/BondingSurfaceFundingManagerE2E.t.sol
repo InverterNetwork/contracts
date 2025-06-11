@@ -24,7 +24,7 @@ import {ERC165Upgradeable} from
 import {
     FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    IFM_BC_BondingSurface_Redeeming_v1
+    IFM_BC_BondingSurface_Redeeming_v2
 } from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IBondingCurveBase_v1} from
@@ -72,8 +72,8 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         );
         issuanceToken.setMinter(address(this), true);
 
-        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
-            bc_properties = IFM_BC_BondingSurface_Redeeming_v1
+        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
+            bc_properties = IFM_BC_BondingSurface_Redeeming_v2
                 .BondingCurveProperties({
                 formula: address(bondingSurface),
                 capitalRequired: 1_000_000 * 1e18, // Taken from Topos repo test case

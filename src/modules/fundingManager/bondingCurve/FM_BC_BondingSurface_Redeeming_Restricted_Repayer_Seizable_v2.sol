@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {FM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
+import {FM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
 import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
@@ -17,8 +17,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
@@ -66,7 +66,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    FM_BC_BondingSurface_Redeeming_v1
+    FM_BC_BondingSurface_Redeeming_v2
 {
     using SafeERC20 for IERC20;
 
@@ -75,7 +75,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         public
         view
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v1)
+        override(FM_BC_BondingSurface_Redeeming_v2)
         returns (bool supportsInterface_)
     {
         return interfaceId_
@@ -133,7 +133,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(FM_BC_BondingSurface_Redeeming_v1) initializer {
+    ) external override(FM_BC_BondingSurface_Redeeming_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         address issuanceToken;
@@ -153,7 +153,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
             (address, address, BondingCurveProperties, address, uint64)
         );
         __Module_init(orchestrator_, metadata_);
-        __FM_BC_BondingSurface_Redeeming_v1_Init(
+        __FM_BC_BondingSurface_Redeeming_v2_Init(
             issuanceToken, acceptedToken, bondingCurveProperties
         );
         __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Init(
@@ -301,8 +301,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     function setRepayableAmount(uint amount_) external permissioned {
         if (amount_ > _getSmallerCaCr()) {
             revert
-                IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+                IFM_BC_BondingSurface_Redeeming_v2
+                .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
         }
         emit RepayableAmountChanged(amount_, _repayableAmount);
         _repayableAmount = amount_;
@@ -329,7 +329,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
             to_, amount_
         );
         if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
         }
 
         emit RepaymentTransfer(to_, amount_);
