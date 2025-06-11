@@ -35,11 +35,11 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.2
+ * @custom:version 2.0.0
  *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v1 is IBondingCurveBase_v2, Module_v2 {
+abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public

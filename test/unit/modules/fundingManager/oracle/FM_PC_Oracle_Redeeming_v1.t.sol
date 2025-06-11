@@ -8,9 +8,9 @@ import {IFM_PC_Oracle_Redeeming_v1} from
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
-    BondingCurveBase_v1,
+    BondingCurveBase_v2,
     IBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {
     RedeemingBondingCurveBase_v2,

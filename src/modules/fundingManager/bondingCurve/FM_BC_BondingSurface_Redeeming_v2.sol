@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {RedeemingBondingCurveBase_v2} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
-import {BondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {BondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
@@ -36,7 +36,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          bonding curve.
  *
  * @dev     This contract inherits functionalties from the contracts:
- *              - BondingCurveBase_v1
+ *              - BondingCurveBase_v2
  *              - RedeemingBondingCurveBase_v2
  *              - Repayer
  *          The contract should be used by the orchestrator admin or manager
@@ -181,7 +181,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         returns (uint staticPriceForBuying_)
     {
         return _formula.spotPrice(
@@ -386,7 +386,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
 
     /// @notice Calculates the amount of tokens to mint for a given deposit
     ///         amount using the formula contract.
-    /// @dev    This internal function is an override of BondingCurveBase_v1's
+    /// @dev    This internal function is an override of BondingCurveBase_v2's
     ///         virtual function.
     /// @param  depositAmount_ The amount of collateral deposited to
     ///         purchase tokens.
@@ -394,7 +394,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     function _issueTokensFormulaWrapper(uint depositAmount_)
         internal
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
         returns (uint mintAmount_)
     {
         uint capitalAvailable = _getCapitalAvailable();
@@ -435,7 +435,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         }
     }
 
-    /// @inheritdoc BondingCurveBase_v1
+    /// @inheritdoc BondingCurveBase_v2
     function _processCollateralTokensForBuyOperation(uint _amount)
         internal
         virtual

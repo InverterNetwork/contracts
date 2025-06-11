@@ -12,8 +12,8 @@ import {IOrchestrator_v1} from
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {BondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {BondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 import {RedeemingBondingCurveBase_v2} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {IRedeemingBondingCurveBase_v2} from
@@ -319,7 +319,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         public
         view
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         returns (uint buyPrice_)
     {
         return _oracle.getPriceForIssuance();
@@ -452,11 +452,11 @@ contract FM_PC_Oracle_Redeeming_v1 is
     // -------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc BondingCurveBase_v1
+    /// @inheritdoc BondingCurveBase_v2
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         thirdPartyOperationsEnabled
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
@@ -734,7 +734,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function _projectFeeCollected(uint _projectFeeAmount)
         internal
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
     {
         emit ProjectCollateralFeeAdded(_projectFeeAmount);
     }
@@ -783,13 +783,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @notice Sets the buy fee.
-    /// @dev    Overrides the internal function from BondingCurveBase_v1.
+    /// @dev    Overrides the internal function from BondingCurveBase_v2.
     ///         Revert if buy fee exceeds max project buy fee.
     /// @param  fee_ The fee percentage to set.
     function _setBuyFee(uint fee_)
         internal
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
     {
         // Check that fee doesn't exceed maximum allowed.
         if (fee_ > _maxProjectBuyFee) {
@@ -806,7 +806,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         internal
         view
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
         returns (uint mintAmount_)
     {
         // Calculate the mint amount.
@@ -843,13 +843,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
 
     /// @dev    Sets the issuance token.
     ///         This function overrides the internal function set in
-    ///         {BondingCurveBase_v1}, and it updates the `issuanceToken` state
+    ///         {BondingCurveBase_v2}, and it updates the `issuanceToken` state
     ///         variable and caches the decimals as `_issuanceTokenDecimals`.
     /// @param  issuanceToken_ The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address issuanceToken_)
         internal
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
     {
         uint8 decimals_ = IERC20Metadata(issuanceToken_).decimals();
 
@@ -911,7 +911,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         emit RedemptionAmountUpdated(_openRedemptionAmount);
     }
 
-    /// @inheritdoc BondingCurveBase_v1
+    /// @inheritdoc BondingCurveBase_v2
     function _handleIssuanceTokensAfterBuy(address recipient_, uint amount_)
         internal
         virtual
@@ -921,7 +921,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         IERC20Issuance_v1(issuanceToken).mint(recipient_, amount_);
     }
 
-    /// @inheritdoc BondingCurveBase_v1
+    /// @inheritdoc BondingCurveBase_v2
     /// @dev    Implementation transfer collateral tokens to the project treasury.
     function _processCollateralTokensForBuyOperation(uint _amount)
         internal
@@ -961,7 +961,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function _getFunctionFeesAndTreasuryAddresses(bytes4 selector_)
         internal
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
         returns (
             address collateralTreasury_,
             address issuanceTreasury_,

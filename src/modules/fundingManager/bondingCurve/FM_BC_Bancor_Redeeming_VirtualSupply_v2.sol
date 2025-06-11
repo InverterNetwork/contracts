@@ -14,8 +14,8 @@ import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 
 import {
     IBondingCurveBase_v2,
-    BondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+    BondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 import {
     IRedeemingBondingCurveBase_v2,
     RedeemingBondingCurveBase_v2
@@ -52,7 +52,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          to manage the calculations for token issuance and redemption rates
  *          based on specified reserve ratios.
  *
- * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v2},
+ * @dev     Inherits {BondingCurveBase_v2}, {RedeemingBondingCurveBase_v2},
  *          {VirtualIssuanceSupplyBase_v1}, and
  *          {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper
  *          functions for bonding curve calculations using the {BancorFormula}.
@@ -216,7 +216,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         permissioned
         buyingIsEnabled
         validReceiver(_receiver)
@@ -239,7 +239,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         permissioned
         buyingIsEnabled
     {
@@ -328,7 +328,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v2)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         returns (uint staticPriceForBuying_)
     {
         return (
@@ -447,14 +447,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     // Upstream Function Implementations
 
     /// @dev    Calculates the amount of tokens to mint for a given deposit amount using the {BancorFormula}.
-    ///         This internal function is an override of {BondingCurveBase_v1}'s abstract function.
+    ///         This internal function is an override of {BondingCurveBase_v2}'s abstract function.
     ///         It handles decimal conversions and calculations through the bonding curve.
     /// @param  depositAmount_ The amount of collateral deposited to purchase tokens.
     /// @return mintAmount_ The amount of tokens that will be minted.
     function _issueTokensFormulaWrapper(uint depositAmount_)
         internal
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
         returns (uint mintAmount_)
     {
         // Calculate mint amount through bonding curve
@@ -524,13 +524,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     // Internal Functions
 
     /// @dev    Sets the issuance token for the Bonding Curve Funding Manager.
-    ///         This function overrides the internal function set in {BondingCurveBase_v1}, adding
+    ///         This function overrides the internal function set in {BondingCurveBase_v2}, adding
     ///         an input validation specific for the {BancorFormula} utilizing implementation, after which
     ///         it updates the `issuanceToken` state variable and caches the decimals as `issuanceTokenDecimals`.
     /// @param  issuanceToken_ The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address issuanceToken_)
         internal
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
     {
         uint8 _decimals = IERC20Metadata(issuanceToken_).decimals();
         // An input verification is needed here since the Bancor formula, which determines the
@@ -624,7 +624,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     // -------------------------------------------------------------------------
     // Overridden Internal Functions
 
-    /// @inheritdoc BondingCurveBase_v1
+    /// @inheritdoc BondingCurveBase_v2
     function _processCollateralTokensForBuyOperation(uint _amount)
         internal
         virtual

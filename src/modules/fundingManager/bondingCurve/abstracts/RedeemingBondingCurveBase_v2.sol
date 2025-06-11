@@ -6,8 +6,8 @@ import {IRedeemingBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 
 // Internal Dependencies
-import {BondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {BondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,7 +25,7 @@ import {ERC165Upgradeable} from
  * @notice  Manages the redemption of issuance for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.
  *
- * @dev     Inherits from {BondingCurveBase_v1}. Extends by providing core functionalities for
+ * @dev     Inherits from {BondingCurveBase_v2}. Extends by providing core functionalities for
  *          redeem operations, fee adjustments, and redemption calculations.
  *          Fee calculations utilize BPS for precision. Redeem-specific calculations should be
  *          implemented in derived contracts.
@@ -41,14 +41,14 @@ import {ERC165Upgradeable} from
  */
 abstract contract RedeemingBondingCurveBase_v2 is
     IRedeemingBondingCurveBase_v2,
-    BondingCurveBase_v1
+    BondingCurveBase_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v2)
         returns (bool)
     {
         return interfaceId == type(IRedeemingBondingCurveBase_v2).interfaceId

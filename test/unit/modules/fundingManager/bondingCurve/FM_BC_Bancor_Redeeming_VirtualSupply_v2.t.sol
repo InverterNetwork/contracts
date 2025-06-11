@@ -341,7 +341,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
-        // Test covered in BondingCurveBase_v1
+        // Test covered in BondingCurveBase_v2
     }
 
     function testBuyOrder_FailsIfDepositAmountOverflowsVirtualCollateralSupply(

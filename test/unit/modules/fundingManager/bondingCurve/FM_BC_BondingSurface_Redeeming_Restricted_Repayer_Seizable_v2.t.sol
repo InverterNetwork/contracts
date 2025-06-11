@@ -1014,7 +1014,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         ├── Given the caller_ is not the liquidityVaultController
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert
-        ├── Given modifier validReceiver(to_) is in place: Please Note: Modifier test can be found in BondingCurveBase_v1.t
+        ├── Given modifier validReceiver(to_) is in place: Please Note: Modifier test can be found in BondingCurveBase_v2.t
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert if receiver is invalid
         └── Given: the caller_ is the liquidityVaultController
