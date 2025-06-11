@@ -1,6 +1,29 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+/**
+ * @title   Inverter Voting Role Manager Interface
+ *
+ * @notice  Facilitates voting and motion management within the Inverter
+ *          Network, allowing designated voters to participate in governance
+ *          through proposals, voting, and execution of decisions.
+ *
+ * @dev     Supports setting thresholds for decision-making, managing voter
+ *          lists, creating _motions, casting votes, and executing actions
+ *          based on collective decisions. This structure enhances governance
+ *          transparency and efficacy.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version  v2.0.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
+ * @author  Inverter Network
+ */
 interface IAUT_EXT_VotingRoles_v2 {
     // ========================================================================
     // Structs

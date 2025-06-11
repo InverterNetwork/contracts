@@ -27,6 +27,10 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version  v2.0.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
  * @author  Inverter Network
  */
 
