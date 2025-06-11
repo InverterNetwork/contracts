@@ -17,9 +17,9 @@ import {
     BondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {
-    IRedeemingBondingCurveBase_v1,
-    RedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+    IRedeemingBondingCurveBase_v2,
+    RedeemingBondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {
     IVirtualCollateralSupplyBase_v1,
     VirtualCollateralSupplyBase_v1
@@ -52,7 +52,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          to manage the calculations for token issuance and redemption rates
  *          based on specified reserve ratios.
  *
- * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v1},
+ * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v2},
  *          {VirtualIssuanceSupplyBase_v1}, and
  *          {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper
  *          functions for bonding curve calculations using the {BancorFormula}.
@@ -75,7 +75,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     IFundingManager_v1,
     VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
-    RedeemingBondingCurveBase_v1
+    RedeemingBondingCurveBase_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
@@ -85,7 +85,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
         override(
             VirtualIssuanceSupplyBase_v1,
             VirtualCollateralSupplyBase_v1,
-            RedeemingBondingCurveBase_v1
+            RedeemingBondingCurveBase_v2
         )
         returns (bool supportsInterface_)
     {
@@ -262,7 +262,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         permissioned
         sellingIsEnabled
         validReceiver(_receiver)
@@ -285,7 +285,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         permissioned
         sellingIsEnabled
     {
@@ -352,7 +352,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function getStaticPriceForSelling()
         external
         view
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint staticPriceForSelling_)
     {
         return (
@@ -482,7 +482,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     }
 
     /// @dev    Calculates the amount of collateral to be received when redeeming a given amount of tokens.
-    ///         This internal function is an override of {RedeemingBondingCurveBase_v1}'s abstract function.
+    ///         This internal function is an override of {RedeemingBondingCurveBase_v2}'s abstract function.
     ///         It handles decimal conversions and calculations through the bonding curve. Note the {BancorFormula}
     ///         assumes 18 decimals for all tokens.
     /// @param  depositAmount_ The amount of tokens to be redeemed for collateral.
@@ -490,7 +490,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint redeemAmount_)
     {
         // Calculate redeem amount through bonding curve

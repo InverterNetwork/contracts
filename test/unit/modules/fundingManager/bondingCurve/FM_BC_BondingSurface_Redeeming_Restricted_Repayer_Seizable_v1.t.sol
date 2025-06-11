@@ -31,9 +31,9 @@ import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {
-    IRedeemingBondingCurveBase_v1,
-    IRedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+    IRedeemingBondingCurveBase_v2,
+    IRedeemingBondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";

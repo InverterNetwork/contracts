@@ -14,10 +14,10 @@ import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
-import {RedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {RedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {
@@ -46,7 +46,7 @@ import {ERC165Upgradeable} from
  * @dev     Inherits functionality from:
  *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
  *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
- *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic.
+ *          - RedeemingBondingCurveBase_v2: Token issuance and redemption logic.
  *
  *          Key features:
  *              - Oracle-driven token pricing.
@@ -143,7 +143,7 @@ import {ERC165Upgradeable} from
 contract FM_PC_Oracle_Redeeming_v1 is
     IFM_PC_Oracle_Redeeming_v1,
     ERC20PaymentClientBase_v2,
-    RedeemingBondingCurveBase_v1
+    RedeemingBondingCurveBase_v2
 {
     // -------------------------------------------------------------------------
     // Libraries
@@ -157,7 +157,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function supportsInterface(bytes4 interfaceId_)
         public
         view
-        override(ERC20PaymentClientBase_v2, RedeemingBondingCurveBase_v1)
+        override(ERC20PaymentClientBase_v2, RedeemingBondingCurveBase_v2)
         returns (bool isSupported_)
     {
         return interfaceId_ == type(IFM_PC_Oracle_Redeeming_v1).interfaceId
@@ -325,12 +325,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _oracle.getPriceForIssuance();
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function getStaticPriceForSelling()
         public
         view
         virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2, IRedeemingBondingCurveBase_v2)
         returns (uint sellPrice_)
     {
         return _oracle.getPriceForRedemption();
@@ -406,7 +406,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return sellFee;
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     /// @dev        Function uses the collateral sell fee from the payment processor
     ///             function processPayments() to calculate the sale return.
     ///             This is done because the collateral fee will be collected when the
@@ -415,7 +415,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         public
         view
         virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2, IRedeemingBondingCurveBase_v2)
         returns (uint redeemAmount_)
     {
         // Set min amount out to 1 for price calculation
@@ -462,11 +462,11 @@ contract FM_PC_Oracle_Redeeming_v1 is
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
     }
 
-    /// @inheritdoc RedeemingBondingCurveBase_v1
+    /// @inheritdoc RedeemingBondingCurveBase_v2
     function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2, IRedeemingBondingCurveBase_v2)
         thirdPartyOperationsEnabled
     {
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
@@ -644,7 +644,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     )
         internal
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (
             uint totalCollateralTokenMovedOut_,
             uint projectCollateralFeeAmount_
@@ -764,13 +764,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @notice Sets the sell fee.
-    /// @dev    Overrides the internal function from RedeemingBondingCurveBase_v1.
+    /// @dev    Overrides the internal function from RedeemingBondingCurveBase_v2.
     ///         Revert if sell fee exceeds max project sell fee.
     /// @param  fee_ The fee percentage to set.
     function _setSellFee(uint fee_)
         internal
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
     {
         // Check that fee doesn't exceed maximum allowed
         if (fee_ > _maxProjectSellFee) {
@@ -825,7 +825,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         internal
         view
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint redeemAmount_)
     {
         // Convert issuance token deposit amount to collateral token decimals.
@@ -931,7 +931,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         IERC20(token()).safeTransfer(_projectTreasury, _amount);
     }
 
-    /// @inheritdoc RedeemingBondingCurveBase_v1
+    /// @inheritdoc RedeemingBondingCurveBase_v2
     /// @dev    Implementation does not transfer collateral tokens to recipient
     ///         as the payout is managed through a redemption queue.
     function _handleCollateralTokensAfterSell(address recipient_, uint amount_)

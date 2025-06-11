@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 
 /**
  * @title   Inverter Redeeming Bonding Surface Funding Manager Interface
@@ -25,7 +25,7 @@ import {IRedeemingBondingCurveBase_v1} from
  */
 interface IFM_BC_BondingSurface_Redeeming_v2 is
     IFundingManager_v1,
-    IRedeemingBondingCurveBase_v1
+    IRedeemingBondingCurveBase_v2
 {
     // ========================================================================
     // Errors

@@ -13,9 +13,9 @@ import {
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {
-    RedeemingBondingCurveBase_v1,
-    IRedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+    RedeemingBondingCurveBase_v2,
+    IRedeemingBondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 
@@ -1634,7 +1634,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             expectedProjectCollateralFeeAmount_
         );
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IRedeemingBondingCurveBase_v1.TokensSold(
+        emit IRedeemingBondingCurveBase_v2.TokensSold(
             receiver_,
             sellAmount_,
             expectedNetCollateralRedeemAmount_,
@@ -1706,7 +1706,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         vm.prank(receiver_);
         // Expect events
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IRedeemingBondingCurveBase_v1.TokensSold(
+        emit IRedeemingBondingCurveBase_v2.TokensSold(
             receiver_,
             sellAmount_,
             expectedNetCollateralRedeemAmount_,

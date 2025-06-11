@@ -6,8 +6,8 @@ import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
-import {RedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+import {RedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
@@ -15,8 +15,8 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
@@ -44,7 +44,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @dev     This contract inherits functionalties from the contracts:
  *              - BondingCurveBase_v1
- *              - RedeemingBondingCurveBase_v1
+ *              - RedeemingBondingCurveBase_v2
  *              - Repayer
  *          The contract should be used by the orchestrator admin to manage all
  *          the configuration for the bonding curve as well as the opening and

@@ -16,11 +16,11 @@ import {IBondingCurveBase_v2} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.3
+ * @custom:version 2.0.0
  *
  * @author  Inverter Network
  */
-interface IRedeemingBondingCurveBase_v1 is IBondingCurveBase_v2 {
+interface IRedeemingBondingCurveBase_v2 is IBondingCurveBase_v2 {
     //--------------------------------------------------------------------------
     // Errors
 

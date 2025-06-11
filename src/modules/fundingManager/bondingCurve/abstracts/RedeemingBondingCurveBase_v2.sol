@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 
 // Internal Dependencies
 import {BondingCurveBase_v1} from
@@ -35,12 +35,12 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.3
+ * @custom:version 2.0.0
  *
  * @author  Inverter Network
  */
-abstract contract RedeemingBondingCurveBase_v1 is
-    IRedeemingBondingCurveBase_v1,
+abstract contract RedeemingBondingCurveBase_v2 is
+    IRedeemingBondingCurveBase_v2,
     BondingCurveBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
@@ -51,7 +51,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         override(BondingCurveBase_v1)
         returns (bool)
     {
-        return interfaceId == type(IRedeemingBondingCurveBase_v1).interfaceId
+        return interfaceId == type(IRedeemingBondingCurveBase_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -81,7 +81,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // -------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -92,7 +92,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -105,24 +105,24 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // -------------------------------------------------------------------------
     // Permissioned Functions
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function openSell() external virtual permissioned {
         sellIsOpen = true;
         emit SellingEnabled();
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function closeSell() external virtual permissioned {
         sellIsOpen = false;
         emit SellingDisabled();
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function setSellFee(uint _fee) external virtual permissioned {
         _setSellFee(_fee);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function calculateSaleReturn(uint _depositAmount)
         public
         view
@@ -161,7 +161,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     function getStaticPriceForSelling() external view virtual returns (uint);
 
     // -------------------------------------------------------------------------

@@ -3,15 +3,15 @@ pragma solidity 0.8.23;
 
 // Internal
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {RedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+import {RedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 import {
     IFM_BC_BondingSurface_Redeeming_v2,
     IFundingManager_v1
@@ -37,7 +37,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @dev     This contract inherits functionalties from the contracts:
  *              - BondingCurveBase_v1
- *              - RedeemingBondingCurveBase_v1
+ *              - RedeemingBondingCurveBase_v2
  *              - Repayer
  *          The contract should be used by the orchestrator admin or manager
  *          to manage all the configuration for the bonding curve as well as the
@@ -58,7 +58,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_v2 is
-    RedeemingBondingCurveBase_v1,
+    RedeemingBondingCurveBase_v2,
     IFM_BC_BondingSurface_Redeeming_v2
 {
     /// @inheritdoc ERC165Upgradeable
@@ -66,7 +66,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         public
         view
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (bool supportsInterface_)
     {
         return interfaceId_
@@ -189,12 +189,12 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         );
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
     /// @dev    The return value is formatted in PPM.
     function getStaticPriceForSelling()
         external
         view
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2, IRedeemingBondingCurveBase_v2)
         returns (uint staticPriceForSelling_)
     {
         return _formula.spotPrice(
@@ -410,14 +410,14 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     /// @notice Calculates the amount of collateral to be received when
     ///         redeeming a given amount of tokens.
     /// @dev    This internal function is an override of
-    ///         RedeemingBondingCurveBase_v1's virtual function.
+    ///         RedeemingBondingCurveBase_v2's virtual function.
     /// @param  depositAmount_ The amount of tokens to be redeemed for
     ///         collateral.
     /// @return redeemAmount_ The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint redeemAmount_)
     {
         // Subtract fee collected from capital held by contract.

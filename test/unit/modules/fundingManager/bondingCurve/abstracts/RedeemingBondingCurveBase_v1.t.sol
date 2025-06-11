@@ -28,7 +28,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {
     RedeemingBondingCurveBaseV1Mock,
-    IRedeemingBondingCurveBase_v1
+    IRedeemingBondingCurveBase_v2
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol";
 
@@ -92,7 +92,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
-                type(IRedeemingBondingCurveBase_v1).interfaceId
+                type(IRedeemingBondingCurveBase_v2).interfaceId
             )
         );
     }
@@ -165,7 +165,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         vm.prank(non_admin_address);
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
+            IRedeemingBondingCurveBase_v2
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
@@ -243,7 +243,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
+            IRedeemingBondingCurveBase_v2
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
@@ -297,7 +297,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
+            IRedeemingBondingCurveBase_v2
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
@@ -389,7 +389,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(
-                IRedeemingBondingCurveBase_v1
+                IRedeemingBondingCurveBase_v2
                     .Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee
                     .selector
             );
@@ -467,7 +467,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IRedeemingBondingCurveBase_v1.TokensSold(
+        emit IRedeemingBondingCurveBase_v2.TokensSold(
             seller, amount, finalAmount, seller
         );
 
@@ -525,7 +525,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     function testOpenSell_Idempotence() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRedeemingBondingCurveBase_v1.SellingEnabled();
+        emit IRedeemingBondingCurveBase_v2.SellingEnabled();
 
         bondingCurveFundingManager.openSell();
     }
@@ -538,7 +538,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRedeemingBondingCurveBase_v1.SellingEnabled();
+        emit IRedeemingBondingCurveBase_v2.SellingEnabled();
 
         bondingCurveFundingManager.openSell();
 
@@ -577,13 +577,13 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
+        emit IRedeemingBondingCurveBase_v2.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
+        emit IRedeemingBondingCurveBase_v2.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
@@ -593,7 +593,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRedeemingBondingCurveBase_v1.SellingDisabled();
+        emit IRedeemingBondingCurveBase_v2.SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
@@ -648,7 +648,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit IRedeemingBondingCurveBase_v1.SellFeeUpdated(_fee, oldSellFee);
+        emit IRedeemingBondingCurveBase_v2.SellFeeUpdated(_fee, oldSellFee);
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);
