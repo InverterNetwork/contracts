@@ -847,6 +847,38 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test _handleIssuanceTokensAfterBuy (exposed)
+        └── Given a receiver address and an amount of issuance tokens to mint
+            └── When exposed_handleIssuanceTokensAfterBuy is called
+                └── Then it should mint the specified amount of issuance tokens to the receiver
+                    └── And the receiver's token balance should increase by the amount
+                    └── And the total supply of issuance tokens should increase by the amount
+    */
+    function testHandleIssuanceTokensAfterBuy_MintsTokensToReceiver(
+        address _receiver,
+        uint _amount
+    ) public {
+        vm.assume(_receiver != address(0) && _amount > 0);
+
+        uint initialReceiverBalance = issuanceToken.balanceOf(_receiver);
+        uint initialTotalSupply = issuanceToken.totalSupply();
+
+        // Call the exposed function
+        fmBcDiscrete.exposed_handleIssuanceTokensAfterBuy(_receiver, _amount);
+
+        // Assert final balances
+        assertEq(
+            issuanceToken.balanceOf(_receiver),
+            initialReceiverBalance + _amount,
+            "Receiver final balance mismatch"
+        );
+        assertEq(
+            issuanceToken.totalSupply(),
+            initialTotalSupply + _amount,
+            "Total supply mismatch"
+        );
+    }
+
     // =========================================================================
     // Helpers
 

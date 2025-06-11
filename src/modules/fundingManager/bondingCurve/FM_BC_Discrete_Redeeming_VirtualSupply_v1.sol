@@ -317,7 +317,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         virtual
         override
     {
-        revert("NOT IMPLEMENTED"); // TODO: Implement
+        issuanceToken.mint(_receiver, _amount);
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
