@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal
 import {ILM_Oracle_Permissioned_v1} from
     "@lm/interfaces/ILM_Oracle_Permissioned_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
@@ -24,7 +24,7 @@ import {ERC165Upgradeable} from
  * @dev     This contract inherits from:
  *          - ILM_Oracle_Permissioned_v1: Implementation interface.
  *          - IOraclePrice_v1: Oracle price interface.
- *          - Module_v1: Base module functionality.
+ *          - Module_v2: Base module functionality.
  *
  *          Key features:
  *              - Two separate price feeds for issuance and redemption.
@@ -71,7 +71,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Zealynx Security
  */
-contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
+contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v2 {
     // -------------------------------------------------------------------------
     // ERC165
 
@@ -117,7 +117,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         // Decode collateral token address from configData_.

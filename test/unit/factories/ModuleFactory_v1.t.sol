@@ -12,7 +12,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {
     IModuleFactory_v1,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -61,14 +61,14 @@ contract ModuleFactoryV1Test is Test {
 
     /// @notice Event emitted when new beacon registered for metadata.
     event MetadataRegistered(
-        IModule_v1.Metadata metadata, IInverterBeacon_v1 indexed beacon
+        IModule_v2.Metadata metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator.
     event ModuleCreated(
         address indexed orchestrator,
         address indexed module,
-        IModule_v1.Metadata metadata
+        IModule_v2.Metadata metadata
     );
 
     event GovernorSet(address indexed governor);
@@ -80,7 +80,7 @@ contract ModuleFactoryV1Test is Test {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Payment Processor";
 
-    IModule_v1.Metadata DATA = IModule_v1.Metadata(
+    IModule_v2.Metadata DATA = IModule_v2.Metadata(
         MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
     );
 
@@ -96,7 +96,7 @@ contract ModuleFactoryV1Test is Test {
         emit GovernorSet(address(governor));
         factory.init(
             address(governor),
-            new IModule_v1.Metadata[](0),
+            new IModule_v2.Metadata[](0),
             new IInverterBeacon_v1[](0)
         );
     }
@@ -116,15 +116,15 @@ contract ModuleFactoryV1Test is Test {
         factory = ModuleFactory_v1(Clones.clone(impl));
         metadataSets = bound(metadataSets, 1, 10);
 
-        IModule_v1.Metadata[] memory metadata =
-            new IModule_v1.Metadata[](metadataSets);
+        IModule_v2.Metadata[] memory metadata =
+            new IModule_v2.Metadata[](metadataSets);
 
         IInverterBeacon_v1[] memory beacons =
             new IInverterBeacon_v1[](metadataSets);
 
         InverterBeaconV1OwnableMock beaconI;
         for (uint i = 0; i < metadataSets; i++) {
-            metadata[i] = IModule_v1.Metadata(
+            metadata[i] = IModule_v2.Metadata(
                 i + 1, MINOR_VERSION, PATCH_VERSION, URL, TITLE
             );
 
@@ -165,9 +165,9 @@ contract ModuleFactoryV1Test is Test {
             );
         }
 
-        IModule_v1.Metadata[] memory metadata =
-            new IModule_v1.Metadata[](number1);
-        metadata[0] = IModule_v1.Metadata(
+        IModule_v2.Metadata[] memory metadata =
+            new IModule_v2.Metadata[](number1);
+        metadata[0] = IModule_v2.Metadata(
             MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, ""
         );
 
@@ -194,7 +194,7 @@ contract ModuleFactoryV1Test is Test {
         factory.registerMetadata(DATA, beacon);
     }
 
-    function testRegisterMetadata(IModule_v1.Metadata memory metadata) public {
+    function testRegisterMetadata(IModule_v2.Metadata memory metadata) public {
         _assumeValidMetadata(metadata);
 
         beacon.overrideImplementation(address(module));
@@ -220,7 +220,7 @@ contract ModuleFactoryV1Test is Test {
         );
         vm.prank(address(governor));
         factory.registerMetadata(
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, "", TITLE
             ),
             beacon
@@ -232,7 +232,7 @@ contract ModuleFactoryV1Test is Test {
         );
         vm.prank(address(governor));
         factory.registerMetadata(
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, ""
             ),
             beacon
@@ -301,7 +301,7 @@ contract ModuleFactoryV1Test is Test {
 
     function testCreateAndInitModule(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
     ) public {
@@ -316,7 +316,7 @@ contract ModuleFactoryV1Test is Test {
         factory.registerMetadata(metadata, beacon);
 
         // Create new module instance.
-        IModule_v1 newModule = IModule_v1(
+        IModule_v2 newModule = IModule_v2(
             factory.createAndInitModule(
                 metadata,
                 IOrchestrator_v1(orchestrator),
@@ -336,7 +336,7 @@ contract ModuleFactoryV1Test is Test {
 
     function testCreateModuleProxy(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         address orchestrator
     ) public {
         _assumeValidMetadata(metadata);
@@ -356,7 +356,7 @@ contract ModuleFactoryV1Test is Test {
         emit ModuleCreated(orchestrator, address(0), metadata);
 
         // Create new module instance.
-        IModule_v1 newModule = IModule_v1(
+        IModule_v2 newModule = IModule_v2(
             factory.createModuleProxy(
                 metadata, IOrchestrator_v1(orchestrator), workflowConfig
             )
@@ -389,7 +389,7 @@ contract ModuleFactoryV1Test is Test {
 
     function testCreateModuleReorgResilience(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         address orchestrator
     ) public {
         address alice = address(0xA11CE);
@@ -414,11 +414,11 @@ contract ModuleFactoryV1Test is Test {
         // We emit the event we expect to see.
         emit ModuleCreated(orchestrator, address(0), metadata);
 
-        IModule_v1 originalModule;
+        IModule_v2 originalModule;
         vm.startPrank(alice);
         {
             // Create new module instance.
-            originalModule = IModule_v1(
+            originalModule = IModule_v2(
                 factory.createModuleProxy(
                     metadata, IOrchestrator_v1(orchestrator), workflowConfig
                 )
@@ -457,11 +457,11 @@ contract ModuleFactoryV1Test is Test {
         // We emit the event we expect to see.
         emit ModuleCreated(orchestrator, address(0), metadata);
 
-        IModule_v1 redeployedModule_bob;
+        IModule_v2 redeployedModule_bob;
         vm.startPrank(bob);
         {
             // Create new module instance.
-            redeployedModule_bob = IModule_v1(
+            redeployedModule_bob = IModule_v2(
                 factory.createModuleProxy(
                     metadata, IOrchestrator_v1(orchestrator), workflowConfig
                 )
@@ -479,11 +479,11 @@ contract ModuleFactoryV1Test is Test {
         // We emit the event we expect to see.
         emit ModuleCreated(orchestrator, address(0), metadata);
 
-        IModule_v1 redeployedModule_alice;
+        IModule_v2 redeployedModule_alice;
         vm.startPrank(alice);
         {
             // Create new module instance.
-            redeployedModule_alice = IModule_v1(
+            redeployedModule_alice = IModule_v2(
                 factory.createModuleProxy(
                     metadata, IOrchestrator_v1(orchestrator), workflowConfig
                 )
@@ -498,7 +498,7 @@ contract ModuleFactoryV1Test is Test {
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
     ) public {
@@ -519,7 +519,7 @@ contract ModuleFactoryV1Test is Test {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule_v1.Metadata memory metadata)
+    function _assumeValidMetadata(IModule_v2.Metadata memory metadata)
         public
         pure
     {

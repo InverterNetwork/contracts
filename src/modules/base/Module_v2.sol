@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
@@ -41,13 +41,16 @@ import {ERC165Upgradeable} from
  *          version, title, and url given in the metadata.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version  v2.0.0
  *
  * @author  Inverter Network
  */
-abstract contract Module_v1 is
-    IModule_v1,
+abstract contract Module_v2 is
+    IModule_v2,
     Initializable,
     ERC2771ContextUpgradeable,
     ERC165Upgradeable
@@ -60,7 +63,7 @@ abstract contract Module_v1 is
         override(ERC165Upgradeable)
         returns (bool)
     {
-        return interfaceId == type(IModule_v1).interfaceId
+        return interfaceId == type(IModule_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -115,7 +118,7 @@ abstract contract Module_v1 is
         _disableInitializers();
     }
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
@@ -152,12 +155,12 @@ abstract contract Module_v1 is
     // ------------------------------------------------------------------------
     // Getter - Module State
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function identifier() public view returns (bytes32) {
         return LibMetadata.identifier(__Module_metadata);
     }
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function version() public view returns (uint, uint, uint) {
         return (
             __Module_metadata.majorVersion,
@@ -166,17 +169,17 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function url() public view returns (string memory) {
         return __Module_metadata.url;
     }
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function title() public view returns (string memory) {
         return __Module_metadata.title;
     }
 
-    /// @inheritdoc IModule_v1
+    /// @inheritdoc IModule_v2
     function orchestrator() public view returns (IOrchestrator_v1) {
         return __Module_orchestrator;
     }

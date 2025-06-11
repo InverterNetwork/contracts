@@ -8,7 +8,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Template_v1} from "./IPP_Template_v1.sol";
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -21,7 +21,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  * @dev     This contract is used to showcase a basic setup for a payment
  *          processor. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
+ *          - Inherit from the Module_v2 contract to enable interaction with
  *            the Inverter workflow.
  *          - Use of the IPaymentProcessor_v2 interface to facilitate
  *            interaction with a payment client.
@@ -41,7 +41,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  * @author  Inverter Network
  */
-contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
+contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Libraries
 
@@ -55,7 +55,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId_ == type(IPP_Template_v1).interfaceId
@@ -90,12 +90,12 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Constructor & Init
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         // Decode module specific init data through use of configData bytes.

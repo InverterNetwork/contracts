@@ -14,7 +14,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 /**
@@ -27,7 +27,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  * @dev     This contract inherits from:
  *          - IPP_Queue_v1: Implementation interface.
  *          - IPaymentProcessor_v2: Payment processor interface.
- *          - Module_v1: Base module functionality.
+ *          - Module_v2: Base module functionality.
  *
  *          Key features:
  *              - FIFO queue management for payment orders.
@@ -76,7 +76,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *
  * @author  Zealynx Security
  */
-contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
+contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     // -------------------------------------------------------------------------
     // Libraries
 
@@ -91,7 +91,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool supported_)
     {
         return interfaceId_ == type(IPP_Queue_v1).interfaceId
@@ -178,7 +178,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
         // Decode config data.
         (address cancelledOrdersTreasury_, address failedOrdersTreasury_) =

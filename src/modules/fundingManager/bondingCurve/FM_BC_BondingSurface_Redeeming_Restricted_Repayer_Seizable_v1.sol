@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
 import {RedeemingBondingCurveBase_v1} from
@@ -128,7 +128,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ========================================================================
     // Init Function
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,

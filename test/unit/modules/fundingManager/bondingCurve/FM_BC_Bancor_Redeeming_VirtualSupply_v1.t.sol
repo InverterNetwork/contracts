@@ -22,7 +22,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
@@ -242,7 +242,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -295,7 +295,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -653,7 +653,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -707,7 +707,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1375,7 +1375,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1465,7 +1465,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1545,7 +1545,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1637,7 +1637,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1860,7 +1860,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Mutating Functions
 
     /* Test transferOrchestratorToken 
-        ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
+        ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v2.t.sol)
         │   └── and the conditions of the modifier are not met
         │       └── when the function transferOrchestratorToken() gets called
         │           └── then it should revert
@@ -1883,7 +1883,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(caller);
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         bondingCurveFundingManager.transferOrchestratorToken(to, amount);
     }
 

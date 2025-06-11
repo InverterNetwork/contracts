@@ -16,7 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -26,7 +26,7 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 // Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // Mocks
 import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";

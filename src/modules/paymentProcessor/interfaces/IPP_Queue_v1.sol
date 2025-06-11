@@ -16,7 +16,7 @@ import {IERC20PaymentClientBase_v2} from
  * @dev     This contract inherits from:
  *          - IPP_Queue_v1: Implementation interface.
  *          - IPaymentProcessor_v2: Payment processor interface.
- *          - Module_v1: Base module functionality.
+ *          - Module_v2: Base module functionality.
  *
  *          Key features:
  *              - FIFO queue management for payment orders.

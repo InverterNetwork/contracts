@@ -13,7 +13,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -21,7 +21,7 @@ import {
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
 
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
@@ -369,7 +369,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
         //permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         _authSuT.addAccessPermission(address(this), bytes4(0), bytes32(uint(0)));
@@ -491,7 +491,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
         //permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         _authSuT.removeAccessPermission(
@@ -595,7 +595,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
         //permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         _authSuT.createRole("RoleName", bytes32(uint(0)), new address[](0));
@@ -663,7 +663,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
         //permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         _authSuT.labelRole(bytes32(uint(0)), "RoleName");
@@ -907,7 +907,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
         //permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         _authSuT.createRoleAndAddAccessPermissions(

@@ -13,7 +13,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -21,7 +21,7 @@ import {
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
 
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
@@ -59,7 +59,7 @@ contract ModuleBaseV1Test is ModuleTest {
         _setUpOrchestrator(module);
 
         vm.expectEmit(true, true, true, false);
-        emit IModule_v1.ModuleInitialized(address(_orchestrator), _METADATA);
+        emit IModule_v2.ModuleInitialized(address(_orchestrator), _METADATA);
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
@@ -69,12 +69,12 @@ contract ModuleBaseV1Test is ModuleTest {
 
     /*
     Test: SupportsInterface
-    └── Given: The interfaceId is IModule_v1
+    └── Given: The interfaceId is IModule_v2
         └── When: the function supportsInterface is called
             └── Then: the function should return true
     */
     function testSupportsInterface() public override(ModuleTest) {
-        assertTrue(module.supportsInterface(type(IModule_v1).interfaceId));
+        assertTrue(module.supportsInterface(type(IModule_v2).interfaceId));
     }
 
     function testInit() public override {
@@ -117,7 +117,7 @@ contract ModuleBaseV1Test is ModuleTest {
         address impl = address(new Module_v2_Mock());
         module = Module_v2_Mock(Clones.clone(impl));
 
-        vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidOrchestratorAddress.selector);
         module.init(IOrchestrator_v1(address(0)), _METADATA, _CONFIGDATA);
     }
 
@@ -126,20 +126,20 @@ contract ModuleBaseV1Test is ModuleTest {
         module = Module_v2_Mock(Clones.clone(impl));
 
         // Invalid if _URL empty.
-        vm.expectRevert(IModule_v1.Module__InvalidMetadata.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidMetadata.selector);
         module.init(
             _orchestrator,
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, "", _TITLE
             ),
             _CONFIGDATA
         );
 
         // Invalid if _TITLE empty.
-        vm.expectRevert(IModule_v1.Module__InvalidMetadata.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidMetadata.selector);
         module.init(
             _orchestrator,
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, _URL, ""
             ),
             _CONFIGDATA
@@ -196,7 +196,7 @@ contract ModuleBaseV1Test is ModuleTest {
         address _notPaymentClient
     ) public {
         vm.prank(address(_notPaymentClient));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         module.modifierOnlyPaymentClientCheck();
     }
 
@@ -206,7 +206,7 @@ contract ModuleBaseV1Test is ModuleTest {
             new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(address(_erc20PaymentClientMock));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         module.modifierOnlyPaymentClientCheck();
     }
 
@@ -219,7 +219,7 @@ contract ModuleBaseV1Test is ModuleTest {
 
     function testValidAddress(address adr) public {
         if (adr == address(0) || adr == address(module)) {
-            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+            vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         }
         module.modifierOnlyValidAddressCheck(adr);
     }
@@ -422,7 +422,7 @@ contract ModuleBaseV1Test is ModuleTest {
         );
 
         if (!hasPermission_) {
-            vm.expectRevert(IModule_v1.Module__CallerNotPermissioned.selector);
+            vm.expectRevert(IModule_v2.Module__CallerNotPermissioned.selector);
         }
 
         module._checkAuthorization_exposed(caller_, data_);

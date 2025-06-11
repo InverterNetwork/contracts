@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Dependencies
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
@@ -39,13 +39,13 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
+abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId == type(IBondingCurveBase_v1).interfaceId
@@ -447,7 +447,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // transfer fee amount
             _token.safeTransfer(_treasury, _feeAmount);
-            emit IModule_v1.ProtocolFeeTransferred(
+            emit IModule_v2.ProtocolFeeTransferred(
                 address(_token), _treasury, _feeAmount
             );
         }

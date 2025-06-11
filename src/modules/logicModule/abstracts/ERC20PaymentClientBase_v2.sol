@@ -9,7 +9,7 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
-import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
+import {Module_v2, ContextUpgradeable} from "src/modules/base/Module_v2.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -40,14 +40,14 @@ import {ERC165Upgradeable} from
  */
 abstract contract ERC20PaymentClientBase_v2 is
     IERC20PaymentClientBase_v2,
-    Module_v1
+    Module_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId == type(IERC20PaymentClientBase_v2).interfaceId

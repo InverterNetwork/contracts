@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IFM_EXT_TokenVault_v1} from
     "src/modules/fundingManager/extensions/interfaces/IFM_EXT_TokenVault_v1.sol";
 
@@ -30,13 +30,13 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
+contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool supportsInterface_)
     {
         return interfaceId_ == type(IFM_EXT_TokenVault_v1).interfaceId

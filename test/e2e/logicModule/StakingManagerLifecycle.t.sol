@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";

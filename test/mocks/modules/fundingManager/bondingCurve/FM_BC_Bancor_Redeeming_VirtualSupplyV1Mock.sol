@@ -14,7 +14,7 @@ import {
     FM_BC_Tools
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     FM_BC_Bancor_Redeeming_VirtualSupply_v1

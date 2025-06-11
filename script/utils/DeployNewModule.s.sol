@@ -14,7 +14,7 @@ import {IDeterministicFactory_v1} from
 
 import {
     Governor_v1,
-    IModule_v1,
+    IModule_v2,
     IInverterBeacon_v1
 } from "@ex/governance/Governor_v1.sol";
 
@@ -75,7 +75,7 @@ contract DeployNewModule is Script, ProtocolConstants_v1 {
         Governor_v1 governor = Governor_v1(deployedGovernor);
         vm.startBroadcast(deployerPrivateKey);
         governor.registerMetadataInModuleFactory(
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 majorVersion,
                 minorVersion,
                 patchVersion,

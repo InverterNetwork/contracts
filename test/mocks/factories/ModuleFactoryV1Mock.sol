@@ -6,7 +6,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory_v1,
     IInverterBeacon_v1,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -33,19 +33,19 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
-    IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata fundingManagerMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://fundingmanager.com", "FundingManager"
     );
 
-    IModule_v1.Metadata authorizerMetadata =
-        IModule_v1.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
+    IModule_v2.Metadata authorizerMetadata =
+        IModule_v2.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
 
-    IModule_v1.Metadata paymentProcessorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata paymentProcessorMetadata = IModule_v2.Metadata(
         1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
     );
 
     function createAndInitModule(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         IOrchestrator_v1,
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
@@ -72,14 +72,14 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     }
 
     function createModuleProxy(
-        IModule_v1.Metadata memory,
+        IModule_v2.Metadata memory,
         IOrchestrator_v1,
         IOrchestratorFactory_v1.WorkflowConfig memory
     ) external returns (address) {
         return Clones.clone(address(new Module_v2_Mock()));
     }
 
-    function getBeaconAndId(IModule_v1.Metadata memory metadata)
+    function getBeaconAndId(IModule_v2.Metadata memory metadata)
         external
         view
         returns (IInverterBeacon_v1, bytes32)
@@ -100,7 +100,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         return msg.sender;
     }
 
-    function registerMetadata(IModule_v1.Metadata memory, IInverterBeacon_v1)
+    function registerMetadata(IModule_v2.Metadata memory, IInverterBeacon_v1)
         external
     {
         howManyCalls++;

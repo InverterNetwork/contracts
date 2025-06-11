@@ -9,7 +9,7 @@ import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
 
 // Internal Dependencies
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
@@ -40,14 +40,14 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 contract FM_DepositVault_v1 is
     IFundingManager_v1,
     IFM_DepositVault_v1,
-    Module_v1
+    Module_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId == type(IFundingManager_v1).interfaceId
@@ -73,7 +73,7 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Init Function
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
@@ -148,7 +148,7 @@ contract FM_DepositVault_v1 is
 
             // transfer fee amount
             token_.safeTransfer(treasury_, feeAmount_);
-            emit IModule_v1.ProtocolFeeTransferred(
+            emit IModule_v2.ProtocolFeeTransferred(
                 address(token_), treasury_, feeAmount_
             );
         }

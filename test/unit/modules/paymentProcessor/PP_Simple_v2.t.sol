@@ -8,7 +8,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 /**
  * @title Inverter Metadata Collection
@@ -17,12 +17,12 @@ contract MetadataCollection_v1 {
     // External Contracts
 
     // Governor
-    IModule_v1.Metadata public governorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public governorMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "Governor_v1"
     );
 
     // TransactionForwarder
-    IModule_v1.Metadata public forwarderMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public forwarderMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -31,7 +31,7 @@ contract MetadataCollection_v1 {
     );
 
     // FeeManager
-    IModule_v1.Metadata public feeManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public feeManagerMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "FeeManager_v1"
     );
 
@@ -39,7 +39,7 @@ contract MetadataCollection_v1 {
     // Factories
 
     // ModuleFactory
-    IModule_v1.Metadata public moduleFactoryMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public moduleFactoryMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -48,7 +48,7 @@ contract MetadataCollection_v1 {
     );
 
     // OrchestratorFactory
-    IModule_v1.Metadata public orchestratorFactoryMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public orchestratorFactoryMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -60,7 +60,7 @@ contract MetadataCollection_v1 {
     // Orchestrator
 
     // Orchestrator
-    IModule_v1.Metadata public orchestratorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public orchestratorMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -72,12 +72,12 @@ contract MetadataCollection_v1 {
     // Authorizer
 
     // RoleAuthorizer
-    IModule_v1.Metadata public roleAuthorizerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public roleAuthorizerMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "AUT_Roles_v2"
     );
 
     // TokenGatedRoleAuthorizer
-    IModule_v1.Metadata public tokenGatedRoleAuthorizerMetadata = IModule_v1
+    IModule_v2.Metadata public tokenGatedRoleAuthorizerMetadata = IModule_v2
         .Metadata(
         1,
         0,
@@ -87,7 +87,7 @@ contract MetadataCollection_v1 {
     );
 
     // VotingRoles
-    IModule_v1.Metadata public votingRolesMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public votingRolesMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -99,8 +99,8 @@ contract MetadataCollection_v1 {
     // Funding Manager
 
     // BancorRedeemingVirtualSupplyFundingManager
-    IModule_v1.Metadata public
-        bancorRedeemingVirtualSupplyFundingManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public
+        bancorRedeemingVirtualSupplyFundingManagerMetadata = IModule_v2.Metadata(
             1,
             0,
             0,
@@ -109,8 +109,8 @@ contract MetadataCollection_v1 {
         );
 
     // BondingSurfaceRedeemingFundingManager
-    IModule_v1.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
-    IModule_v1.Metadata(
+    IModule_v2.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
+    IModule_v2.Metadata(
         1,
         0,
         0,
@@ -119,9 +119,9 @@ contract MetadataCollection_v1 {
     );
 
     // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
-    IModule_v1.Metadata public
+    IModule_v2.Metadata public
         bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata =
-        IModule_v1.Metadata(
+        IModule_v2.Metadata(
             1,
             0,
             0,
@@ -130,7 +130,7 @@ contract MetadataCollection_v1 {
         );
 
     // DepositVaultFundingManager
-    IModule_v1.Metadata public depositVaultFundingManagerMetadata = IModule_v1
+    IModule_v2.Metadata public depositVaultFundingManagerMetadata = IModule_v2
         .Metadata(
         1,
         0,
@@ -140,8 +140,8 @@ contract MetadataCollection_v1 {
     );
 
     // OracleRedeemingFundingManager
-    IModule_v1.Metadata public oracleRedeemingFundingManagerMetadata =
-    IModule_v1.Metadata(
+    IModule_v2.Metadata public oracleRedeemingFundingManagerMetadata =
+    IModule_v2.Metadata(
         1,
         0,
         0,
@@ -152,7 +152,7 @@ contract MetadataCollection_v1 {
     // Funding Manager - Extensions
 
     // FM_EXT_TokenVault_v1
-    IModule_v1.Metadata public tokenVaultMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public tokenVaultMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -164,7 +164,7 @@ contract MetadataCollection_v1 {
     // Logic Module
 
     // Oracle_Permissioned
-    IModule_v1.Metadata public oraclePermissionedMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public oraclePermissionedMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -173,7 +173,7 @@ contract MetadataCollection_v1 {
     );
 
     // Bounties
-    IModule_v1.Metadata public bountiesMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public bountiesMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -182,7 +182,7 @@ contract MetadataCollection_v1 {
     );
 
     // KPIRewarder
-    IModule_v1.Metadata public kpiRewarderMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public kpiRewarderMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -191,7 +191,7 @@ contract MetadataCollection_v1 {
     );
 
     // PaymentRouter
-    IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public paymentRouterMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -200,7 +200,7 @@ contract MetadataCollection_v1 {
     );
 
     // RecurringPayments
-    IModule_v1.Metadata public recurringPaymentsMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public recurringPaymentsMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -209,7 +209,7 @@ contract MetadataCollection_v1 {
     );
 
     // Staking
-    IModule_v1.Metadata public stakingMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public stakingMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -221,8 +221,8 @@ contract MetadataCollection_v1 {
     // Payment Processor
 
     // QueueManualExecutionPaymentProcessor
-    IModule_v1.Metadata public queueManualExecutionPaymentProcessorMetadata =
-    IModule_v1.Metadata(
+    IModule_v2.Metadata public queueManualExecutionPaymentProcessorMetadata =
+    IModule_v2.Metadata(
         1,
         0,
         0,
@@ -231,19 +231,19 @@ contract MetadataCollection_v1 {
     );
 
     // QueuePaymentProcessor
-    IModule_v1.Metadata public queuePaymentProcessorMetadata = IModule_v1
+    IModule_v2.Metadata public queuePaymentProcessorMetadata = IModule_v2
         .Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v1"
     );
 
     // SimplePaymentProcessor
-    IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
+    IModule_v2.Metadata public simplePaymentProcessorMetadata = IModule_v2
         .Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v2"
     );
 
     // StreamingPaymentProcessor
-    IModule_v1.Metadata public streamingPaymentProcessorMetadata = IModule_v1
+    IModule_v2.Metadata public streamingPaymentProcessorMetadata = IModule_v2
         .Metadata(
         1,
         0,

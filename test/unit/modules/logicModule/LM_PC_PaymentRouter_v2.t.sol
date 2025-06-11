@@ -13,7 +13,7 @@ import "@oz/utils/Strings.sol";
 
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -26,7 +26,7 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBase_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
@@ -127,7 +127,7 @@ contract LM_PC_PaymentRouter_v2_Test_pushPayment is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -193,7 +193,7 @@ contract LM_PC_PaymentRouter_v2_Test_pushPaymentBatched is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

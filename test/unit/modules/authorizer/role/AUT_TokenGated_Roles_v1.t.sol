@@ -13,7 +13,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -21,7 +21,7 @@ import {
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
 
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
@@ -350,7 +350,7 @@ contract AUT_TokenGated_Roles_v2_Test is ModuleTest {
         // permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(_bob);
@@ -420,7 +420,7 @@ contract AUT_TokenGated_Roles_v2_Test is ModuleTest {
         // permissioned
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(_bob);

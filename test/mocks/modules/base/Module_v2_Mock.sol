@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import {
-    Module_v1,
-    IModule_v1,
+    Module_v2,
+    IModule_v2,
     IOrchestrator_v1
-} from "src/modules/base/Module_v1.sol";
+} from "src/modules/base/Module_v2.sol";
 
-contract Module_v2_Mock is Module_v1 {
+contract Module_v2_Mock is Module_v2 {
     // ========================================================================
     // Modifier Access
 
@@ -29,7 +29,7 @@ contract Module_v2_Mock is Module_v1 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
-    ) public virtual override(Module_v1) initializer {
+    ) public virtual override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

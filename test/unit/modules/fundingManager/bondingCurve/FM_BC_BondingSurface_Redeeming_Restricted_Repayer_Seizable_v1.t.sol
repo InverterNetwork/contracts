@@ -24,7 +24,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
@@ -482,7 +482,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -560,7 +560,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -714,7 +714,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -839,7 +839,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -879,7 +879,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -952,7 +952,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -992,7 +992,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1273,12 +1273,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testSetTokenVault_revertGivenAddressIsZero() public {
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         bondingCurveFundingManager.exposed_setTokenVault(address(0));
     }
 
     function testSetTokenVault_revertGivenAddressIsSameContract() public {
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         bondingCurveFundingManager.exposed_setTokenVault(
             address(bondingCurveFundingManager)
         );

@@ -14,7 +14,7 @@ import {IDeterministicFactory_v1} from
 
 import {
     Governor_v1,
-    IModule_v1,
+    IModule_v2,
     IInverterBeacon_v1
 } from "@ex/governance/Governor_v1.sol";
 
@@ -83,7 +83,7 @@ contract UpgradeModule is Script, ProtocolConstants_v1 {
     {
         ModuleFactory_v1 moduleFactory = ModuleFactory_v1(deployedModuleFactory);
         (IInverterBeacon_v1 beacon,) = moduleFactory.getBeaconAndId(
-            IModule_v1.Metadata(
+            IModule_v2.Metadata(
                 majorVersion,
                 0,
                 0,

@@ -12,7 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -112,7 +112,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
         );
 
         // Init Module wrongly
-        vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidOrchestratorAddress.selector);
         kpiManager.init(IOrchestrator_v1(address(0)), _METADATA, configData);
 
         // Test invalid staking token
@@ -202,7 +202,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
                 type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
             )
         );
-        assertTrue(kpiManager.supportsInterface(type(IModule_v1).interfaceId));
+        assertTrue(kpiManager.supportsInterface(type(IModule_v2).interfaceId));
     }
 
     // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
@@ -365,7 +365,7 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -608,7 +608,7 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -770,7 +770,7 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1233,7 +1233,7 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

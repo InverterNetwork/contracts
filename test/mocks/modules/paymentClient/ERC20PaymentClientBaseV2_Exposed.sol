@@ -5,10 +5,10 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {
-    Module_v1,
-    IModule_v1,
+    Module_v2,
+    IModule_v2,
     IOrchestrator_v1
-} from "src/modules/base/Module_v1.sol";
+} from "src/modules/base/Module_v2.sol";
 
 // SuT
 import {
@@ -30,7 +30,7 @@ contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v2 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory // configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

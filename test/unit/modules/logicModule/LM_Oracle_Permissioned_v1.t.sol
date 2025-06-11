@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Internal
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -109,7 +109,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -158,7 +158,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -208,7 +208,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
@@ -62,7 +62,7 @@ interface IOrchestratorFactory_v1 {
     /// @param  metadata The module's metadata.
     /// @param  configData Variable config data for specific module implementations.
     struct ModuleConfig {
-        IModule_v1.Metadata metadata;
+        IModule_v2.Metadata metadata;
         bytes configData;
     }
 

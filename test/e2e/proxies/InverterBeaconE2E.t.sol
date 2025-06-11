@@ -11,7 +11,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 import {
     IModuleFactory_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -45,7 +45,7 @@ contract InverterBeaconE2E is E2ETest {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule_v1.Metadata DATA = IModule_v1.Metadata(
+    IModule_v2.Metadata DATA = IModule_v2.Metadata(
         MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
     );
 
@@ -243,7 +243,7 @@ contract InverterBeaconE2E is E2ETest {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule_v1.Metadata memory metadata)
+    function _assumeValidMetadata(IModule_v2.Metadata memory metadata)
         public
         pure
     {

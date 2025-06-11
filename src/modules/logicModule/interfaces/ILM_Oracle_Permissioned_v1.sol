@@ -14,7 +14,7 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
  * @dev     This contract inherits from:
  *          - ILM_Oracle_Permissioned_v1: Implementation interface.
  *          - IOraclePrice_v1: Oracle price interface.
- *          - Module_v1: Base module functionality.
+ *          - Module_v2: Base module functionality.
  *
  *          Key features:
  *              - Two separate price feeds for issuance and redemption.

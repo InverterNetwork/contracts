@@ -13,7 +13,7 @@ import {IAccessControlEnumerable} from
  *
  * @dev     Inherits functionality from:
  *          - IAuthorizer_v2: Implementation interface.
- *          - Module_v1: Inverter network base module functionality.
+ *          - Module_v2: Inverter network base module functionality.
  *          - AccessControlEnumerableUpgradeable: Access control functionality.
  *
  *          Key features:

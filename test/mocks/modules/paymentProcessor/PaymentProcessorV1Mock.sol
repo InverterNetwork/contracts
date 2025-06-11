@@ -9,7 +9,7 @@ import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {IModule_v1} from "src/modules/base/Module_v1.sol";
+import {IModule_v2} from "src/modules/base/Module_v2.sol";
 
 contract PaymentProcessorV1Mock is IPaymentProcessor_v2, ERC165 {
     function supportsInterface(bytes4 interfaceId)
@@ -21,7 +21,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v2, ERC165 {
     {
         bytes4 interfaceId_IPaymentProcessor =
             type(IPaymentProcessor_v2).interfaceId;
-        bytes4 interfaceId_IModule = type(IModule_v1).interfaceId;
+        bytes4 interfaceId_IModule = type(IModule_v2).interfaceId;
         return interfaceId == interfaceId_IPaymentProcessor
             || interfaceId == interfaceId_IModule
             || super.supportsInterface(interfaceId);

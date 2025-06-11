@@ -6,10 +6,10 @@ import "forge-std/Test.sol";
 // Internal
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
@@ -89,7 +89,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -97,7 +97,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     }
 
     function testWithdraw_validAddressTokModifierInPosition() public {
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         vault.withdraw(address(0), 1, address(1));
     }
 
@@ -111,7 +111,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     }
 
     function testWithdraw_validAddressDstModifierInPosition() public {
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         vault.withdraw(address(1), 1, address(0));
     }
 

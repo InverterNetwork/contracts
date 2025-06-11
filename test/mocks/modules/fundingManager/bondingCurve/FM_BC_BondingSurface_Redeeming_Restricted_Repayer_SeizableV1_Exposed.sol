@@ -13,7 +13,7 @@ import {
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
 } from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
     FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1

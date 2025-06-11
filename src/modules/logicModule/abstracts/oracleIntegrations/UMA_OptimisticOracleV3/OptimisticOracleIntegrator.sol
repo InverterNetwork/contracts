@@ -8,7 +8,7 @@ import {IOptimisticOracleIntegrator} from
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/IOptimisticOracleIntegrator.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -37,7 +37,7 @@ import {ERC165Upgradeable} from
 
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
-    Module_v1
+    Module_v2
 {
     using SafeERC20 for IERC20;
 
@@ -46,7 +46,7 @@ abstract contract OptimisticOracleIntegrator is
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId == type(IOptimisticOracleIntegrator).interfaceId
@@ -79,7 +79,7 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Initialization
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,

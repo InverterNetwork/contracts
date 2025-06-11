@@ -10,7 +10,7 @@ import {IERC20PaymentClientBase_v2} from
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {IPP_Queue_ManualExecution_v1} from
     "@pp/interfaces/IPP_Queue_ManualExecution_v1.sol";
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
 
 // External

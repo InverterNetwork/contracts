@@ -14,7 +14,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
@@ -210,7 +210,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -263,7 +263,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -674,7 +674,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IModule_v1.ProtocolFeeTransferred(
+        emit IModule_v2.ProtocolFeeTransferred(
             address(_token), treasury, _feeAmount
         );
         // Function call
@@ -864,7 +864,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -915,7 +915,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -968,7 +968,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -1172,7 +1172,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

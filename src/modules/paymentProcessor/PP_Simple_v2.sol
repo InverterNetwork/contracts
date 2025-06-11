@@ -10,7 +10,7 @@ import {
 } from "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Internal Dependencies
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -24,7 +24,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @notice  Manages ERC20 payment processing for modules within the Inverter Network
  *          that are compliant with the {IERC20PaymentClientBase_v2} interface.
  *
- * @dev     Inherits {Module_v1} and implements {IPaymentProcessor_v2} to handle payment
+ * @dev     Inherits {Module_v2} and implements {IPaymentProcessor_v2} to handle payment
  *          orders from registered modules, ensuring only eligible modules can initiate
  *          payments. Utilizes {SafeERC20} for secure token transfers.
  *
@@ -34,13 +34,13 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-contract PP_Simple_v2 is Module_v1, IPaymentProcessor_v2 {
+contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId == type(IPaymentProcessor_v2).interfaceId
@@ -82,12 +82,12 @@ contract PP_Simple_v2 is Module_v1, IPaymentProcessor_v2 {
     //--------------------------------------------------------------------------
     // Initializer
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

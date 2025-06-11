@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {
     IOrchestratorFactory_v1,
     IOrchestrator_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
     IFundingManager_v1,
@@ -281,7 +281,7 @@ contract OrchestratorFactory_v1 is
         // Deploy and cache optional modules.
 
         for (uint i; i < modules.length; ++i) {
-            IModule_v1(modules[i]).init(
+            IModule_v2(modules[i]).init(
                 IOrchestrator_v1(proxy),
                 moduleConfigs[i].metadata,
                 moduleConfigs[i].configData

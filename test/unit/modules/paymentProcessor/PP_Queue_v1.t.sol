@@ -16,7 +16,7 @@ import "forge-std/console.sol";
 // Tests and Mocks
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from
@@ -465,7 +465,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -2310,7 +2310,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         emit IPaymentProcessor_v2.TokensReleased(
             protocolTreasury_, address(_token), protocolFeeAmount
         );
-        emit IModule_v1.ProtocolFeeTransferred(
+        emit IModule_v2.ProtocolFeeTransferred(
             address(_token), protocolTreasury_, protocolFeeAmount
         );
         // Test
@@ -2927,7 +2927,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -3160,7 +3160,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -3240,7 +3240,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -3283,7 +3283,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

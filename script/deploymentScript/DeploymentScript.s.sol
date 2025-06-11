@@ -23,7 +23,7 @@ import {
     IInverterBeacon_v1
 } from "src/proxies/InverterBeacon_v1.sol";
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {EIP712} from "@oz/utils/cryptography/EIP712.sol";
 
@@ -463,7 +463,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         (IInverterBeacon_v1 testBeacon,) = ModuleFactory_v1(moduleFactory)
             .getBeaconAndId(initialMetadataRegistration[0]);
 
-        IModule_v1.Metadata memory testMetadata = IModule_v1.Metadata(
+        IModule_v2.Metadata memory testMetadata = IModule_v2.Metadata(
             type(uint).max,
             type(uint).max,
             type(uint).max,

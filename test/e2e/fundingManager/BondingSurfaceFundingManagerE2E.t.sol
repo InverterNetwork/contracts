@@ -12,7 +12,7 @@ import {
 
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
@@ -306,7 +306,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         // Check that the buy and sell functionalities dont work anymore for a regular user
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(alice);
@@ -314,7 +314,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(alice);

@@ -13,7 +13,7 @@ import {ILM_PC_Staking_v2} from "@lm/interfaces/ILM_PC_Staking_v2.sol";
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v2,
-    Module_v1
+    Module_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External Interfaces
@@ -102,12 +102,12 @@ contract LM_PC_Staking_v2 is
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external virtual override(Module_v1) initializer {
+    ) external virtual override(Module_v2) initializer {
         __ReentrancyGuard_init();
         __Module_init(orchestrator_, metadata);
 

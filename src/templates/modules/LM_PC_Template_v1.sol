@@ -11,7 +11,7 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {
     ERC20PaymentClientBase_v2,
-    Module_v1
+    Module_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External
@@ -143,7 +143,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         // Decode module specific init data through use of configData bytes.

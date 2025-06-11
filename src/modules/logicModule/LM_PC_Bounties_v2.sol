@@ -14,7 +14,7 @@ import {
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v2,
-    Module_v1
+    Module_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External Dependencies
@@ -261,12 +261,12 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
         // This module does not use any PaymentOrder flags.
         __ERC20PaymentClientBase_v2_init(bytes32(0));

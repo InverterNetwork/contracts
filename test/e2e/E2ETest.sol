@@ -26,7 +26,7 @@ import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {
     ModuleFactory_v1,
     IModuleFactory_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/ModuleFactory_v1.sol";
 import {
     OrchestratorFactory_v1,
@@ -139,7 +139,7 @@ contract E2ETest is E2EModuleRegistry {
         // as the governor knows about it.
         moduleFactory.init(
             address(gov),
-            new IModule_v1.Metadata[](0),
+            new IModule_v2.Metadata[](0),
             new IInverterBeacon_v1[](0)
         );
 

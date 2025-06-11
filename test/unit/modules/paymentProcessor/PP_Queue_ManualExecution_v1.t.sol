@@ -15,7 +15,7 @@ import "forge-std/console.sol";
 // Tests and Mocks
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from

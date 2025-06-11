@@ -18,7 +18,7 @@ import {TransactionForwarder_v1} from
 import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
 
 // Mocks
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
@@ -59,20 +59,20 @@ abstract contract ModuleTest is Test {
     // Orchestrator_v1 Constants
     uint constant _ORCHESTRATOR_ID = 1;
 
-    // Module_v1 Constants
+    // Module_v2 Constants
     uint constant _MAJOR_VERSION = 1;
     uint constant _MINOR_VERSION = 0;
     uint constant _PATCH_VERSION = 0;
     string constant _URL = "https://github.com/organization/module";
-    string constant _TITLE = "Module_v1";
+    string constant _TITLE = "Module_v2";
 
-    IModule_v1.Metadata _METADATA = IModule_v1.Metadata(
+    IModule_v2.Metadata _METADATA = IModule_v2.Metadata(
         _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, _URL, _TITLE
     );
 
     //--------------------------------------------------------------------------
     // Setup
-    function _setUpOrchestrator(IModule_v1 module) internal virtual {
+    function _setUpOrchestrator(IModule_v2 module) internal virtual {
         // Needs to be a proxy for the notInitialized Check
         feeManager = FeeManager_v1(
             address(

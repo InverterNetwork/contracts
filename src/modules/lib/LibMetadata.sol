@@ -2,12 +2,12 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 /**
  * @title   Inverter Metadata Library
  *
- * @dev     Provides common functions for {IModule_v1}'s Metadata type.
+ * @dev     Provides common functions for {IModule_v2}'s Metadata type.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
@@ -19,7 +19,7 @@ library LibMetadata {
     /// @dev    Returns the identifier for given metadata.
     /// @param  metadata The metadata.
     /// @return The metadata's identifier.
-    function identifier(IModule_v1.Metadata memory metadata)
+    function identifier(IModule_v2.Metadata memory metadata)
         internal
         pure
         returns (bytes32)
@@ -32,7 +32,7 @@ library LibMetadata {
     /// @dev	Returns whether the given metadata is valid.
     /// @param  metadata The metadata.
     /// @return True if metadata valid, false otherwise.
-    function isValid(IModule_v1.Metadata memory metadata)
+    function isValid(IModule_v2.Metadata memory metadata)
         internal
         pure
         returns (bool)

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Internal
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";

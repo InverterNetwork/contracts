@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 import {IFM_Template_v1} from "./IFM_Template_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
@@ -20,7 +20,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @dev     This contract is used to showcase a basic setup for a funding
  *          manager. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
+ *          - Inherit from the Module_v2 contract to enable interaction with
  *            the Inverter workflow.
  *          - Use of the IFundingManager_v1 interface to facilitate
  *            interaction as a Funding Manager.
@@ -40,7 +40,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
+contract FM_Template_v1 is IFM_Template_v1, Module_v2 {
     // =========================================================================
     // Libraries
 
@@ -54,7 +54,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId_ == type(IFM_Template_v1).interfaceId
@@ -87,12 +87,12 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // =========================================================================
     // Constructor & Init
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         // Decode module specific init data through use of configData bytes.

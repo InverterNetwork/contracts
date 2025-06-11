@@ -12,7 +12,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
  *
  * @dev     This contract is used to showcase a basic setup for a payment
  *          processor. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
+ *          - Inherit from the Module_v2 contract to enable interaction with
  *            the Inverter workflow.
  *          - Use of the IPaymentProcessor_v2 interface to facilitate
  *            interaction with a payment client.

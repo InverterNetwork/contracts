@@ -18,7 +18,7 @@ import {FM_DepositVault_v1_Exposed} from
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -109,7 +109,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         // Deposit
         if (expectedFeeAmount != 0) {
             vm.expectEmit(true, true, true, true);
-            emit IModule_v1.ProtocolFeeTransferred(
+            emit IModule_v2.ProtocolFeeTransferred(
                 address(_token),
                 feeManager.getDefaultProtocolTreasury(),
                 expectedFeeAmount
@@ -144,10 +144,10 @@ contract FM_DepositVaultV1Test is ModuleTest {
     }
 
     function testTransferOrchestratorTokenModifierInPosition() public {
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         vault.transferOrchestratorToken(address(this), 0);
 
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         vm.prank(address(client));
         vault.transferOrchestratorToken(address(0), 0);
     }
@@ -166,7 +166,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(vault)), amount_);
 
         vm.expectEmit(true, true, true, true);
-        emit IModule_v1.ProtocolFeeTransferred(
+        emit IModule_v2.ProtocolFeeTransferred(
             address(_token), treasury_, amount_
         );
 

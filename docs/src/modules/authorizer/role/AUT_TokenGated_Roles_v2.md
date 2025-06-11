@@ -67,7 +67,7 @@ classDiagram
 This contract is based on the following contracts and inherits their functionalities:
 
 - [IAUT_TokenGated_Roles_v2](./interfaces/IAUT_TokenGated_Roles_v2.md): Implementation interface.
-- [Module_v1](../../base/Module_v1.md): Inverter network base module functionality.
+- [Module_v2](../../base/Module_v2.md): Inverter network base module functionality.
 - [AccessControlEnumerableUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol): Access control functionality.
 - [AUT_Roles_v2](./AUT_Roles_v2.md): Base contract for the role-based access control.
 

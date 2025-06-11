@@ -10,7 +10,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {
     ModuleTest,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
@@ -19,7 +19,7 @@ import {
     ERC20PaymentClientBaseV2_Exposed,
     IERC20PaymentClientBase_v2
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2_Exposed.sol";
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 

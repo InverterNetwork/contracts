@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // Internal Interfaces
 import {IOrchestrator_v1} from

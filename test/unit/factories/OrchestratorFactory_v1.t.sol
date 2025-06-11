@@ -13,7 +13,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
-    IModule_v1,
+    IModule_v2,
     IOrchestrator_v1
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
@@ -69,7 +69,7 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(
+        IModule_v2.Metadata(
             1, 0, 0, "https://fundingmanager.com", "FundingManager"
         ),
         bytes("data")
@@ -77,13 +77,13 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer"),
+        IModule_v2.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this))
     );
 
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(
+        IModule_v2.Metadata(
             1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
         ),
         bytes("data")
@@ -91,7 +91,7 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig moduleConfig = IOrchestratorFactory_v1
         .ModuleConfig(
-        IModule_v1.Metadata(1, 0, 0, "https://module.com", "Module_v1"),
+        IModule_v2.Metadata(1, 0, 0, "https://module.com", "Module_v2"),
         bytes("")
     );
 

@@ -12,7 +12,7 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
@@ -64,7 +64,7 @@ contract E2EModuleRegistry is Test {
     //      Module moduleImpl;
     //      InverterBeacon_v1 moduleBeacon;
     //      address moduleBeaconOwner = DEFAULT_BEACON_OWNER;
-    //      IModule_v1.Metadata moduleMetadata = IModule_v1.Metadata(
+    //      IModule_v2.Metadata moduleMetadata = IModule_v2.Metadata(
     //          1, 1, "https://github.com/inverter/module", "ModuleName"
     //      );
     // And AS A COMMENT:
@@ -84,7 +84,7 @@ contract E2EModuleRegistry is Test {
     // Funding Managers
     //--------------------------------------------------------------------------
 
-    IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata fundingManagerMetadata = IModule_v2.Metadata(
         1, // major version
         0, // minor version
         0, // patch version
@@ -126,8 +126,8 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
-    IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
-    IModule_v1.Metadata(
+    IModule_v2.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule_v2.Metadata(
         1,
         0,
         0,
@@ -202,8 +202,8 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon;
 
-    IModule_v1.Metadata
-        bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata = IModule_v1
+    IModule_v2.Metadata
+        bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata = IModule_v2
             .Metadata(
             1,
             0,
@@ -285,7 +285,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 tokenVaultFundingManagerExtensionBeacon;
 
-    IModule_v1.Metadata tokenVaultFundingManagerExtensionMetadata = IModule_v1
+    IModule_v2.Metadata tokenVaultFundingManagerExtensionMetadata = IModule_v2
         .Metadata(
         1, 0, 0, "https://github.com/inverter/contracts", "FM_EXT_TokenVault_v1"
     );
@@ -328,7 +328,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 depositVaultBeacon;
 
-    IModule_v1.Metadata depositVaultMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata depositVaultMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -367,7 +367,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
-    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata roleAuthorizerMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v2"
     );
 
@@ -406,7 +406,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
-    IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata tokenRoleAuthorizerMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -453,7 +453,7 @@ contract E2EModuleRegistry is Test {
     PP_Queue_v1 queueBasedPaymentProcessor;
     InverterBeacon_v1 queueBasedPaymentProcessorBeacon;
 
-    IModule_v1.Metadata queueBasedPaymentProcessorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata queueBasedPaymentProcessorMetadata = IModule_v2.Metadata(
         1, // major version
         0, // minor version
         0, // patch version
@@ -487,7 +487,7 @@ contract E2EModuleRegistry is Test {
     PP_Queue_ManualExecution_v1 manualQueueBasedPaymentProcessor;
     InverterBeacon_v1 manualQueueBasedPaymentProcessorBeacon;
 
-    IModule_v1.Metadata manualQueueBasedPaymentProcessorMetadata = IModule_v1
+    IModule_v2.Metadata manualQueueBasedPaymentProcessorMetadata = IModule_v2
         .Metadata(
         1, // major version
         0, // minor version
@@ -524,7 +524,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
-    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata simplePaymentProcessorMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v2"
     );
 
@@ -563,7 +563,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
-    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata streamingPaymentProcessorMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -607,7 +607,7 @@ contract E2EModuleRegistry is Test {
 
     // LM_Oracle_Permissioned_v1
 
-    IModule_v1.Metadata oracleMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata oracleMetadata = IModule_v2.Metadata(
         1, // major version
         0, // minor version
         0, // patch version
@@ -642,7 +642,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
-    IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata recurringPaymentManagerMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -685,7 +685,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 bountyManagerBeacon;
 
-    IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata bountyManagerMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -727,7 +727,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 paymentRouterBeacon;
 
-    IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata public paymentRouterMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -771,7 +771,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 LM_PC_Staking_v2Beacon;
 
-    IModule_v1.Metadata LM_PC_Staking_v2Metadata = IModule_v1.Metadata(
+    IModule_v2.Metadata LM_PC_Staking_v2Metadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -814,7 +814,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 LM_PC_KPIRewarder_v2Beacon;
 
-    IModule_v1.Metadata LM_PC_KPIRewarder_v2Metadata = IModule_v1.Metadata(
+    IModule_v2.Metadata LM_PC_KPIRewarder_v2Metadata = IModule_v2.Metadata(
         1,
         0,
         0,
@@ -861,7 +861,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 votingRolesBeacon;
 
-    IModule_v1.Metadata votingRolesMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata votingRolesMetadata = IModule_v2.Metadata(
         1,
         0,
         0,

@@ -9,7 +9,7 @@ import {
     IAuthorizer_v2,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
@@ -387,7 +387,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         address _contractAddr,
         bytes4 _privilegedInterfaceId
     ) internal view {
-        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || !ERC165Checker.supportsInterface(
@@ -404,7 +404,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         internal
         view
     {
-        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || ERC165Checker.supportsInterface(

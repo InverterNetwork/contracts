@@ -18,7 +18,7 @@ import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {
     ERC20PaymentClientBase_v2,
@@ -258,7 +258,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         // Initialize base module.
         __Module_init(orchestrator_, metadata_);
 

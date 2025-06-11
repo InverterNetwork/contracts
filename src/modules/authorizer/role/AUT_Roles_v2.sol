@@ -2,13 +2,13 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -29,7 +29,7 @@ import {AccessControlEnumerableUpgradeable} from
  *
  * @dev     Inherits functionality from:
  *          - IAuthorizer_v2: Implementation interface.
- *          - Module_v1: Inverter network base module functionality.
+ *          - Module_v2: Inverter network base module functionality.
  *          - AccessControlEnumerableUpgradeable: Access control functionality.
  *
  *          Key features:
@@ -56,7 +56,7 @@ import {AccessControlEnumerableUpgradeable} from
  */
 contract AUT_Roles_v2 is
     IAuthorizer_v2,
-    Module_v1,
+    Module_v2,
     AccessControlEnumerableUpgradeable
 {
     /// @inheritdoc ERC165Upgradeable
@@ -64,7 +64,7 @@ contract AUT_Roles_v2 is
         public
         view
         virtual
-        override(Module_v1, AccessControlEnumerableUpgradeable)
+        override(Module_v2, AccessControlEnumerableUpgradeable)
         returns (bool isInterfaceId_)
     {
         return interfaceId_ == type(IAuthorizer_v2).interfaceId
@@ -125,7 +125,7 @@ contract AUT_Roles_v2 is
     // ========================================================================
     // Initialization
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,

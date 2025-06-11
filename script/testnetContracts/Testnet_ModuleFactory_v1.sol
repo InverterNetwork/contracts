@@ -6,7 +6,7 @@ import {
     ModuleFactory_v1,
     IModuleFactory_v1,
     IInverterBeacon_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/ModuleFactory_v1.sol";
 
 /**
@@ -39,7 +39,7 @@ contract Testnet_ModuleFactory_v1 is ModuleFactory_v1 {
 
     /// @inheritdoc IModuleFactory_v1
     function registerMetadata(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external override(ModuleFactory_v1) {
         _registerMetadata(metadata, beacon);

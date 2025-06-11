@@ -15,7 +15,7 @@ import {
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v2,
-    Module_v1
+    Module_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External Dependencies
@@ -67,7 +67,7 @@ contract LM_PC_PaymentRouter_v2 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
 
         // Set the flags for the PaymentOrders (this module uses 3 flags).

@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IModuleFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // External Dependencies
 import {ERC2771ContextUpgradeable} from
@@ -339,7 +339,7 @@ abstract contract ModuleManagerBase_v1 is
             module.code.length == 0 || module == address(0)
                 || module == address(this)
                 || !ERC165Upgradeable(module).supportsInterface(
-                    type(IModule_v1).interfaceId
+                    type(IModule_v2).interfaceId
                 )
         ) {
             revert ModuleManagerBase__InvalidModuleAddress();

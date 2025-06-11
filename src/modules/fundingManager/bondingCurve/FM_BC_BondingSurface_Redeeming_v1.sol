@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
@@ -104,12 +104,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ========================================================================
     // Init Function
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external virtual override(Module_v1) initializer {
+    ) external virtual override(Module_v2) initializer {
         address issuanceToken;
         address acceptedToken;
         BondingCurveProperties memory bondingCurveProperties;

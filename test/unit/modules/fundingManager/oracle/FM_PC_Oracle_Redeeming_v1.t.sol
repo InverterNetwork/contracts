@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
 import {IFM_PC_Oracle_Redeeming_v1} from
     "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
     BondingCurveBase_v1,
@@ -531,7 +531,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint amount_ = 100;
 
         // Test - Should revert if not called by payment client
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         fundingManager.transferOrchestratorToken(receiver_, amount_);
     }
 
@@ -677,7 +677,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -718,7 +718,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -761,7 +761,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));
@@ -794,7 +794,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotPermissioned.selector
+                IModule_v2.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(address(0xB0B));

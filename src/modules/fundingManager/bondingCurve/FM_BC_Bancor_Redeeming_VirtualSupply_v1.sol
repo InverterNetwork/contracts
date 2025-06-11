@@ -10,7 +10,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 
 import {
     IBondingCurveBase_v1,
@@ -140,12 +140,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // -------------------------------------------------------------------------
     // Init Function
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
 
         address issuanceToken;

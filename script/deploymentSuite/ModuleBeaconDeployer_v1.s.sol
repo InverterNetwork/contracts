@@ -13,7 +13,7 @@ import {ProxyAndBeaconDeployer_v1} from
 
 // Interfaces
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 /**
  * @title Inverter Module Beacon Deployer Script
@@ -30,7 +30,7 @@ contract ModuleBeaconDeployer_v1 is
         new ProxyAndBeaconDeployer_v1();
 
     // ModuleFactory Registration Data
-    IModule_v1.Metadata[] initialMetadataRegistration;
+    IModule_v2.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
 
     // Orchestrator Beacon

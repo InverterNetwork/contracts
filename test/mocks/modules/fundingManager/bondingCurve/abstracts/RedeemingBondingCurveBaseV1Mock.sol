@@ -18,7 +18,7 @@ import {
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -33,7 +33,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
 
         (

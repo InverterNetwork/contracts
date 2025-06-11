@@ -20,7 +20,7 @@ import {
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -104,7 +104,7 @@ contract LM_PC_KPIRewarder_v2 is
 
     */
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc Module_v2
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
