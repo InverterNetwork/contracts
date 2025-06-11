@@ -300,7 +300,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         address _receiver,
         uint _collateralTokenAmount
     ) internal virtual override {
-        revert("NOT IMPLEMENTED"); // TODO: Implement
+        _token.safeTransfer(_receiver, _collateralTokenAmount);
     }
 
     // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)

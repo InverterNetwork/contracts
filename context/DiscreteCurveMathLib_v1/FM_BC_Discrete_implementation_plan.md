@@ -123,13 +123,13 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
   - tests (via exposed function)
     - [x] transfers tokens from provider to this module
 
-#### 2.9.2. `_handleIssuanceTokensAfterBuy`
+#### 2.9.2. `_handleIssuanceTokensAfterBuy` [DONE]
 
 - mints issuance tokens to receiver
   - tests (via exposed function)
     - mints tokens to receiver
 
-#### 2.9.3. `_handleCollateralTokensAfterSell`
+#### 2.9.3. `_handleCollateralTokensAfterSell` [DONE]
 
 - transfers collateral tokens to receiver
   - tests (via exposed function)

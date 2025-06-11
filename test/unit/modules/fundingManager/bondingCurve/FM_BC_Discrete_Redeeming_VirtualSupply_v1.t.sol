@@ -879,6 +879,52 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test _handleCollateralTokensAfterSell (exposed)
+        └── Given a receiver address and an amount of collateral tokens to transfer
+            └── When exposed_handleCollateralTokensAfterSell is called
+                └── Then it should transfer the specified amount of collateral tokens to the receiver
+                    └── And the receiver's token balance should increase by the amount
+                    └── And the module's token balance should decrease by the amount
+    */
+    function testHandleCollateralTokensAfterSell_TransfersTokensToReceiver(
+        address _receiver,
+        uint _amount
+    ) public {
+        vm.assume(_receiver != address(0) && _amount > 0);
+
+        // Mint initial tokens to the fmBcDiscrete contract
+        orchestratorToken.mint(address(fmBcDiscrete), _amount);
+        assertEq(
+            orchestratorToken.balanceOf(address(fmBcDiscrete)),
+            _amount,
+            "Module initial balance mismatch"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(_receiver),
+            0,
+            "Receiver initial balance mismatch"
+        );
+
+        uint initialReceiverBalance = orchestratorToken.balanceOf(_receiver);
+        uint initialModuleBalance =
+            orchestratorToken.balanceOf(address(fmBcDiscrete));
+
+        // Call the exposed function
+        fmBcDiscrete.exposed_handleCollateralTokensAfterSell(_receiver, _amount);
+
+        // Assert final balances
+        assertEq(
+            orchestratorToken.balanceOf(_receiver),
+            initialReceiverBalance + _amount,
+            "Receiver final balance mismatch"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(address(fmBcDiscrete)),
+            initialModuleBalance - _amount,
+            "Module final balance mismatch"
+        );
+    }
+
     // =========================================================================
     // Helpers
 
