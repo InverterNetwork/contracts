@@ -24,7 +24,8 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
     PaymentProcessorV1Mock,
@@ -42,7 +43,7 @@ abstract contract ModuleTest is Test {
 
     // Mocks
     FundingManagerV1Mock _fundingManager;
-    AuthorizerV1Mock _authorizer;
+    Authorizer_v2_Mock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK", 18);
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
@@ -94,8 +95,8 @@ abstract contract ModuleTest is Test {
         impl = address(new FundingManagerV1Mock());
         _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
 
-        impl = address(new AuthorizerV1Mock());
-        _authorizer = AuthorizerV1Mock(Clones.clone(impl));
+        impl = address(new Authorizer_v2_Mock());
+        _authorizer = Authorizer_v2_Mock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
@@ -135,8 +136,8 @@ abstract contract ModuleTest is Test {
         impl = address(new FundingManagerV1Mock());
         _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
 
-        impl = address(new AuthorizerV1Mock());
-        _authorizer = AuthorizerV1Mock(Clones.clone(impl));
+        impl = address(new Authorizer_v2_Mock());
+        _authorizer = Authorizer_v2_Mock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,

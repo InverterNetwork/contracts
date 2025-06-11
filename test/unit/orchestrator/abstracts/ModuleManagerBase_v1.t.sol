@@ -10,7 +10,8 @@ import {
 } from "@mocks/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
 
 // Mocks
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
 
 // Errors

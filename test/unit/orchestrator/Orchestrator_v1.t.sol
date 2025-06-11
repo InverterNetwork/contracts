@@ -29,7 +29,8 @@ import {
     FundingManagerV1Mock,
     IFundingManager_v1
 } from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {PaymentProcessorV1Mock} from
     "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
@@ -52,7 +53,7 @@ contract OrchestratorV1Test is Test {
 
     // Mocks
     FundingManagerV1Mock fundingManager;
-    AuthorizerV1Mock authorizer;
+    Authorizer_v2_Mock authorizer;
     PaymentProcessorV1Mock paymentProcessor;
     GovernorV1Mock governor;
     ModuleFactoryV1Mock moduleFactory;
@@ -61,7 +62,7 @@ contract OrchestratorV1Test is Test {
 
     function setUp() public {
         fundingManager = new FundingManagerV1Mock();
-        authorizer = new AuthorizerV1Mock();
+        authorizer = new Authorizer_v2_Mock();
         paymentProcessor = new PaymentProcessorV1Mock();
         governor = new GovernorV1Mock();
         moduleFactory = new ModuleFactoryV1Mock();
@@ -314,7 +315,7 @@ contract OrchestratorV1Test is Test {
         );
 
         // Create new authorizer module
-        AuthorizerV1Mock newAuthorizer = new AuthorizerV1Mock();
+        Authorizer_v2_Mock newAuthorizer = new Authorizer_v2_Mock();
 
         newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
 

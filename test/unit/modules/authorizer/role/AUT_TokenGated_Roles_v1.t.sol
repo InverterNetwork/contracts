@@ -38,7 +38,8 @@ import {AUT_TokenGated_Roles_v2_Exposed} from
 // Mocks
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {PaymentProcessorV1Mock} from
     "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 import {ERC20PaymentClientBaseV2Mock} from

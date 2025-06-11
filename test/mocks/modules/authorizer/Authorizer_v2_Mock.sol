@@ -11,7 +11,7 @@ import {
 
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
-contract AuthorizerV1Mock is IAuthorizer_v2, Module_v1 {
+contract Authorizer_v2_Mock is IAuthorizer_v2, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
