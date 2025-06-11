@@ -111,9 +111,13 @@ This analysis confirms that our current approach of adding empty `revert("NOT IM
 
 There are two types of fees: protocol fees and project fees.
 
-Both are used in `calculatePurchaseReturn` (`BondingCurveBase_v1.sol`) and `calculateSaleReturn` (`RedeemingBondingCurveBase_v1.sol`)
+Both are used in
 
-### Status Quo
+A) read functions: `calculatePurchaseReturn` (`BondingCurveBase_v1.sol`) and `calculateSaleReturn` (`RedeemingBondingCurveBase_v1.sol`)
+
+B) write functions: as well as in the buy and sell functions.
+
+### Read Functions: Status Quo
 
 #### Protocol Fees
 
@@ -126,7 +130,7 @@ Both are used in `calculatePurchaseReturn` (`BondingCurveBase_v1.sol`) and `calc
 - `buyFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.sol`
 - `sellFee` is state var on `src/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol`
 
-### New Expected Behavior
+### Read Functions: New Expected Behavior
 
 #### Project Fees
 
@@ -148,3 +152,47 @@ Tests:
 - init gets protocol fees and treasury address from `FeeManager` and stores in state
 - protocol fees are correctly deducted and sent to treasury addresses
 - project fee withdrawal triggers protocol fee update
+
+### Write functions: Status Quo (`_buyOrder`, `_sellOrder`)
+
+This section outlines how fees are processed during the actual state-changing buy and sell operations, which complements the fee considerations for the read functions (`calculatePurchaseReturn`, `calculateSaleReturn`).
+
+**Core Mechanisms (Leveraging Base Contract Logic):**
+
+The primary fee processing logic resides within the `_buyOrder` (from `BondingCurveBase_v1`) and `_sellOrder` (from `RedeemingBondingCurveBase_v1`) internal functions. These functions orchestrate fee deduction and distribution.
+
+1.  **Fee Inputs:**
+
+    - **Project Fees:** The `buyFee` and `sellFee` state variables (which, in `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, will be initialized from hardcoded constants like `PROJECT_BUY_FEE_BPS` and `PROJECT_SELL_FEE_BPS`).
+    - **Protocol Fees:** The cached protocol fee percentages (e.g., `_protocolCollateralFeeBps`, `_protocolIssuanceFeeBps`) and treasury addresses (e.g., `_protocolCollateralTreasury`, `_protocolIssuanceTreasury`) stored as state variables in `FM_BC_Discrete_Redeeming_VirtualSupply_v1` after being fetched from the `FeeManager` during `init`.
+
+2.  **Calculation (`_calculateNetAndSplitFees`):**
+
+    - This crucial helper function (from `BondingCurveBase_v1`) is used to determine the net amount after fees and the individual amounts for protocol and project fees. It's applied sequentially:
+      - First to the primary token being deposited/exchanged (e.g., collateral for a buy, issuance for a sell).
+      - Then to the token being received before fees (e.g., gross issuance tokens for a buy, gross collateral for a sell).
+
+3.  **Processing Steps (Conceptual for a Buy Operation):**
+
+    - The user's incoming collateral (`_depositAmount`) is processed by `_calculateNetAndSplitFees` using the project `buyFee` and the cached protocol `collateralBuyFeePercentage`. This yields:
+      - `netDeposit`: Collateral used for the actual purchase via `_issueTokensFormulaWrapper`.
+      - `collateralProtocolFeeAmount`: Protocol fee taken from collateral.
+      - `projectFeeAmount`: Project fee taken from collateral.
+    - The `_issueTokensFormulaWrapper` calculates the gross `issuanceTokenAmount` based on `netDeposit`.
+    - This gross `issuanceTokenAmount` is then processed by `_calculateNetAndSplitFees` using the cached protocol `issuanceBuyFeePercentage` (project fee on issuance is typically 0). This yields:
+      - Net `issuanceTokenAmount`: Tokens the user actually receives.
+      - `issuanceProtocolFeeAmount`: Protocol fee taken from issuance tokens.
+    - A similar two-stage fee deduction applies to sell operations.
+
+4.  **Fee Distribution & Accounting:**
+    - **Project Fees (Collateral):** The `projectFeeAmount` (collateral) is accounted for. In `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, this will involve incrementing a dedicated state variable like `projectCollateralFeeCollected`. The base `_projectFeeCollected` hook in `BondingCurveBase_v1` can be leveraged or overridden if necessary.
+    - **Protocol Fees:**
+      - `collateralProtocolFeeAmount` is transferred to the `_protocolCollateralTreasury` (via `_processProtocolFeeViaTransfer`).
+      - `issuanceProtocolFeeAmount` is minted directly to the `_protocolIssuanceTreasury` (via `_processProtocolFeeViaMinting`).
+
+**Role of `FM_BC_Discrete_Redeeming_VirtualSupply_v1`:**
+
+- Ensure its `init` function correctly sets the `buyFee`/`sellFee` state variables and caches the protocol fee details in its own state variables.
+- Ensure that its specific `_issueTokensFormulaWrapper` and `_redeemTokensFormulaWrapper` are used by the `_buyOrder` and `_sellOrder` logic.
+- Implement or ensure correct usage of the mechanism to track `projectCollateralFeeCollected`.
+- Override `_buyOrder` and `_sellOrder` _only if_ the base implementations cannot correctly utilize the cached fee BPS values or the specific discrete formula wrappers without modification. Often, the base logic is designed to be flexible enough if the underlying fee state variables and formula wrappers are correctly set/overridden.
