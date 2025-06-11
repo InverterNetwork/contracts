@@ -1,7 +1,27 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IBondingCurveBase_v1 {
+/**
+ * @title   Inverter Bonding Curve Funding Manager Base Interface
+ *
+ * @notice  Manages the issuance of token for collateral along a bonding curve in the
+ *          Inverter Network, including fee handling and sell functionality control.
+ *
+ * @dev     Provides core functionalities for issuance operations, fee adjustments,
+ *          and issuance calculations.
+ *          Fee calculations utilize BPS for precision. Issuance-specific calculations should be
+ *          implemented in derived contracts.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 2.0.0
+ *
+ * @author  Inverter Network
+ */
+interface IBondingCurveBase_v2 {
     //--------------------------------------------------------------------------
     // Errors
 

@@ -30,8 +30,8 @@ import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 import {IVirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {
     IRedeemingBondingCurveBase_v1,
     IRedeemingBondingCurveBase_v1
@@ -257,7 +257,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -269,7 +269,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v1
+                IBondingCurveBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )
@@ -310,7 +310,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -461,7 +461,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.TokensBought(
+        emit IBondingCurveBase_v2.TokensBought(
             buyer, amount, formulaReturn, buyer
         );
         vm.expectEmit(
@@ -541,7 +541,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.TokensBought(
+        emit IBondingCurveBase_v2.TokensBought(
             buyer, amount, formulaReturn, buyer
         );
         vm.expectEmit(
@@ -680,7 +680,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v1
+                IBondingCurveBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )

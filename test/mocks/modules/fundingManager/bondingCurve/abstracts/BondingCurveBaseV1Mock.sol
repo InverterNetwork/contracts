@@ -10,7 +10,7 @@ import {IOrchestrator_v1} from
 // SuT
 import {
     BondingCurveBase_v1,
-    IBondingCurveBase_v1
+    IBondingCurveBase_v2
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";

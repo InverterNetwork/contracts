@@ -20,8 +20,8 @@ import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v2,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v2
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 
 contract BondingCurveTokenRescueE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.

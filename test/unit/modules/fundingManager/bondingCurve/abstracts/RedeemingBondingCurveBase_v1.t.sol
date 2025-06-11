@@ -18,8 +18,8 @@ import {
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -255,7 +255,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v1
+                IBondingCurveBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )
@@ -333,7 +333,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(non_admin_address);
         {
             vm.expectRevert(
-                IBondingCurveBase_v1
+                IBondingCurveBase_v2
                     .Module__BondingCurveBase__InvalidDepositAmount
                     .selector
             );
@@ -355,7 +355,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         vm.startPrank(seller);
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InsufficientOutputAmount
                 .selector
         );
@@ -458,7 +458,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(
+            emit IBondingCurveBase_v2.ProjectCollateralFeeAdded(
                 projectCollateralFeeAmount
             );
         }
@@ -633,7 +633,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidFeePercentage
                 .selector
         );
@@ -670,7 +670,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         uint depositAmount = 0;
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );

@@ -8,8 +8,8 @@ import {RedeemingBondingCurveBase_v1} from
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {
@@ -177,11 +177,11 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @inheritdoc IBondingCurveBase_v1
+    /// @inheritdoc IBondingCurveBase_v2
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         returns (uint staticPriceForBuying_)
     {
         return _formula.spotPrice(

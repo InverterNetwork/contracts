@@ -14,7 +14,7 @@ import {
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {
     BondingCurveBase_v1,
-    IBondingCurveBase_v1
+    IBondingCurveBase_v2
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
@@ -117,7 +117,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         returns (uint)
     {}
 

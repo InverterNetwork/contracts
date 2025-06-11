@@ -13,8 +13,8 @@ import {BondingCurveBase_v1} from
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from
@@ -338,11 +338,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     // ------------------------------------------------------------------------
     // Mutating - Out of Order
 
-    /// @inheritdoc IBondingCurveBase_v1
+    /// @inheritdoc IBondingCurveBase_v2
     function withdrawProjectCollateralFee(
         address, /* receiver_ */
         uint /* amount_ */
-    ) public view override(BondingCurveBase_v1, IBondingCurveBase_v1) {
+    ) public view override(BondingCurveBase_v1, IBondingCurveBase_v2) {
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
         );

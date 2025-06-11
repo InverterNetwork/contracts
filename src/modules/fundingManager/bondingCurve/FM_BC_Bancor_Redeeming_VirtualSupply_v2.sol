@@ -13,7 +13,7 @@ import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 
 import {
-    IBondingCurveBase_v1,
+    IBondingCurveBase_v2,
     BondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {
@@ -216,7 +216,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         permissioned
         buyingIsEnabled
         validReceiver(_receiver)
@@ -239,7 +239,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         permissioned
         buyingIsEnabled
     {
@@ -328,7 +328,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         returns (uint staticPriceForBuying_)
     {
         return (

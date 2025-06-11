@@ -25,7 +25,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 // Mocks
 import {
     BondingCurveBaseV1Mock,
-    IBondingCurveBase_v1
+    IBondingCurveBase_v2
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -78,7 +78,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
-                type(IBondingCurveBase_v1).interfaceId
+                type(IBondingCurveBase_v2).interfaceId
             )
         );
     }
@@ -148,7 +148,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.prank(non_admin_address);
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -168,7 +168,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Test for address(0)
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
@@ -176,7 +176,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Test for its own address)
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
@@ -225,7 +225,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -237,7 +237,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v1
+                IBondingCurveBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )
@@ -278,7 +278,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -309,7 +309,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(non_admin_address);
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
@@ -329,7 +329,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.startPrank(buyer);
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InsufficientOutputAmount
                 .selector
         );
@@ -351,7 +351,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.TokensBought(buyer, amount, amount, buyer);
+        emit IBondingCurveBase_v2.TokensBought(buyer, amount, amount, buyer);
 
         // Execution
         vm.prank(buyer);
@@ -445,7 +445,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(
+            emit IBondingCurveBase_v2.ProjectCollateralFeeAdded(
                 projectCollateralFeeAmount
             );
         }
@@ -454,7 +454,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.TokensBought(
+        emit IBondingCurveBase_v2.TokensBought(
             buyer, amount, finalAmount, buyer
         ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
@@ -556,7 +556,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address _treasury = address(0);
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
@@ -597,7 +597,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.ProtocolFeeMinted(
+        emit IBondingCurveBase_v2.ProtocolFeeMinted(
             address(issuanceToken), treasury, _feeAmount
         );
         // Function call
@@ -632,7 +632,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address _treasury = address(0);
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
@@ -734,7 +734,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(protocolFee + workflowFee >= _bps);
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__FeeAmountToHigh
                 .selector
         );
@@ -750,7 +750,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint totalAmount = 100;
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__TradeAmountTooLow
                 .selector
         );
@@ -766,7 +766,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint totalAmount = 100;
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__TradeAmountTooLow
                 .selector
         );
@@ -875,7 +875,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IBondingCurveBase_v1.BuyingEnabled();
+        emit IBondingCurveBase_v2.BuyingEnabled();
 
         bondingCurveFundingManager.openBuy();
 
@@ -890,7 +890,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IBondingCurveBase_v1.BuyingEnabled();
+        emit IBondingCurveBase_v2.BuyingEnabled();
 
         bondingCurveFundingManager.openBuy();
 
@@ -924,14 +924,14 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     function testCloseBuy_FailsIfAlreadyClosed() public {
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IBondingCurveBase_v1.BuyingDisabled();
+        emit IBondingCurveBase_v2.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IBondingCurveBase_v1.BuyingDisabled();
+        emit IBondingCurveBase_v2.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
@@ -942,7 +942,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IBondingCurveBase_v1.BuyingDisabled();
+        emit IBondingCurveBase_v2.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
@@ -978,7 +978,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
     function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee) public {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidFeePercentage
                 .selector
         );
@@ -991,7 +991,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.BuyFeeUpdated(newFee, BUY_FEE);
+        emit IBondingCurveBase_v2.BuyFeeUpdated(newFee, BUY_FEE);
 
         bondingCurveFundingManager.setBuyFee(newFee);
 
@@ -1027,7 +1027,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.IssuanceTokenSet(
+        emit IBondingCurveBase_v2.IssuanceTokenSet(
             address(newIssuanceToken), _newDecimals
         );
         bondingCurveFundingManager.call_setIssuanceToken(
@@ -1060,7 +1060,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint depositAmount = 0;
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
@@ -1183,7 +1183,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // validReceiver
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
@@ -1213,7 +1213,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
 
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidWithdrawAmount
                 .selector
         );
@@ -1249,7 +1249,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+        emit IBondingCurveBase_v2.ProjectCollateralFeeWithdrawn(
             receiver, _amount
         );
         // Execute function
@@ -1287,7 +1287,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         _minAmountOut = bound(_minAmountOut, 1, type(uint128).max);
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
@@ -1303,7 +1303,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         _depositAmount = bound(_depositAmount, 1, type(uint128).max);
         vm.expectRevert(
-            IBondingCurveBase_v1
+            IBondingCurveBase_v2
                 .Module__BondingCurveBase__InvalidMinAmountOut
                 .selector
         );
@@ -1324,7 +1324,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
             bondingCurveFundingManager.projectCollateralFeeCollected();
 
         vm.expectEmit(true, true, true, true);
-        emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(_projectFeeAmount);
+        emit IBondingCurveBase_v2.ProjectCollateralFeeAdded(_projectFeeAmount);
 
         // Execute Tx
         bondingCurveFundingManager.exposed_projectFeeCollected(

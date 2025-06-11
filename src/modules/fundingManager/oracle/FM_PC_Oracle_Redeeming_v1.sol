@@ -10,8 +10,8 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {RedeemingBondingCurveBase_v1} from
@@ -314,12 +314,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _token;
     }
 
-    /// @inheritdoc IBondingCurveBase_v1
+    /// @inheritdoc IBondingCurveBase_v2
     function getStaticPriceForBuying()
         public
         view
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         returns (uint buyPrice_)
     {
         return _oracle.getPriceForIssuance();
@@ -456,7 +456,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v2)
         thirdPartyOperationsEnabled
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
