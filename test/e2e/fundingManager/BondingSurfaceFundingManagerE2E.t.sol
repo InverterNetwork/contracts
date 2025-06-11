@@ -29,8 +29,8 @@ import {
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {IFM_EXT_TokenVault_v1} from
-    "@fm/extensions/interfaces/IFM_EXT_TokenVault_v1.sol";
+import {IFM_EXT_TokenVault_v2} from
+    "@fm/extensions/interfaces/IFM_EXT_TokenVault_v2.sol";
 
 contract BondingSurfaceFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -164,7 +164,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(IFM_EXT_TokenVault_v1).interfaceId
+                    type(IFM_EXT_TokenVault_v2).interfaceId
                 )
             ) {
                 tokenVault = modulesList[i];
@@ -497,7 +497,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         assertTrue(feeAmount > 0);
 
         // Withdraw fee from token vault
-        IFM_EXT_TokenVault_v1(tokenVault).withdraw(
+        IFM_EXT_TokenVault_v2(tokenVault).withdraw(
             address(token), feeAmount, feeReceiver
         );
 

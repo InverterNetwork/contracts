@@ -24,20 +24,20 @@ import "@oz/utils/Strings.sol";
 
 // SuT
 import {
-    FM_EXT_TokenVault_v1,
-    IFM_EXT_TokenVault_v1
-} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
-import {FM_EXT_TokenVault_v1_Exposed} from
-    "@mocks/modules/fundingManager/extensions/FM_EXT_TokenVault_v1_Exposed.sol";
+    FM_EXT_TokenVault_v2,
+    IFM_EXT_TokenVault_v2
+} from "@fm/extensions/FM_EXT_TokenVault_v2.sol";
+import {FM_EXT_TokenVault_v2_Exposed} from
+    "@mocks/modules/fundingManager/extensions/FM_EXT_TokenVault_v2_Exposed.sol";
 
-contract FM_EXT_TokenVault_v1_Test is ModuleTest {
+contract FM_EXT_TokenVault_v2_Test is ModuleTest {
     // SuT
-    FM_EXT_TokenVault_v1_Exposed vault;
+    FM_EXT_TokenVault_v2_Exposed vault;
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new FM_EXT_TokenVault_v1_Exposed());
-        vault = FM_EXT_TokenVault_v1_Exposed(Clones.clone(impl));
+        address impl = address(new FM_EXT_TokenVault_v2_Exposed());
+        vault = FM_EXT_TokenVault_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
         // Every caller has permission for every permissioned function
@@ -48,7 +48,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
 
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
-            vault.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
+            vault.supportsInterface(type(IFM_EXT_TokenVault_v2).interfaceId)
         );
     }
 
@@ -103,7 +103,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
 
     function testWithdraw_validAmountModifierInPosition() public {
         vm.expectRevert(
-            IFM_EXT_TokenVault_v1
+            IFM_EXT_TokenVault_v2
                 .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );
@@ -138,7 +138,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
 
         // Test condition
         vm.expectEmit(true, true, true, true);
-        emit IFM_EXT_TokenVault_v1.TokensWithdrawn(address(_token), dst, amount);
+        emit IFM_EXT_TokenVault_v2.TokensWithdrawn(address(_token), dst, amount);
         vault.withdraw(address(_token), amount, dst);
 
         assertEq(_token.balanceOf(address(vault)), 0);
@@ -159,7 +159,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
 
     function testInternalOnlyValidAmount_revertGivenZeroAmount() public {
         vm.expectRevert(
-            IFM_EXT_TokenVault_v1
+            IFM_EXT_TokenVault_v2
                 .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );

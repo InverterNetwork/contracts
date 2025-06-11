@@ -60,7 +60,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_FM_PC_Oracle_Redeeming_v1;
 
     // Funding Managers - Extensions
-    address public impl_mod_FM_EXT_TokenVault_v1;
+    address public impl_mod_FM_EXT_TokenVault_v2;
 
     // Logic Modules
     address public impl_mod_LM_PC_Oracle_Permissioned_v1;
@@ -215,9 +215,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Funding Manager - Extensions
         console2.log("  --- Funding Managers - Extensions");
 
-        impl_mod_FM_EXT_TokenVault_v1 = deployAndLogWithCreate2(
-            "FM_EXT_TokenVault_v1",
-            vm.getCode("FM_EXT_TokenVault_v1.sol:FM_EXT_TokenVault_v1")
+        impl_mod_FM_EXT_TokenVault_v2 = deployAndLogWithCreate2(
+            "FM_EXT_TokenVault_v2",
+            vm.getCode("FM_EXT_TokenVault_v2.sol:FM_EXT_TokenVault_v2")
         );
 
         // Logic Modules

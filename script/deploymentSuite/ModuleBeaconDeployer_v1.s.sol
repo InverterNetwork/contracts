@@ -215,7 +215,7 @@ contract ModuleBeaconDeployer_v1 is
                     tokenVaultMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_FM_EXT_TokenVault_v1,
+                    impl_mod_FM_EXT_TokenVault_v2,
                     tokenVaultMetadata.majorVersion,
                     tokenVaultMetadata.minorVersion,
                     tokenVaultMetadata.patchVersion

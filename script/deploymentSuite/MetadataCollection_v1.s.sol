@@ -151,13 +151,13 @@ contract MetadataCollection_v1 {
 
     // Funding Manager - Extensions
 
-    // FM_EXT_TokenVault_v1
+    // FM_EXT_TokenVault_v2
     IModule_v2.Metadata public tokenVaultMetadata = IModule_v2.Metadata(
         1,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "FM_EXT_TokenVault_v1"
+        "FM_EXT_TokenVault_v2"
     );
 
     // ------------------------------------------------------------------------

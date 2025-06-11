@@ -18,7 +18,7 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
-import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
+import {FM_EXT_TokenVault_v2} from "@fm/extensions/FM_EXT_TokenVault_v2.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v2} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
@@ -279,15 +279,15 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // FM_EXT_TokenVault_v1
+    // FM_EXT_TokenVault_v2
 
-    FM_EXT_TokenVault_v1 tokenVaultFundingManagerExtensionImpl;
+    FM_EXT_TokenVault_v2 tokenVaultFundingManagerExtensionImpl;
 
     InverterBeacon_v1 tokenVaultFundingManagerExtensionBeacon;
 
     IModule_v2.Metadata tokenVaultFundingManagerExtensionMetadata = IModule_v2
         .Metadata(
-        1, 0, 0, "https://github.com/inverter/contracts", "FM_EXT_TokenVault_v1"
+        1, 0, 0, "https://github.com/inverter/contracts", "FM_EXT_TokenVault_v2"
     );
 
     /*
@@ -301,7 +301,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpTokenVaultFundingManagerExtension() internal {
         // Deploy module implementations.
-        tokenVaultFundingManagerExtensionImpl = new FM_EXT_TokenVault_v1();
+        tokenVaultFundingManagerExtensionImpl = new FM_EXT_TokenVault_v2();
 
         // Deploy module beacons.
         tokenVaultFundingManagerExtensionBeacon = new InverterBeacon_v1(

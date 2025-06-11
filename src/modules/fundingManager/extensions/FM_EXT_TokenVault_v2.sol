@@ -3,8 +3,8 @@ pragma solidity 0.8.23;
 
 // Internal
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {IFM_EXT_TokenVault_v1} from
-    "src/modules/fundingManager/extensions/interfaces/IFM_EXT_TokenVault_v1.sol";
+import {IFM_EXT_TokenVault_v2} from
+    "src/modules/fundingManager/extensions/interfaces/IFM_EXT_TokenVault_v2.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -24,13 +24,13 @@ import {ERC165Upgradeable} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v2 {
+contract FM_EXT_TokenVault_v2 is IFM_EXT_TokenVault_v2, Module_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -39,7 +39,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v2 {
         override(Module_v2)
         returns (bool supportsInterface_)
     {
-        return interfaceId_ == type(IFM_EXT_TokenVault_v1).interfaceId
+        return interfaceId_ == type(IFM_EXT_TokenVault_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -57,7 +57,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v2 {
     // ========================================================================
     // Public Mutating Functions
 
-    /// @inheritdoc IFM_EXT_TokenVault_v1
+    /// @inheritdoc IFM_EXT_TokenVault_v2
     function withdraw(address token_, uint amount_, address recipient_)
         external
         virtual
