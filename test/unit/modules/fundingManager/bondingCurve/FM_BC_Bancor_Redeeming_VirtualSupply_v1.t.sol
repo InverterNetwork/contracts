@@ -5,10 +5,10 @@ import "forge-std/console.sol";
 
 // SuT
 import {
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2,
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2,
     IFundingManager_v1
-} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -87,7 +87,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BondingCurveProperties memory
             bc_properties;
 
         bc_properties.formula = formula;
@@ -131,7 +131,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
-                type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
+                type(IFM_BC_Bancor_Redeeming_VirtualSupply_v2).interfaceId
             )
         );
     }
@@ -1387,7 +1387,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newSupply != 0);
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -1477,7 +1477,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newSupply != 0);
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -1555,7 +1555,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testSetReserveRatioForBuying_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -1568,7 +1568,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
@@ -1581,7 +1581,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
         _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
@@ -1598,7 +1598,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BuyReserveRatioSet(
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BuyReserveRatioSet(
             _newRatio, RESERVE_RATIO_FOR_BUYING
         );
         bondingCurveFundingManager.setReserveRatioForBuying(_newRatio);
@@ -1647,7 +1647,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testSetReserveRatioForSelling_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -1660,7 +1660,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
@@ -1673,7 +1673,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
         _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
@@ -1690,7 +1690,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.SellReserveRatioSet(
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v2.SellReserveRatioSet(
             _newRatio, RESERVE_RATIO_FOR_SELLING
         );
         bondingCurveFundingManager.setReserveRatioForSelling(_newRatio);
@@ -1727,7 +1727,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal
                 .selector
         );
@@ -1752,7 +1752,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal
                 .selector
         );
@@ -1976,7 +1976,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint virtualSupply = 100e18;
 
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -1989,7 +1989,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );
@@ -2002,7 +2002,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
                 .selector
         );

@@ -13,8 +13,8 @@ import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
-import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
@@ -117,11 +117,11 @@ contract E2EModuleRegistry is Test {
     // Funding Managers
     //--------------------------------------------------------------------------
 
-    // FM_BC_Bancor_Redeeming_VirtualSupply_v1
+    // FM_BC_Bancor_Redeeming_VirtualSupply_v2
 
     BancorFormula formula = new BancorFormula();
 
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
@@ -132,21 +132,21 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/bonding-curve-funding-manager",
-        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
+        "FM_BC_Bancor_Redeeming_VirtualSupply_v2"
     );
 
     /*
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v2.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BondingCurveProperties
             memory bc_properties =
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -171,7 +171,7 @@ contract E2EModuleRegistry is Test {
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
-            new FM_BC_Bancor_Redeeming_VirtualSupply_v1();
+            new FM_BC_Bancor_Redeeming_VirtualSupply_v2();
 
         // Deploy module beacons.
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(

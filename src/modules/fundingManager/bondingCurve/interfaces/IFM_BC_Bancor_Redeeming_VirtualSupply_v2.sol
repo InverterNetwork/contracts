@@ -13,11 +13,11 @@ pragma solidity ^0.8.0;
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.2
+ * @custom:version 2.0.0
  *
  * @author  Inverter Network
  */
-interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
+interface IFM_BC_Bancor_Redeeming_VirtualSupply_v2 {
     // ========================================================================
     // Errors
 

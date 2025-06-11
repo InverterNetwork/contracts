@@ -52,7 +52,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_AUT_EXT_VotingRoles_v2;
 
     // Funding Managers
-    address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
+    address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v2;
     address public impl_mod_FM_BC_BondingSurface_Redeeming_v1;
     address public
         impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1;
@@ -178,11 +178,11 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Funding Managers
         console2.log("  -- Funding Managers");
 
-        impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
+        impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v2 =
         deployAndLogWithCreate2(
-            "FM_BC_Bancor_Redeeming_VirtualSupply_v1",
+            "FM_BC_Bancor_Redeeming_VirtualSupply_v2",
             vm.getCode(
-                "FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v1"
+                "FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v2"
             )
         );
 

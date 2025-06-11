@@ -105,7 +105,7 @@ contract MetadataCollection_v1 {
             0,
             0,
             "https://github.com/InverterNetwork/contracts",
-            "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
+            "FM_BC_Bancor_Redeeming_VirtualSupply_v2"
         );
 
     // BondingSurfaceRedeemingFundingManager

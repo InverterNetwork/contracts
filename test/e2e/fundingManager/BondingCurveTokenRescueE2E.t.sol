@@ -17,10 +17,10 @@ import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // SuT
 import {
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2
 } from
-    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.t.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
@@ -30,7 +30,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
     ERC20Issuance_v1 issuanceToken;
 
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BondingCurveProperties
         bc_properties;
 
     address alice = address(0xA11CE);
@@ -58,7 +58,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         );
         issuanceToken.setMinter(address(this), true);
 
-        bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+        bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v2
             .BondingCurveProperties({
             formula: address(formula),
             reserveRatioForBuying: 333_333,
@@ -109,8 +109,8 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         AUT_Roles_v2 authorizer =
             AUT_Roles_v2(address(orchestrator.authorizer()));
 
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2(
             address(orchestrator.fundingManager())
         );
 
@@ -226,7 +226,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         assertEq(address(orchestrator.fundingManager()), newBondingCurve);
 
         fundingManager =
-            FM_BC_Bancor_Redeeming_VirtualSupply_v1(newBondingCurve);
+            FM_BC_Bancor_Redeeming_VirtualSupply_v2(newBondingCurve);
 
         assertEq(oldIssuanceSupply, fundingManager.getVirtualIssuanceSupply());
         assertEq(

@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -66,12 +66,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.2
+ * @custom:version 2.0.0
  *
  * @author  Inverter Network
  */
-contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2,
     IFundingManager_v1,
     VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
@@ -90,7 +90,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         returns (bool supportsInterface_)
     {
         return interfaceId
-            == type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
+            == type(IFM_BC_Bancor_Redeeming_VirtualSupply_v2).interfaceId
             || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -298,7 +298,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // -------------------------------------------------------------------------
     // Public Data Query Functions
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v2
     function getReserveRatioForBuying()
         external
         view
@@ -307,7 +307,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return reserveRatioForBuying;
     }
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v2
     function getReserveRatioForSelling()
         external
         view
@@ -402,7 +402,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _setVirtualCollateralSupply(virtualSupply_);
     }
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v2
     function setReserveRatioForBuying(uint32 reserveRatio_)
         external
         virtual
@@ -412,7 +412,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _setReserveRatioForBuying(reserveRatio_);
     }
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v2
     /// @dev    Function access controlled by authorizer.
     function setReserveRatioForSelling(uint32 reserveRatio_)
         external

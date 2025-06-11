@@ -9,18 +9,18 @@ import {IOrchestrator_v1} from
 
 // SuT
 import {
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2,
     FM_BC_Tools
-} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2
 {
     // -------------------------------------------------------------------------
-    // The FM_BC_Bancor_Redeeming_VirtualSupply_v1 is not abstract, so all the necessary functions are already implemented
+    // The FM_BC_Bancor_Redeeming_VirtualSupply_v2 is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     // -------------------------------------------------------------------------

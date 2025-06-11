@@ -39,8 +39,8 @@ import {
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
 
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Mocks

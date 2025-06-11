@@ -15,10 +15,10 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // SuT
 import {
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2
 } from
-    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.t.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
@@ -56,8 +56,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         );
         issuanceToken.setMinter(address(this), true);
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BondingCurveProperties memory
+            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v2
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 333_333,
@@ -116,8 +116,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         AUT_Roles_v2 authorizer =
             AUT_Roles_v2(address(orchestrator.authorizer()));
 
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2(
             address(orchestrator.fundingManager())
         );
 
