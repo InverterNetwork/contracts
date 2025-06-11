@@ -17,8 +17,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v2,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v2
-} from
-    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.t.sol";
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 

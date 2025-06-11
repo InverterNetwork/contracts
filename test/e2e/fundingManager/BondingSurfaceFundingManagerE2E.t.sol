@@ -22,11 +22,11 @@ import {ERC165Upgradeable} from
 
 // SuT
 import {
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
-    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
+    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
+    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
     IFM_BC_BondingSurface_Redeeming_v1
 } from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IFM_EXT_TokenVault_v1} from
@@ -152,9 +152,9 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         AUT_Roles_v2 authorizer =
             AUT_Roles_v2(address(orchestrator.authorizer()));
 
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
             fundingManager =
-            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1(
+            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2(
                 address(orchestrator.fundingManager())
             );
 
@@ -387,8 +387,8 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         // Check that seize cant be triggered again unditl Seize Delay is not reached
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout
+                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout
                     .selector,
                 block.timestamp + fundingManager.SEIZE_DELAY()
             )

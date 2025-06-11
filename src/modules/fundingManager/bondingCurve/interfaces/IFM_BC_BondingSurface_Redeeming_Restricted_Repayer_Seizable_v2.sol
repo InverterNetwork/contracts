@@ -19,13 +19,13 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
+interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     IFM_BC_BondingSurface_Redeeming_v1,
     IRepayer_v1
 {
@@ -33,31 +33,31 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Errors
 
     /// @notice Invalid address passed as argument.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidInputAddress(
     );
 
     /// @notice Buy fee can not be set.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
     );
 
     /// @notice Invalid Liquidity Vault Controller.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidLiquidityVaultController(
         address invalidLiquidityVaultController
     );
 
     /// @notice Seize cannot be bigger than MAX_SEIZE = 1%.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeize(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeize(
         uint64 seize
     );
 
     /// @notice Amount exeeds the seizable amount, defined by a percentage of
     ///         total collateral.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeizeAmount(
         uint amount
     );
 
     /// @notice Timestamp is still in the future, so a seize is not allowed.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout(
+    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout(
         uint allowedTimestamp
     );
 

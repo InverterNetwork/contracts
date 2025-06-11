@@ -162,7 +162,7 @@ contract ModuleBeaconDeployer_v1 is
                         .title,
                     reverter,
                     governor,
-                    impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
                     bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
                         .majorVersion,
                     bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata

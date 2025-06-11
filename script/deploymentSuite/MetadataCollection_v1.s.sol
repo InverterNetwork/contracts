@@ -126,7 +126,7 @@ contract MetadataCollection_v1 {
             0,
             0,
             "https://github.com/InverterNetwork/contracts",
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1"
+            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
         );
 
     // DepositVaultFundingManager

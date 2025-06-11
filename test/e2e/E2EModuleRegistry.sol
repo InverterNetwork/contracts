@@ -15,8 +15,8 @@ import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
+import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
@@ -193,11 +193,11 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    // FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
 
     BondingSurface bondingSurface = new BondingSurface();
 
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
         bondingSurfaceRedeemingRestrictedRepayerSeizableImpl;
 
     InverterBeacon_v1 bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon;
@@ -209,7 +209,7 @@ contract E2EModuleRegistry is Test {
             0,
             0,
             "https://github.com/inverter/contracts",
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1"
+            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
         );
 
     /*
@@ -252,8 +252,8 @@ contract E2EModuleRegistry is Test {
 
     function setUpBondingSurfaceRedeemingRestrictedRepayerSeizable() internal {
         // Deploy module implementations.
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            bondigSurfaceRedeemingRestrictedRepayerSeizableImpl = new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1(
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+            bondigSurfaceRedeemingRestrictedRepayerSeizableImpl = new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2(
             );
 
         // Deploy module beacons.
