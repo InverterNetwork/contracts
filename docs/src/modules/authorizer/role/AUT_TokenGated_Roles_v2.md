@@ -1,4 +1,4 @@
-# AUT_Roles_v2
+# AUT_TokenGated_Roles_v2
 
 ## Purpose of Contract
 
