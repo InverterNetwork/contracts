@@ -153,6 +153,52 @@ Tests:
 - protocol fees are correctly deducted and sent to treasury addresses
 - project fee withdrawal triggers protocol fee update
 
+##### Test Setup:
+
+You're absolutely right to focus on how the `FeeManager_v1` needs to be configured in our tests. Based on its implementation:
+
+**Key `FeeManager_v1` Configuration Points for Our Tests:**
+
+1.  **Workflow Treasury:** The `FeeManager` uses a single treasury address per `workflow` (our `_orchestrator` address). This treasury will receive both collateral and issuance protocol fees.
+
+    - **Test Action:** We'll call `feeManager.setWorkflowTreasury(address(_orchestrator), designatedProtocolTreasury);` where `designatedProtocolTreasury` is an address we define for testing.
+    - Our FM's cached `_protocolCollateralTreasury` and `_protocolIssuanceTreasury` will both point to this `designatedProtocolTreasury`.
+
+2.  **Workflow-Specific Fees:** Fees are set based on a combination of `workflow` (Orchestrator), `module` (our FM's address), and `functionSelector`.
+    - **For Buy Operations (using `_buyOrder` selector):**
+      - `feeManager.setCollateralWorkflowFee(address(_orchestrator), address(fm), buyOrderSelector, true, collateralBuyFeeBps);`
+      - `feeManager.setIssuanceWorkflowFee(address(_orchestrator), address(fm), buyOrderSelector, true, issuanceBuyFeeBps);`
+    - **For Sell Operations (using `_sellOrder` selector):**
+      - `feeManager.setIssuanceWorkflowFee(address(_orchestrator), address(fm), sellOrderSelector, true, issuanceSellFeeBps);`
+      - `feeManager.setCollateralWorkflowFee(address(_orchestrator), address(fm), sellOrderSelector, true, collateralSellFeeBps);`
+
+**In the `init` function of our `FM_BC_Discrete_Redeeming_VirtualSupply_v1`:**
+When `_getFunctionFeesAndTreasuryAddresses(buyOrderSelector)` is called:
+
+- It will fetch the `collateralBuyFeeBps` and `issuanceBuyFeeBps` we set above.
+- It will fetch the `designatedProtocolTreasury` for both collateral and issuance treasuries.
+  These will be stored in our FM's private state variables: `_protocolCollateralFeeBuyBps`, `_protocolIssuanceFeeBuyBps`, `_protocolCollateralTreasury`, and `_protocolIssuanceTreasury`.
+
+Similarly, when `_getFunctionFeesAndTreasuryAddresses(sellOrderSelector)` is called:
+
+- It will fetch the `issuanceSellFeeBps` and `collateralSellFeeBps`.
+- It will again fetch the `designatedProtocolTreasury`.
+  These will be stored in `_protocolIssuanceFeeSellBps` and `_protocolCollateralFeeSellBps`. The treasury addresses would re-confirm the same `designatedProtocolTreasury`.
+
+**Test Implementation:**
+Our test setup for `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` will involve:
+
+1.  Ensuring a `FeeManager` instance is deployed and its owner is the test contract (or we can `prank` its owner).
+2.  Before calling `fm.init()`, or before the specific test logic that relies on these fees:
+    - Call `feeManager.setWorkflowTreasury(...)` once.
+    - Call `feeManager.setCollateralWorkflowFee(...)` and `feeManager.setIssuanceWorkflowFee(...)` for the `_buyOrder` selector with desired BPS values.
+    - Call `feeManager.setCollateralWorkflowFee(...)` and `feeManager.setIssuanceWorkflowFee(...)` for the `_sellOrder` selector with desired BPS values.
+3.  Then, proceed with testing `init` (to check if fees are cached correctly in the FM) and `calculatePurchaseReturn`/`calculateSaleReturn` (to check if they use these cached fees).
+
+This approach allows precise control over the protocol fee environment for our FM contract during testing. This understanding is now integrated into my plan for implementing and testing step 2.10.1.
+
+Are we aligned on this FeeManager configuration strategy for the tests?
+
 ### Write functions: Status Quo (`_buyOrder`, `_sellOrder`)
 
 This section outlines how fees are processed during the actual state-changing buy and sell operations, which complements the fee considerations for the read functions (`calculatePurchaseReturn`, `calculateSaleReturn`).
