@@ -57,106 +57,11 @@ interface TokenInterface {
  *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
  *          - {AUT_Roles_v1}: Inverter's role-based access control.
  *
- *          Key feeatures:
+ *          Key features:
  *              - Token-based access checks before role assignment.
  *              - Supports both {ERC20} and {ERC721} tokens.
  *
- * @custom:guide
- *          The following guide explains in detail how to use the key features
- *          of this module:
- *
- *              - TOKEN BASED ACCESS CONTROL:
- *                  - Token Gated Role:
- *                    With this contract it is possible to extend the base
- *                    functionality of the {AUT_Roles_v1} contract to make a
- *                    role token gated. A token gated role behaves in all
- *                    respects like a regular role, but handles the membership
- *                    of that role differently. A member of a token gated role
- *                    is only allowed to access the role functionalities if
- *                    they hold a certain amount of a token.
- *                    The implementation of this contract uses a few tricks to
- *                    achieve this. Without going into too much detail, this
- *                    is the main part that is needed to understand the basic
- *                    mechanism:
- *                    In the contract, token gating is implemented by storing
- *                    the token address in the role’s members property, instead
- *                    of directly listing user addresses. This setup allows the
- *                    contract to check the token balance of a user against a
- *                    defined threshold when access is requested.
- *                    Example: We want to restrict a role to users who hold a
- *                    certain amount of Token A. Therefore, we configure the
- *                    role to be token-gated and set a required token amount
- *                    the user needs to hold as threshold. When we then call
- *                    'grantRole' with the address of Token A, the role becomes
- *                    accessible only to users whose wallet holds at least the
- *                    specified amount of that token.
- *
- *                  - Making a role token gated:
- *                    Making a role token gated is done by calling the
- *                    `setTokenGated` function. This function takes the
- *                    following parameters:
- *                    - The role id of the role that we change the token gated
- *                      status of.
- *                    - The boolean that indicates if the role should be token
- *                      gated or not.
- *                    This function can only be called by a permissioned address
- *                    (See permissioned section in the {AUT_Roles_v1} contract).
- *                    Also the role can not contain any members, when it is
- *                    switched to and from token gated.
- *                    Example: Making the role "Whitelisted" token gated would
- *                    look like this:
- *                    authorizer.setTokenGated(whitelistedRoleId, true);
- *
- *                  - Setting the token threshold:
- *                    Setting the token threshold needed to pass the token gate
- *                    is done by calling the setTokenThreshold function. This
- *                    function takes the following parameters:
- *                    - The role id of the role to set the threshold for.
- *                    - The address of the token to set the threshold for.
- *                    - The threshold value to set.
- *                    This function can only be called by a permissioned address
- *                    (See permissioned section in the {AUT_Roles_v1} contract).
- *                    This function can be called anytime, even if the role is
- *                    not token gated yet.
- *                    Example: Setting the threshold for the token "USDC" to
- *                    100 would look like this:
- *                    authorizer.setTokenThreshold(
- *                      whitelistedRoleId, USDC, 100);
- *
- *                  - Adding a token to the token gate:
- *                    Adding a token to the token gate is done by calling the
- *                    grantRole function. This function takes the following
- *                    parameters:
- *                    - The role id of the role to grant.
- *                    - The address of the token to grant the role to.
- *                    The grantRole function can only be called by according
- *                    admin of the role. In addition, the given address needs
- *                    to be a contract, already have a threshold set and
- *                    contain the balanceOf function.
- *                    If the role is not token gated then grantRole will
- *                    behave like the regular grantRole function.
- *                    Example: Adding a token gate to the token gated role
- *                    "Whitelisted" would look like this:
- *                    authorizer.grantRole(whitelistedRoleId, address(USDC));
- *
- *                  - Removing a token from the token gate:
- *                    Removing a token from the token gate is done by calling
- *                    the revokeRole function. This function behaves like the
- *                    regular revokeRole function, except that it sets the
- *                    threshold for the role and token combination to 0 as
- *                    well.
- *                    Example: Removing the token from the role "Whitelisted"
- *                    would look like this:
- *                    authorizer.revokeRole(whitelistedRoleId, address(USDC));
- *
- *                  - Reversing a token gate:
- *                    In case the token gated status of a role needs to be
- *                    reverted, the setTokenGated function can be used. The
- *                    same restrictions as for the setTokenGated function apply
- *                    here as well (see above).
- *                    Example: Reversing the token gated status of the role
- *                    "Whitelisted" would look like this:
- *                    authorizer.setTokenGated(whitelistedRoleId, false);
+ * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_TokenGated_Roles_v1.md
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
