@@ -159,6 +159,14 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Test: Initialization
 
+    /* Test init()
+        └── Given valid initialization parameters
+            └── When init() is called
+                └── Then the orchestrator should be set correctly
+                    └── And the collateral token should be set correctly
+                    └── And the issuance token should be set correctly
+                    └── And the segments should be set correctly
+    */
     function testInit() public override(ModuleTest) {
         assertEq(address(fmBcDiscrete.orchestrator()), address(_orchestrator));
         assertEq(
@@ -191,6 +199,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         }
     }
 
+    /* Test reinitFails()
+        └── Given the contract is already initialized
+            └── When init() is called again
+                └── Then it should revert with Initializable__InvalidInitialization
+    */
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fmBcDiscrete.init(
@@ -204,6 +217,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test supportsInterface()
+        └── Given the FM_BC_Discrete_Redeeming_VirtualSupply_v1 contract
+            ├── When supportsInterface() is called with IFundingManager_v1 interface ID
+            |   └── Then it should return true
+            └── When supportsInterface() is called with IFM_BC_Discrete_Redeeming_VirtualSupply_v1 interface ID
+                └── Then it should return true
+    */
     function test_SupportsInterface() public {
         assertTrue(
             fmBcDiscrete.supportsInterface(type(IFundingManager_v1).interfaceId)
@@ -286,15 +306,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         │   └── And the conditions of the modifier are not met
         │       └── When the function transferOrchestratorToken() gets called
         │           └── Then it should revert
-        ├── Given the caller is a PaymentClient module
-        │   └── And the PaymentClient module is registered in the Orchestrator
-        │       ├── And the withdraw amount + project collateral fee > FM collateral token balance
-        │       │   └── When the function transferOrchestratorToken() gets called
-        │       │       └── Then it should revert
-        │       └── And the FM has enough collateral token for amount to be transferred
-        │           └── When the function transferOrchestratorToken() gets called
-        │               └── Then it should send the funds to the specified address
-        │                   └── And it should emit an event
+        └── Given the caller is a PaymentClient module
+            └── And the PaymentClient module is registered in the Orchestrator
+                ├── And the withdraw amount + project collateral fee > FM collateral token balance
+                │   └── When the function transferOrchestratorToken() gets called
+                │       └── Then it should revert
+                └── And the FM has enough collateral token for amount to be transferred
+                    └── When the function transferOrchestratorToken() gets called
+                        └── Then it should send the funds to the specified address
+                            └── And it should emit an event
     */
     function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
         address caller,
@@ -383,10 +403,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     /* Test _setVirtualIssuanceSupply function (exposed)
-        ├── Given a new virtual issuance supply
-        │   └── When exposed_setVirtualIssuanceSupply is called
-        │       └── Then it should set the new supply
-        │           └── And it should emit a VirtualIssuanceSupplySet event
+        └── Given a new virtual issuance supply
+            └── When exposed_setVirtualIssuanceSupply is called
+                └── Then it should set the new supply
+                    └── And it should emit a VirtualIssuanceSupplySet event
     */
     function testInternal_SetVirtualIssuanceSupply_WorksAndEmitsEvent(
         uint _newSupply
@@ -453,10 +473,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
         assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
     }
-
-    // ... (rest of the tests remain the same)
-    // =========================================================================
-    // Test: reconfigureSegments
 
     /* Test reconfigureSegments function
         ├── given caller is not the Orchestrator_v1 admin
@@ -568,9 +584,22 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
-    // =========================================================================
-    // Test: Getters - Price
-
+    /* Test Price Getters: getStaticPriceForSelling() and getStaticPriceForBuying()
+        ├── Test getStaticPriceForSelling()
+        │   ├── Given a specific virtualIssuanceSupply at a segment transition point
+        │   │   └── When getStaticPriceForSelling() is called
+        │   │       └── Then it should return the correct price for that segment
+        │   └── Given a specific virtualIssuanceSupply at an exact step transition point
+        │       └── When getStaticPriceForSelling() is called
+        │           └── Then it should return the correct price for that step
+        └── Test getStaticPriceForBuying()
+            ├── Given a specific virtualCollateralSupply at a segment transition point
+            │   └── When getStaticPriceForBuying() is called
+            │       └── Then it should return the correct price for the next segment/step
+            └── Given a specific virtualCollateralSupply at an exact step transition point
+                └── When getStaticPriceForBuying() is called
+                    └── Then it should return the correct price for the next step
+    */
     function testGetStaticPriceForSelling_AtSegmentTransitionPoint() public {
         uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
@@ -605,9 +634,17 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         assertEq(fmBcDiscrete.getStaticPriceForBuying(), expectedPrice);
     }
 
-    // =========================================================================
-    // Test: _issueTokensFormulaWrapper
-
+    /* Test _issueTokensFormulaWrapper()
+        ├── Given a flat segment and zero initial supply
+        │   └── When collateral is spent to buy tokens
+        │       └── Then it should return the correct number of tokens minted
+        ├── Given spanning segments and zero initial supply
+        │   └── When collateral is spent to buy tokens across segments
+        │       └── Then it should return the correct number of tokens minted
+        └── Given a sloped segment and mid-curve initial supply
+            └── When collateral is spent to buy tokens
+                └── Then it should return the correct number of tokens minted
+    */
     function testIssueTokensFormulaWrapper_FlatSegment_FromZeroSupply()
         public
     {
@@ -649,6 +686,26 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Test: _redeemTokensFormulaWrapper
 
+    /* Test _redeemTokensFormulaWrapper()
+        ├── Given a flat segment with existing supply
+        │   └── When tokens are redeemed
+        │       └── Then it should return the correct collateral amount
+        ├── Given spanning segments with existing supply
+        │   └── When tokens are redeemed across segments
+        │       └── Then it should return the correct collateral amount
+        ├── Given a sloped segment with existing supply
+        │   └── When tokens are redeemed
+        │       └── Then it should return the correct collateral amount
+        ├── Given a partial step redemption
+        │   └── When tokens are redeemed partially from a step
+        │       └── Then it should return the correct collateral amount
+        ├── Given zero tokens to redeem
+        │   └── When redeeming zero tokens
+        │       └── Then it should revert with DiscreteCurveMathLib__ZeroIssuanceInput
+        └── Given tokens to redeem exceed current supply
+            └── When redeeming more tokens than available
+                └── Then it should revert with DiscreteCurveMathLib__InsufficientIssuanceToSell
+    */
     function testRedeemTokensFormulaWrapper_FlatSegment() public {
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP
@@ -731,10 +788,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
     /* Test _handleCollateralTokensBeforeBuy (exposed)
         ├── Given a provider with sufficient collateral tokens and an amount to transfer
-        │   └── When exposed_handleCollateralTokensBeforeBuy is called
-        │       └── Then it should transfer the specified amount of collateral tokens from the provider to the module
-        │           └── And the provider's token balance should decrease by the amount
-        │           └── And the module's token balance should increase by the amount
+            └── When exposed_handleCollateralTokensBeforeBuy is called
+                └── Then it should transfer the specified amount of collateral tokens from the provider to the module
+                    └── And the provider's token balance should decrease by the amount
+                    └── And the module's token balance should increase by the amount
     */
     function testHandleCollateralTokensBeforeBuy_TransfersTokensFromProviderToModule(
         address _provider,
