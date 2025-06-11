@@ -8,6 +8,20 @@ import {
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IVirtualCollateralSupplyBase_v1} from
+    "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {IVirtualIssuanceSupplyBase_v1} from
+    "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
+import {PackedSegment} from
+    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {IDiscreteCurveMathLib_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
+import {DiscreteCurveMathLib_v1} from
+    "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
+import {PackedSegmentLib} from
+    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -15,6 +29,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Tests and Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol"; // Added import
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock
@@ -25,18 +40,6 @@ import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed} from
     "test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
-import {PackedSegment} from
-    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
-import {IDiscreteCurveMathLib_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
-import {DiscreteCurveMathLib_v1} from
-    "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
-import {PackedSegmentLib} from
-    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
-import {IVirtualCollateralSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {IVirtualIssuanceSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
@@ -51,35 +54,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
-    ERC20Mock public orchestratorToken;
+    ERC20Mock public orchestratorToken; // This is the collateral token
+    ERC20Issuance_v1 public issuanceToken; // This is the token to be issued
     ERC20PaymentClientBaseV2Mock public paymentClient;
     PackedSegment[] public initialTestSegments;
     CurveTestData internal defaultCurve; // Declare defaultCurve variable
 
     address internal non_admin_address = address(0xB0B);
 
-    // Default Curve Parameters (as defined in DiscreteCurveMathLib_v1.t.sol)
-    // Based on flatSlopedTestCurve initialized in setUp() in DiscreteCurveMathLib_v1.t.sol:
-    // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1  (Price: 0.50)
-    // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2 (Prices: 0.80, 0.82)
-    //
-    //     Price (ether)
-    //       ^
-    //     0.82|                     +------+ (Supply: 100)
-    //         |                     |      |
-    //     0.80|             +-------+      | (Supply: 75)
-    //         |             |              |
-    //         |             |              |
-    //         |             |              |
-    //         |             |              |
-    //     0.50|-------------+              | (Supply: 50)
-    //         +-------------+--------------+--> Supply (ether)
-    //         0             50     75     100
-    //
-    //          Step Prices:
-    //          Supply  0-50:  Price 0.50 (Segment 0, Step 0)
-    //          Supply 50-75:  Price 0.80 (Segment 1, Step 0)
-    //          Supply 75-100: Price 0.82 (Segment 1, Step 1)
+    // Default Curve Parameters
     uint public constant DEFAULT_SEG0_INITIAL_PRICE = 0.5 ether;
     uint public constant DEFAULT_SEG0_PRICE_INCREASE = 0;
     uint public constant DEFAULT_SEG0_SUPPLY_PER_STEP = 50 ether;
@@ -89,6 +72,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     uint public constant DEFAULT_SEG1_PRICE_INCREASE = 0.02 ether;
     uint public constant DEFAULT_SEG1_SUPPLY_PER_STEP = 25 ether;
     uint public constant DEFAULT_SEG1_NUMBER_OF_STEPS = 2;
+
+    // Issuance Token Parameters
+    string internal constant ISSUANCE_TOKEN_NAME = "House Token";
+    string internal constant ISSUANCE_TOKEN_SYMBOL = "HOUSE";
+    uint8 internal constant ISSUANCE_TOKEN_DECIMALS = 18;
+    uint internal constant ISSUANCE_TOKEN_MAX_SUPPLY = type(uint).max;
 
     // =========================================================================
     // Setup
@@ -101,26 +90,30 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
 
         orchestratorToken = new ERC20Mock("Orchestrator Token", "OTK", 18);
+        issuanceToken = new ERC20Issuance_v1(
+            ISSUANCE_TOKEN_NAME,
+            ISSUANCE_TOKEN_SYMBOL,
+            ISSUANCE_TOKEN_DECIMALS,
+            ISSUANCE_TOKEN_MAX_SUPPLY
+        );
+        // Grant minting rights for issuance token to the test contract for setup if needed,
+        // and later to the bonding curve itself.
+        issuanceToken.setMinter(address(this), true);
 
         _setUpOrchestrator(fmBcDiscrete);
         _authorizer.setIsAuthorized(address(this), true);
-        _authorizer.grantRole(_authorizer.getAdminRole(), address(this)); // Grant admin role to the test contract
+        _authorizer.grantRole(_authorizer.getAdminRole(), address(this));
 
-        // --- Initialize defaultCurve ---
         defaultCurve.description = "Flat segment followed by a sloped segment";
-
         uint[] memory initialPrices = new uint[](2);
         initialPrices[0] = DEFAULT_SEG0_INITIAL_PRICE;
         initialPrices[1] = DEFAULT_SEG1_INITIAL_PRICE;
-
         uint[] memory priceIncreases = new uint[](2);
         priceIncreases[0] = DEFAULT_SEG0_PRICE_INCREASE;
         priceIncreases[1] = DEFAULT_SEG1_PRICE_INCREASE;
-
         uint[] memory suppliesPerStep = new uint[](2);
         suppliesPerStep[0] = DEFAULT_SEG0_SUPPLY_PER_STEP;
         suppliesPerStep[1] = DEFAULT_SEG1_SUPPLY_PER_STEP;
-
         uint[] memory numbersOfSteps = new uint[](2);
         numbersOfSteps[0] = DEFAULT_SEG0_NUMBER_OF_STEPS;
         numbersOfSteps[1] = DEFAULT_SEG1_NUMBER_OF_STEPS;
@@ -131,14 +124,35 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         defaultCurve.totalCapacity = (
             DEFAULT_SEG0_SUPPLY_PER_STEP * DEFAULT_SEG0_NUMBER_OF_STEPS
         ) + (DEFAULT_SEG1_SUPPLY_PER_STEP * DEFAULT_SEG1_NUMBER_OF_STEPS);
-
         initialTestSegments = defaultCurve.packedSegmentsArray;
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IBondingCurveBase_v1.IssuanceTokenSet(
+            address(issuanceToken), issuanceToken.decimals()
+        );
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1.SegmentsSet(
+            initialTestSegments
+        );
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IFundingManager_v1.OrchestratorTokenSet(
+            address(orchestratorToken), orchestratorToken.decimals()
+        );
 
         fmBcDiscrete.init(
             _orchestrator,
             _METADATA,
-            abi.encode(address(orchestratorToken), initialTestSegments)
+            abi.encode(
+                address(issuanceToken),
+                address(orchestratorToken),
+                initialTestSegments
+            )
         );
+
+        // Grant minting rights for issuance token to the bonding curve
+        issuanceToken.setMinter(address(fmBcDiscrete), true);
 
         paymentClient = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(paymentClient));
@@ -149,18 +163,46 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(address(fmBcDiscrete.orchestrator()), address(_orchestrator));
-        assertEq(address(fmBcDiscrete.token()), address(orchestratorToken));
-        assertEq(fmBcDiscrete.getSegments().length, initialTestSegments.length);
         assertEq(
-            PackedSegment.unwrap(fmBcDiscrete.getSegments()[0]),
-            PackedSegment.unwrap(initialTestSegments[0])
+            address(fmBcDiscrete.token()),
+            address(orchestratorToken),
+            "Collateral token mismatch"
         );
+        assertEq(
+            fmBcDiscrete.getIssuanceToken(),
+            address(issuanceToken),
+            "Issuance token mismatch"
+        );
+
+        PackedSegment[] memory segmentsAfterInit = fmBcDiscrete.getSegments();
+        assertEq(
+            segmentsAfterInit.length,
+            initialTestSegments.length,
+            "Segments length mismatch"
+        );
+        for (uint i = 0; i < segmentsAfterInit.length; i++) {
+            assertEq(
+                PackedSegment.unwrap(segmentsAfterInit[i]),
+                PackedSegment.unwrap(initialTestSegments[i]),
+                string(
+                    abi.encodePacked(
+                        "Segment content mismatch at index ", vm.toString(i)
+                    )
+                )
+            );
+        }
     }
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fmBcDiscrete.init(
-            _orchestrator, _METADATA, abi.encode(address(orchestratorToken))
+            _orchestrator,
+            _METADATA,
+            abi.encode(
+                address(issuanceToken),
+                address(orchestratorToken),
+                initialTestSegments
+            )
         );
     }
 
@@ -222,6 +264,25 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         fmBcDiscrete.exposed_setSegments(testSegments);
     }
 
+    /* Test internal _setIssuanceToken()
+        └── Given a new issuance token
+            └── When exposed_setIssuanceToken is called
+                └── Then the issuance token should be set correctly
+                └── And it should emit an IssuanceTokenSet event
+    */
+    function testInternal_SetIssuanceToken_SuccessAndEvent() public {
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1("New Token", "NEW", 18, type(uint).max);
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IBondingCurveBase_v1.IssuanceTokenSet(
+            address(newIssuanceToken), newIssuanceToken.decimals()
+        );
+
+        fmBcDiscrete.exposed_setIssuanceToken(address(newIssuanceToken));
+        assertEq(fmBcDiscrete.getIssuanceToken(), address(newIssuanceToken));
+    }
+
     /* Test transferOrchestratorToken
         ├── Given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
         │   └── And the conditions of the modifier are not met
@@ -246,48 +307,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         fmBcDiscrete.transferOrchestratorToken(to, amount);
     }
-
-    // This test is commented out because it relies on setting `projectCollateralFeeCollected`
-    // which is not directly settable in the SuT without a helper function, and we do not
-    // want to add a helper function for this. This test can be re-enabled once there is
-    // a way to get a non-zero fee in the SuT.
-    /*
-    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
-        address to,
-        uint amount,
-        uint projectCollateralFeeCollected
-    ) public {
-        vm.assume(to != address(0) && to != address(fmBcDiscrete));
-
-        amount = bound(amount, 1, type(uint128).max);
-        projectCollateralFeeCollected =
-            bound(projectCollateralFeeCollected, 1, type(uint128).max);
-
-        // Add collateral fee collected to create fail scenario
-        fmBcDiscrete.setProjectCollateralFeeCollectedHelper(
-            projectCollateralFeeCollected
-        );
-        assertEq(
-            fmBcDiscrete.projectCollateralFeeCollected(),
-            projectCollateralFeeCollected
-        );
-        amount = amount + projectCollateralFeeCollected; // Withdraw amount which includes the fee
-
-        orchestratorToken.mint(address(fmBcDiscrete), amount);
-        assertEq(orchestratorToken.balanceOf(address(fmBcDiscrete)), amount);
-
-        vm.startPrank(address(paymentClient));
-        {
-            vm.expectRevert(
-                IFundingManager_v1
-                    .InvalidOrchestratorTokenWithdrawAmount
-                    .selector
-            );
-            fmBcDiscrete.transferOrchestratorToken(to, amount);
-        }
-        vm.stopPrank();
-    }
-    */
 
     function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
         address to,
@@ -338,7 +357,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
                 non_admin_address
             )
         );
-        vm.prank(non_admin_address); // Use non_admin_address as non-admin caller
+        vm.prank(non_admin_address);
         fmBcDiscrete.setVirtualCollateralSupply(_newSupply);
     }
 
@@ -437,6 +456,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
     }
 
+    // ... (rest of the tests remain the same)
     // =========================================================================
     // Test: reconfigureSegments
 
@@ -517,9 +537,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             initialCollateralReserve
         );
 
-        // New configuration: single flat segment
-        // Price = 0.655 ether, SupplyPerStep = 100 ether, NumberOfSteps = 1
-        // This should result in a reserve of 0.655 * 100 = 65.5 ether for the initialIssuanceSupply of 100 ether
         PackedSegment[] memory newSegments = new PackedSegment[](1);
         newSegments[0] = helper_createSegment(0.655 ether, 0, 100 ether, 1);
 
@@ -556,93 +573,48 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Test: Getters - Price
 
-    /* Test getStaticPriceForSelling
-        ├── Given the default curve configuration
-        │   ├── At Segment Transition:
-        │   │   └── And virtualIssuanceSupply is at the last unit of the first segment (50 ether)
-        │   │       └── When getStaticPriceForSelling is called
-        │   │           └── Then it should return the price of the last unit of the first segment (0.5 ether)
-        │   └── At Step Transition (within Segment 1, supply at 75 ether):
-        │       └── And virtualIssuanceSupply is at the end of the first step of Segment 1 (75 ether)
-        │           └── When getStaticPriceForSelling is called
-        │               └── Then it should return the price of that step (0.8 ether)
-    */
     function testGetStaticPriceForSelling_AtSegmentTransitionPoint() public {
-        uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether, last unit of first segment
+        uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
         assertEq(
-            fmBcDiscrete.getStaticPriceForSelling(),
-            DEFAULT_SEG0_INITIAL_PRICE // 0.5 ether
+            fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG0_INITIAL_PRICE
         );
     }
 
     function testGetStaticPriceForSelling_AtExactStepTransitionPoint() public {
-        // Supply is 75 ether, which is the last unit of the first step in Segment 1.
-        // Price of this step (and thus this token) is 0.8 ether.
         uint virtualIssuanceSupply =
-            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP; // 50 + 25 = 75 ether
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
         assertEq(
-            fmBcDiscrete.getStaticPriceForSelling(),
-            DEFAULT_SEG1_INITIAL_PRICE // 0.8 ether
+            fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG1_INITIAL_PRICE
         );
     }
 
-    /* Test getStaticPriceForBuying
-        ├── Given the default curve configuration
-        │   ├── At Segment Transition:
-        │   │   └── And virtualCollateralSupply is at the last unit of the first segment (50 ether)
-        │   │       └── When getStaticPriceForBuying is called (for supply 50+1=51)
-        │   │           └── Then it should return the price of the first unit of the second segment (0.8 ether)
-        │   └── At Step Transition (within Segment 1, supply at 75 ether):
-        │       └── And virtualCollateralSupply is at the end of the first step of Segment 1 (75 ether)
-        │           └── When getStaticPriceForBuying is called (for supply 75+1=76)
-        │               └── Then it should return the price of the next step (0.82 ether)
-    */
     function testGetStaticPriceForBuying_AtSegmentTransitionPoint() public {
-        // virtualCollateralSupply is 50 ether. getStaticPriceForBuying looks at supply 50 + 1 = 51.
-        // The 51st unit is the first unit of Segment 1, Step 0. Price is 0.8 ether.
-        uint virtualCollateralSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether
+        uint virtualCollateralSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualCollateralSupply(virtualCollateralSupply);
         assertEq(
-            fmBcDiscrete.getStaticPriceForBuying(),
-            DEFAULT_SEG1_INITIAL_PRICE // 0.8 ether
+            fmBcDiscrete.getStaticPriceForBuying(), DEFAULT_SEG1_INITIAL_PRICE
         );
     }
 
     function testGetStaticPriceForBuying_AtExactStepTransitionPoint() public {
-        // virtualCollateralSupply is 75 ether. getStaticPriceForBuying looks at supply 75 + 1 = 76.
-        // The 76th unit is the first unit of Segment 1, Step 1.
-        // Price of this step is 0.8 + 0.02 = 0.82 ether.
         uint virtualCollateralSupply =
-            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP; // 50 + 25 = 75 ether
+            DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualCollateralSupply(virtualCollateralSupply);
         uint expectedPrice =
-            DEFAULT_SEG1_INITIAL_PRICE + DEFAULT_SEG1_PRICE_INCREASE; // 0.82 ether
+            DEFAULT_SEG1_INITIAL_PRICE + DEFAULT_SEG1_PRICE_INCREASE;
         assertEq(fmBcDiscrete.getStaticPriceForBuying(), expectedPrice);
     }
 
     // =========================================================================
     // Test: _issueTokensFormulaWrapper
 
-    /* Test _issueTokensFormulaWrapper
-        ├── Given a flat segment and zero initial supply
-        │   └── When collateral is provided to buy within the flat segment
-        │       └── Then it should return the correct amount of tokens for the flat price
-        ├── Given a curve spanning multiple segments and zero initial supply
-        │   └── When collateral is provided to buy across segment boundaries
-        │       └── Then it should return the correct total amount of tokens
-        └── Given a sloped segment and an initial supply at the start of that segment
-            └── When collateral is provided to buy within the sloped segment
-                └── Then it should return the correct amount of tokens considering the price slope
-    */
-
     function testIssueTokensFormulaWrapper_FlatSegment_FromZeroSupply()
         public
     {
         uint collateralToSpend = 25 ether;
-        uint expectedTokensToMint = 50 ether; // 25 / 0.5 = 50
-
+        uint expectedTokensToMint = 50 ether;
         assertEq(
             fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
             expectedTokensToMint,
@@ -653,14 +625,8 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     function testIssueTokensFormulaWrapper_SpanningSegments_FromZeroSupply()
         public
     {
-        // Test buying across Seg0 (flat) and into Seg1,Step0 (sloped)
         uint collateralToSpend = 45 ether;
-        // Expected:
-        // Seg0 (price 0.5): 50 tokens for 25 ether.
-        // Seg1,Step0 (price 0.8): 25 tokens for 20 ether.
-        // Total: 75 tokens for 45 ether.
         uint expectedTokensToMint = 75 ether;
-
         assertEq(
             fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
             expectedTokensToMint,
@@ -671,16 +637,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     function testIssueTokensFormulaWrapper_SlopedSegment_FromMidSupply()
         public
     {
-        // Set initial supply to be at the start of the sloped segment
-        uint startingIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP; // 50 ether
+        uint startingIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(startingIssuanceSupply);
-
         uint collateralToSpend = 20 ether;
-        // Expected (starting at supply 50, spending 20 ether):
-        // This buys all of Seg1,Step0 (price 0.8), which has a capacity of 25 tokens and costs 20 ether.
-        // Total tokens: 25.
         uint expectedTokensToMint = 25 ether;
-
         assertEq(
             fmBcDiscrete.exposed_issueTokensFormulaWrapper(collateralToSpend),
             expectedTokensToMint,
@@ -691,36 +651,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Test: _redeemTokensFormulaWrapper
 
-    /* Test _redeemTokensFormulaWrapper
-        ├── Given a flat segment (Seg0) and virtual issuance supply within that segment
-        │   └── When tokens are redeemed entirely within that flat segment
-        │       └── Then it should return the correct collateral based on the flat price
-        ├── Given the default curve and virtual issuance supply in Seg1
-        │   └── When tokens are redeemed spanning across Seg1 and into Seg0
-        │       └── Then it should return the correct total collateral from both segments
-        ├── Given the default curve and virtual issuance supply at the end of the curve (Seg1, Step1)
-        │   └── When tokens are redeemed from the sloped part of Seg1
-        │       └── Then it should return the correct collateral considering the price slope
-        ├── Given the default curve and virtual issuance supply in Seg1, Step0
-        │   └── When tokens are redeemed partially from a step in Seg1
-        │       └── Then it should return the correct collateral for that partial step
-        ├── When redeeming zero tokens
-        │   └── Then it should revert with DiscreteCurveMathLib__ZeroIssuanceInput
-        └── Given a virtual issuance supply
-            └── When attempting to redeem more tokens than the virtual issuance supply
-                └── Then it should revert with DiscreteCurveMathLib__InsufficientIssuanceToSell
-    */
-
     function testRedeemTokensFormulaWrapper_FlatSegment() public {
-        // Scenario 1: Redeeming from a flat segment (Seg0)
-        // virtualIssuanceSupply is 50 ether (end of Seg0). Price is 0.5.
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP
         );
-
         uint tokensToRedeem = 20 ether;
-        uint expectedCollateral = 10 ether; // 20 tokens * 0.5 price = 10 ether
-
+        uint expectedCollateral = 10 ether;
         assertEq(
             fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
             expectedCollateral,
@@ -729,17 +665,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_SpanningSegments() public {
-        // Scenario 2: Redeeming across segment boundaries (from Seg1 into Seg0)
-        // virtualIssuanceSupply is 75 ether (end of Seg1, Step0).
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
         );
-
-        uint tokensToRedeem = 35 ether; // Redeem 25 from Seg1,Step0 (price 0.8) + 10 from Seg0 (price 0.5)
-        // Collateral from Seg1,Step0: 25 tokens * 0.8 price = 20 ether
-        // Collateral from Seg0: 10 tokens * 0.5 price = 5 ether
-        uint expectedCollateral = 20 ether + 5 ether; // 25 ether
-
+        uint tokensToRedeem = 35 ether;
+        uint expectedCollateral = 20 ether + 5 ether;
         assertEq(
             fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
             expectedCollateral,
@@ -748,17 +678,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_SlopedSegment() public {
-        // Scenario 3: Redeeming from a sloped segment (Seg1, Step1)
-        // virtualIssuanceSupply is 100 ether (end of Seg1, Step1).
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(
             defaultCurve.totalCapacity
         );
-
         uint tokensToRedeem = 30 ether;
-        // Redeem 25 from Seg1,Step1 (price 0.82) = 20.5 ether
-        // Redeem 5 from Seg1,Step0 (price 0.80) = 4 ether
-        uint expectedCollateral = (25 ether * 82) / 100 + (5 ether * 80) / 100; // 20.5 + 4 = 24.5 ether
-
+        uint expectedCollateral = (25 ether * 82) / 100 + (5 ether * 80) / 100;
         assertEq(
             fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
             expectedCollateral,
@@ -767,15 +691,11 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_PartialStep() public {
-        // Scenario 4: Redeeming partially from a step
-        // virtualIssuanceSupply is 75 ether (end of Seg1,Step0). Price is 0.8.
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
         );
-
-        uint tokensToRedeem = 10 ether; // Redeem 10 tokens from Seg1,Step0 (price 0.8)
-        uint expectedCollateral = 8 ether; // 10 tokens * 0.8 price = 8 ether
-
+        uint tokensToRedeem = 10 ether;
+        uint expectedCollateral = 8 ether;
         assertEq(
             fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem),
             expectedCollateral,
@@ -784,8 +704,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_RevertsOnZeroTokens() public {
-        // Scenario 5: Revert on redeeming zero tokens
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(50 ether); // Arbitrary non-zero supply
+        fmBcDiscrete.exposed_setVirtualIssuanceSupply(50 ether);
         vm.expectRevert(
             IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroIssuanceInput
@@ -797,11 +716,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     function testRedeemTokensFormulaWrapper_RevertsOnInsufficientSupply()
         public
     {
-        // Scenario 6: Revert on redeeming more tokens than available supply
         uint currentSupply = 50 ether;
         fmBcDiscrete.exposed_setVirtualIssuanceSupply(currentSupply);
-        uint tokensToRedeem = 51 ether; // More than current supply
-
+        uint tokensToRedeem = 51 ether;
         vm.expectRevert(
             abi.encodeWithSelector(
                 IDiscreteCurveMathLib_v1
@@ -817,12 +734,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // =========================================================================
     // Helpers
 
-    /// @notice Helper function to create a single PackedSegment.
-    /// @param _initialPrice The initial price of the segment.
-    /// @param _priceIncrease The price increase per step.
-    /// @param _supplyPerStep The supply per step.
-    /// @param _numberOfSteps The number of steps in the segment.
-    /// @return A PackedSegment struct.
     function helper_createSegment(
         uint _initialPrice,
         uint _priceIncrease,
@@ -834,12 +745,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
-    /// @notice Helper function to create a segments array from arrays of parameters.
-    /// @param _initialPrices An array of initial prices for each segment.
-    /// @param _priceIncreases An array of price increases for each segment.
-    /// @param _suppliesPerStep An array of supplies per step for each segment.
-    /// @param _numbersOfSteps An array of number of steps for each segment.
-    /// @return An array of PackedSegment.
     function helper_createSegments(
         uint[] memory _initialPrices,
         uint[] memory _priceIncreases,

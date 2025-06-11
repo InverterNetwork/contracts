@@ -59,4 +59,28 @@ interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
     /// @param  newSegments_ The new array of PackedSegment structs.
     function reconfigureSegments(PackedSegment[] memory newSegments_)
         external;
+
+    /// @notice Sets the virtual issuance supply.
+    /// @dev    Can only be called by the orchestrator admin.
+    ///         Curve interactions (buy/sell) must be closed.
+    /// @param  newSupply_ The new virtual issuance supply.
+    function setVirtualIssuanceSupply(uint newSupply_) external;
+
+    /// @notice Sets the virtual collateral supply.
+    /// @dev    Can only be called by the orchestrator admin.
+    ///         Curve interactions (buy/sell) must be closed.
+    /// @param  newSupply_ The new virtual collateral supply.
+    function setVirtualCollateralSupply(uint newSupply_) external;
+
+    /// @notice Returns the static price for buying one unit of the issuance token.
+    /// @dev    This price is based on the current state of the curve and
+    ///         the virtual collateral supply + 1.
+    /// @return price_ The price to buy one unit.
+    function getStaticPriceForBuying() external view returns (uint price_);
+
+    /// @notice Returns the static price for selling one unit of the issuance token.
+    /// @dev    This price is based on the current state of the curve and
+    ///         the virtual issuance supply.
+    /// @return price_ The price to sell one unit.
+    function getStaticPriceForSelling() external view returns (uint price_);
 }

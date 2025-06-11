@@ -29,6 +29,17 @@
 
 ### 2. Implementation
 
+### 2.0 `_init`
+
+#### 2.0.1 setting tokens [DONE]
+
+- set issuance token in the bonding curve (`issuanceToken`)
+  - internal function `_setIssuanceToken`
+  - is called within the `init` function
+  - requires test to check that the issuance token is set correctly + event emission
+- set collateral token in the bonding curve (`_token`)
+  - requires test to check that the token is set correctly + event emission
+
 ### 2.1. `_setSegments` [DONE]
 
 - Create a function that takes in an array of `PackedSegment` structs and sets the segments of the bonding curve
@@ -102,7 +113,7 @@
 - tests (via exposed function)
   - returns expected value for given input (multiple curve scenarios)
 
-### 2.9. handle functions: token transfers & mints
+### 2.9. handle functions: token transfers & mints [BLOCKED]
 
 #### 2.9.1. `_handleCollateralTokensBeforeBuy`
 

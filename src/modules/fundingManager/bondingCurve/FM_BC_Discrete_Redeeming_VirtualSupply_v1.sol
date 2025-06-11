@@ -29,6 +29,7 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     IFM_BC_Discrete_Redeeming_VirtualSupply_v1,
@@ -61,7 +62,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // ========================================================================
     // Storage
 
-    /// @notice Token that is accepted by this funding manager for deposits.
     IERC20 internal _token;
 
     /// @notice The array of packed segments that define the discrete bonding curve.
@@ -79,32 +79,39 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         Metadata memory metadata_,
         bytes memory configData_
     ) external virtual override(Module_v1) initializer {
-        address collateralToken;
+        address issuanceTokenAddress;
+        address collateralTokenAddress;
         PackedSegment[] memory initialSegments;
 
-        (collateralToken, initialSegments) =
-            abi.decode(configData_, (address, PackedSegment[]));
+        (issuanceTokenAddress, collateralTokenAddress, initialSegments) =
+            abi.decode(configData_, (address, address, PackedSegment[]));
 
         __Module_init(orchestrator_, metadata_);
         __FM_BC_Discrete_Redeeming_VirtualSupply_v1_Init(
-            collateralToken, initialSegments
+            issuanceTokenAddress, collateralTokenAddress, initialSegments
         );
     }
 
     /// @notice Initializes the Discrete Redeeming Virtual Supply Contract.
     /// @dev    Only callable during the initialization.
-    /// @param  collateralToken_ The token that is accepted as collateral.
+    /// @param  issuanceTokenAddress_ The address of the token to be issued.
+    /// @param  collateralTokenAddress_ The token that is accepted as collateral.
     /// @param  initialSegments_ The initial array of packed segments for the curve.
     function __FM_BC_Discrete_Redeeming_VirtualSupply_v1_Init(
-        address collateralToken_,
+        address issuanceTokenAddress_,
+        address collateralTokenAddress_,
         PackedSegment[] memory initialSegments_
     ) internal onlyInitializing {
-        // Set collateral token.
-        _token = IERC20(collateralToken_);
+        // Set issuance token.
+        _setIssuanceToken(ERC20Issuance_v1(issuanceTokenAddress_)); // collateralDecimals argument removed
+
+        // Set initial segments.
         _setSegments(initialSegments_);
 
-        emit OrchestratorTokenSet(
-            collateralToken_, IERC20Metadata(address(_token)).decimals()
+        _token = IERC20(collateralTokenAddress_);
+        emit IFundingManager_v1.OrchestratorTokenSet(
+            collateralTokenAddress_,
+            IERC20Metadata(collateralTokenAddress_).decimals()
         );
     }
 
@@ -112,46 +119,59 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // Public - Getters
 
     // IFundingManager_v1 implementations
-    function token()
-        external
-        view
-        override(IFundingManager_v1)
-        returns (IERC20)
-    {
+    function token(
+    ) // This is the collateral token
+     external view override(IFundingManager_v1) returns (IERC20) {
         return _token;
     }
 
+    /// @inheritdoc IBondingCurveBase_v1
+    function getIssuanceToken()
+        external
+        view
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        returns (address)
+    {
+        return address(issuanceToken);
+    }
+
     /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
-    function getSegments() external view returns (PackedSegment[] memory) {
+    function getSegments()
+        external
+        view
+        override
+        returns (PackedSegment[] memory)
+    {
         return _segments;
     }
 
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function getStaticPriceForBuying()
         external
         view
         virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(
+            BondingCurveBase_v1,
+            IBondingCurveBase_v1,
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+        )
         returns (uint)
     {
-        // getStaticPriceForBuying is the return value of _findPositionForSupply
-        // it needs to be passed the current curve configuration and
-        // the virtualCollateralSupply + 1
         (,, uint priceAtCurrentStep) =
             _segments._findPositionForSupply(virtualCollateralSupply + 1);
         return priceAtCurrentStep;
     }
 
-    // RedeemingBondingCurveBase_v1 implementations
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function getStaticPriceForSelling()
         external
         view
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(
+            RedeemingBondingCurveBase_v1, IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+        )
         returns (uint)
     {
-        // getStaticPriceForSelling is the return value of _findPositionForSupply
-        // it needs to be passed the current curve configuration and
-        // the virtualIssuanceSupply
         (,, uint priceAtCurrentStep) =
             _segments._findPositionForSupply(virtualIssuanceSupply);
         return priceAtCurrentStep;
@@ -177,21 +197,26 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    // VirtualIssuanceSupplyBase_v1 implementations
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function setVirtualIssuanceSupply(uint virtualSupply_)
         external
         virtual
-        override(VirtualIssuanceSupplyBase_v1)
+        override(
+            VirtualIssuanceSupplyBase_v1, IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+        )
         onlyOrchestratorAdmin
     {
         _setVirtualIssuanceSupply(virtualSupply_);
     }
 
-    // VirtualCollateralSupplyBase_v1 implementations
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function setVirtualCollateralSupply(uint virtualSupply_)
         external
         virtual
-        override(VirtualCollateralSupplyBase_v1)
+        override(
+            VirtualCollateralSupplyBase_v1,
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+        )
         onlyOrchestratorAdmin
     {
         _setVirtualCollateralSupply(virtualSupply_);
@@ -220,8 +245,19 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // =========================================================================
     // Internal
 
+    /// @notice Sets the issuance token for the bonding curve.
+    /// @param  newIssuanceToken_ The new issuance token.
+    function _setIssuanceToken(ERC20Issuance_v1 newIssuanceToken_) internal {
+        // collateralDecimals_ argument removed
+        issuanceToken = newIssuanceToken_;
+
+        emit IBondingCurveBase_v1.IssuanceTokenSet(
+            address(newIssuanceToken_),
+            IERC20Metadata(address(newIssuanceToken_)).decimals()
+        );
+    }
+
     /// @notice Sets the segments for the discrete bonding curve.
-    /// @dev    Can only be called once during initialization.
     /// @param  newSegments_ The array of packed segments.
     function _setSegments(PackedSegment[] memory newSegments_) internal {
         DiscreteCurveMathLib_v1._validateSegmentArray(newSegments_);
@@ -254,8 +290,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         override
         returns (uint)
     {
-        (uint collateralToReturn, /* uint tokensToBurn_ */ ) = _segments
-            ._calculateSaleReturn(_depositAmount, virtualIssuanceSupply);
+        (uint collateralToReturn,) = _segments._calculateSaleReturn(
+            _depositAmount, virtualIssuanceSupply
+        );
         return collateralToReturn;
     }
 
@@ -263,7 +300,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         address _receiver,
         uint _collateralTokenAmount
     ) internal virtual override {
-        revert("NOT IMPLEMENTED");
+        revert("NOT IMPLEMENTED"); // TODO: Implement
     }
 
     // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)
@@ -272,7 +309,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         virtual
         override
     {
-        revert("NOT IMPLEMENTED");
+        revert("NOT IMPLEMENTED"); // TODO: Implement
     }
 
     function _handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
@@ -280,7 +317,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         virtual
         override
     {
-        revert("NOT IMPLEMENTED");
+        revert("NOT IMPLEMENTED"); // TODO: Implement
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)

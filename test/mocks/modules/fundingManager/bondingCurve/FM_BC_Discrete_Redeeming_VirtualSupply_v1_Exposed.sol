@@ -5,12 +5,19 @@ import {FM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Access Mock of the FM_BC_Discrete_Redeeming_VirtualSupply_v1 contract for Testing.
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
     FM_BC_Discrete_Redeeming_VirtualSupply_v1
 {
     // Use the `exposed_` prefix for functions to expose internal functions for testing purposes only.
+
+    function exposed_setIssuanceToken(address newIssuanceTokenAddress_)
+        external
+    {
+        _setIssuanceToken(ERC20Issuance_v1(newIssuanceTokenAddress_));
+    }
 
     function exposed_redeemTokensFormulaWrapper(uint _depositAmount)
         external
