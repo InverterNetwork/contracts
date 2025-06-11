@@ -84,4 +84,13 @@ contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
             IERC20PaymentClientBase_v2(address(this))
         );
     }
+
+    // Getter for testing purposes to access individual payment orders
+    function getPaymentOrder(uint index)
+        external
+        view
+        returns (PaymentOrder memory)
+    {
+        return _orders[index]; // _orders is internal in ERC20PaymentClientBase_v2
+    }
 }

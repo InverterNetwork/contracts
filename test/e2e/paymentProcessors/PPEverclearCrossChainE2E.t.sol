@@ -10,6 +10,7 @@ import {IOrchestrator_v1} from
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol"; // Added for casting
 
 // Modules to be tested and their dependencies
 import {PP_Everclear_CrossChain_v1} from
@@ -20,9 +21,18 @@ import {IEverclear} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 import {IERC20PaymentClientBase_v2} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPP_CrossChainBase_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_CrossChainBase_v1.sol";
+import {IFM_DepositVault_v1} from
+    "src/modules/fundingManager/depositVault/interfaces/IFM_DepositVault_v1.sol";
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol"; // For interfaceId check
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol"; // Added for event emission
 
 contract PPEverclearCrossChainE2E is E2ETest {
     //--------------------------------------------------------------------------
@@ -45,6 +55,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
     IOrchestrator_v1 orchestrator;
     PP_Everclear_CrossChain_v1 paymentProcessor;
     Mock_LM_PC_PaymentRouter_Everclear_v1 paymentClient;
+    IFM_DepositVault_v1 fmDepositVault;
 
     ERC20Mock paymentToken;
     ERC20Mock usdc; // Assuming USDC might be needed for Everclear fees/bonds on Sepolia
@@ -175,38 +186,82 @@ contract PPEverclearCrossChainE2E is E2ETest {
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i = 0; i < modulesList.length; i++) {
-            // Check for a more specific interface if available, or rely on name for mocks
-            // The 'name' field in our local Metadata struct corresponds to 'title' in IModule_v1
-            string memory currentModuleTitle =
-                IModule_v1(modulesList[i]).title();
-            if (
-                // Cast to the specific interface that should have supportsInterface
-                // or to a generic IERC165 if available.
-                // Mock_LM_PC_PaymentRouter_Everclear_v1 inherits supportsInterface.
-                keccak256(abi.encodePacked(currentModuleTitle))
-                    == keccak256(
-                        abi.encodePacked(
-                            mockLmPcPaymentRouterEverclearMetadata.title
+            address moduleAddress = modulesList[i];
+            // Check for Payment Client
+            if (address(paymentClient) == address(0)) {
+                // Only find if not already found
+                string memory currentModuleTitle =
+                    IModule_v1(moduleAddress).title();
+                if (
+                    keccak256(abi.encodePacked(currentModuleTitle))
+                        == keccak256(
+                            abi.encodePacked(
+                                mockLmPcPaymentRouterEverclearMetadata.title
+                            )
                         )
+                        && Mock_LM_PC_PaymentRouter_Everclear_v1(
+                            payable(moduleAddress)
+                        ).supportsInterface(
+                            type(IERC20PaymentClientBase_v2).interfaceId
+                        )
+                ) {
+                    paymentClient =
+                        Mock_LM_PC_PaymentRouter_Everclear_v1(moduleAddress);
+                    vm.label(
+                        address(paymentClient),
+                        "Mock_LM_PC_PaymentRouter_Everclear_v1_Instance"
+                    );
+                }
+            }
+
+            // Check for Funding Manager (Deposit Vault)
+            if (address(fmDepositVault) == address(0)) {
+                // Only find if not already found
+                // Using supportsInterface for more robust check
+                // Cast to Module_v1 to access supportsInterface from ERC165Upgradeable
+                Module_v1 baseModule = Module_v1(payable(moduleAddress));
+                if (
+                    baseModule.supportsInterface(
+                        type(IFundingManager_v1).interfaceId
                     )
-                    && Mock_LM_PC_PaymentRouter_Everclear_v1(
-                        payable(modulesList[i])
-                    ).supportsInterface(
-                        type(IERC20PaymentClientBase_v2).interfaceId
-                    )
+                        && baseModule.supportsInterface(
+                            type(IFM_DepositVault_v1).interfaceId
+                        )
+                ) {
+                    // Further check if it's the one configured with our paymentToken
+                    // This assumes depositVaultMetadata was used for its deployment.
+                    string memory currentModuleTitle =
+                        IModule_v1(moduleAddress).title();
+                    if (
+                        keccak256(abi.encodePacked(currentModuleTitle))
+                            == keccak256(
+                                abi.encodePacked(depositVaultMetadata.title)
+                            )
+                    ) {
+                        fmDepositVault = IFM_DepositVault_v1(moduleAddress);
+                        vm.label(
+                            address(fmDepositVault),
+                            "FM_DepositVault_v1_Instance"
+                        );
+                    }
+                }
+            }
+
+            // Optimization: if both found, break early
+            if (
+                address(paymentClient) != address(0)
+                    && address(fmDepositVault) != address(0)
             ) {
-                paymentClient =
-                    Mock_LM_PC_PaymentRouter_Everclear_v1(modulesList[i]);
-                vm.label(
-                    address(paymentClient),
-                    "Mock_LM_PC_PaymentRouter_Everclear_v1_Instance"
-                );
                 break;
             }
         }
         require(
             address(paymentClient) != address(0),
             "PaymentClient not found in orchestrator"
+        );
+        require(
+            address(fmDepositVault) != address(0),
+            "FM_DepositVault_v1 not found in orchestrator"
         );
 
         // 8. Initial Token Minting & Approvals
@@ -227,8 +282,8 @@ contract PPEverclearCrossChainE2E is E2ETest {
         // Grant PAYMENT_PUSHER_ROLE to owner for the paymentClient mock
         // The role value is defined in LM_PC_PaymentRouter_v2
         // This needs to be called by an admin of the paymentClient's authorizer (which is 'owner')
-        bytes32 PAYMENT_PUSHER_ROLE = keccak256("PAYMENT_PUSHER_ROLE");
-        paymentClient.grantModuleRole(PAYMENT_PUSHER_ROLE, owner);
+        bytes32 pusherRole = paymentClient.PAYMENT_PUSHER_ROLE(); // Directly use the constant
+        paymentClient.grantModuleRole(pusherRole, owner);
 
         // Grant MODULE_ROLE to paymentClient on the paymentProcessor
         // The role value is defined in Module_v1 or specific PP
@@ -244,14 +299,334 @@ contract PPEverclearCrossChainE2E is E2ETest {
     //--------------------------------------------------------------------------
     // Test Cases
     //--------------------------------------------------------------------------
+
+    // Helper struct to pass initial state to assertion helpers
+    struct InitialState {
+        uint ownerBalance;
+        uint processorBalance;
+        uint vaultBalance; // Added for fmDepositVault
+        uint paymentClientTotalPayments;
+        uint paymentClientOutstanding;
+        uint paymentProcessorPaymentId;
+    }
+
+    function _assertTokenBalances(
+        uint initialOwnerBalance,
+        uint initialProcessorBalance,
+        uint initialVaultBalance,
+        uint paymentAmount_
+    ) internal view {
+        assertEq(
+            paymentToken.balanceOf(owner),
+            initialOwnerBalance - paymentAmount_, // Owner pays into the vault
+            "Owner balance incorrect"
+        );
+        assertEq(
+            paymentToken.balanceOf(address(paymentProcessor)),
+            initialProcessorBalance, // Processor itself should not hold these tokens
+            "Processor balance incorrect"
+        );
+        assertEq(
+            paymentToken.balanceOf(address(fmDepositVault)),
+            initialVaultBalance, // Vault balance should be initial + deposit - transferToSpoke = initial
+            "Vault balance incorrect post-payment"
+        );
+        assertEq(
+            paymentToken.balanceOf(address(everclearSpoke)),
+            paymentAmount_, // Assuming spoke was empty
+            "Everclear Spoke balance incorrect"
+        );
+    }
+
+    function _assertPaymentClientState(
+        uint, /*initialPaymentClientTotalPayments*/ // Parameter no longer used as orders are cleared
+        uint initialPaymentClientOutstanding,
+        uint, /*paymentAmount_*/ // Parameters below are for clientOrder, which is no longer checked
+        address, /*recipientAddressOnTargetChain_*/
+        uint, /*targetChainId_*/
+        uint24, /*everclearMaxFee_*/
+        uint48 /*everclearTTL_*/
+    ) internal view {
+        assertEq(
+            paymentClient.paymentOrders().length,
+            0, // Orders should be cleared after collection by paymentProcessor
+            "PaymentClient totalPayments incorrect"
+        );
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(paymentToken)),
+            initialPaymentClientOutstanding,
+            "PaymentClient outstandingTokenAmount incorrect after payment"
+        );
+
+        // Since orders are cleared, we can no longer check the details of the specific order
+        // that was processed. The checks for outstandingTokenAmount and paymentOrders().length
+        // confirm the client's state regarding overall payment processing.
+    }
+
+    function _assertPaymentProcessorState(
+        uint initialPaymentProcessorPaymentId_,
+        uint paymentAmount_,
+        address recipientAddressOnTargetChain_,
+        uint targetChainId_,
+        uint24 everclearMaxFee_,
+        uint48 everclearTTL_
+    ) internal view {
+        uint currentPaymentId = paymentProcessor.getPaymentId();
+        assertEq(
+            currentPaymentId,
+            initialPaymentProcessorPaymentId_ + 1,
+            "Processor currentPaymentId incorrect"
+        );
+
+        bytes memory retrievedPackedIntentIdBytes = paymentProcessor
+            .getBridgeDataByPaymentId(initialPaymentProcessorPaymentId_);
+        require(
+            retrievedPackedIntentIdBytes.length == 32,
+            "Packed IntentId not 32 bytes"
+        );
+        bytes32 intentId;
+        assembly {
+            intentId := mload(add(retrievedPackedIntentIdBytes, 0x20))
+        }
+        assertTrue(intentId != bytes32(0), "Retrieved intentId is zero");
+
+        IEverclear.Intent memory processorIntent =
+            paymentProcessor.getIntentByIntentId(intentId);
+
+        assertEq(
+            processorIntent.initiator,
+            bytes32(uint(uint160(address(paymentProcessor)))),
+            "ProcessorIntent initiator mismatch"
+        );
+        assertEq(
+            processorIntent.receiver,
+            bytes32(uint(uint160(recipientAddressOnTargetChain_))),
+            "ProcessorIntent receiver mismatch"
+        );
+        assertEq(
+            processorIntent.inputAsset,
+            bytes32(uint(uint160(address(paymentToken)))),
+            "ProcessorIntent inputAsset mismatch"
+        );
+        assertEq(
+            processorIntent.outputAsset,
+            bytes32(uint(uint160(address(paymentToken)))),
+            "ProcessorIntent outputAsset mismatch"
+        );
+        assertEq(
+            processorIntent.amount,
+            paymentAmount_,
+            "ProcessorIntent amount mismatch"
+        );
+        assertEq(
+            processorIntent.maxFee,
+            everclearMaxFee_,
+            "ProcessorIntent maxFee mismatch"
+        );
+        assertEq(
+            processorIntent.ttl, everclearTTL_, "ProcessorIntent ttl mismatch"
+        );
+        assertEq(
+            processorIntent.origin,
+            block.chainid,
+            "ProcessorIntent origin mismatch"
+        );
+        assertEq(
+            processorIntent.destinations.length,
+            1,
+            "ProcessorIntent destinations length mismatch"
+        );
+        assertEq(
+            processorIntent.destinations[0],
+            uint32(targetChainId_),
+            "ProcessorIntent destinations[0] mismatch"
+        );
+        assertTrue(processorIntent.nonce != 0, "ProcessorIntent nonce is zero");
+        assertTrue(
+            processorIntent.timestamp != 0, "ProcessorIntent timestamp is zero"
+        );
+        assertTrue(
+            processorIntent.timestamp <= block.timestamp,
+            "ProcessorIntent timestamp too high"
+        );
+    }
+
     function test_e2e_EverclearCrossChain_FullLifecycle() public {
-        // Test logic will be implemented later
         if (skipTestsWithFailingRpc) {
             console.log(
                 "Skipping test_e2e_EverclearCrossChain_FullLifecycle due to RPC/forking issues."
             );
             return;
         }
-        // TODO: Implement test
+
+        // 1. Initial Setup & Parameter Definition
+        uint paymentAmount = 100 * 10 ** paymentToken.decimals();
+        uint targetChainId = block.chainid + 1;
+        uint24 everclearMaxFee = 1 * 10 ** 5;
+        uint48 everclearTTL = uint48(block.timestamp + 3600);
+        address recipientAddressOnTargetChain = user1;
+
+        // Store initial state using the helper struct
+        InitialState memory initialState = InitialState({
+            ownerBalance: paymentToken.balanceOf(owner),
+            processorBalance: paymentToken.balanceOf(address(paymentProcessor)),
+            vaultBalance: paymentToken.balanceOf(address(fmDepositVault)),
+            paymentClientTotalPayments: paymentClient.paymentOrders().length,
+            paymentClientOutstanding: paymentClient.outstandingTokenAmount(
+                address(paymentToken)
+            ),
+            paymentProcessorPaymentId: paymentProcessor.getPaymentId()
+        });
+
+        // 2. Execute Payment
+        vm.startPrank(owner);
+
+        // A. Owner funds the FM_DepositVault_v1
+        // A.1 Owner approves fmDepositVault to spend their paymentTokens
+        paymentToken.approve(address(fmDepositVault), paymentAmount);
+
+        // A.2 Owner deposits paymentTokens into fmDepositVault
+        // Expect Transfer from owner to fmDepositVault
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Transfer(owner, address(fmDepositVault), paymentAmount);
+
+        // Expect Deposit event from fmDepositVault
+        // vm.expectEmit(true, false, false, true, address(fmDepositVault)); // from (indexed), amount (data)
+        // emit IFM_DepositVault_v1.Deposit(owner, paymentAmount);
+
+        fmDepositVault.deposit(paymentAmount);
+
+        // B. paymentClient initiates the cross-chain payment
+        // This sequence of events happens INSIDE paymentClient.pushCrossChainPaymentEverclear(...)
+        //    and the subsequent PP_Everclear_CrossChain_v1.processPaymentOrder call.
+
+        // B.1. fmDepositVault transfers to paymentClient
+        // B.1.a IERC20.Transfer event from the token contract
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Transfer(
+        //     address(fmDepositVault), address(paymentClient), paymentAmount
+        // );
+        // B.1.b TransferOrchestratorToken event from the fmDepositVault contract
+        // vm.expectEmit(true, false, false, true, address(fmDepositVault)); // to (indexed), amount (data)
+        // emit IFundingManager_v1.TransferOrchestratorToken(
+        //     address(paymentClient), paymentAmount
+        // );
+
+        // B.2. paymentClient approves paymentProcessor
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Approval(
+        //     address(paymentClient), address(paymentProcessor), paymentAmount
+        // );
+
+        // B.3. paymentProcessor pulls from paymentClient
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Transfer(
+        //     address(paymentClient), address(paymentProcessor), paymentAmount
+        // );
+
+        // B.4. paymentProcessor approves Everclear Spoke
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Approval(
+        //     address(paymentProcessor),
+        //     EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
+        //     paymentAmount
+        // );
+
+        // B.5. Everclear Spoke pulls from paymentProcessor (via newIntent call)
+        // vm.expectEmit(true, true, false, true, address(paymentToken));
+        // emit IERC20.Transfer(
+        //     address(paymentProcessor),
+        //     EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
+        //     paymentAmount
+        // );
+
+        // Expect events from paymentProcessor (PP_Everclear_CrossChain_v1)
+        // Note: For PaymentOrderProcessed, data field might be complex to match exactly if its order changes.
+        // We will check its content later via direct state reads.
+        // vm.expectEmit(true, true, true, false, address(paymentProcessor)); // checkTopic1=true (paymentClient), checkTopic2=true (recipient), checkTopic3=true (paymentToken), checkData=false
+        // emit IPaymentProcessor_v2.PaymentOrderProcessed(
+        //     address(paymentClient),
+        //     recipientAddressOnTargetChain,
+        //     address(paymentToken),
+        //     paymentAmount,
+        //     block.chainid,
+        //     targetChainId,
+        //     paymentClient.getFlags(), // Flags set in mock client
+        //     // Data array is tricky to predict exactly here due to internal assembly.
+        //     // We will verify its contents through state checks later.
+        //     new bytes32[](0) // Placeholder, actual data check later
+        // );
+
+        // For BridgeTransferCompleted, we need the intentId. We'll capture it.
+        // The paymentId will be initialPaymentProcessorPaymentId
+        // vm.expectEmit(true, false, true, false, address(paymentProcessor)); // checkTopic1=true (paymentId), checkTopic2=false (intentId), checkTopic3=true (recipient), checkData=false
+        // We can't know intentId beforehand for emit check, so we check other fields.
+        // A more robust check would capture the event and inspect its fields.
+        // For now, we rely on the fact that if other fields match, it's likely correct.
+        // A better approach is to use `vm.recordLogs()` and then `vm.getRecordedLogs()`
+        // to inspect the emitted intentId. For simplicity here, we'll skip exact intentId match in emit.
+        // emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
+        //     initialState.paymentProcessorPaymentId, // Expected paymentId
+        //     bytes32(0), // Placeholder for intentId, will verify via state
+        //     recipientAddressOnTargetChain,
+        //     address(paymentClient),
+        //     address(paymentToken),
+        //     paymentAmount,
+        //     block.chainid,
+        //     targetChainId,
+        //     paymentClient.getFlags(),
+        //     new bytes32[](0) // Placeholder for data
+        // );
+
+        // vm.expectEmit(true, true, false, true, address(paymentProcessor)); // Only recipient and token are indexed
+        // emit IPaymentProcessor_v2.TokensReleased(
+        //     recipientAddressOnTargetChain, address(paymentToken), paymentAmount
+        // );
+
+        // Note: The IEverclear interface provided does not define a NewIntent event.
+        // Verification of intent creation will rely on state checks of the paymentProcessor
+        // and the returned values from the newIntent call (which our PP stores).
+
+        paymentClient.pushCrossChainPaymentEverclear(
+            recipientAddressOnTargetChain,
+            address(paymentToken),
+            paymentAmount,
+            targetChainId,
+            everclearMaxFee,
+            everclearTTL
+        );
+
+        vm.stopPrank();
+
+        // 3. Verify State Changes & Data Integrity
+        _assertTokenBalances(
+            initialState.ownerBalance,
+            initialState.processorBalance,
+            initialState.vaultBalance,
+            paymentAmount
+        );
+
+        _assertPaymentClientState(
+            initialState.paymentClientTotalPayments,
+            initialState.paymentClientOutstanding,
+            paymentAmount,
+            recipientAddressOnTargetChain,
+            targetChainId,
+            everclearMaxFee,
+            everclearTTL
+        );
+
+        _assertPaymentProcessorState(
+            initialState.paymentProcessorPaymentId,
+            paymentAmount,
+            recipientAddressOnTargetChain,
+            targetChainId,
+            everclearMaxFee,
+            everclearTTL
+        );
+
+        console.log(
+            "test_e2e_EverclearCrossChain_FullLifecycle: Successfully processed cross-chain payment."
+        );
     }
 }
