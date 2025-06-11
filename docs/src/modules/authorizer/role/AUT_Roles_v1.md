@@ -76,6 +76,16 @@ classDiagram
 
     class AUT_Roles_v1{
         - mapping(address target => mapping(bytes4 selector => bytes32[] roleIds)) _permissions;
+        + getPermissions()
+        + isRolePermissioned()
+        + hasPermission()
+        + createRole()
+        + labelRole()
+        + transferAdminRole()
+        + burnRoleAdmin()
+        + addAccessPermission()
+        + removeAccessPermission()
+        + createRoleAndAddAccessPermissions()
     }
 
 ```
