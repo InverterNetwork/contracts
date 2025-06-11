@@ -1355,10 +1355,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   │   └── When the user contributes to the round
     │   │       └── Then the transaction should revert
     │   │
-    │   └── Given a user has already contributed up to their personal cap
-    │       └── When the user attempts to contribute again
-    │           └── Then the transaction should revert
-    │
+    │   ├── Given a user has already contributed up to their personal cap
+    │   │   └── When the user attempts to contribute again
+    │   │       └── Then the transaction should revert
+    │   │
+    │   ├── Given the user tries to use unspent caps not from a previous round(i.e. using the current or a future round's ID)
+    │   │   └── When the user attempts to contribute
+    │   │       └── Then the transaction should revert
+    │   │
     └── Given the round contribution cap is reached
         └── When the user attempts to contribute
             └── Then the transaction should revert
@@ -1571,6 +1575,125 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.contributeToRoundFor(
             contributor1_, roundId, amount, accessCriteriaId, new bytes32[](0)
         );
+    }
+
+    function testContributeToRoundFor_revertsGivenUnspentCapsIsNotFromPreviousRounds(
+    ) public {
+        RoundParams memory params1 = _defaultRoundParams;
+        params1.accumulationMode = ILM_PC_FundingPot_v1.AccumulationMode.All;
+
+        fundingPot.createRound(
+            params1.roundStart,
+            params1.roundEnd,
+            params1.roundCap,
+            params1.hookContract,
+            params1.hookFunction,
+            params1.autoClosure,
+            params1.accumulationMode
+        );
+        uint32 round1Id = fundingPot.getRoundCount();
+
+        uint8 accessCriteriaId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessType, round1Id);
+
+        fundingPot.setAccessCriteria(
+            round1Id, accessType, 0, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, accessCriteriaId, 500, false, 0, 0, 0
+        );
+
+        mockNFTContract.mint(contributor1_);
+
+        RoundParams memory params2 = _defaultRoundParams;
+        params2.roundStart = _defaultRoundParams.roundStart + 3 days;
+        params2.roundEnd = _defaultRoundParams.roundEnd + 3 days;
+        params2.accumulationMode = ILM_PC_FundingPot_v1.AccumulationMode.All;
+
+        fundingPot.createRound(
+            params2.roundStart,
+            params2.roundEnd,
+            params2.roundCap,
+            params2.hookContract,
+            params2.hookFunction,
+            params2.autoClosure,
+            params2.accumulationMode
+        );
+        uint32 round2Id = fundingPot.getRoundCount();
+
+        fundingPot.setAccessCriteria(
+            round2Id, accessType, 0, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, accessCriteriaId, 400, false, 0, 0, 0
+        );
+
+        vm.warp(params2.roundStart + 1);
+
+        //Attempt to use current round's ID
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            invalidUnspentCaps1 =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        invalidUnspentCaps1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round2Id,
+            accessCriteriaId: accessCriteriaId,
+            merkleProof: new bytes32[](0)
+        });
+
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 700);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds
+                    .selector
+            )
+        );
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round2Id,
+            700,
+            accessCriteriaId,
+            new bytes32[](0),
+            invalidUnspentCaps1
+        );
+
+        //Attempt to use future round's ID
+        uint32 round3Id = round2Id + 1;
+
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            invalidUnspentCaps2 =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        invalidUnspentCaps2[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round3Id,
+            accessCriteriaId: accessCriteriaId,
+            merkleProof: new bytes32[](0)
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds
+                    .selector
+            )
+        );
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round2Id,
+            700,
+            accessCriteriaId,
+            new bytes32[](0),
+            invalidUnspentCaps2
+        );
+
+        vm.stopPrank();
     }
 
     function testContributeToRoundFor_revertsGivenPreviousContributionExceedsPersonalCap(

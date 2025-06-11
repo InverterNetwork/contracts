@@ -320,6 +320,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Thrown when round IDs in UnspentPersonalRoundCap array are not strictly increasing.
     error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing();
 
+    /// @notice Unspent personal round cap references a round that is not previous to the current round.
+    error Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+
     // -------------------------------------------------------------------------
     // Public - Getters
 

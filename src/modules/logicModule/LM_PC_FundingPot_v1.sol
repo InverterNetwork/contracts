@@ -651,6 +651,12 @@ contract LM_PC_FundingPot_v1 is
                 );
             }
 
+            // Enforcement: Round IDs must be strictly before the current roundId_
+            if (currentProcessingRoundId >= roundId_) {
+                revert
+                    Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+            }
+
             lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
 
             // Skip if this round is before the global accumulation start round
