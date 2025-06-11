@@ -12,7 +12,7 @@ import {
 // Mocks
 import {Authorizer_v2_Mock} from
     "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -118,7 +118,7 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         address[] memory modules = new address[](2);
         modules[0] = module;
@@ -206,7 +206,7 @@ contract ModuleManagerBaseV1Test is Test {
     {
         vm.assume(timePassed < timelock - 1);
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         moduleManager.call_initiateAddModuleWithTimelock(module);
 
         (, uint timelockUntil) = moduleManager.moduleAddressToTimelock(module);
@@ -227,7 +227,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testExecuteAddModule_revertGivenTimelockStillActive() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         moduleManager.call_initiateAddModuleWithTimelock(module);
 
         // Cancel setting module
@@ -249,7 +249,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         // Create MAX_MODULES amount of modules + 1
         for (uint i = 0; i < modulesUntilLimit + 1; i++) {
-            modules[i] = address(new ModuleV1Mock());
+            modules[i] = address(new Module_v2_Mock());
             moduleManager.call_initiateAddModuleWithTimelock(modules[i]);
         }
 
@@ -297,7 +297,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testInitiateAddModuleWithTimelock_FailsIfAlreadyAdded() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
@@ -332,7 +332,7 @@ contract ModuleManagerBaseV1Test is Test {
     ) public {
         vm.assume(timePassed < timelock - 1);
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         // Setup add module
         moduleManager.call_initiateAddModuleWithTimelock(module);
@@ -360,7 +360,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testExecuteRemoveModule_revertGivenTimelockStillActive() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         // Setup add module
         moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
@@ -437,7 +437,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testInitiateRemoveModuleWithTimelock_FailsIfNotModule() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         vm.expectRevert(
             IModuleManagerBase_v1.ModuleManagerBase__IsNotModule.selector
@@ -461,7 +461,7 @@ contract ModuleManagerBaseV1Test is Test {
     function testCancelModuleUpdate_failsGivenModuleUpdateNotInitated()
         public
     {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         vm.expectRevert(
             IModuleManagerBase_v1
                 .ModuleManagerBase__ModuleUpdateAlreadyStarted
@@ -516,7 +516,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         modules = new address[](amount);
         for (uint i = 0; i < amount; i++) {
-            modules[i] = address(new ModuleV1Mock());
+            modules[i] = address(new Module_v2_Mock());
         }
     }
 }

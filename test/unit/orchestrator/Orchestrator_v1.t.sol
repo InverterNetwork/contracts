@@ -37,7 +37,7 @@ import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
 import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
@@ -92,7 +92,7 @@ contract OrchestratorV1Test is Test {
 
         address[] memory modules = createModules(moduleAmount);
 
-        address wrongModule = address(new ModuleV1Mock());
+        address wrongModule = address(new Module_v2_Mock());
 
         // We expect reverts when trying to set the wrong module as any of the privileged modules
         vm.expectRevert(
@@ -968,7 +968,7 @@ contract OrchestratorV1Test is Test {
 
         modules = new address[](amount);
         for (uint i = 0; i < amount; i++) {
-            modules[i] = address(new ModuleV1Mock());
+            modules[i] = address(new Module_v2_Mock());
         }
     }
 }

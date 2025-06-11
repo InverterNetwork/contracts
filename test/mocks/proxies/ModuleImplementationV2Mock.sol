@@ -2,12 +2,12 @@ pragma solidity ^0.8.0;
 
 import "@oz/proxy/utils/Initializable.sol";
 
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 import {IModuleImplementationMock} from
     "@mocks/proxies/IModuleImplementationMock.sol";
 
 contract ModuleImplementationV2Mock is
-    ModuleV1Mock,
+    Module_v2_Mock,
     IModuleImplementationMock
 {
     uint public data;

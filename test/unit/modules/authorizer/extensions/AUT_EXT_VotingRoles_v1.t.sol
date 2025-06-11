@@ -29,7 +29,7 @@ import {IOrchestrator_v1} from
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Mocks
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";

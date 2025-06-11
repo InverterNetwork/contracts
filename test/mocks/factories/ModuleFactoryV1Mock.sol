@@ -12,7 +12,7 @@ import {
 
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
@@ -67,7 +67,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         ) {
             return address(new PaymentProcessorV1Mock());
         } else {
-            return address(new ModuleV1Mock());
+            return address(new Module_v2_Mock());
         }
     }
 
@@ -76,7 +76,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         IOrchestrator_v1,
         IOrchestratorFactory_v1.WorkflowConfig memory
     ) external returns (address) {
-        return Clones.clone(address(new ModuleV1Mock()));
+        return Clones.clone(address(new Module_v2_Mock()));
     }
 
     function getBeaconAndId(IModule_v1.Metadata memory metadata)

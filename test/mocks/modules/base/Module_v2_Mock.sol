@@ -7,7 +7,7 @@ import {
     IOrchestrator_v1
 } from "src/modules/base/Module_v1.sol";
 
-contract ModuleV1Mock is Module_v1 {
+contract Module_v2_Mock is Module_v1 {
     // ========================================================================
     // Modifier Access
 

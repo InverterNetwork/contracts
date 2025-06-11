@@ -26,7 +26,7 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
 import {Authorizer_v2_Mock} from
@@ -45,7 +45,7 @@ contract ModuleBaseV1Test is ModuleTest {
     // State
 
     // SuT
-    ModuleV1Mock module;
+    Module_v2_Mock module;
 
     bytes _CONFIGDATA = bytes("");
 
@@ -53,8 +53,8 @@ contract ModuleBaseV1Test is ModuleTest {
     // Setup
 
     function setUp() public {
-        address impl = address(new ModuleV1Mock());
-        module = ModuleV1Mock(Clones.clone(impl));
+        address impl = address(new Module_v2_Mock());
+        module = Module_v2_Mock(Clones.clone(impl));
 
         _setUpOrchestrator(module);
 
@@ -101,8 +101,8 @@ contract ModuleBaseV1Test is ModuleTest {
     }
 
     function testInitFailsForNonInitializerFunction() public {
-        address impl = address(new ModuleV1Mock());
-        module = ModuleV1Mock(Clones.clone(impl));
+        address impl = address(new Module_v2_Mock());
+        module = Module_v2_Mock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         module.initNoInitializer(_orchestrator, _METADATA, _CONFIGDATA);
@@ -114,16 +114,16 @@ contract ModuleBaseV1Test is ModuleTest {
     }
 
     function testInitFailsForInvalidOrchestrator() public {
-        address impl = address(new ModuleV1Mock());
-        module = ModuleV1Mock(Clones.clone(impl));
+        address impl = address(new Module_v2_Mock());
+        module = Module_v2_Mock(Clones.clone(impl));
 
         vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
         module.init(IOrchestrator_v1(address(0)), _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {
-        address impl = address(new ModuleV1Mock());
-        module = ModuleV1Mock(Clones.clone(impl));
+        address impl = address(new Module_v2_Mock());
+        module = Module_v2_Mock(Clones.clone(impl));
 
         // Invalid if _URL empty.
         vm.expectRevert(IModule_v1.Module__InvalidMetadata.selector);
@@ -163,7 +163,8 @@ contract ModuleBaseV1Test is ModuleTest {
         // Assume that the calldata is at least 4 bytes long
         vm.assume(data_.length >= 4);
 
-        bytes4 targetSelector = ModuleV1Mock.modifierPermissionedCheck.selector;
+        bytes4 targetSelector =
+            Module_v2_Mock.modifierPermissionedCheck.selector;
 
         // Proof
         _authorizer.setHasPermission(

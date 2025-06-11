@@ -311,7 +311,7 @@ contract ModuleFactoryV1Test is Test {
 
         beacon.overrideImplementation(address(module));
 
-        // Register ModuleV1Mock for given metadata.
+        // Register Module_v2_Mock for given metadata.
         vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
@@ -345,7 +345,7 @@ contract ModuleFactoryV1Test is Test {
 
         beacon.overrideImplementation(address(module));
 
-        // Register ModuleV1Mock for given metadata.
+        // Register Module_v2_Mock for given metadata.
         vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
@@ -401,7 +401,7 @@ contract ModuleFactoryV1Test is Test {
 
         beacon.overrideImplementation(address(module));
 
-        // Register ModuleV1Mock for given metadata.
+        // Register Module_v2_Mock for given metadata.
         vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
