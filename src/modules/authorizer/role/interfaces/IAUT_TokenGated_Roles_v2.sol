@@ -12,27 +12,27 @@ import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
  *          specific token holdings.
  *
  * @dev     Inherits functionality from:
- *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
+ *          - {IAUT_TokenGated_Roles_v2}: Implementation interface.
  *          - {AUT_Roles_v2}: Inverter's role-based access control.
  *
  *          Key feeatures:
  *              - Token-based access checks before role assignment.
  *              - Supports both {ERC20} and {ERC721} tokens.
  *
- * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_TokenGated_Roles_v1.md
+ * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_TokenGated_Roles_v2.md
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v2 {
+interface IAUT_TokenGated_Roles_v2 is IAuthorizer_v2 {
     //=======================================================================
     // Errors
 

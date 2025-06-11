@@ -31,7 +31,7 @@ Example: We want to restrict a role to users who hold a certain amount of Token 
 classDiagram
 
     note for AUT_Roles_v2 "OpenZeppelin Authorization System"
-    AUT_Roles_v2 <|--  AUT_TokenGated_Roles_v1
+    AUT_Roles_v2 <|--  AUT_TokenGated_Roles_v2
 
 
 
@@ -50,7 +50,7 @@ classDiagram
         + createRoleAndAddAccessPermissions()
     }
 
-    class AUT_TokenGated_Roles_v1{
+    class AUT_TokenGated_Roles_v2{
         - mapping(bytes32 => bool) _isTokenGated
         - mapping(bytes32 => uint) _thresholdMap
         + isTokenGated()
@@ -66,7 +66,7 @@ classDiagram
 
 This contract is based on the following contracts and inherits their functionalities:
 
-- [IAUT_TokenGated_Roles_v1](./interfaces/IAUT_TokenGated_Roles_v1.md): Implementation interface.
+- [IAUT_TokenGated_Roles_v2](./interfaces/IAUT_TokenGated_Roles_v2.md): Implementation interface.
 - [Module_v1](../../base/Module_v1.md): Inverter network base module functionality.
 - [AccessControlEnumerableUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol): Access control functionality.
 - [AUT_Roles_v2](./AUT_Roles_v2.md): Base contract for the role-based access control.
@@ -205,7 +205,7 @@ The third step is to actually add the token to the token gate. This is done by c
 
 ### Deployment Parameters
 
-The list of deployment parameters can be found in the _Technical Reference_ section of the documentation under the `init()` function ([https://docs.inverter.network/contracts/technical-reference/modules/authorizer/role/AUT_TokenGated_Roles_v1.sol]()).
+The list of deployment parameters can be found in the _Technical Reference_ section of the documentation under the `init()` function ([https://docs.inverter.network/contracts/technical-reference/modules/authorizer/role/AUT_TokenGated_Roles_v2.sol]()).
 
 ### Deployment
 

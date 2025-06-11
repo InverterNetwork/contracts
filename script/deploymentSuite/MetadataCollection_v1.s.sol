@@ -83,7 +83,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "AUT_TokenGated_Roles_v1"
+        "AUT_TokenGated_Roles_v2"
     );
 
     // VotingRoles

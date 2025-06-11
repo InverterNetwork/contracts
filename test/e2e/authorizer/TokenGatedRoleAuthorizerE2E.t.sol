@@ -10,7 +10,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 // SuT
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 
 // Modules that are used in this E2E test
 import {
@@ -87,8 +87,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_TokenGated_Roles_v1 authorizer =
-            AUT_TokenGated_Roles_v1(address(orchestrator.authorizer()));
+        AUT_TokenGated_Roles_v2 authorizer =
+            AUT_TokenGated_Roles_v2(address(orchestrator.authorizer()));
 
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));

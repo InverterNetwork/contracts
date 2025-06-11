@@ -26,14 +26,14 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
-import {IAUT_TokenGated_Roles_v1} from
-    "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
+import {IAUT_TokenGated_Roles_v2} from
+    "@aut/role/interfaces/IAUT_TokenGated_Roles_v2.sol";
 
-import {TokenInterface} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {TokenInterface} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 
 // SuT
-import {AUT_TokenGated_Roles_v1_Exposed} from
-    "@mocks/modules/authorizer/AUT_TokenGated_Roles_v1_Exposed.sol";
+import {AUT_TokenGated_Roles_v2_Exposed} from
+    "@mocks/modules/authorizer/AUT_TokenGated_Roles_v2_Exposed.sol";
 
 // Mocks
 import {FundingManagerV1Mock} from
@@ -52,12 +52,12 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
-contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
+contract AUT_TokenGated_Roles_v2_Test is ModuleTest {
     ///////////////////////////////////////////////////////////////////////////
     // State
 
     // SuT
-    AUT_TokenGated_Roles_v1_Exposed _authSuT;
+    AUT_TokenGated_Roles_v2_Exposed _authSuT;
 
     // Constants
     address _bob = makeAddr("Bob");
@@ -77,8 +77,8 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
     // Setup
 
     function setUp() public {
-        address impl = address(new AUT_TokenGated_Roles_v1_Exposed());
-        _authSuT = AUT_TokenGated_Roles_v1_Exposed(Clones.clone(impl));
+        address impl = address(new AUT_TokenGated_Roles_v2_Exposed());
+        _authSuT = AUT_TokenGated_Roles_v2_Exposed(Clones.clone(impl));
 
         // initiate orchestrator without extra Module
         _setUpOrchestrator();
@@ -107,7 +107,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             _authSuT.supportsInterface(
-                type(IAUT_TokenGated_Roles_v1).interfaceId
+                type(IAUT_TokenGated_Roles_v2).interfaceId
             )
         );
     }
@@ -154,7 +154,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         if (members.length != 0) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IAUT_TokenGated_Roles_v1
+                    IAUT_TokenGated_Roles_v2
                         .Module__AUT_TokenGated_Roles__RoleNotEmpty
                         .selector
                 )
@@ -173,7 +173,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         bytes32 roleId = _authSuT.PUBLIC_ROLE();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__RoleIsPublic
                     .selector
             )
@@ -200,7 +200,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
             // If not token gated, then the function should revert
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IAUT_TokenGated_Roles_v1
+                    IAUT_TokenGated_Roles_v2
                         .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                         .selector
                 )
@@ -219,7 +219,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         if (threshold_ == 0) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IAUT_TokenGated_Roles_v1
+                    IAUT_TokenGated_Roles_v2
                         .Module__AUT_TokenGated_Roles__InvalidThreshold
                         .selector,
                     threshold_
@@ -264,7 +264,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         // onlyTokenGated
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                     .selector
             )
@@ -372,7 +372,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
             _authSuT.createRole("Role", _authSuT.DEFAULT_ADMIN_ROLE(), members);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__RoleNotEmpty
                     .selector
             )
@@ -383,7 +383,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         roleId = _authSuT.PUBLIC_ROLE();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__RoleIsPublic
                     .selector
             )
@@ -399,7 +399,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAUT_TokenGated_Roles_v1.ChangedTokenGating(roleId, true);
+        emit IAUT_TokenGated_Roles_v2.ChangedTokenGating(roleId, true);
 
         // Set token gated
         _authSuT.setTokenGated(roleId, true);
@@ -445,7 +445,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(
+        emit IAUT_TokenGated_Roles_v2.ChangedTokenThreshold(
             roleId, address(0), 1
         );
 
@@ -582,7 +582,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         // Grant Role
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__InvalidToken
                     .selector,
                 address(who_)
@@ -606,7 +606,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         // Grant Role
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold
                     .selector,
                 roleId,
@@ -634,7 +634,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         // Grant Role
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__InvalidToken
                     .selector,
                 who_
@@ -717,7 +717,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(roleId, who, 0);
+        emit IAUT_TokenGated_Roles_v2.ChangedTokenThreshold(roleId, who, 0);
 
         // Revoke Role
         _authSuT.revokeRole(roleId, who);
@@ -759,7 +759,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                     .selector
             )
@@ -773,7 +773,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
+                IAUT_TokenGated_Roles_v2
                     .Module__AUT_TokenGated_Roles__InvalidThreshold
                     .selector,
                 0
@@ -795,7 +795,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         _authSuT.setTokenGated(roleId, true);
 
         vm.expectEmit(true, true, true, true);
-        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(
+        emit IAUT_TokenGated_Roles_v2.ChangedTokenThreshold(
             roleId, token_, threshold_
         );
         // Set Threshold

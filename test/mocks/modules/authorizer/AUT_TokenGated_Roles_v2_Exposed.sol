@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 // Internal Dependencies
 
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 import {AccessControlUpgradeable} from
     "@oz-up/access/AccessControlUpgradeable.sol";
 
-contract AUT_TokenGated_Roles_v1_Exposed is AUT_TokenGated_Roles_v1 {
+contract AUT_TokenGated_Roles_v2_Exposed is AUT_TokenGated_Roles_v2 {
     //==========================================================================
     // Modifier
 

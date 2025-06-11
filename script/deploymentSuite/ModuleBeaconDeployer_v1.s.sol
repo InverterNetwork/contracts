@@ -85,7 +85,7 @@ contract ModuleBeaconDeployer_v1 is
                     tokenGatedRoleAuthorizerMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_Aut_TokenGated_Roles_v1,
+                    impl_mod_AUT_TokenGated_Roles_v2,
                     tokenGatedRoleAuthorizerMetadata.majorVersion,
                     tokenGatedRoleAuthorizerMetadata.minorVersion,
                     tokenGatedRoleAuthorizerMetadata.patchVersion

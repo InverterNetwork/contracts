@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {TokenInterface} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {TokenInterface} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 
 contract TokenInterfaceMock is TokenInterface {
     //==========================================================================

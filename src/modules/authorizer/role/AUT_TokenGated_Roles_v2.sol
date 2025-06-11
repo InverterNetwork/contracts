@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IAUT_TokenGated_Roles_v1} from
-    "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
+import {IAUT_TokenGated_Roles_v2} from
+    "@aut/role/interfaces/IAUT_TokenGated_Roles_v2.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // Internal Dependencies
@@ -54,27 +54,27 @@ interface TokenInterface {
  *          specific token holdings.
  *
  * @dev     Inherits functionality from:
- *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
+ *          - {IAUT_TokenGated_Roles_v2}: Implementation interface.
  *          - {AUT_Roles_v2}: Inverter's role-based access control.
  *
  *          Key features:
  *              - Token-based access checks before role assignment.
  *              - Supports both {ERC20} and {ERC721} tokens.
  *
- * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_TokenGated_Roles_v1.md
+ * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_TokenGated_Roles_v2.md
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
+contract AUT_TokenGated_Roles_v2 is IAUT_TokenGated_Roles_v2, AUT_Roles_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -83,7 +83,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
         override(AUT_Roles_v2)
         returns (bool isInterfaceId_)
     {
-        return interfaceId_ == type(IAUT_TokenGated_Roles_v1).interfaceId
+        return interfaceId_ == type(IAUT_TokenGated_Roles_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -155,7 +155,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
     // ========================================================================
     // Public Getter Functions
 
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v2
     function isTokenGated(bytes32 roleId_)
         external
         view
@@ -164,7 +164,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
         return _isTokenGated[roleId_];
     }
 
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v2
     function hasTokenRole(bytes32 roleId_, address who_)
         external
         view
@@ -174,7 +174,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
         return _hasTokenRole(roleId_, who_);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v2
     function getThresholdValue(bytes32 roleId_, address token_)
         public
         view
@@ -190,7 +190,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
     // ------------------------------------------------------------------------
     // Mutating - TokenGated Settings
 
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v2
     function setTokenGated(bytes32 roleId_, bool to_)
         public
         permissioned
@@ -202,7 +202,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
         emit ChangedTokenGating(roleId_, to_);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Roles_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v2
     function setThreshold(bytes32 roleId_, address token_, uint threshold_)
         public
         permissioned

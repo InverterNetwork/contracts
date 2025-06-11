@@ -29,7 +29,7 @@ import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 import {AUT_EXT_VotingRoles_v2} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
 import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
@@ -402,7 +402,7 @@ contract E2EModuleRegistry is Test {
 
     // Token Gated Role Authorizer
 
-    AUT_TokenGated_Roles_v1 tokenRoleAuthorizerImpl;
+    AUT_TokenGated_Roles_v2 tokenRoleAuthorizerImpl;
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
@@ -411,7 +411,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
-        "AUT_TokenGated_Roles_v1"
+        "AUT_TokenGated_Roles_v2"
     );
 
     /* 
@@ -425,7 +425,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpTokenGatedRoleAuthorizer() internal {
         // Deploy module implementations.
-        tokenRoleAuthorizerImpl = new AUT_TokenGated_Roles_v1();
+        tokenRoleAuthorizerImpl = new AUT_TokenGated_Roles_v2();
 
         // Deploy module beacons.
         tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
