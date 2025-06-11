@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {ModuleTest, IOrchestrator_v1} from "@unitTest/modules/ModuleTest.sol";
 import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -82,7 +82,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
 
     IOrchestrator_v1 orchestrator;
     FM_DepositVault_v1 fundingManager;
-    AUT_Roles_v1 authorizer;
+    AUT_Roles_v2 authorizer;
     LM_PC_KPIRewarder_v2 kpiRewarder;
 
     ERC20Mock USDC;
@@ -246,7 +246,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        authorizer = AUT_Roles_v1(address(orchestrator.authorizer()));
+        authorizer = AUT_Roles_v2(address(orchestrator.authorizer()));
 
         fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));

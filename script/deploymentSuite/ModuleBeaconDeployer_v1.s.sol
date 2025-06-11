@@ -69,7 +69,7 @@ contract ModuleBeaconDeployer_v1 is
                     roleAuthorizerMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_Aut_Roles_v1,
+                    impl_mod_AUT_Roles_v2,
                     roleAuthorizerMetadata.majorVersion,
                     roleAuthorizerMetadata.minorVersion,
                     roleAuthorizerMetadata.patchVersion

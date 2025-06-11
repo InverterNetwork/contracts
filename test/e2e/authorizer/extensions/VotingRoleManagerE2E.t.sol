@@ -9,7 +9,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {
     LM_PC_Bounties_v2, ILM_PC_Bounties_v2
 } from "@lm/LM_PC_Bounties_v2.sol";
@@ -94,8 +94,8 @@ contract VotingRoleManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         // Find LM_PC_Bounties_v2
         LM_PC_Bounties_v2 bountyManager;

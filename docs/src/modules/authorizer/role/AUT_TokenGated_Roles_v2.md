@@ -15,7 +15,7 @@ To understand the functionalities of the following contract, it is important to 
 
 ### Token Gated Role
 
-With this contract it is possible to extend the base functionality of the [AUT_Roles_v1](./AUT_Roles_v1.md) contract to make a role token gated. A token gated role behaves in all respects like a regular role, but handles the membership of that role differently. A member of a token gated role is only allowed to access the role functionalities if they hold a certain amount of a token.
+With this contract it is possible to extend the base functionality of the [AUT_Roles_v2](./AUT_Roles_v2.md) contract to make a role token gated. A token gated role behaves in all respects like a regular role, but handles the membership of that role differently. A member of a token gated role is only allowed to access the role functionalities if they hold a certain amount of a token.
 
 The implementation of this contract uses a few tricks to achieve this. Without going into too much detail, this is the main part that is needed to understand the basic mechanism:
 
@@ -30,13 +30,13 @@ Example: We want to restrict a role to users who hold a certain amount of Token 
 ```mermaid
 classDiagram
 
-    note for AUT_Roles_v1 "OpenZeppelin Authorization System"
-    AUT_Roles_v1 <|--  AUT_TokenGated_Roles_v1
+    note for AUT_Roles_v2 "OpenZeppelin Authorization System"
+    AUT_Roles_v2 <|--  AUT_TokenGated_Roles_v1
 
 
 
 
-    class AUT_Roles_v1{
+    class AUT_Roles_v2{
         - mapping(address target => mapping(bytes4 selector => bytes32[] roleIds)) _permissions;
         + getPermissions()
         + isRolePermissioned()
@@ -69,7 +69,7 @@ This contract is based on the following contracts and inherits their functionali
 - [IAUT_TokenGated_Roles_v1](./interfaces/IAUT_TokenGated_Roles_v1.md): Implementation interface.
 - [Module_v1](../../base/Module_v1.md): Inverter network base module functionality.
 - [AccessControlEnumerableUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol): Access control functionality.
-- [AUT_Roles_v1](./AUT_Roles_v1.md): Base contract for the role-based access control.
+- [AUT_Roles_v2](./AUT_Roles_v2.md): Base contract for the role-based access control.
 
 Functions that have been overridden to adapt functionalities are outlined below.
 
@@ -218,4 +218,4 @@ Deployment should be done using one of the methods provided below:
 
 #### Optional Setup Steps
 
-Because a workflow and its authorizer module are deployed without any native permissions (except the initial admin role [here](#native-roles)), it might be necessary for some modules to modify the access of their functions. For this look up the sections `Mixed Utility`,`Role Management` and `Role Based Access Control` from the [AUT_Roles_v1](./AUT_Roles_v1.md) as well as the section [Full process of making a role token gated](#full-process-of-making-a-role-token-gated).
+Because a workflow and its authorizer module are deployed without any native permissions (except the initial admin role [here](#native-roles)), it might be necessary for some modules to modify the access of their functions. For this look up the sections `Mixed Utility`,`Role Management` and `Role Based Access Control` from the [AUT_Roles_v2](./AUT_Roles_v2.md) as well as the section [Full process of making a role token gated](#full-process-of-making-a-role-token-gated).

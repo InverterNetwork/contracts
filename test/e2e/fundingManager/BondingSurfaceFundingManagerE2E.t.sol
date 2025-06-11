@@ -10,7 +10,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
@@ -149,8 +149,8 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
             fundingManager =

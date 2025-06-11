@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 // Internal Dependencies
 
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
-contract AUT_Roles_v1_Exposed is AUT_Roles_v1 {
+contract AUT_Roles_v2_Exposed is AUT_Roles_v2 {
     //==========================================================================
     // State Access Functions
 

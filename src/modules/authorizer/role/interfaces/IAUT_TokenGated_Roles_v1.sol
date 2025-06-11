@@ -13,7 +13,7 @@ import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
  *
  * @dev     Inherits functionality from:
  *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
- *          - {AUT_Roles_v1}: Inverter's role-based access control.
+ *          - {AUT_Roles_v2}: Inverter's role-based access control.
  *
  *          Key feeatures:
  *              - Token-based access checks before role assignment.

@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {Vm, VmSafe} from "forge-std/Vm.sol";
 
 // SuT
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // Internal Dependencies
 import {
@@ -116,7 +116,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     ERC20Issuance_Blacklist_v1 issuanceToken;
     FM_PC_Oracle_Redeeming_v1 fundingManager;
     PP_Queue_ManualExecution_v1 paymentProcessor;
-    AUT_Roles_v1 authorizer;
+    AUT_Roles_v2 authorizer;
     LM_Oracle_Permissioned_v1 permissionedOracle;
     IOrchestrator_v1 orchestrator;
 
@@ -214,7 +214,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        authorizer = AUT_Roles_v1(address(orchestrator.authorizer()));
+        authorizer = AUT_Roles_v2(address(orchestrator.authorizer()));
 
         // Get funding manager
         fundingManager =

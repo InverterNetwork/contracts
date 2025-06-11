@@ -73,7 +73,7 @@ contract MetadataCollection_v1 {
 
     // RoleAuthorizer
     IModule_v1.Metadata public roleAuthorizerMetadata = IModule_v1.Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "AUT_Roles_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "AUT_Roles_v2"
     );
 
     // TokenGatedRoleAuthorizer

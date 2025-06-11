@@ -47,7 +47,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     // Modules
 
     // Authorizer
-    address public impl_mod_Aut_Roles_v1;
+    address public impl_mod_AUT_Roles_v2;
     address public impl_mod_Aut_TokenGated_Roles_v1;
     address public impl_mod_AUT_EXT_VotingRoles_v2;
 
@@ -163,8 +163,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Authorizer
         console2.log("  -- Authorizer");
 
-        impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
-            "AUT_Roles_v1", vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
+        impl_mod_AUT_Roles_v2 = deployAndLogWithCreate2(
+            "AUT_Roles_v2", vm.getCode("AUT_Roles_v2.sol:AUT_Roles_v2")
         );
         impl_mod_Aut_TokenGated_Roles_v1 = deployAndLogWithCreate2(
             "AUT_TokenGated_Roles_v1",

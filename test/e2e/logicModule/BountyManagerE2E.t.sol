@@ -7,7 +7,7 @@ import {
     IOrchestratorFactory_v1,
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // SuT
 import {
@@ -94,8 +94,8 @@ contract BountyManagerE2E is E2ETest {
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         LM_PC_Bounties_v2 bountyManager;
 

@@ -28,8 +28,8 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // SuT
-import {AUT_Roles_v1_Exposed} from
-    "@mocks/modules/authorizer/AUT_Roles_v1_Exposed.sol";
+import {AUT_Roles_v2_Exposed} from
+    "@mocks/modules/authorizer/AUT_Roles_v2_Exposed.sol";
 
 // Mocks
 import {FundingManagerV1Mock} from
@@ -47,12 +47,12 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
-contract AUT_Roles_v1_Test is ModuleTest {
+contract AUT_Roles_v2_Test is ModuleTest {
     ///////////////////////////////////////////////////////////////////////////
     // State
 
     // SuT
-    AUT_Roles_v1_Exposed _authSuT;
+    AUT_Roles_v2_Exposed _authSuT;
 
     // Constants
     address _initialAdmin = makeAddr("initialAdmin");
@@ -74,8 +74,8 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // Setup
 
     function setUp() public {
-        address impl = address(new AUT_Roles_v1_Exposed());
-        _authSuT = AUT_Roles_v1_Exposed(Clones.clone(impl));
+        address impl = address(new AUT_Roles_v2_Exposed());
+        _authSuT = AUT_Roles_v2_Exposed(Clones.clone(impl));
 
         // initiate orchestrator without extra Module
         _setUpOrchestrator();

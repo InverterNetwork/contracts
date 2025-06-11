@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // Internal Dependencies
 import {
@@ -87,8 +87,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         //--------------------------------------------------------------------------
         // Module E2E Test
@@ -164,8 +164,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         //--------------------------------------------------------------------------
         // Module E2E Test

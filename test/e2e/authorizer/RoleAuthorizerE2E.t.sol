@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // Internal Dependencies
 import {
@@ -93,8 +93,8 @@ contract RoleAuthorizerE2E1 is E2ETest {
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
-        AUT_Roles_v1 authorizer =
-            AUT_Roles_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
 
         // Find LM_PC_Bounties_v2
         LM_PC_Bounties_v2 bountyManager;

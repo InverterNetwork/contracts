@@ -28,7 +28,7 @@ import {LM_PC_RecurringPayments_v2} from "@lm/LM_PC_RecurringPayments_v2.sol";
 import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v2} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
@@ -363,16 +363,16 @@ contract E2EModuleRegistry is Test {
 
     // Role Authorizer
 
-    AUT_Roles_v1 roleAuthorizerImpl;
+    AUT_Roles_v2 roleAuthorizerImpl;
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
     IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
-        1, 0, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
+        1, 0, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v2"
     );
 
     /* 
-    // Note that AUT_Roles_v1 owner and manager are the same
+    // Note that AUT_Roles_v2 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
@@ -381,7 +381,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpRoleAuthorizer() internal {
         // Deploy module implementations.
-        roleAuthorizerImpl = new AUT_Roles_v1();
+        roleAuthorizerImpl = new AUT_Roles_v2();
 
         // Deploy module beacons.
         roleAuthorizerBeacon = new InverterBeacon_v1(
@@ -415,7 +415,7 @@ contract E2EModuleRegistry is Test {
     );
 
     /* 
-    // Note that AUT_Roles_v1 owner and manager are the same
+    // Note that AUT_Roles_v2 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,

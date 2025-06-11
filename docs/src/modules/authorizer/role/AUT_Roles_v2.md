@@ -55,8 +55,8 @@ Note: As a workflow is intialized without any native permissions, some functions
 ```mermaid
 classDiagram
 
-    Module <|-- AUT_Roles_v1
-    AccessControlEnumerableUpgradeable <|-- AUT_Roles_v1
+    Module <|-- AUT_Roles_v2
+    AccessControlEnumerableUpgradeable <|-- AUT_Roles_v2
 
     note for Module "Base contract for every module implementation"
     class Module{
@@ -74,7 +74,7 @@ classDiagram
         + revokeRole()
     }
 
-    class AUT_Roles_v1{
+    class AUT_Roles_v2{
         - mapping(address target => mapping(bytes4 selector => bytes32[] roleIds)) _permissions;
         + getPermissions()
         + isRolePermissioned()

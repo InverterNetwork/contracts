@@ -7,7 +7,7 @@ import {IAUT_TokenGated_Roles_v1} from
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // Internal Dependencies
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // External Interfaces
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
@@ -55,7 +55,7 @@ interface TokenInterface {
  *
  * @dev     Inherits functionality from:
  *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
- *          - {AUT_Roles_v1}: Inverter's role-based access control.
+ *          - {AUT_Roles_v2}: Inverter's role-based access control.
  *
  *          Key features:
  *              - Token-based access checks before role assignment.
@@ -74,13 +74,13 @@ interface TokenInterface {
  *
  * @author  Inverter Network
  */
-contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
+contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
-        override(AUT_Roles_v1)
+        override(AUT_Roles_v2)
         returns (bool isInterfaceId_)
     {
         return interfaceId_ == type(IAUT_TokenGated_Roles_v1).interfaceId
@@ -88,7 +88,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     }
 
     /*
-    * This Module expands on the AUT_Roles_v1 by adding the possibility to set
+    * This Module expands on the AUT_Roles_v2 by adding the possibility to set
     * a role as "Token-Gated". Instead of whitelisting a user address, the
     * whitelisted addresses will correspond to a token address, and on 
     * authorization the contract will check on ownership of one of the specifed
@@ -239,7 +239,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param  roleId_ The role to grant.
     /// @param  who_ The address to grant the role to.
     /// @return success_ Returns true if the role has been granted succesfully.
-    /// @dev	Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface
+    /// @dev	Overrides {_grantRole} from {AUT_Roles_v2} to enforce interface
     ///         implementation and threshold existence when role is token-gated.
     /// @dev	Please note: current check for validating a valid token is not
     ///         conclusive and could be circumvented through a `callback()`
