@@ -259,8 +259,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Incorrect access criteria.
     error Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
 
-    /// @notice Invalid access criteria ID.
-    error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+    /// @notice Invalid access criteria type.
+    error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
 
     /// @notice Invalid times.
     error Module__LM_PC_FundingPot__InvalidTimes();

@@ -935,7 +935,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__InvalidAccessCriteriaId
+                    .Module__LM_PC_FundingPot__InvalidAccessCriteriaType
                     .selector
             )
         );
@@ -4925,7 +4925,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__InvalidAccessCriteriaId
+                    .Module__LM_PC_FundingPot__InvalidAccessCriteriaType
                     .selector
             )
         );

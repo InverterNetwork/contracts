@@ -305,10 +305,6 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (bool isEligible, uint remainingAmountAllowedToContribute)
     {
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_TYPE) {
-            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
-        }
-
         Round storage round = rounds[roundId_];
 
         if (round.roundEnd == 0 && round.roundCap == 0) {
@@ -472,7 +468,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
 
         if (accessCriteriaType_ > MAX_ACCESS_CRITERIA_TYPE) {
-            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
         }
 
         _validateEditRoundParameters(round);
@@ -494,7 +490,7 @@ contract LM_PC_FundingPot_v1 is
                 round.accessCriterias[criteriaId].accessCriteriaType
                     == AccessCriteriaType.UNSET
             ) {
-                revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+                revert Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
             }
         }
 
@@ -562,7 +558,7 @@ contract LM_PC_FundingPot_v1 is
             round.accessCriterias[accessCriteriaId_].accessCriteriaType
                 == AccessCriteriaType.UNSET
         ) {
-            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
         }
 
         _validateEditRoundParameters(round);
@@ -899,7 +895,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_TYPE) {
-            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
         }
 
         _validateAccessCriteria(
