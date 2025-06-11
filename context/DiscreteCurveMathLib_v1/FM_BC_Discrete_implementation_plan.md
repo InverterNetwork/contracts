@@ -115,11 +115,13 @@
 
 ### 2.9. handle functions: token transfers & mints [BLOCKED]
 
-#### 2.9.1. `_handleCollateralTokensBeforeBuy`
+Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol`
 
-- transfers issuance tokens from provider to this module
+#### 2.9.1. `_handleCollateralTokensBeforeBuy` [DONE]
+
+- [x] transfers issuance tokens from provider to this module
   - tests (via exposed function)
-    - transfers tokens from provider to this module
+    - [x] transfers tokens from provider to this module
 
 #### 2.9.2. `_handleIssuanceTokensAfterBuy`
 

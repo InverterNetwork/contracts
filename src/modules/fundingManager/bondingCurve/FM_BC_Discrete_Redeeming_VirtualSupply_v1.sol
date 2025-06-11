@@ -309,7 +309,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         virtual
         override
     {
-        revert("NOT IMPLEMENTED"); // TODO: Implement
+        _token.safeTransferFrom(_provider, address(this), _amount);
     }
 
     function _handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
