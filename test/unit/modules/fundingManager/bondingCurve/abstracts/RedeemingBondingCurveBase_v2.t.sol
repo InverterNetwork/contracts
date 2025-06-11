@@ -32,7 +32,7 @@ import {
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol";
 
-contract RedeemingBondingCurveBaseV1Test is ModuleTest {
+contract RedeemingBondingCurveBaseV2Test is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
     string private constant SYMBOL = "BCT";
     uint8 private constant DECIMALS = 18;

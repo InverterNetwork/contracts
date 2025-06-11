@@ -52,7 +52,7 @@ import {ERC20PaymentClientBaseV2Mock} from
     - _redeemTokensFormulaWrapper(uint _depositAmount)
 */
 
-contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
+contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
     string internal constant NAME = "Bonding Curve Token";
     string internal constant SYMBOL = "BCT";
     uint8 internal constant DECIMALS = 18;
