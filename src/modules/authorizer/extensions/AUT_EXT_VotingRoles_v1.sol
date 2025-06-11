@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IAUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/extensions/interfaces/IAUT_EXT_VotingRoles_v1.sol";
+import {IAUT_EXT_VotingRoles_v2} from
+    "src/modules/authorizer/extensions/interfaces/IAUT_EXT_VotingRoles_v2.sol";
 
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
@@ -30,7 +30,7 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
  * @author  Inverter Network
  */
 
-contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
+contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v2, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -39,7 +39,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         override(Module_v1)
         returns (bool isInterfaceId_)
     {
-        return interfaceId_ == type(IAUT_EXT_VotingRoles_v1).interfaceId
+        return interfaceId_ == type(IAUT_EXT_VotingRoles_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -77,10 +77,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //==========================================================================
     // Constants
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     uint public constant MAX_VOTING_DURATION = 2 weeks;
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     uint public constant MIN_VOTING_DURATION = 1 days;
 
     //==========================================================================
@@ -182,12 +182,12 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Getter - State Access Functions
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function isVoter(address who_) external view returns (bool isVoter_) {
         return _isVoter[who_];
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getMotion(bytes32 id_)
         external
         view
@@ -222,22 +222,22 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         );
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getMotionCount() external view returns (uint motionCount_) {
         return _motionCount;
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getVoterCount() external view returns (uint voterCount_) {
         return _voterCount;
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getThreshold() external view returns (uint threshold_) {
         return _threshold;
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getVoteDuration() external view returns (uint voteDuration_) {
         return _voteDuration;
     }
@@ -245,7 +245,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Data Retrieval Functions
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function getReceipt(bytes32 id_, address voter_)
         public
         view
@@ -262,7 +262,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Mutating - Configuration Functions
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function setThreshold(uint newThreshold_) public onlySelf {
         // Revert if the threshold is set incorrectly.
         _validateThreshold(_voterCount, newThreshold_);
@@ -271,7 +271,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _threshold = newThreshold_;
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function setVotingDuration(uint newVoteDuration_) external onlySelf {
         // Revert if votingDuration outside of bounds.
         if (
@@ -288,7 +288,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Mutating - Voter Management Functions
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function addVoter(address who_) public onlySelf isValidVoterAddress(who_) {
         if (!_isVoter[who_]) {
             _addVoter(who_);
@@ -297,7 +297,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function addVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external
     {
@@ -309,7 +309,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         setThreshold(newThreshold_);
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function removeVoter(address who_) public onlySelf {
         _removeVoter(who_);
 
@@ -317,7 +317,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _validateThreshold(_voterCount, _threshold);
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function removeVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external
         onlySelf
@@ -331,7 +331,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Mutating - Governance Functions
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function createMotion(address target_, bytes calldata action_)
         external
         onlyVoter
@@ -363,7 +363,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         return motionId;
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function castVote(bytes32 motionId_, uint8 support_) external onlyVoter {
         // Revert if support invalid.
         // - 0 = for
@@ -412,7 +412,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         emit VoteCast(motionId_, voter, support_);
     }
 
-    /// @inheritdoc IAUT_EXT_VotingRoles_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v2
     function executeMotion(bytes32 motionId_) external {
         // Get pointer to the motion.
         Motion storage motion_ = _motions[motionId_];

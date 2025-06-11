@@ -17,7 +17,7 @@ import {
 // SuT
 import {
     AUT_EXT_VotingRoles_v1,
-    IAUT_EXT_VotingRoles_v1
+    IAUT_EXT_VotingRoles_v2
 } from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
 contract VotingRoleManagerE2E is E2ETest {
@@ -115,7 +115,7 @@ contract VotingRoleManagerE2E is E2ETest {
         AUT_EXT_VotingRoles_v1 votingRoles;
 
         for (uint i; i < modulesList.length; ++i) {
-            try IAUT_EXT_VotingRoles_v1(modulesList[i]).isVoter(address(0))
+            try IAUT_EXT_VotingRoles_v2(modulesList[i]).isVoter(address(0))
             returns (bool) {
                 votingRoles = AUT_EXT_VotingRoles_v1(modulesList[i]);
                 break;
