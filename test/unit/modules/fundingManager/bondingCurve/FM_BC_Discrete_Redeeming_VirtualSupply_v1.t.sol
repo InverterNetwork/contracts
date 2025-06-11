@@ -126,19 +126,18 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         ) + (DEFAULT_SEG1_SUPPLY_PER_STEP * DEFAULT_SEG1_NUMBER_OF_STEPS);
         initialTestSegments = defaultCurve.packedSegmentsArray;
 
+        // Expect events during initialization
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IFundingManager_v1.OrchestratorTokenSet(
+            address(orchestratorToken), orchestratorToken.decimals()
+        );
         vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
         emit IBondingCurveBase_v1.IssuanceTokenSet(
             address(issuanceToken), issuanceToken.decimals()
         );
-
         vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
         emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1.SegmentsSet(
             initialTestSegments
-        );
-
-        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
-        emit IFundingManager_v1.OrchestratorTokenSet(
-            address(orchestratorToken), orchestratorToken.decimals()
         );
 
         fmBcDiscrete.init(
