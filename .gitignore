@@ -3,7 +3,8 @@ cache/
 out/
 
 # AI Context
-memory-bank/
+#memory-bank/
+#context/
 
 # Test files
 coverage/
