@@ -25,7 +25,7 @@ import {PP_Simple_v2} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
 import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 import {LM_PC_Bounties_v3} from "@lm/LM_PC_Bounties_v3.sol";
 import {LM_PC_RecurringPayments_v2} from "@lm/LM_PC_RecurringPayments_v2.sol";
-import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
+import {LM_PC_PaymentRouter_v3} from "@lm/LM_PC_PaymentRouter_v3.sol";
 import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v3} from "@lm/LM_PC_KPIRewarder_v3.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
@@ -722,8 +722,8 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_PaymentRouter_v2
-    LM_PC_PaymentRouter_v2 paymentRouterImpl;
+    // LM_PC_PaymentRouter_v3
+    LM_PC_PaymentRouter_v3 paymentRouterImpl;
 
     InverterBeacon_v1 paymentRouterBeacon;
 
@@ -732,7 +732,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_PaymentRouter_v2"
+        "LM_PC_PaymentRouter_v3"
     );
 
     /*
@@ -746,7 +746,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpPaymentRouter() internal {
         // Deploy module implementations.
-        paymentRouterImpl = new LM_PC_PaymentRouter_v2();
+        paymentRouterImpl = new LM_PC_PaymentRouter_v3();
 
         // Deploy module beacons.
         paymentRouterBeacon = new InverterBeacon_v1(

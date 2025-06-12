@@ -13,7 +13,7 @@ import {
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
-import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
+import {LM_PC_PaymentRouter_v3} from "@lm/LM_PC_PaymentRouter_v3.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // SuT
 import {
@@ -189,7 +189,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
         // Transfer all collateral to the new BC
 
-        LM_PC_PaymentRouter_v2(paymentRouter).pushPayment(
+        LM_PC_PaymentRouter_v3(paymentRouter).pushPayment(
             newBondingCurve, // recipient
             address(token), // token
             // This represented the allowed amount of collateral token to be transferred

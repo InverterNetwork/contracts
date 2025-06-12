@@ -196,7 +196,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_PaymentRouter_v2"
+        "LM_PC_PaymentRouter_v3"
     );
 
     // RecurringPayments

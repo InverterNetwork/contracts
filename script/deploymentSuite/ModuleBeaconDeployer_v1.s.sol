@@ -282,7 +282,7 @@ contract ModuleBeaconDeployer_v1 is
                     paymentRouterMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_PaymentRouter_v2,
+                    impl_mod_LM_PC_PaymentRouter_v3,
                     paymentRouterMetadata.majorVersion,
                     paymentRouterMetadata.minorVersion,
                     paymentRouterMetadata.patchVersion

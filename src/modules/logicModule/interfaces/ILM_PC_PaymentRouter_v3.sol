@@ -1,12 +1,30 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_PaymentRouter_v2 {
+/**
+ * @title   Inverter Payment Router interface
+ *
+ * @notice  This module enables pushing payments directly to the Payment Processor.
+ *
+ * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
+ *          bounty management, supporting dynamic additions, updates, and the locking
+ *          of bounties. Utilizes roles for managing permissions and maintaining robust
+ *          control over bounty operations.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface ILM_PC_PaymentRouter_v3 {
     // -----------------------------------------------------------------------------
     // Errors
 
     /// @notice Given arrays' length mismatch.
-    error Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch();
+    error Module__LM_PC_PaymentRouter_v3__ArrayLengthMismatch();
 
     //--------------------------------------------------------------------------
     // Mutating Functions
