@@ -197,7 +197,7 @@ contract ModuleBeaconDeployer_v1 is
                     oracleRedeemingFundingManagerMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_FM_PC_Oracle_Redeeming_v1,
+                    impl_mod_FM_PC_Oracle_Redeeming_v2,
                     oracleRedeemingFundingManagerMetadata.majorVersion,
                     oracleRedeemingFundingManagerMetadata.minorVersion,
                     oracleRedeemingFundingManagerMetadata.patchVersion

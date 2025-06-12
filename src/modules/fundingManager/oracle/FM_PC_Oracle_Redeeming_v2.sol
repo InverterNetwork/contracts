@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IFM_PC_Oracle_Redeeming_v1} from
-    "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v1.sol";
+import {IFM_PC_Oracle_Redeeming_v2} from
+    "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v2.sol";
 import {IERC20Issuance_Blacklist_v1} from
     "@ex/token/interfaces/IERC20Issuance_Blacklist_v1.sol";
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
@@ -44,7 +44,7 @@ import {ERC165Upgradeable} from
  *          client system.
  *
  * @dev     Inherits functionality from:
- *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
+ *          - IFM_PC_Oracle_Redeeming_v2: Implementation interface.
  *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
  *          - RedeemingBondingCurveBase_v2: Token issuance and redemption logic.
  *
@@ -134,14 +134,14 @@ import {ERC165Upgradeable} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-contract FM_PC_Oracle_Redeeming_v1 is
-    IFM_PC_Oracle_Redeeming_v1,
+contract FM_PC_Oracle_Redeeming_v2 is
+    IFM_PC_Oracle_Redeeming_v2,
     ERC20PaymentClientBase_v2,
     RedeemingBondingCurveBase_v2
 {
@@ -160,7 +160,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         override(ERC20PaymentClientBase_v2, RedeemingBondingCurveBase_v2)
         returns (bool isSupported_)
     {
-        return interfaceId_ == type(IFM_PC_Oracle_Redeeming_v1).interfaceId
+        return interfaceId_ == type(IFM_PC_Oracle_Redeeming_v2).interfaceId
             || interfaceId_ == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -336,7 +336,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _oracle.getPriceForRedemption();
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getOpenRedemptionAmount()
         external
         view
@@ -346,12 +346,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _openRedemptionAmount;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getOrderId() external view virtual returns (uint orderId_) {
         return _orderId;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getProjectTreasury()
         external
         view
@@ -361,7 +361,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _projectTreasury;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getIsDirectOperationsOnly()
         public
         view
@@ -371,17 +371,17 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _isDirectOperationsOnly;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getOracle() external view virtual returns (address oracle_) {
         return address(_oracle);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getBuyFee() public view virtual returns (uint buyFee_) {
         return buyFee;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getMaxProjectBuyFee()
         public
         view
@@ -391,7 +391,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _maxProjectBuyFee;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getMaxProjectSellFee()
         public
         view
@@ -401,7 +401,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return _maxProjectSellFee;
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function getSellFee() public view virtual returns (uint fee_) {
         return sellFee;
     }
@@ -472,7 +472,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function depositReserve(uint amount_) external virtual {
         if (amount_ == 0) {
             revert Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount();
@@ -505,7 +505,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function setProjectTreasury(address projectTreasury_)
         external
         virtual
@@ -514,12 +514,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
         _setProjectTreasury(projectTreasury_);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function setOracleAddress(address oracle_) external virtual permissioned {
         _setOracleAddress(oracle_);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
         public
         virtual
@@ -528,7 +528,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         _setIsDirectOperationsOnly(isDirectOperationsOnly_);
     }
 
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v2
     function executeRedemptionQueue() external virtual permissioned {
         (bool success, bytes memory data) = address(
             __Module_orchestrator.paymentProcessor()

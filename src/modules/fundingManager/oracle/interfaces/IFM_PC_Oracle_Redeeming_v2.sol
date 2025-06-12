@@ -18,7 +18,7 @@ import {IRedeemingBondingCurveBase_v2} from
  *          client system.
  *
  * @dev     Inherits functionality from:
- *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
+ *          - IFM_PC_Oracle_Redeeming_v2: Implementation interface.
  *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
  *          - RedeemingBondingCurveBase_v2: Token issuance and redemption logic.
  *
@@ -108,13 +108,13 @@ import {IRedeemingBondingCurveBase_v2} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-interface IFM_PC_Oracle_Redeeming_v1 is
+interface IFM_PC_Oracle_Redeeming_v2 is
     IFundingManager_v1,
     IERC20PaymentClientBase_v2,
     IRedeemingBondingCurveBase_v2

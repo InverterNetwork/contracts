@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal imports
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
-import {IFM_PC_Oracle_Redeeming_v1} from
-    "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v1.sol";
+import {IFM_PC_Oracle_Redeeming_v2} from
+    "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v2.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
@@ -36,12 +36,12 @@ import {PP_Queue_ManualExecution_v1_Mock} from
     "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Mock.sol";
 
 // System under testing (SUT)
-import {FM_PC_Oracle_Redeeming_v1_Exposed} from
-    "@mocks/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1_Exposed.sol";
+import {FM_PC_Oracle_Redeeming_v2_Exposed} from
+    "@mocks/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2_Exposed.sol";
 
 /**
  * @title FM_PC_ExternalPrice_Redeeming_v1_Test
- * @notice Test contract for FM_PC_Oracle_Redeeming_v1
+ * @notice Test contract for FM_PC_Oracle_Redeeming_v2
  */
 contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     // ============================================================================
@@ -74,7 +74,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     // State
 
     // Contracts
-    FM_PC_Oracle_Redeeming_v1_Exposed fundingManager;
+    FM_PC_Oracle_Redeeming_v2_Exposed fundingManager;
     ERC20Issuance_v1 issuanceToken;
     OraclePrice_Mock oracle;
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -115,8 +115,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
 
         // Setup funding manager
-        impl = address(new FM_PC_Oracle_Redeeming_v1_Exposed());
-        fundingManager = FM_PC_Oracle_Redeeming_v1_Exposed(Clones.clone(impl));
+        impl = address(new FM_PC_Oracle_Redeeming_v2_Exposed());
+        fundingManager = FM_PC_Oracle_Redeeming_v2_Exposed(Clones.clone(impl));
         _setUpOrchestrator(fundingManager);
 
         // Initialize the funding manager
@@ -216,9 +216,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Test - Verify supported interfaces
         assertTrue(
             fundingManager.supportsInterface(
-                type(IFM_PC_Oracle_Redeeming_v1).interfaceId
+                type(IFM_PC_Oracle_Redeeming_v2).interfaceId
             ),
-            "Should support IFM_PC_Oracle_Redeeming_v1"
+            "Should support IFM_PC_Oracle_Redeeming_v2"
         );
 
         assertTrue(
@@ -455,7 +455,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test - Expect ReserveDeposited event
         vm.expectEmit(true, true, true, true);
-        emit IFM_PC_Oracle_Redeeming_v1.ReserveDeposited(address(this), amount_);
+        emit IFM_PC_Oracle_Redeeming_v2.ReserveDeposited(address(this), amount_);
 
         // Test - Deposit reserve
         fundingManager.depositReserve(amount_);
@@ -481,7 +481,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     function testDepositReserve_revertGivenZeroAmount() public {
         // Test - Expect revert on zero amount
         vm.expectRevert(
-            IFM_PC_Oracle_Redeeming_v1
+            IFM_PC_Oracle_Redeeming_v2
                 .Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount
                 .selector
         );
@@ -496,7 +496,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     function testBuyFor_revertGivenTPODisabled() public {
         // Test - Should revert as TPO is disabled
         vm.expectRevert(
-            IFM_PC_Oracle_Redeeming_v1
+            IFM_PC_Oracle_Redeeming_v2
                 .Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled
                 .selector
         );
@@ -511,7 +511,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     function testSellTo_revertGivenTPODisabled() public {
         // Test - Should revert as TPO is disabled
         vm.expectRevert(
-            IFM_PC_Oracle_Redeeming_v1
+            IFM_PC_Oracle_Redeeming_v2
                 .Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled
                 .selector
         );
@@ -815,7 +815,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // which means we test the low level call failure.
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_PC_Oracle_Redeeming_v1
+                IFM_PC_Oracle_Redeeming_v2
                     .Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed
                     .selector,
                 bytes("")
@@ -883,7 +883,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Test
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_PC_Oracle_Redeeming_v1
+                IFM_PC_Oracle_Redeeming_v2
                     .Module__FM_PC_ExternalPrice_Redeeming_InvalidProjectTreasury
                     .selector
             )
@@ -899,7 +899,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test
         vm.expectEmit(true, true, true, true);
-        emit IFM_PC_Oracle_Redeeming_v1.ProjectTreasuryUpdated(
+        emit IFM_PC_Oracle_Redeeming_v2.ProjectTreasuryUpdated(
             projectTreasury, projectTreasury_
         );
 
@@ -929,7 +929,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test
         vm.expectEmit(true, true, true, true);
-        emit IFM_PC_Oracle_Redeeming_v1.RedemptionAmountUpdated(
+        emit IFM_PC_Oracle_Redeeming_v2.RedemptionAmountUpdated(
             openRedemptionAmount_ - amount_
         );
 
@@ -960,7 +960,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test
         vm.expectEmit(true, true, true, true);
-        emit IFM_PC_Oracle_Redeeming_v1.RedemptionAmountUpdated(
+        emit IFM_PC_Oracle_Redeeming_v2.RedemptionAmountUpdated(
             openRedemptionAmount_ + amount_
         );
 
@@ -1001,7 +1001,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test
         vm.expectEmit(true, true, true, true);
-        emit IFM_PC_Oracle_Redeeming_v1.OracleUpdated(
+        emit IFM_PC_Oracle_Redeeming_v2.OracleUpdated(
             currentOracle, address(newOracle)
         );
 
@@ -1146,8 +1146,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Convert amount to issuance token decimals
         amount_ = amount_ * 10 ** issuanceTokenDecimals_;
 
-        FM_PC_Oracle_Redeeming_v1_Exposed newFundingManager =
-        FM_PC_Oracle_Redeeming_v1_Exposed(
+        FM_PC_Oracle_Redeeming_v2_Exposed newFundingManager =
+        FM_PC_Oracle_Redeeming_v2_Exposed(
             _initializeFundingManagerWithDifferentTokenDecimals(
                 issuanceTokenDecimals_, collateralTokenDecimals_
             )
@@ -1200,8 +1200,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         issuanceTokenDecimals_ = uint8(bound(issuanceTokenDecimals_, 1, 18));
         collateralTokenDecimals_ = uint8(bound(collateralTokenDecimals_, 1, 18));
 
-        FM_PC_Oracle_Redeeming_v1_Exposed newFundingManager =
-        FM_PC_Oracle_Redeeming_v1_Exposed(
+        FM_PC_Oracle_Redeeming_v2_Exposed newFundingManager =
+        FM_PC_Oracle_Redeeming_v2_Exposed(
             _initializeFundingManagerWithDifferentTokenDecimals(
                 issuanceTokenDecimals_, collateralTokenDecimals_
             )
@@ -1468,7 +1468,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test - Expect event emission
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IFM_PC_Oracle_Redeeming_v1.RedemptionOrderCreated(
+        emit IFM_PC_Oracle_Redeeming_v2.RedemptionOrderCreated(
             address(fundingManager), // paymentClient_
             1, // orderId_ (first order)
             address(this), // seller_
@@ -1480,7 +1480,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             protocolSellFeeAmount_, // protocolFeeAmount_
             collateralRedeemAmount_, // finalRedemptionAmount_
             address(_token), // collateralToken_
-            IFM_PC_Oracle_Redeeming_v1.RedemptionState.PENDING // state_
+            IFM_PC_Oracle_Redeeming_v2.RedemptionState.PENDING // state_
         );
 
         // Execute
@@ -1867,9 +1867,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
         // Setup funding manager
         address implementation =
-            address(new FM_PC_Oracle_Redeeming_v1_Exposed());
-        FM_PC_Oracle_Redeeming_v1_Exposed newFundingManager =
-            FM_PC_Oracle_Redeeming_v1_Exposed(Clones.clone(implementation));
+            address(new FM_PC_Oracle_Redeeming_v2_Exposed());
+        FM_PC_Oracle_Redeeming_v2_Exposed newFundingManager =
+            FM_PC_Oracle_Redeeming_v2_Exposed(Clones.clone(implementation));
 
         // Initialize funding manager
         newFundingManager.init(_orchestrator, _METADATA, newConfigData);

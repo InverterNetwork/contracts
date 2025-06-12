@@ -21,9 +21,9 @@ import {
     IPP_Queue_ManualExecution_v1
 } from "@pp/PP_Queue_ManualExecution_v1.sol";
 import {
-    FM_PC_Oracle_Redeeming_v1,
-    IFM_PC_Oracle_Redeeming_v1
-} from "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1.sol";
+    FM_PC_Oracle_Redeeming_v2,
+    IFM_PC_Oracle_Redeeming_v2
+} from "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
 
 import {
     LM_Oracle_Permissioned_v1,
@@ -114,7 +114,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     // Contracts
     ERC20Mock collateralToken;
     ERC20Issuance_Blacklist_v1 issuanceToken;
-    FM_PC_Oracle_Redeeming_v1 fundingManager;
+    FM_PC_Oracle_Redeeming_v2 fundingManager;
     PP_Queue_ManualExecution_v1 paymentProcessor;
     AUT_Roles_v2 authorizer;
     LM_Oracle_Permissioned_v1 permissionedOracle;
@@ -133,7 +133,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         uint protocolFeeAmount_;
         uint finalRedemptionAmount_;
         address collateralToken_;
-        IFM_PC_Oracle_Redeeming_v1.RedemptionState state_;
+        IFM_PC_Oracle_Redeeming_v2.RedemptionState state_;
     }
 
     function setUp() public override {
@@ -218,7 +218,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
 
         // Get funding manager
         fundingManager =
-            FM_PC_Oracle_Redeeming_v1(address(orchestrator.fundingManager()));
+            FM_PC_Oracle_Redeeming_v2(address(orchestrator.fundingManager()));
 
         // Get payment processor
         paymentProcessor = PP_Queue_ManualExecution_v1(
@@ -636,7 +636,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                     uint protocolFeeAmount,
                     uint finalRedemptionAmount,
                     address collateralToken_,
-                    IFM_PC_Oracle_Redeeming_v1.RedemptionState state
+                    IFM_PC_Oracle_Redeeming_v2.RedemptionState state
                 ) = abi.decode(
                     entry.data,
                     (
@@ -648,7 +648,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                         uint,
                         uint,
                         address,
-                        IFM_PC_Oracle_Redeeming_v1.RedemptionState
+                        IFM_PC_Oracle_Redeeming_v2.RedemptionState
                     )
                 );
 

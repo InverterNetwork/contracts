@@ -146,7 +146,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "FM_PC_Oracle_Redeeming_v1"
+        "FM_PC_Oracle_Redeeming_v2"
     );
 
     // Funding Manager - Extensions

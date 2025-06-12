@@ -57,7 +57,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public
         impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2;
     address public impl_mod_FM_DepositVault_v1;
-    address public impl_mod_FM_PC_Oracle_Redeeming_v1;
+    address public impl_mod_FM_PC_Oracle_Redeeming_v2;
 
     // Funding Managers - Extensions
     address public impl_mod_FM_EXT_TokenVault_v2;
@@ -205,10 +205,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         );
 
-        impl_mod_FM_PC_Oracle_Redeeming_v1 = deployAndLogWithCreate2(
-            "FM_PC_Oracle_Redeeming_v1",
+        impl_mod_FM_PC_Oracle_Redeeming_v2 = deployAndLogWithCreate2(
+            "FM_PC_Oracle_Redeeming_v2",
             vm.getCode(
-                "FM_PC_Oracle_Redeeming_v1.sol:FM_PC_Oracle_Redeeming_v1"
+                "FM_PC_Oracle_Redeeming_v2.sol:FM_PC_Oracle_Redeeming_v2"
             )
         );
 

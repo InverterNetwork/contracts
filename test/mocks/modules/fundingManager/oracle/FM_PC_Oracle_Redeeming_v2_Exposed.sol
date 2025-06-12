@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {FM_PC_Oracle_Redeeming_v1} from
-    "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1.sol";
+import {FM_PC_Oracle_Redeeming_v2} from
+    "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
 
-contract FM_PC_Oracle_Redeeming_v1_Exposed is FM_PC_Oracle_Redeeming_v1 {
+contract FM_PC_Oracle_Redeeming_v2_Exposed is FM_PC_Oracle_Redeeming_v2 {
     function exposed_setProjectTreasury(address projectTreasury_) public {
         _setProjectTreasury(projectTreasury_);
     }
