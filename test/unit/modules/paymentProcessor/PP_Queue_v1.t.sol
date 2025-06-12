@@ -63,7 +63,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
         bytes4(keccak256(bytes("processPayments(address)")));
     uint internal constant BPS = 10_000;
-    uint internal constant DEFAULT_MAX_ORDERS_PER_EXECUTION = 30;
+    uint internal constant DEFAULT_MAX_ORDERS_PER_EXECUTION = 50;
     uint internal constant FLAG_ORDER_ID = 0;
     uint internal constant FLAG_PROJECT_FEE = 4;
 

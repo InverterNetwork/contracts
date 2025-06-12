@@ -221,7 +221,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         _setFailedOrdersTreasury(failedOrdersTreasury_);
 
         // Default value for max orders per execution to ensure not to run out of gas.
-        _maxOrdersPerExecution = 30;
+        _maxOrdersPerExecution = 50;
     }
 
     //--------------------------------------------------------------------------
