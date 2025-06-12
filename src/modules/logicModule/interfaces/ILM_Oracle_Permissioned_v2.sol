@@ -12,7 +12,7 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
  *          for both issuance (buying) and redemption (selling) operations.
  *
  * @dev     This contract inherits from:
- *          - ILM_Oracle_Permissioned_v1: Implementation interface.
+ *          - ILM_Oracle_Permissioned_v2: Implementation interface.
  *          - IOraclePrice_v1: Oracle price interface.
  *          - Module_v2: Base module functionality.
  *
@@ -55,13 +55,13 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
+interface ILM_Oracle_Permissioned_v2 is IOraclePrice_v1 {
     // -------------------------------------------------------------------------
 
     // Errors

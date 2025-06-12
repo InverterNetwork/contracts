@@ -169,7 +169,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_Oracle_Permissioned_v1"
+        "LM_Oracle_Permissioned_v2"
     );
 
     // Bounties

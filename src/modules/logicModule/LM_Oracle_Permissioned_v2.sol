@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {ILM_Oracle_Permissioned_v1} from
-    "@lm/interfaces/ILM_Oracle_Permissioned_v1.sol";
+import {ILM_Oracle_Permissioned_v2} from
+    "@lm/interfaces/ILM_Oracle_Permissioned_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -22,7 +22,7 @@ import {ERC165Upgradeable} from
  *          for both issuance (buying) and redemption (selling) operations.
  *
  * @dev     This contract inherits from:
- *          - ILM_Oracle_Permissioned_v1: Implementation interface.
+ *          - ILM_Oracle_Permissioned_v2: Implementation interface.
  *          - IOraclePrice_v1: Oracle price interface.
  *          - Module_v2: Base module functionality.
  *
@@ -65,13 +65,13 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v2 {
+contract LM_Oracle_Permissioned_v2 is ILM_Oracle_Permissioned_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // ERC165
 
@@ -82,7 +82,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v2 {
         override
         returns (bool)
     {
-        return interfaceId == type(ILM_Oracle_Permissioned_v1).interfaceId
+        return interfaceId == type(ILM_Oracle_Permissioned_v2).interfaceId
             || interfaceId == type(IOraclePrice_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -130,7 +130,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    /// @inheritdoc ILM_Oracle_Permissioned_v2
     function getCollateralTokenDecimals()
         external
         view
@@ -153,17 +153,17 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    /// @inheritdoc ILM_Oracle_Permissioned_v2
     function setIssuancePrice(uint price_) external virtual permissioned {
         _setIssuancePrice(price_);
     }
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    /// @inheritdoc ILM_Oracle_Permissioned_v2
     function setRedemptionPrice(uint price_) external virtual permissioned {
         _setRedemptionPrice(price_);
     }
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    /// @inheritdoc ILM_Oracle_Permissioned_v2
     function setIssuanceAndRedemptionPrice(
         uint issuancePrice_,
         uint redemptionPrice_

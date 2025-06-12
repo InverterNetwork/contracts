@@ -26,9 +26,9 @@ import {
 } from "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
 
 import {
-    LM_Oracle_Permissioned_v1,
-    ILM_Oracle_Permissioned_v1
-} from "src/modules/logicModule/LM_Oracle_Permissioned_v1.sol";
+    LM_Oracle_Permissioned_v2,
+    ILM_Oracle_Permissioned_v2
+} from "src/modules/logicModule/LM_Oracle_Permissioned_v2.sol";
 
 import {ERC20Issuance_Blacklist_v1} from
     "@ex/token/ERC20Issuance_Blacklist_v1.sol";
@@ -117,7 +117,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     FM_PC_Oracle_Redeeming_v2 fundingManager;
     PP_Queue_ManualExecution_v1 paymentProcessor;
     AUT_Roles_v2 authorizer;
-    LM_Oracle_Permissioned_v1 permissionedOracle;
+    LM_Oracle_Permissioned_v2 permissionedOracle;
     IOrchestrator_v1 orchestrator;
 
     // Define struct to hold all event parameters
@@ -230,10 +230,10 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_Oracle_Permissioned_v1).interfaceId
+                    type(ILM_Oracle_Permissioned_v2).interfaceId
                 )
             ) {
-                permissionedOracle = LM_Oracle_Permissioned_v1(modulesList[i]);
+                permissionedOracle = LM_Oracle_Permissioned_v2(modulesList[i]);
                 break;
             }
         }

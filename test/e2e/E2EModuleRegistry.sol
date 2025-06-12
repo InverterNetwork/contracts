@@ -36,8 +36,8 @@ import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
 import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
 import {FM_PC_Oracle_Redeeming_v2} from
     "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
-import {LM_Oracle_Permissioned_v1} from
-    "src/modules/logicModule/LM_Oracle_Permissioned_v1.sol";
+import {LM_Oracle_Permissioned_v2} from
+    "src/modules/logicModule/LM_Oracle_Permissioned_v2.sol";
 
 // Beacon
 import {
@@ -605,21 +605,21 @@ contract E2EModuleRegistry is Test {
     // logicModules
     //--------------------------------------------------------------------------
 
-    // LM_Oracle_Permissioned_v1
+    // LM_Oracle_Permissioned_v2
 
     IModule_v2.Metadata oracleMetadata = IModule_v2.Metadata(
         1, // major version
         0, // minor version
         0, // patch version
         "https://github.com/inverter/oracle",
-        "LM_Oracle_Permissioned_v1"
+        "LM_Oracle_Permissioned_v2"
     );
 
     InverterBeacon_v1 oracleBeacon;
-    LM_Oracle_Permissioned_v1 oracle;
+    LM_Oracle_Permissioned_v2 oracle;
 
     function setUpPermissionedOracle() internal {
-        oracle = new LM_Oracle_Permissioned_v1();
+        oracle = new LM_Oracle_Permissioned_v2();
 
         oracleBeacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
