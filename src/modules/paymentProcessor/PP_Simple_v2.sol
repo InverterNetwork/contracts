@@ -6,7 +6,7 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
     IPaymentProcessor_v2,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Internal Dependencies
@@ -22,7 +22,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @title   Inverter Simple Payment Processor
  *
  * @notice  Manages ERC20 payment processing for modules within the Inverter Network
- *          that are compliant with the {IERC20PaymentClientBase_v2} interface.
+ *          that are compliant with the {IERC20PaymentClientBase_v3} interface.
  *
  * @dev     Inherits {Module_v2} and implements {IPaymentProcessor_v2} to handle payment
  *          orders from registered modules, ensuring only eligible modules can initiate
@@ -61,7 +61,7 @@ contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
     }
 
     /// @dev    Checks that the client is calling for itself.
-    modifier validClient(IERC20PaymentClientBase_v2 client) {
+    modifier validClient(IERC20PaymentClientBase_v3 client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
         }
@@ -95,17 +95,17 @@ contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
     // IPaymentProcessor_v2 Functions
 
     /// @inheritdoc IPaymentProcessor_v2
-    function processPayments(IERC20PaymentClientBase_v2 client)
+    function processPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
         validClient(client)
     {
         // Collect outstanding orders and their total token amount.
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
 
         (orders,,) = client.collectPaymentOrders();
 
-        // Transfer tokens from {IERC20PaymentClientBase_v2} to order recipients.
+        // Transfer tokens from {IERC20PaymentClientBase_v3} to order recipients.
         address recipient;
         uint amount;
         uint len = orders.length;
@@ -156,7 +156,7 @@ contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
+    function cancelRunningPayments(IERC20PaymentClientBase_v3 client)
         external
         view
         onlyModule
@@ -192,7 +192,7 @@ contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
 
     /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount) && _validPaymentToken(order.paymentToken)
@@ -220,7 +220,7 @@ contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
         delete unclaimableAmountsForRecipient[client][token][sender];
 
         // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v2(client).amountPaid(token, amount);
+        IERC20PaymentClientBase_v3(client).amountPaid(token, amount);
 
         // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);

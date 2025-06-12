@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
+ * @dev     Extends {ERC20PaymentClientBase_v3} to integrate payment processing with
  *          bounty management, supporting dynamic additions, updates, and the locking
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.

@@ -10,7 +10,7 @@ import {
     LM_PC_Staking_v3,
     SafeERC20,
     IERC20,
-    ERC20PaymentClientBase_v2
+    ERC20PaymentClientBase_v3
 } from "./LM_PC_Staking_v3.sol";
 import {
     IOptimisticOracleIntegrator,

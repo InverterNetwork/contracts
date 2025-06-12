@@ -6,9 +6,9 @@ import {IOrchestrator_v1} from
 
 // SuT
 import {
-    ERC20PaymentClientBase_v2,
-    IERC20PaymentClientBase_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    ERC20PaymentClientBase_v3,
+    IERC20PaymentClientBase_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor_v2} from
@@ -17,7 +17,7 @@ import {IPaymentProcessor_v2} from
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
+contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v3 {
     ERC20Mock token;
 
     mapping(address => uint) public amountPaidCounter;
@@ -38,7 +38,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
         token = token_;
     }
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v2 Wrapper Functions
+    // IERC20PaymentClientBase_v3 Wrapper Functions
 
     function exposed_addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
@@ -74,11 +74,11 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v2 Overriden Functions
+    // IERC20PaymentClientBase_v3 Overriden Functions
 
     function _ensureTokenBalance(address token_)
         internal
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
     {
         uint amount = _outstandingTokenAmounts[token_];
 
@@ -92,7 +92,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
 
     function _ensureTokenAllowance(IPaymentProcessor_v2 spender, address _token)
         internal
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
     {
         token.approve(address(spender), _outstandingTokenAmounts[_token]);
     }
@@ -100,7 +100,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor_v2)
         internal
         view
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return authorized[_msgSender()];
@@ -108,7 +108,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
 
     function amountPaid(address _token, uint amount)
         public
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
     {
         amountPaidCounter[_token] += amount;
 

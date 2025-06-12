@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
  *
  * @notice  Provides a mechanism for users to stake tokens and earn rewards.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} and integrates with the Payment Processor
+ * @dev     Extends {ERC20PaymentClientBase_v3} and integrates with the Payment Processor
  *          to enable the distribution of rewards to stakers.
  *
  * @custom:security-contact security@inverter.network

@@ -7,15 +7,15 @@ import {IOrchestrator_v1} from
 import {ILM_PC_RecurringPayments_v3} from
     "@lm/interfaces/ILM_PC_RecurringPayments_v3.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IPaymentProcessor_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Dependencies
 import {
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     Module_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -33,7 +33,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *
  * @dev     Uses epochs to define the period of recurring payments and supports operations
  *          such as adding, removing, and triggering payments based on time cycles.
- *          Integrates with {ERC20PaymentClientBase_v2} for handling actual payment
+ *          Integrates with {ERC20PaymentClientBase_v3} for handling actual payment
  *          transactions. Note that it will use the token type stored in the FundingManager for the payments.
  *
  * @custom:security-contact security@inverter.network
@@ -46,14 +46,14 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  */
 contract LM_PC_RecurringPayments_v3 is
     ILM_PC_RecurringPayments_v3,
-    ERC20PaymentClientBase_v2
+    ERC20PaymentClientBase_v3
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_RecurringPayments_v3).interfaceId
@@ -149,7 +149,7 @@ contract LM_PC_RecurringPayments_v3 is
         flags |= bytes32(1 << FLAG_START);
         flags |= bytes32(1 << FLAG_END);
 
-        __ERC20PaymentClientBase_v2_init(flags);
+        __ERC20PaymentClientBase_v3_init(flags);
     }
 
     //--------------------------------------------------------------------------
@@ -376,7 +376,7 @@ contract LM_PC_RecurringPayments_v3 is
         emit RecurringPaymentsTriggered(currentEpoch);
 
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 }

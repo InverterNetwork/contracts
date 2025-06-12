@@ -21,7 +21,7 @@ import {
 import {PP_Queue_v1_Exposed} from
     "@mocks/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
@@ -93,8 +93,8 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
 
         (bytes32 flags_, bytes32[] memory data_) =
             helper__encodePaymentOrderData(1);
-        IERC20PaymentClientBase_v2.PaymentOrder memory orders =
-        IERC20PaymentClientBase_v2.PaymentOrder({
+        IERC20PaymentClientBase_v3.PaymentOrder memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: recipient,
             amount: amount,
             paymentToken: paymentToken,
@@ -190,8 +190,8 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
         (bytes32 flags_, bytes32[] memory data_) =
             helper__encodePaymentOrderData(1);
 
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
+        IERC20PaymentClientBase_v3.PaymentOrder memory order =
+        IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: recipient,
             amount: amount,
             paymentToken: paymentToken,

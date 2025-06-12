@@ -22,7 +22,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
     LM_PC_Bounties_v3,
     ILM_PC_Bounties_v3,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@lm/LM_PC_Bounties_v3.sol";
 
 import {LM_PC_Bounties_v3_Exposed} from
@@ -911,7 +911,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         bountyManager.verifyClaim(claimId, contribs);
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             bountyManager.paymentOrders();
 
         assertEq(length, orders.length);

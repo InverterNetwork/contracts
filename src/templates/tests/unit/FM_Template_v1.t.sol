@@ -18,7 +18,7 @@ import {FM_Template_v1_Exposed} from
     "src/templates/tests/unit/FM_Template_v1_Exposed.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 

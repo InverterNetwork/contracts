@@ -53,7 +53,7 @@ interface IModule_v2 {
     /// @notice Function is only callable by authorized caller.
     error Module__CallerNotPermissioned();
 
-    /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
+    /// @notice Function is only callable by a {IERC20PaymentClientBase_v3}.
     error Module__OnlyCallableByPaymentClient();
 
     /// @notice Given {Orchestrator_v1} address invalid.

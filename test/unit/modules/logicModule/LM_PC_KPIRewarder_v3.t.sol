@@ -16,8 +16,8 @@ import {
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
 
-import {IERC20PaymentClientBase_v2} from
-    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v3.sol";
 
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -784,7 +784,7 @@ contract LM_PC_KPIRewarder_v3_stakeTest is LM_PC_KPIRewarder_v3Test {
         vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), 1000e18);
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -1013,7 +1013,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit IERC20PaymentClientBase_v2.PaymentOrderAdded(
+                emit IERC20PaymentClientBase_v3.PaymentOrderAdded(
                     users[i],
                     address(_token),
                     earnedReward,
@@ -1104,7 +1104,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit IERC20PaymentClientBase_v2.PaymentOrderAdded(
+                emit IERC20PaymentClientBase_v3.PaymentOrderAdded(
                     users[i],
                     address(_token),
                     earnedReward,

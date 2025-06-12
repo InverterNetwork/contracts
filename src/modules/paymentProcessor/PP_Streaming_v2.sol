@@ -7,7 +7,7 @@ import {IOrchestrator_v1} from
 import {
     IPP_Streaming_v2,
     IPaymentProcessor_v2,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@pp/interfaces/IPP_Streaming_v2.sol";
 
 // Internal Dependencies
@@ -207,7 +207,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function processPayments(IERC20PaymentClientBase_v2 client)
+    function processPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
         validClient(address(client))
@@ -215,7 +215,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         // We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
-            IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+            IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
             address[] memory tokens;
             uint[] memory totalAmounts;
             (orders, tokens, totalAmounts) = client.collectPaymentOrders();
@@ -235,7 +235,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
             for (uint i; i < numOrders;) {
                 if (!validPaymentOrder(orders[i])) {
                     revert
-                        IERC20PaymentClientBase_v2
+                        IERC20PaymentClientBase_v3
                         .Module__ERC20PaymentClientBase__InvalidPaymentOrder();
                 }
 
@@ -264,7 +264,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
+    function cancelRunningPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
         validClient(address(client))
@@ -425,7 +425,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
 
     /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) public returns (bool) {
         (uint start, uint cliff, uint end) =
             _getStreamingDetails(order.flags, order.data);
@@ -569,7 +569,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
     }
 
     /// @notice Deletes all payments related to a `paymentReceiver` & leaves currently streaming tokens in the
-    ///         {IERC20PaymentClientBase_v2}.
+    ///         {IERC20PaymentClientBase_v3}.
     /// @dev	This function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
     ///         For the payment orders that are completely streamed, their details are deleted in the
     ///         `_claimForSpecificStream` function and for others it is deleted in the `_removePayment` function only,
@@ -633,7 +633,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         if (remainingReleasable > 0) {
             // Let PaymentClient know that the amount is not needed to be stored anymore
 
-            IERC20PaymentClientBase_v2(client).amountPaid(
+            IERC20PaymentClientBase_v3(client).amountPaid(
                 _token, remainingReleasable
             );
         }
@@ -702,7 +702,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
     /// @param  _streamId ID of the new stream of the a particular paymentReceiver being added.
     function _addPayment(
         address _client,
-        IERC20PaymentClientBase_v2.PaymentOrder memory _order,
+        IERC20PaymentClientBase_v3.PaymentOrder memory _order,
         uint _streamId
     ) internal {
         ++numStreams[_client][_order.recipient];
@@ -800,7 +800,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            IERC20PaymentClientBase_v2(client).amountPaid(
+            IERC20PaymentClientBase_v3(client).amountPaid(
                 address(_token), amount
             );
         } else {
@@ -866,7 +866,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         delete unclaimableStreams[client][token][sender];
 
         // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v2(client).amountPaid(address(token), amount);
+        IERC20PaymentClientBase_v3(client).amountPaid(address(token), amount);
 
         // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);

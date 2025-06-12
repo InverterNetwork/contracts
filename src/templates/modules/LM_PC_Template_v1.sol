@@ -6,13 +6,13 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IPaymentProcessor_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 import {
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     Module_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *          - Interface compliance checks via ERC165
  *
  *          Key components:
- *          - Inherits from ERC20PaymentClientBase_v2
+ *          - Inherits from ERC20PaymentClientBase_v3
  *          - Uses permissioned modifier for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
@@ -71,7 +71,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
+contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v3 {
     // -------------------------------------------------------------------------
     // Libraries
 
@@ -85,7 +85,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return interfaceId_ == type(ILM_PC_Template_v1).interfaceId
@@ -160,7 +160,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         flags |= bytes32(1 << FLAG_CLIFF);
         flags |= bytes32(1 << FLAG_END);
 
-        __ERC20PaymentClientBase_v2_init(flags);
+        __ERC20PaymentClientBase_v3_init(flags);
     }
 
     // -------------------------------------------------------------------------
@@ -235,7 +235,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
         // Process the payment.
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 

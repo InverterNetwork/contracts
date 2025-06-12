@@ -27,7 +27,7 @@ import {PP_Streaming_v2_Exposed} from
     "@mocks/modules/paymentProcessor/PP_Streaming_v2_Exposed.sol";
 
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
@@ -584,7 +584,7 @@ contract PP_StreamingV1Test is ModuleTest {
             );
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         // Call processPayments
@@ -593,7 +593,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         for (uint i; i < length; i++) {
             address recipient = recipients[i];
-            IERC20PaymentClientBase_v2.PaymentOrder memory order = orders[i];
+            IERC20PaymentClientBase_v3.PaymentOrder memory order = orders[i];
 
             uint end = uint(order.data[2]);
 
@@ -1174,7 +1174,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                     .selector
             )
@@ -1226,7 +1226,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                     .selector
             )
@@ -1254,7 +1254,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                     .selector
             )
@@ -1282,7 +1282,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                     .selector
             )
@@ -1310,7 +1310,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                     .selector
             )
@@ -1775,7 +1775,7 @@ contract PP_StreamingV1Test is ModuleTest {
             );
         }
 
-        // No funds left in the ERC20PaymentClientBase_v2
+        // No funds left in the ERC20PaymentClientBase_v3
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
@@ -2029,7 +2029,7 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     function test_ValidPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order,
         address sender,
         uint start,
         uint cliff,
@@ -2324,7 +2324,7 @@ contract PP_StreamingV1Test is ModuleTest {
     )
         internal
         view
-        returns (IERC20PaymentClientBase_v2.PaymentOrder memory paymentOrder)
+        returns (IERC20PaymentClientBase_v3.PaymentOrder memory paymentOrder)
     {
         bytes32 flagsBytes =
             0x000000000000000000000000000000000000000000000000000000000000000e;
@@ -2333,7 +2333,7 @@ contract PP_StreamingV1Test is ModuleTest {
         data[1] = bytes32(cliff);
         data[2] = bytes32(end);
 
-        paymentOrder = IERC20PaymentClientBase_v2.PaymentOrder({
+        paymentOrder = IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: recipient,
             paymentToken: paymentToken,
             amount: amount,

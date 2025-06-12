@@ -24,7 +24,7 @@ import {
 
 // Mocks
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
@@ -111,7 +111,7 @@ contract PP_SimpleV2Test is ModuleTest {
 
         // Add payment order to client.
         paymentClient.exposed_addPaymentOrder(
-            IERC20PaymentClientBase_v2.PaymentOrder({
+            IERC20PaymentClientBase_v3.PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
@@ -305,7 +305,7 @@ contract PP_SimpleV2Test is ModuleTest {
             data[1] = bytes32(block.timestamp);
 
             paymentClient.exposed_addPaymentOrder(
-                IERC20PaymentClientBase_v2.PaymentOrder({
+                IERC20PaymentClientBase_v3.PaymentOrder({
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
@@ -382,7 +382,7 @@ contract PP_SimpleV2Test is ModuleTest {
     }
 
     function test_ValidPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order,
         address sender
     ) public {
         // The randomToken can't be the address of the Create2Deployer

@@ -18,7 +18,7 @@ import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {
     LM_PC_Bounties_v3,
     ILM_PC_Bounties_v3,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@lm/LM_PC_Bounties_v3.sol";
 
 contract RoleAuthorizerE2E1 is E2ETest {

@@ -11,8 +11,8 @@ import {ERC165Upgradeable} from
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
@@ -225,7 +225,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     }
 
     /// @inheritdoc IPP_Queue_v1
-    function getOrder(uint orderId_, IERC20PaymentClientBase_v2 client_)
+    function getOrder(uint orderId_, IERC20PaymentClientBase_v3 client_)
         external
         view
         virtual
@@ -309,7 +309,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
 
     /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) external view virtual returns (bool isValid_) {
         return _validPaymentOrder(order_);
     }
@@ -344,14 +344,14 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function processPayments(IERC20PaymentClientBase_v2 client_)
+    function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
         clientIsValid(address(client_))
         onlyModule
     {
         // Collect outstanding orders and their total token amount.
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
 
         (orders,,) = client_.collectPaymentOrders();
 
@@ -365,7 +365,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
+    function cancelRunningPayments(IERC20PaymentClientBase_v3 client_)
         external
         view
         virtual
@@ -417,7 +417,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     /// @inheritdoc IPP_Queue_v1
     function cancelPaymentOrderThroughQueueId(
         uint orderId_,
-        IERC20PaymentClientBase_v2 client_
+        IERC20PaymentClientBase_v3 client_
     ) external virtual permissioned returns (bool success_) {
         // Validate that the order exists for the given queue ID and client.
         if (!_orderExists(orderId_, client_)) {
@@ -643,7 +643,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         }
 
         // Update client accounting
-        IERC20PaymentClientBase_v2(client_).amountPaid(token_, amount_);
+        IERC20PaymentClientBase_v3(client_).amountPaid(token_, amount_);
     }
 
     /// @notice	Executes all pending orders in the queue.
@@ -675,7 +675,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     /// @param  client_ The client paying for the order.
     /// @return	queueId_ The ID of the added order.
     function _addPaymentOrderToQueue(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_
     ) internal virtual returns (uint queueId_) {
         if (!_validPaymentOrder(order_)) {
@@ -869,7 +869,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     /// @param  order_ The order to validate.
     /// @return valid_ True if the order is valid.
     function _validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) internal view virtual returns (bool valid_) {
         // Extract queue ID from order data.
         uint queueId_ = _getPaymentQueueId(order_.flags, order_.data);
@@ -985,7 +985,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     /// @param  orderId_ ID of the order to check.
     /// @param  client_ Address of the client.
     /// @return exists_ True if the order exists.
-    function _orderExists(uint orderId_, IERC20PaymentClientBase_v2 client_)
+    function _orderExists(uint orderId_, IERC20PaymentClientBase_v3 client_)
         internal
         view
         virtual

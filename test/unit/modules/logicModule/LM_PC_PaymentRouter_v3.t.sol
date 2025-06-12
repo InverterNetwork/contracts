@@ -23,9 +23,9 @@ import {LM_PC_PaymentRouter_v3_Exposed} from
 import {ILM_PC_PaymentRouter_v3} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v3.sol";
 import {
-    IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBase_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    IERC20PaymentClientBase_v3,
+    ERC20PaymentClientBase_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";

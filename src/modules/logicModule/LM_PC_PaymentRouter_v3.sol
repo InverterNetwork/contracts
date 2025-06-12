@@ -8,15 +8,15 @@ import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {ILM_PC_PaymentRouter_v3} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v3.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IPaymentProcessor_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Dependencies
 import {
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     Module_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -27,7 +27,7 @@ import {ERC165Upgradeable} from
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
+ * @dev     Extends {ERC20PaymentClientBase_v3} to integrate payment processing with
  *          bounty management, supporting dynamic additions, updates, and the locking
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
@@ -42,14 +42,14 @@ import {ERC165Upgradeable} from
  */
 contract LM_PC_PaymentRouter_v3 is
     ILM_PC_PaymentRouter_v3,
-    ERC20PaymentClientBase_v2
+    ERC20PaymentClientBase_v3
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_PaymentRouter_v3).interfaceId
@@ -78,7 +78,7 @@ contract LM_PC_PaymentRouter_v3 is
         flags |= bytes32(1 << FLAG_CLIFF);
         flags |= bytes32(1 << FLAG_END);
 
-        __ERC20PaymentClientBase_v2_init(flags);
+        __ERC20PaymentClientBase_v3_init(flags);
     }
 
     //--------------------------------------------------------------------------
@@ -119,7 +119,7 @@ contract LM_PC_PaymentRouter_v3 is
 
         // call PaymentProcessor
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 
@@ -171,7 +171,7 @@ contract LM_PC_PaymentRouter_v3 is
 
         // call PaymentProcessor
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 }

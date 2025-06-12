@@ -16,7 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {PP_Template_v1_Exposed} from
     "src/templates/tests/unit/PP_Template_v1_Exposed.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";

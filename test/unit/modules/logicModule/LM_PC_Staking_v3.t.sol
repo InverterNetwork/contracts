@@ -21,7 +21,7 @@ import {
     LM_PC_Staking_v3,
     ILM_PC_Staking_v3,
     ReentrancyGuardUpgradeable,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@lm/LM_PC_Staking_v3.sol";
 
 import {LM_PC_Staking_v3_Exposed} from
@@ -187,7 +187,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
     function testEstimateRewardModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -263,7 +263,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
     function testStakeModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -378,7 +378,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
     function testUnstakeModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -534,7 +534,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
 
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -675,7 +675,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
         assertEq(0, stakingManager.getUserRewards(user));
 
         // Expect paymentOrder to be correct
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             stakingManager.paymentOrders();
 
         assertEq(1, orders.length);

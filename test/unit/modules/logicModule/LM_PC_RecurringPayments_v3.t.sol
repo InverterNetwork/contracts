@@ -22,7 +22,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
     LM_PC_RecurringPayments_v3,
     ILM_PC_RecurringPayments_v3,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@lm/LM_PC_RecurringPayments_v3.sol";
 
 contract LM_PC_RecurringV1Test is ModuleTest {
@@ -259,7 +259,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -277,7 +277,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         // validRecipient
 
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidRecipient
                 .selector
         );
@@ -323,7 +323,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         // Delete all payments for easier testing
         _paymentProcessor.deleteAllPayments(
-            IERC20PaymentClientBase_v2(address(recurringPaymentManager))
+            IERC20PaymentClientBase_v3(address(recurringPaymentManager))
         );
 
         // Fund Fundingmanager
@@ -432,7 +432,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         // remove tokens and orders from recurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
-            IERC20PaymentClientBase_v2(address(recurringPaymentManager))
+            IERC20PaymentClientBase_v3(address(recurringPaymentManager))
         );
         _token.burn(
             address(recurringPaymentManager),
@@ -470,7 +470,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
             // remove tokens and orders from recurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
-                IERC20PaymentClientBase_v2(address(recurringPaymentManager))
+                IERC20PaymentClientBase_v3(address(recurringPaymentManager))
             );
             _token.burn(
                 address(recurringPaymentManager),
@@ -694,7 +694,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     ) internal {
         uint length = recurringPaymentsToBeChecked.length;
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             recurringPaymentManager.paymentOrders();
         assertEq(length, currentRecurringPayments.length);
 
@@ -762,7 +762,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     }
 
     function assertOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order,
         address recipient,
         uint amount,
         uint start,

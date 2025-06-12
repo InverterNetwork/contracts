@@ -12,6 +12,8 @@ import {IERC20PaymentClientBase_v1} from
     "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -24,6 +26,9 @@ import {
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 /**
  * @title   Inverter Module
@@ -98,7 +103,7 @@ abstract contract Module_v2 is
     }
 
     /// @dev    Modifier to guarantee function is only callable by a module registered within the
-    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v2} interface.
+    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v3} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
         _;
@@ -295,16 +300,19 @@ abstract contract Module_v2 is
         }
     }
 
-    /// @dev	Checks if the caller is an {ERC20PaymentClientBase_v2} module.
+    /// @dev	Checks if the caller is an {ERC20PaymentClientBase_v3} module.
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
                 || (
-                    !ERC165Upgradeable(_msgSender()).supportsInterface(
-                        type(IERC20PaymentClientBase_v1).interfaceId
+                    !ERC165Checker.supportsInterface(
+                        _msgSender(), type(IERC20PaymentClientBase_v1).interfaceId
                     )
-                        && !ERC165Upgradeable(_msgSender()).supportsInterface(
-                            type(IERC20PaymentClientBase_v2).interfaceId
+                        && !ERC165Checker.supportsInterface(
+                            _msgSender(), type(IERC20PaymentClientBase_v2).interfaceId
+                        )
+                        && !ERC165Checker.supportsInterface(
+                            _msgSender(), type(IERC20PaymentClientBase_v3).interfaceId
                         )
                 )
         ) revert Module__OnlyCallableByPaymentClient();

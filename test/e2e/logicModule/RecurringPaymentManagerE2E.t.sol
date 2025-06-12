@@ -12,14 +12,14 @@ import {
 import {
     LM_PC_RecurringPayments_v3,
     ILM_PC_RecurringPayments_v3,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@lm/LM_PC_RecurringPayments_v3.sol";
 
 // Modules that are used in this E2E test
 import {
     PP_Streaming_v2,
     IPP_Streaming_v2,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from

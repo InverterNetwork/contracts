@@ -5,16 +5,16 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IPaymentProcessor_v2
-} from "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+} from "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {ILM_PC_Staking_v3} from "@lm/interfaces/ILM_PC_Staking_v3.sol";
 
 // Internal Dependencies
 import {
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     Module_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -33,7 +33,7 @@ import {ReentrancyGuardUpgradeable} from
  *
  * @notice  Provides a mechanism for users to stake tokens and earn rewards.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} and integrates with the Payment Processor
+ * @dev     Extends {ERC20PaymentClientBase_v3} and integrates with the Payment Processor
  *          to enable the distribution of rewards to stakers.
  *
  * @custom:security-contact security@inverter.network
@@ -46,7 +46,7 @@ import {ReentrancyGuardUpgradeable} from
  */
 contract LM_PC_Staking_v3 is
     ILM_PC_Staking_v3,
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20;
@@ -56,7 +56,7 @@ contract LM_PC_Staking_v3 is
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_Staking_v3).interfaceId
@@ -116,7 +116,7 @@ contract LM_PC_Staking_v3 is
         address _stakingToken = abi.decode(configData, (address));
         __LM_PC_Staking_v3_init(_stakingToken);
 
-        __ERC20PaymentClientBase_v2_init(bytes32(0)); // This module does not use any PaymentOrder flags
+        __ERC20PaymentClientBase_v3_init(bytes32(0)); // This module does not use any PaymentOrder flags
     }
 
     /// @dev	Initializes the staking contract.
@@ -381,7 +381,7 @@ contract LM_PC_Staking_v3 is
         );
 
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
 
         emit RewardsDistributed(recipient, amount);

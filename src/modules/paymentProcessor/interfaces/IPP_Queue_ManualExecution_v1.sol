@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 /**
  * @title   Manual Execution Queue Based Payment Processor
@@ -73,6 +73,6 @@ interface IPP_Queue_ManualExecution_v1 is IPP_Queue_v1 {
     ///         the payment client has funds to cover the orders.
     /// @dev    If the payment client does not have enough funds, the function
     ///         will stop executing orders.
-    function executePaymentQueue(IERC20PaymentClientBase_v2 paymentClient)
+    function executePaymentQueue(IERC20PaymentClientBase_v3 paymentClient)
         external;
 }

@@ -3,9 +3,9 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IPaymentProcessor_v2
-} from "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+} from "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
@@ -38,8 +38,8 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-abstract contract ERC20PaymentClientBase_v2 is
-    IERC20PaymentClientBase_v2,
+abstract contract ERC20PaymentClientBase_v3 is
+    IERC20PaymentClientBase_v3,
     Module_v2
 {
     /// @inheritdoc ERC165Upgradeable
@@ -50,7 +50,7 @@ abstract contract ERC20PaymentClientBase_v2 is
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId == type(IERC20PaymentClientBase_v2).interfaceId
+        return interfaceId == type(IERC20PaymentClientBase_v3).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -102,7 +102,7 @@ abstract contract ERC20PaymentClientBase_v2 is
     /// @dev	Initializes the staking contract.
     /// @param  flags_ The flags, represented as an array of uint8 containing
     ///         the flag IDs between 0 and 255.
-    function __ERC20PaymentClientBase_v2_init(bytes32 flags_)
+    function __ERC20PaymentClientBase_v3_init(bytes32 flags_)
         internal
         onlyInitializing
     {
@@ -163,9 +163,9 @@ abstract contract ERC20PaymentClientBase_v2 is
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v2 Functions
+    // IERC20PaymentClientBase_v3 Functions
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function paymentOrders()
         external
         view
@@ -175,7 +175,7 @@ abstract contract ERC20PaymentClientBase_v2 is
         return _orders;
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function outstandingTokenAmount(address token_)
         external
         view
@@ -185,7 +185,7 @@ abstract contract ERC20PaymentClientBase_v2 is
         return _outstandingTokenAmounts[token_];
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function collectPaymentOrders()
         external
         virtual
@@ -255,7 +255,7 @@ abstract contract ERC20PaymentClientBase_v2 is
         return (paymentOrders_, tokens_, totalAmounts_);
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function amountPaid(address token_, uint amount_) public virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v2(_msgSender())))
@@ -267,12 +267,12 @@ abstract contract ERC20PaymentClientBase_v2 is
         _outstandingTokenAmounts[token_] -= amount_;
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function getFlags() public view returns (bytes32 flags_) {
         return (_flags);
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function getFlagCount() public view returns (uint8 flagCount_) {
         return _flagCount;
     }
@@ -313,7 +313,7 @@ abstract contract ERC20PaymentClientBase_v2 is
     }
 
     //--------------------------------------------------------------------------
-    // {ERC20PaymentClientBase_v2} Function Implementations
+    // {ERC20PaymentClientBase_v3} Function Implementations
 
     /// @dev	Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the
     ///         FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to

@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {IPP_Queue_ManualExecution_v1} from
     "@pp/interfaces/IPP_Queue_ManualExecution_v1.sol";
@@ -105,7 +105,7 @@ contract PP_Queue_ManualExecution_v1 is
     // Public Mutating Functions
 
     /// @inheritdoc IPaymentProcessor_v2
-    function processPayments(IERC20PaymentClientBase_v2 client_)
+    function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
         override(PP_Queue_v1, IPaymentProcessor_v2)
@@ -113,7 +113,7 @@ contract PP_Queue_ManualExecution_v1 is
         onlyModule
     {
         // Collect outstanding orders and their total token amount.
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
 
         (orders,,) = client_.collectPaymentOrders();
 
@@ -125,7 +125,7 @@ contract PP_Queue_ManualExecution_v1 is
     }
 
     /// @inheritdoc IPP_Queue_ManualExecution_v1
-    function executePaymentQueue(IERC20PaymentClientBase_v2 client_)
+    function executePaymentQueue(IERC20PaymentClientBase_v3 client_)
         external
         virtual
         onlyModule

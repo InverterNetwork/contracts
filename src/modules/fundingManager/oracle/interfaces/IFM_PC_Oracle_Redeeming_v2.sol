@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IRedeemingBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
 
@@ -19,7 +19,7 @@ import {IRedeemingBondingCurveBase_v2} from
  *
  * @dev     Inherits functionality from:
  *          - IFM_PC_Oracle_Redeeming_v2: Implementation interface.
- *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
+ *          - ERC20PaymentClientBase_v3: Payment processing capabilities.
  *          - RedeemingBondingCurveBase_v2: Token issuance and redemption logic.
  *
  *          Key features:
@@ -116,7 +116,7 @@ import {IRedeemingBondingCurveBase_v2} from
  */
 interface IFM_PC_Oracle_Redeeming_v2 is
     IFundingManager_v1,
-    IERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v3,
     IRedeemingBondingCurveBase_v2
 {
     // -------------------------------------------------------------------------

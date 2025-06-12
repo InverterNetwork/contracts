@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 /**
  * @title   Inverter Bounty Manager Interface
@@ -11,7 +11,7 @@ import {IERC20PaymentClientBase_v2} from
  *          allowing participants to propose, update, and claim bounties securely
  *          and transparently.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
+ * @dev     Extends {ERC20PaymentClientBase_v3} to integrate payment processing with
  *          bounty management, supporting dynamic additions, updates, and the locking
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
@@ -24,7 +24,7 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @author  Inverter Network
  */
-interface ILM_PC_Bounties_v3 is IERC20PaymentClientBase_v2 {
+interface ILM_PC_Bounties_v3 is IERC20PaymentClientBase_v3 {
     //--------------------------------------------------------------------------
     // Structs
 

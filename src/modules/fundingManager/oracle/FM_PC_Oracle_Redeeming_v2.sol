@@ -21,9 +21,9 @@ import {IRedeemingBondingCurveBase_v2} from
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {
-    ERC20PaymentClientBase_v2,
-    IERC20PaymentClientBase_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    ERC20PaymentClientBase_v3,
+    IERC20PaymentClientBase_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 import {IERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
@@ -45,7 +45,7 @@ import {ERC165Upgradeable} from
  *
  * @dev     Inherits functionality from:
  *          - IFM_PC_Oracle_Redeeming_v2: Implementation interface.
- *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
+ *          - ERC20PaymentClientBase_v3: Payment processing capabilities.
  *          - RedeemingBondingCurveBase_v2: Token issuance and redemption logic.
  *
  *          Key features:
@@ -142,7 +142,7 @@ import {ERC165Upgradeable} from
  */
 contract FM_PC_Oracle_Redeeming_v2 is
     IFM_PC_Oracle_Redeeming_v2,
-    ERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v3,
     RedeemingBondingCurveBase_v2
 {
     // -------------------------------------------------------------------------
@@ -157,7 +157,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
     function supportsInterface(bytes4 interfaceId_)
         public
         view
-        override(ERC20PaymentClientBase_v2, RedeemingBondingCurveBase_v2)
+        override(ERC20PaymentClientBase_v3, RedeemingBondingCurveBase_v2)
         returns (bool isSupported_)
     {
         return interfaceId_ == type(IFM_PC_Oracle_Redeeming_v2).interfaceId
@@ -303,7 +303,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
         bytes32 flags;
         flags |= bytes32(1 << FLAG_ORDER_ID);
 
-        __ERC20PaymentClientBase_v2_init(flags);
+        __ERC20PaymentClientBase_v3_init(flags);
     }
 
     // -------------------------------------------------------------------------
@@ -484,11 +484,11 @@ contract FM_PC_Oracle_Redeeming_v2 is
         emit ReserveDeposited(_msgSender(), amount_);
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v2
+    /// @inheritdoc IERC20PaymentClientBase_v3
     function amountPaid(address token_, uint amount_)
         public
         virtual
-        override(ERC20PaymentClientBase_v2, IERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3, IERC20PaymentClientBase_v3)
     {
         _deductFromOpenRedemptionAmount(amount_);
         super.amountPaid(token_, amount_);
@@ -624,7 +624,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
 
         // Process payments through the payment processor.
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 
@@ -942,7 +942,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
         // This function is not used in this implementation.
     }
 
-    /// @inheritdoc ERC20PaymentClientBase_v2
+    /// @inheritdoc ERC20PaymentClientBase_v3
     /// @dev	We do not need to ensure the token balance because all the
     ///         collateral is taken out.
     function _ensureTokenBalance(address token_) internal virtual override {

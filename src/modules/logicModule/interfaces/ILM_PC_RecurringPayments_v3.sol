@@ -10,7 +10,7 @@ pragma solidity ^0.8.0;
  *
  * @dev     Uses epochs to define the period of recurring payments and supports operations
  *          such as adding, removing, and triggering payments based on time cycles.
- *          Integrates with {ERC20PaymentClientBase_v2} for handling actual payment
+ *          Integrates with {ERC20PaymentClientBase_v3} for handling actual payment
  *          transactions. Note that it will use the token type stored in the FundingManager for the payments.
  *
  * @custom:security-contact security@inverter.network
