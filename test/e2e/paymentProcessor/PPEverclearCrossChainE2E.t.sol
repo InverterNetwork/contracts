@@ -484,18 +484,18 @@ contract PPEverclearCrossChainE2E is E2ETest {
         // A. Owner funds the FM_DepositVault_v1
         // A.1 Owner approves fmDepositVault to spend their paymentTokens
         // Expect Approval event from paymentToken
-        //vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Approval(owner, address(fmDepositVault), paymentAmount);
+        vm.expectEmit(true, true, false, true, address(paymentToken));
+        emit IERC20.Approval(owner, address(fmDepositVault), paymentAmount);
         paymentToken.approve(address(fmDepositVault), paymentAmount);
 
         // A.2 Owner deposits paymentTokens into fmDepositVault
         // Expect Transfer from owner to fmDepositVault
-        //vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Transfer(owner, address(fmDepositVault), paymentAmount);
+        vm.expectEmit(true, true, false, true, address(paymentToken));
+        emit IERC20.Transfer(owner, address(fmDepositVault), paymentAmount);
 
         // Expect Deposit event from fmDepositVault
-        //vm.expectEmit(true, false, false, true, address(fmDepositVault)); // owner (indexed), amount (data)
-        //emit IFM_DepositVault_v1.Deposit(owner, paymentAmount);
+        vm.expectEmit(true, false, false, true, address(fmDepositVault)); // owner (indexed), amount (data)
+        emit IFM_DepositVault_v1.Deposit(owner, paymentAmount);
 
         fmDepositVault.deposit(paymentAmount);
 
@@ -505,86 +505,78 @@ contract PPEverclearCrossChainE2E is E2ETest {
 
         // B.1. fmDepositVault transfers to paymentClient (triggered by paymentClient)
         // B.1.a IERC20.Transfer event from the token contract
-        //vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Transfer(
-        //    address(fmDepositVault), address(paymentClient), paymentAmount
-        //);
+        vm.expectEmit(true, true, false, true, address(paymentToken));
+        emit IERC20.Transfer(
+            address(fmDepositVault), address(paymentClient), paymentAmount
+        );
         // B.1.b TransferOrchestratorToken event from the fmDepositVault contract
         //vm.expectEmit(true, false, false, true, address(fmDepositVault)); // to (indexed), amount (data)
-        // emit IFundingManager_v1.TransferOrchestratorToken(
-        //     address(paymentClient), paymentAmount
-        //);
+        emit IFundingManager_v1.TransferOrchestratorToken(
+            address(paymentClient), paymentAmount
+        );
 
         // B.2. paymentClient approves paymentProcessor
         //vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Approval(
-        //     address(paymentClient), address(paymentProcessor), paymentAmount
-        //);
+        emit IERC20.Approval(
+            address(paymentClient), address(paymentProcessor), paymentAmount
+        );
 
         // B.3. paymentProcessor pulls from paymentClient (inside processPayments)
         // vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Transfer(
-        //     address(paymentClient), address(paymentProcessor), paymentAmount
-        //);
+        emit IERC20.Transfer(
+            address(paymentClient), address(paymentProcessor), paymentAmount
+        );
 
         // B.4. paymentProcessor approves Everclear Spoke (inside processPayments)
-        //  vm.expectEmit(true, true, false, true, address(paymentToken));
-        //  emit IERC20.Approval(
-        //     address(paymentProcessor),
-        //      EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
-        //      paymentAmount
-        //  );
+        vm.expectEmit(true, true, false, true, address(paymentToken));
+        emit IERC20.Approval(
+            address(paymentProcessor),
+            EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
+            paymentAmount
+        );
 
         // B.5. Everclear Spoke pulls from paymentProcessor (via newIntent call inside processPayments)
-        //vm.expectEmit(true, true, false, true, address(paymentToken));
-        //emit IERC20.Transfer(
-        //     address(paymentProcessor),
-        //     EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
-        //      paymentAmount
-        //);
-
-        // B.5bis. Everclear Spoke emits its own NewIntent event.
-        // B.5bis. Everclear Spoke emits its own NewIntent event.
-        // We expect an event from the Everclear spoke, but we won't check its topics or data
-        // due to dynamic values and potential complexity.
-        // vm.expectEmit(
-        //     false, false, false, false, EVERCLEAR_SPOKE_ADDRESS_SEPOLIA
-        // );
+        vm.expectEmit(true, true, false, true, address(paymentToken));
+        emit IERC20.Transfer(
+            address(paymentProcessor),
+            EVERCLEAR_SPOKE_ADDRESS_SEPOLIA,
+            paymentAmount
+        );
 
         // B.6. paymentProcessor emits PaymentOrderProcessed (inside processPayments)
-        //vm.expectEmit(true, true, true, false, address(paymentProcessor)); // client, recipient, token are indexed. Data not checked.
-        //emit IPaymentProcessor_v2.PaymentOrderProcessed(
-        //     address(paymentClient),
-        //     recipientAddressOnTargetChain,
-        //     address(paymentToken),
-        //     paymentAmount,
-        //     block.chainid,
-        //     targetChainId,
-        //    paymentClient.getFlags(),
-        //    new bytes32[](0) // Data is not checked here, verified by state assertions
-        // );
+        vm.expectEmit(true, true, true, false, address(paymentProcessor)); // client, recipient, token are indexed. Data not checked.
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
+            address(paymentClient),
+            recipientAddressOnTargetChain,
+            address(paymentToken),
+            paymentAmount,
+            block.chainid,
+            targetChainId,
+            paymentClient.getFlags(),
+            new bytes32[](0) // Data is not checked here, verified by state assertions
+        );
 
         // B.7. paymentProcessor emits BridgeTransferCompleted (inside processPayments)
         // We don't check intentId (topic2) as it's generated dynamically.
-        // vm.expectEmit(true, false, true, false, address(paymentProcessor)); // paymentId (topic1), recipient (topic3) are indexed. Data not checked.
-        // emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
-        //     initialState.paymentProcessorPaymentId, // Expected paymentId
-        //     bytes32(0), // Placeholder for intentId - not checked
-        //     recipientAddressOnTargetChain,
-        //      address(paymentClient),
-        //     address(paymentToken),
-        //     paymentAmount,
-        //     block.chainid,
-        //     targetChainId,
-        //     paymentClient.getFlags(),
-        //     new bytes32[](0) // Data is not checked here, verified by state assertions
-        // );
+        vm.expectEmit(true, false, true, false, address(paymentProcessor)); // paymentId (topic1), recipient (topic3) are indexed. Data not checked.
+        emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
+            initialState.paymentProcessorPaymentId, // Expected paymentId
+            bytes32(0), // Placeholder for intentId - not checked
+            recipientAddressOnTargetChain,
+            address(paymentClient),
+            address(paymentToken),
+            paymentAmount,
+            block.chainid,
+            targetChainId,
+            paymentClient.getFlags(),
+            new bytes32[](0) // Data is not checked here, verified by state assertions
+        );
 
         // B.8. paymentProcessor emits TokensReleased (inside processPayments)
-        //vm.expectEmit(true, true, false, true, address(paymentProcessor)); // recipient (indexed), token (indexed). Amount (data) checked.
-        //  emit IPaymentProcessor_v2.TokensReleased(
-        //      recipientAddressOnTargetChain, address(paymentToken), paymentAmount
-        //);
+        vm.expectEmit(true, true, false, true, address(paymentProcessor)); // recipient (indexed), token (indexed). Amount (data) checked.
+        emit IPaymentProcessor_v2.TokensReleased(
+            recipientAddressOnTargetChain, address(paymentToken), paymentAmount
+        );
 
         // Note: The IEverclear interface provided does not define a NewIntent event.
         // Verification of intent creation will rely on state checks of the paymentProcessor
