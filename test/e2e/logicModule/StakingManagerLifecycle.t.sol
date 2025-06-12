@@ -20,14 +20,14 @@ import {ERC165Upgradeable} from
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 // SuT
-import {LM_PC_Staking_v2, ILM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
+import {LM_PC_Staking_v3, ILM_PC_Staking_v3} from "@lm/LM_PC_Staking_v3.sol";
 
 // Mocks
 // import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-contract LM_PC_Staking_v2Lifecycle is E2ETest {
+contract LM_PC_Staking_v3Lifecycle is E2ETest {
     using SafeERC20 for ERC20Mock;
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -98,15 +98,15 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
         );
 
         // Additional Logic Modules
-        setUpLM_PC_Staking_v2();
+        setUpLM_PC_Staking_v3();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_Staking_v2Metadata, abi.encode(stakingToken)
+                LM_PC_Staking_v3Metadata, abi.encode(stakingToken)
             )
         );
     }
 
-    function test_e2e_LM_PC_Staking_v2Lifecycle() public {
+    function test_e2e_LM_PC_Staking_v3Lifecycle() public {
         //--------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------
@@ -126,16 +126,16 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
-        LM_PC_Staking_v2 stakingManager;
+        LM_PC_Staking_v3 stakingManager;
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_Staking_v2).interfaceId
+                    type(ILM_PC_Staking_v3).interfaceId
                 )
             ) {
-                stakingManager = LM_PC_Staking_v2(modulesList[i]);
+                stakingManager = LM_PC_Staking_v3(modulesList[i]);
                 break;
             }
         }

@@ -1,17 +1,33 @@
 pragma solidity ^0.8.0;
 
-interface ILM_PC_Staking_v2 {
+/**
+ * @title   Inverter Staking Module Interface
+ *
+ * @notice  Provides a mechanism for users to stake tokens and earn rewards.
+ *
+ * @dev     Extends {ERC20PaymentClientBase_v2} and integrates with the Payment Processor
+ *          to enable the distribution of rewards to stakers.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface ILM_PC_Staking_v3 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Given staking token address is invalid.
-    error Module__LM_PC_Staking_v2__InvalidStakingToken();
+    error Module__LM_PC_Staking_v3__InvalidStakingToken();
 
     /// @notice Given Duration is invalid.
-    error Module__LM_PC_Staking_v2__InvalidDuration();
+    error Module__LM_PC_Staking_v3__InvalidDuration();
 
     /// @notice The calculated Reward rate is too low to be used.
-    error Module__LM_PC_Staking_v2__InvalidRewardRate();
+    error Module__LM_PC_Staking_v3__InvalidRewardRate();
 
     //--------------------------------------------------------------------------
     // Events

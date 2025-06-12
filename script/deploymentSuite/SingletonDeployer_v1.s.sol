@@ -68,7 +68,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_LM_PC_KPIRewarder_v3;
     address public impl_mod_LM_PC_PaymentRouter_v3;
     address public impl_mod_LM_PC_RecurringPayments_v3;
-    address public impl_mod_LM_PC_Staking_v2;
+    address public impl_mod_LM_PC_Staking_v3;
 
     // Payment Processors
     address public impl_mod_PP_Queue_ManualExecution_v1;
@@ -248,9 +248,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
                 "LM_PC_RecurringPayments_v3.sol:LM_PC_RecurringPayments_v3"
             )
         );
-        impl_mod_LM_PC_Staking_v2 = deployAndLogWithCreate2(
-            "LM_PC_Staking_v2",
-            vm.getCode("LM_PC_Staking_v2.sol:LM_PC_Staking_v2")
+        impl_mod_LM_PC_Staking_v3 = deployAndLogWithCreate2(
+            "LM_PC_Staking_v3",
+            vm.getCode("LM_PC_Staking_v3.sol:LM_PC_Staking_v3")
         );
 
         // Payment Processors

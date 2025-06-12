@@ -314,7 +314,7 @@ contract ModuleBeaconDeployer_v1 is
                     stakingMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Staking_v2,
+                    impl_mod_LM_PC_Staking_v3,
                     stakingMetadata.majorVersion,
                     stakingMetadata.minorVersion,
                     stakingMetadata.patchVersion

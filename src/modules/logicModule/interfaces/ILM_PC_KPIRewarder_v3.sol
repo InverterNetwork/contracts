@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  * @notice  Provides a mechanism for distributing rewards to stakers based
  *          on Key Performance Indicators (KPIs).
  *
- * @dev     Extends {LM_PC_Staking_v2} and integrates with {OptimisticOracleIntegrator}
+ * @dev     Extends {LM_PC_Staking_v3} and integrates with {OptimisticOracleIntegrator}
  *          to enable KPI-based reward distribution within the staking manager.
  *
  * @custom:security-contact security@inverter.network

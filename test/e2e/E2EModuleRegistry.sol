@@ -26,7 +26,7 @@ import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol"
 import {LM_PC_Bounties_v3} from "@lm/LM_PC_Bounties_v3.sol";
 import {LM_PC_RecurringPayments_v3} from "@lm/LM_PC_RecurringPayments_v3.sol";
 import {LM_PC_PaymentRouter_v3} from "@lm/LM_PC_PaymentRouter_v3.sol";
-import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
+import {LM_PC_Staking_v3} from "@lm/LM_PC_Staking_v3.sol";
 import {LM_PC_KPIRewarder_v3} from "@lm/LM_PC_KPIRewarder_v3.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
@@ -765,46 +765,46 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_Staking_v2
+    // LM_PC_Staking_v3
 
-    LM_PC_Staking_v2 LM_PC_Staking_v2Impl;
+    LM_PC_Staking_v3 LM_PC_Staking_v3Impl;
 
-    InverterBeacon_v1 LM_PC_Staking_v2Beacon;
+    InverterBeacon_v1 LM_PC_Staking_v3Beacon;
 
-    IModule_v2.Metadata LM_PC_Staking_v2Metadata = IModule_v2.Metadata(
+    IModule_v2.Metadata LM_PC_Staking_v3Metadata = IModule_v2.Metadata(
         1,
         0,
         0,
         "https://github.com/inverter/staking-manager",
-        "LM_PC_Staking_v2"
+        "LM_PC_Staking_v3"
     );
 
     /*
-     IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v2FactoryConfig =
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v3FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        LM_PC_Staking_v2Metadata,
+        LM_PC_Staking_v3Metadata,
         bytes(address(stakingToken))  
     ); 
     */
 
-    function setUpLM_PC_Staking_v2() internal {
+    function setUpLM_PC_Staking_v3() internal {
         // Deploy module implementations.
-        LM_PC_Staking_v2Impl = new LM_PC_Staking_v2();
+        LM_PC_Staking_v3Impl = new LM_PC_Staking_v3();
 
         // Deploy module beacons.
-        LM_PC_Staking_v2Beacon = new InverterBeacon_v1(
+        LM_PC_Staking_v3Beacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
-            LM_PC_Staking_v2Metadata.majorVersion,
-            address(LM_PC_Staking_v2Impl),
-            LM_PC_Staking_v2Metadata.minorVersion,
-            LM_PC_Staking_v2Metadata.patchVersion
+            LM_PC_Staking_v3Metadata.majorVersion,
+            address(LM_PC_Staking_v3Impl),
+            LM_PC_Staking_v3Metadata.minorVersion,
+            LM_PC_Staking_v3Metadata.patchVersion
         );
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            LM_PC_Staking_v2Metadata, IInverterBeacon_v1(LM_PC_Staking_v2Beacon)
+            LM_PC_Staking_v3Metadata, IInverterBeacon_v1(LM_PC_Staking_v3Beacon)
         );
     }
 

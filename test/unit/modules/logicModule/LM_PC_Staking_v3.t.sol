@@ -18,21 +18,21 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
-    LM_PC_Staking_v2,
-    ILM_PC_Staking_v2,
+    LM_PC_Staking_v3,
+    ILM_PC_Staking_v3,
     ReentrancyGuardUpgradeable,
     IERC20PaymentClientBase_v2
-} from "@lm/LM_PC_Staking_v2.sol";
+} from "@lm/LM_PC_Staking_v3.sol";
 
-import {LM_PC_Staking_v2_Exposed} from
-    "@mocks/modules/logicModule/LM_PC_Staking_v2_Exposed.sol";
+import {LM_PC_Staking_v3_Exposed} from
+    "@mocks/modules/logicModule/LM_PC_Staking_v3_Exposed.sol";
 
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-contract LM_PC_Staking_v2Test is ModuleTest {
+contract LM_PC_Staking_v3Test is ModuleTest {
     // SuT
-    LM_PC_Staking_v2_Exposed stakingManager;
+    LM_PC_Staking_v3_Exposed stakingManager;
 
     ERC20Mock stakingToken =
         new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
@@ -43,15 +43,15 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator
-        address impl = address(new LM_PC_Staking_v2_Exposed());
-        stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v3_Exposed());
+        stakingManager = LM_PC_Staking_v3_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
         // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.StakingTokenSet(address(stakingToken));
+        emit ILM_PC_Staking_v3.StakingTokenSet(address(stakingToken));
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
@@ -73,14 +73,14 @@ contract LM_PC_Staking_v2Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
 
-        address impl = address(new LM_PC_Staking_v2_Exposed());
-        stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v3_Exposed());
+        stakingManager = LM_PC_Staking_v3_Exposed(Clones.clone(impl));
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
 
         vm.expectRevert(
-            ILM_PC_Staking_v2
-                .Module__LM_PC_Staking_v2__InvalidStakingToken
+            ILM_PC_Staking_v3
+                .Module__LM_PC_Staking_v3__InvalidStakingToken
                 .selector
         );
         stakingManager.init(
@@ -91,7 +91,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             stakingManager.supportsInterface(
-                type(ILM_PC_Staking_v2).interfaceId
+                type(ILM_PC_Staking_v3).interfaceId
             )
         );
     }
@@ -103,8 +103,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         duration = bound(duration, 0, 31_536_000_000); // 31536000000 = 1000 years in seconds
         if (duration == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v2
-                    .Module__LM_PC_Staking_v2__InvalidDuration
+                ILM_PC_Staking_v3
+                    .Module__LM_PC_Staking_v3__InvalidDuration
                     .selector
             );
         }
@@ -196,7 +196,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
         // validDuration
         vm.expectRevert(
-            ILM_PC_Staking_v2.Module__LM_PC_Staking_v2__InvalidDuration.selector
+            ILM_PC_Staking_v3.Module__LM_PC_Staking_v3__InvalidDuration.selector
         );
 
         stakingManager.getEstimatedReward(1, 0);
@@ -242,7 +242,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.Staked(staker, stakeAmount);
+        emit ILM_PC_Staking_v3.Staked(staker, stakeAmount);
 
         vm.prank(staker);
         stakingManager.stake(stakeAmount);
@@ -354,7 +354,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.Unstaked(staker, unstakeAmount);
+        emit ILM_PC_Staking_v3.Unstaked(staker, unstakeAmount);
 
         // Withdraw
         vm.prank(staker);
@@ -468,8 +468,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v2
-                    .Module__LM_PC_Staking_v2__InvalidRewardRate
+                ILM_PC_Staking_v3
+                    .Module__LM_PC_Staking_v3__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(amount, duration);
@@ -478,7 +478,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.RewardSet(
+        emit ILM_PC_Staking_v3.RewardSet(
             amount, duration, expectedRewardRate, expectedRewardsEnd
         );
 
@@ -499,8 +499,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v2
-                    .Module__LM_PC_Staking_v2__InvalidRewardRate
+                ILM_PC_Staking_v3
+                    .Module__LM_PC_Staking_v3__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(secondAmount, secondDuration);
@@ -509,7 +509,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.RewardSet(
+        emit ILM_PC_Staking_v3.RewardSet(
             secondAmount, secondDuration, expectedRewardRate, expectedRewardsEnd
         );
 
@@ -543,7 +543,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
         // validDuration
         vm.expectRevert(
-            ILM_PC_Staking_v2.Module__LM_PC_Staking_v2__InvalidDuration.selector
+            ILM_PC_Staking_v3.Module__LM_PC_Staking_v3__InvalidDuration.selector
         );
 
         stakingManager.setRewards(1, 0);
@@ -570,7 +570,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
                 stakingManager.direct_calculateRewardValue();
         }
         vm.expectEmit(true, true, true, false);
-        emit ILM_PC_Staking_v2.Updated(
+        emit ILM_PC_Staking_v3.Updated(
             trigger, expectedRewards, stakingManager.getLastUpdate(), 0
         );
 
@@ -667,7 +667,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         stakingManager.direct_update(user);
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Staking_v2.RewardsDistributed(user, expectedPayout);
+        emit ILM_PC_Staking_v3.RewardsDistributed(user, expectedPayout);
 
         stakingManager.direct_distributeRewards(user);
 

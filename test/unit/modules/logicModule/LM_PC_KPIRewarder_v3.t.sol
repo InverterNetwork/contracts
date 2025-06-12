@@ -27,7 +27,7 @@ import {
     LM_PC_KPIRewarder_v3,
     ILM_PC_KPIRewarder_v3,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v2,
+    ILM_PC_Staking_v3,
     OptimisticOracleV3CallbackRecipientInterface
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 
@@ -117,8 +117,8 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
 
         // Test invalid staking token
         vm.expectRevert(
-            ILM_PC_Staking_v2
-                .Module__LM_PC_Staking_v2__InvalidStakingToken
+            ILM_PC_Staking_v3
+                .Module__LM_PC_Staking_v3__InvalidStakingToken
                 .selector
         );
         kpiManager.init(
@@ -190,7 +190,7 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
             )
         );
         assertTrue(
-            kpiManager.supportsInterface(type(ILM_PC_Staking_v2).interfaceId)
+            kpiManager.supportsInterface(type(ILM_PC_Staking_v3).interfaceId)
         );
         assertTrue(
             kpiManager.supportsInterface(
@@ -275,7 +275,7 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
             vm.startPrank(cappedUsers[i]);
             stakingToken.approve(address(kpiManager), cappedAmounts[i]);
             vm.expectEmit(true, true, true, true, address(kpiManager));
-            emit ILM_PC_Staking_v2.Staked(cappedUsers[i], cappedAmounts[i]);
+            emit ILM_PC_Staking_v3.Staked(cappedUsers[i], cappedAmounts[i]);
             kpiManager.stake(cappedAmounts[i]);
             totalUserFunds += cappedAmounts[i];
             vm.stopPrank();
@@ -971,7 +971,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit ILM_PC_Staking_v2.RewardSet(250e32, 1, 250e32, block.timestamp + 1);
+        emit ILM_PC_Staking_v3.RewardSet(250e32, 1, 250e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1063,7 +1063,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit ILM_PC_Staking_v2.RewardSet(200e32, 1, 200e32, block.timestamp + 1);
+        emit ILM_PC_Staking_v3.RewardSet(200e32, 1, 200e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();

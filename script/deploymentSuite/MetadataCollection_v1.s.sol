@@ -214,7 +214,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Staking_v2"
+        "LM_PC_Staking_v3"
     );
 
     // ------------------------------------------------------------------------

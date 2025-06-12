@@ -21,7 +21,7 @@ import {
     LM_PC_KPIRewarder_v3,
     ILM_PC_KPIRewarder_v3,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v2
+    ILM_PC_Staking_v3
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 
 import {OptimisticOracleV3Interface} from

@@ -6,12 +6,12 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ILM_PC_KPIRewarder_v3} from "@lm/interfaces/ILM_PC_KPIRewarder_v3.sol";
 import {
-    ILM_PC_Staking_v2,
-    LM_PC_Staking_v2,
+    ILM_PC_Staking_v3,
+    LM_PC_Staking_v3,
     SafeERC20,
     IERC20,
     ERC20PaymentClientBase_v2
-} from "./LM_PC_Staking_v2.sol";
+} from "./LM_PC_Staking_v3.sol";
 import {
     IOptimisticOracleIntegrator,
     OptimisticOracleIntegrator,
@@ -32,7 +32,7 @@ import {ERC165Upgradeable} from
  * @notice  Provides a mechanism for distributing rewards to stakers based
  *          on Key Performance Indicators (KPIs).
  *
- * @dev     Extends {LM_PC_Staking_v2} and integrates with {OptimisticOracleIntegrator}
+ * @dev     Extends {LM_PC_Staking_v3} and integrates with {OptimisticOracleIntegrator}
  *          to enable KPI-based reward distribution within the staking manager.
  *
  * @custom:security-contact security@inverter.network
@@ -45,7 +45,7 @@ import {ERC165Upgradeable} from
  */
 contract LM_PC_KPIRewarder_v3 is
     ILM_PC_KPIRewarder_v3,
-    LM_PC_Staking_v2,
+    LM_PC_Staking_v3,
     OptimisticOracleIntegrator
 {
     using SafeERC20 for IERC20;
@@ -55,11 +55,11 @@ contract LM_PC_KPIRewarder_v3 is
         public
         view
         virtual
-        override(OptimisticOracleIntegrator, LM_PC_Staking_v2)
+        override(OptimisticOracleIntegrator, LM_PC_Staking_v3)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v3).interfaceId
-            || interfaceId == type(ILM_PC_Staking_v2).interfaceId
+            || interfaceId == type(ILM_PC_Staking_v3).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -114,7 +114,7 @@ contract LM_PC_KPIRewarder_v3 is
     )
         external
         virtual
-        override(LM_PC_Staking_v2, OptimisticOracleIntegrator)
+        override(LM_PC_Staking_v3, OptimisticOracleIntegrator)
         initializer
     {
         __Module_init(orchestrator_, metadata);
@@ -127,7 +127,7 @@ contract LM_PC_KPIRewarder_v3 is
             uint64 liveness
         ) = abi.decode(configData, (address, address, uint, address, uint64));
 
-        __LM_PC_Staking_v2_init(stakingTokenAddr);
+        __LM_PC_Staking_v3_init(stakingTokenAddr);
         __OptimisticOracleIntegrator_init(
             currencyAddr, defaultBond, ooAddr, liveness
         );
@@ -283,9 +283,9 @@ contract LM_PC_KPIRewarder_v3 is
     }
 
     //--------------------------------------------------------------------------
-    // New user facing functions (stake() is a LM_PC_Staking_v2 override) :
+    // New user facing functions (stake() is a LM_PC_Staking_v3 override) :
 
-    /// @inheritdoc ILM_PC_Staking_v2
+    /// @inheritdoc ILM_PC_Staking_v3
     function stake(uint amount)
         external
         override
@@ -305,7 +305,7 @@ contract LM_PC_KPIRewarder_v3 is
 
         _stake(sender, amount);
 
-        // transfer funds to LM_PC_Staking_v2
+        // transfer funds to LM_PC_Staking_v3
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
