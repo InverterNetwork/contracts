@@ -244,31 +244,41 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Get protocol fee percentages and treasury addresses
-        (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralBuyFeePercentage,
-            uint issuanceBuyFeePercentage
-        ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
-        );
+        address collateralTreasury;
+        address issuanceTreasury;
+        uint issuanceBuyFeePercentage;
+        uint collateralProtocolFeeAmount;
+        uint projectFeeAmount;
+        uint issuanceTokenAmount;
 
-        // Get net amount, protocol and project fee amounts
-        (
-            uint netDeposit,
-            uint collateralProtocolFeeAmount,
-            uint projectFeeAmount
-        ) = _calculateNetAndSplitFees(
-            _depositAmount, collateralBuyFeePercentage, buyFee
-        );
+        // --- Start of new scope for initial fee calculations to mitigate stack deep error---
+        {
+            uint localCollateralBuyFeePercentage;
+            // Get protocol fee percentages and treasury addresses
+            (
+                collateralTreasury,
+                issuanceTreasury,
+                localCollateralBuyFeePercentage,
+                issuanceBuyFeePercentage
+            ) = _getFunctionFeesAndTreasuryAddresses(
+                bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
+            );
 
-        // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
-        collateralFeeAmount = collateralProtocolFeeAmount + projectFeeAmount;
+            uint localNetDeposit;
+            // Get net amount, protocol and project fee amounts
+            (localNetDeposit, collateralProtocolFeeAmount, projectFeeAmount) =
+            _calculateNetAndSplitFees(
+                _depositAmount, localCollateralBuyFeePercentage, buyFee
+            );
 
-        // Calculate token amount based on upstream formula
-        uint issuanceTokenAmount = _issueTokensFormulaWrapper(netDeposit);
-        totalIssuanceTokenMinted = issuanceTokenAmount;
+            // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
+            collateralFeeAmount = collateralProtocolFeeAmount + projectFeeAmount;
+
+            // Calculate token amount based on upstream formula
+            issuanceTokenAmount = _issueTokensFormulaWrapper(localNetDeposit);
+            totalIssuanceTokenMinted = issuanceTokenAmount;
+        }
+        // --- End of new scope ---
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
@@ -288,8 +298,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // ------------------------------------------------------------
         // Interactions
 
-        // Handle collateral tokens before buy
-        _handleCollateralTokensBeforeBuy(_msgSender(), _depositAmount);
+        // Transfer all the collateral for the buy operation to this contract
+        collateralToken.safeTransferFrom(
+            _msgSender(), address(this), _depositAmount
+        );
+
+        // Handle collateral for the buy operation excluding the protocol fee
+        _processCollateralTokensForBuyOperation(
+            _depositAmount - collateralProtocolFeeAmount
+        );
 
         // Process protocol fee on incoming collateral tokens
         _processProtocolFeeViaTransfer(
@@ -322,11 +339,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         uint _issuanceTokenAmount
     ) internal virtual;
 
-    /// @notice Virtual function to handle collateral tokens before a buy.
-    /// @param  _provider The address from which the collateral tokens
-    ///         will be sent.
+    /// @notice Virtual function to handle collateral tokens during a buy operation
+    ///         after the collateral has been transferred into the contract.
+    ///         The amount of collateral to be handled excludes the protocol fee.
+    /// @dev    The implementation contract should override this function
+    ///         if the collateral token should not be held in the contract.
     /// @param  _amount The amount of collateral tokens to handle.
-    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+    function _processCollateralTokensForBuyOperation(uint _amount)
         internal
         virtual;
 

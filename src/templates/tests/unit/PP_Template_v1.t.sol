@@ -6,8 +6,8 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+} from "@unitTest/modules/ModuleTest.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -19,7 +19,7 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {
