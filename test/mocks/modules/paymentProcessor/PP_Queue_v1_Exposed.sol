@@ -50,12 +50,11 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         _removeFromQueue(orderId_, client_);
     }
 
-    function exposed_getPaymentQueueId(bytes32 flags_, bytes32[] memory data_)
-        external
-        view
-        returns (uint)
-    {
-        return _getPaymentQueueId(flags_, data_);
+    function exposed_getOrderDetailsFromFlagsAndData(
+        bytes32 flags_,
+        bytes32[] memory data_
+    ) external view returns (uint orderId_, uint projectFee_) {
+        return _getOrderDetailsFromFlagsAndData(flags_, data_);
     }
 
     // Función para exponer _validQueueId
@@ -91,10 +90,16 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         address client_,
         address recipient_,
         uint amount_,
-        bool collectProtocolFee_
+        bool collectProtocolFee_,
+        uint projectFee_
     ) external returns (bool) {
         return _tryPaymentTransfer(
-            token_, client_, recipient_, amount_, collectProtocolFee_
+            token_,
+            client_,
+            recipient_,
+            amount_,
+            collectProtocolFee_,
+            projectFee_
         );
     }
 
@@ -107,13 +112,14 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         return _lowLevelTransfer(token_, client_, recipient_, amount_);
     }
 
-    function exposed_getProtocolFeeDetails(
+    function exposed_calculateProtocolFeeAmount(
         uint totalAmount_,
         bytes4 functionSelector_,
-        bool collectProtocolFee_
+        bool collectProtocolFee_,
+        uint projectFee_
     ) external view returns (uint, uint, address) {
-        return _getProtocolFeeDetails(
-            totalAmount_, functionSelector_, collectProtocolFee_
+        return _calculateProtocolFeeAmount(
+            totalAmount_, functionSelector_, collectProtocolFee_, projectFee_
         );
     }
 
@@ -170,11 +176,12 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         return _validPaymentToken(token_);
     }
 
-    function exposed_validateFlagsAndData(
-        bytes32 flags_,
-        bytes32[] memory data_
-    ) external pure returns (bool) {
-        return _validateFlagsAndData(flags_, data_);
+    function exposed_validateOrderFlags(bytes32 flags_)
+        external
+        pure
+        returns (bool)
+    {
+        return _validateOrderFlags(flags_);
     }
 
     function exposed_validStateTransition(
@@ -191,6 +198,14 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         address paymentReceiver_
     ) external {
         _claimPreviouslyUnclaimable(client_, token_, paymentReceiver_);
+    }
+
+    function exposed_validProjectFee(uint projectFee_)
+        external
+        pure
+        returns (bool)
+    {
+        return _validProjectFee(projectFee_);
     }
 
     // Helper functions
