@@ -87,4 +87,19 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
     ) external {
         _protocolFeeCache = newCache_;
     }
+
+    function exposed_getFunctionFeesAndTreasuryAddresses(
+        bytes4 functionSelector_
+    )
+        external
+        view
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralFeeBps,
+            uint issuanceFeeBps
+        )
+    {
+        return _getFunctionFeesAndTreasuryAddresses(functionSelector_);
+    }
 }

@@ -325,7 +325,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             └── When supportsInterface() is called with IFM_BC_Discrete_Redeeming_VirtualSupply_v1 interface ID
                 └── Then it should return true
     */
-    function test_SupportsInterface() public {
+    function testSupportsInterface() public {
         assertTrue(
             fmBcDiscrete.supportsInterface(type(IFundingManager_v1).interfaceId)
         );
@@ -1034,7 +1034,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
                     └── When calculatePurchaseReturn() is called
                         └── Then it should return the correctly calculated issuance amount after only project fee
     */
-    function test_CalculatePurchaseReturn_GivenProjectFeeOnly_WhenProtocolFeesZeroedInCache_ShouldReturnCorrectAmount(
+    function testCalculatePurchaseReturn_GivenProjectFeeOnly_WhenProtocolFeesZeroedInCache_ShouldReturnCorrectAmount(
     ) public {
         uint depositAmount = 10 ether;
 
@@ -1074,6 +1074,221 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             actualIssuanceTokens,
             expectedIssuanceTokens,
             "Project fee only: Calculated purchase return mismatch"
+        );
+    }
+
+    /* Test _getFunctionFeesAndTreasuryAddresses() (exposed)
+        └── Given the FeeManager is configured with specific fees during setup
+            └── And fm.init() has populated the _protocolFeeCache
+                ├── When called with buy-related selector
+                │   └── Then it should return the cached collateral treasury for buy operations
+                │       └── And it should return the cached issuance treasury for buy operations
+                │       └── And it should return the cached collateralFeeBuyBps
+                │       └── And it should return the cached issuanceFeeBuyBps
+                │
+                ├── When called with sell-related selector 
+                │   └── Then it should return the cached collateral treasury for sell operations
+                │       └── And it should return the cached issuance treasury for sell operations
+                │       └── And it should return the cached collateralFeeSellBps
+                │       └── And it should return the cached issuanceFeeSellBps
+                │
+                └── When called with an unhandled selector
+                    └── Then it should return the collateral treasury configured directly in FeeManager (via super call)
+                        └── And it should return the issuance treasury configured directly in FeeManager (via super call)
+                        └── And it should return the collateralFeeBps configured directly in FeeManager (via super call)
+                        └── And it should return the issuanceFeeBps configured directly in FeeManager (via super call)
+    */
+    function testGetFunctionFeesAndTreasuryAddresses_BuySelectors_ReturnsCachedValues(
+    ) public {
+        // Arrange
+        bytes4 calculatePurchaseReturnSelector =
+            fmBcDiscrete.calculatePurchaseReturn.selector;
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+
+        // Act & Assert for calculatePurchaseReturn.selector
+        (
+            address cTreasuryCalc,
+            address iTreasuryCalc,
+            uint cBpsCalc,
+            uint iBpsCalc
+        ) = fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(
+            calculatePurchaseReturnSelector
+        );
+
+        assertEq(
+            cTreasuryCalc,
+            TEST_PROTOCOL_TREASURY,
+            "Buy (calc): Collateral treasury mismatch"
+        );
+        assertEq(
+            iTreasuryCalc,
+            TEST_PROTOCOL_TREASURY,
+            "Buy (calc): Issuance treasury mismatch"
+        );
+        assertEq(
+            cBpsCalc,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS,
+            "Buy (calc): Collateral BPS mismatch"
+        );
+        assertEq(
+            iBpsCalc,
+            TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS,
+            "Buy (calc): Issuance BPS mismatch"
+        );
+
+        // Act & Assert for _buyOrder.selector
+        (
+            address cTreasuryOrder,
+            address iTreasuryOrder,
+            uint cBpsOrder,
+            uint iBpsOrder
+        ) = fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(
+            buyOrderSelector
+        );
+
+        assertEq(
+            cTreasuryOrder,
+            TEST_PROTOCOL_TREASURY,
+            "Buy (order): Collateral treasury mismatch"
+        );
+        assertEq(
+            iTreasuryOrder,
+            TEST_PROTOCOL_TREASURY,
+            "Buy (order): Issuance treasury mismatch"
+        );
+        assertEq(
+            cBpsOrder,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS,
+            "Buy (order): Collateral BPS mismatch"
+        );
+        assertEq(
+            iBpsOrder,
+            TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS,
+            "Buy (order): Issuance BPS mismatch"
+        );
+    }
+
+    function testGetFunctionFeesAndTreasuryAddresses_SellSelectors_ReturnsCachedValues(
+    ) public {
+        // Arrange
+        bytes4 calculateSaleReturnSelector =
+            fmBcDiscrete.calculateSaleReturn.selector;
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+
+        // Act & Assert for calculateSaleReturn.selector
+        (
+            address cTreasuryCalc,
+            address iTreasuryCalc,
+            uint cBpsCalc,
+            uint iBpsCalc
+        ) = fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(
+            calculateSaleReturnSelector
+        );
+
+        assertEq(
+            cTreasuryCalc,
+            TEST_PROTOCOL_TREASURY,
+            "Sell (calc): Collateral treasury mismatch"
+        );
+        assertEq(
+            iTreasuryCalc,
+            TEST_PROTOCOL_TREASURY,
+            "Sell (calc): Issuance treasury mismatch"
+        );
+        assertEq(
+            cBpsCalc,
+            TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS,
+            "Sell (calc): Collateral BPS mismatch"
+        );
+        assertEq(
+            iBpsCalc,
+            TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS,
+            "Sell (calc): Issuance BPS mismatch"
+        );
+
+        // Act & Assert for _sellOrder.selector
+        (
+            address cTreasuryOrder,
+            address iTreasuryOrder,
+            uint cBpsOrder,
+            uint iBpsOrder
+        ) = fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(
+            sellOrderSelector
+        );
+
+        assertEq(
+            cTreasuryOrder,
+            TEST_PROTOCOL_TREASURY,
+            "Sell (order): Collateral treasury mismatch"
+        );
+        assertEq(
+            iTreasuryOrder,
+            TEST_PROTOCOL_TREASURY,
+            "Sell (order): Issuance treasury mismatch"
+        );
+        assertEq(
+            cBpsOrder,
+            TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS,
+            "Sell (order): Collateral BPS mismatch"
+        );
+        assertEq(
+            iBpsOrder,
+            TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS,
+            "Sell (order): Issuance BPS mismatch"
+        );
+    }
+
+    function testGetFunctionFeesAndTreasuryAddresses_OtherSelector_FallsBackToSuper(
+    ) public {
+        // For testing fallback to super._getFunctionFeesAndTreasuryAddresses
+        uint TEST_OTHER_COLLATERAL_FEE_BPS = 77;
+        uint TEST_OTHER_ISSUANCE_FEE_BPS = 88;
+        bytes4 OTHER_SELECTOR =
+            bytes4(keccak256(bytes("someOtherFunctionSelectorNotCached()")));
+
+        // Configure FeeManager for a selector NOT explicitly handled by the cache, to test fallback
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            OTHER_SELECTOR,
+            true,
+            TEST_OTHER_COLLATERAL_FEE_BPS
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            OTHER_SELECTOR,
+            true,
+            TEST_OTHER_ISSUANCE_FEE_BPS
+        );
+
+        // Act
+        (address cTreasury, address iTreasury, uint cBps, uint iBps) =
+        fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(OTHER_SELECTOR);
+
+        // Assert - Values should come directly from FeeManager via super call
+        assertEq(
+            cTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Other: Collateral treasury mismatch (fallback)"
+        );
+        // Note: FeeManager_v1 uses one treasury per workflow, so issuanceTreasury will also be TEST_PROTOCOL_TREASURY.
+        assertEq(
+            iTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Other: Issuance treasury mismatch (fallback)"
+        );
+        assertEq(
+            cBps,
+            TEST_OTHER_COLLATERAL_FEE_BPS,
+            "Other: Collateral BPS mismatch (fallback)"
+        );
+        assertEq(
+            iBps,
+            TEST_OTHER_ISSUANCE_FEE_BPS,
+            "Other: Issuance BPS mismatch (fallback)"
         );
     }
 
