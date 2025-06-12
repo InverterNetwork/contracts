@@ -26,6 +26,19 @@ import {PackedSegment} from
  */
 interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
     // =========================================================================
+    // Structs
+
+    /// @notice Struct to cache protocol fee data fetched from the FeeManager.
+    struct ProtocolFeeCache {
+        address collateralTreasury;
+        address issuanceTreasury;
+        uint collateralFeeBuyBps;
+        uint issuanceFeeBuyBps;
+        uint collateralFeeSellBps;
+        uint issuanceFeeSellBps;
+    }
+
+    // =========================================================================
     // Errors
 
     /// @notice Thrown when a curve reconfiguration fails the invariance check.

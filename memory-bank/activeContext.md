@@ -2,15 +2,31 @@
 
 ## 1. Current Work Focus
 
-- **Primary Task:** Implementation of fee mechanisms within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-  - According to `context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_plan.md`, this is step "2.10. Fees".
-  - Initial phase: Implement project fees using a hardcoded constant.
-  - Subsequent phase: Implement protocol fee caching and update logic.
+- **Primary Task:** Implementation of fee mechanisms within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` (Step 2.10 in `FM_BC_Discrete_implementation_plan.md`).
+  - **Current Sub-Task (2.10.1):** Implementing fee setup in `init` and overriding `calculatePurchaseReturn`/`calculateSaleReturn` to be fee-aware using `ProtocolFeeCache` struct.
+    - Defined `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+    - Added `PROJECT_BUY_FEE_BPS`, `PROJECT_SELL_FEE_BPS` constants in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+    - Replaced individual fee cache state variables with `ProtocolFeeCache private _protocolFeeCache;`.
+    - Updated `init` to set project fees and populate `_protocolFeeCache` from `FeeManager`.
+    - Overridden `calculatePurchaseReturn` and `calculateSaleReturn` to use fees from `_protocolFeeCache` and project fee state vars.
+  - **Next Sub-Task:** Implementing actual fee collection and distribution in write functions (`_buyOrder`, `_sellOrder`) and updating `projectCollateralFeeCollected`.
   - Future: Integration with a dedicated `DynamicFeeCalculator` contract.
 
 ## 2. Recent Changes & Accomplishments
 
-Based on `context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_plan.md` (up to step 2.9):
+**Fee Implementation (Step 2.10.1 - View Functions & Init using `ProtocolFeeCache`):**
+
+- Defined `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` to hold all cached protocol fee BPS values and treasury addresses.
+- In `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`:
+  - Added `PROJECT_BUY_FEE_BPS` and `PROJECT_SELL_FEE_BPS` constants.
+  - Replaced previous individual private state variables for protocol fees with a single `ProtocolFeeCache private _protocolFeeCache;` instance.
+  - Updated `__FM_BC_Discrete_Redeeming_VirtualSupply_v1_Init` to:
+    - Set `buyFee` and `sellFee` state variables using the project fee constants.
+    - Fetch protocol fees (for `_buyOrder` and `_sellOrder` selectors) from `FeeManager` via `_getFunctionFeesAndTreasuryAddresses`.
+    - Store all fetched protocol fee BPS values and treasury addresses into the `_protocolFeeCache` struct instance.
+  - Overridden `calculatePurchaseReturn` and `calculateSaleReturn` to use the project fee state variables (`buyFee`/`sellFee`) and the relevant BPS values from the `_protocolFeeCache` struct, ensuring these view functions now account for both fee types.
+
+**Previous Accomplishments (Up to step 2.9):**
 
 - **File Structure & Inheritance:** `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` created with necessary inheritance and overridden functions.
 - **Token Initialization:** Issuance and collateral tokens set in `init`.
@@ -31,15 +47,20 @@ Based on `context/DiscreteCurveMathLib_v1/FM_BC_Discrete_implementation_plan.md`
 
 ## 3. Next Steps
 
-- **Implement Project Fees (Hardcoded):**
-  - Define a constant for project fee percentage/amount in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-  - Modify `_issueTokensFormulaWrapper` and/or `_handleCollateralTokensBeforeBuy` to collect this fee from the collateral paid by the user.
-  - Modify `_redeemTokensFormulaWrapper` and/or `_handleCollateralTokensAfterSell` to collect this fee from the collateral returned to the user.
-  - Store collected project fees in a dedicated state variable (e.g., `projectCollateralFeeCollected`).
-  - Add tests for fee collection during mint and redeem operations.
-- **Implement Protocol Fees (Cached):**
-  - Logic for caching and updating protocol fees (details to be clarified based on spec for how these are derived/set).
-- **Fee Withdrawal Mechanism:** Function for an authorized address to withdraw collected project fees.
+- **Testing for 2.10.1:**
+  - Write unit tests for `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to verify:
+    - Correct initialization of `buyFee` and `sellFee` state variables.
+    - Correct population of the `_protocolFeeCache` struct after `init` (requires mocking/configuring `FeeManager`).
+    - `calculatePurchaseReturn` returns correct values under various fee scenarios using the `_protocolFeeCache`.
+    - `calculateSaleReturn` returns correct values under various fee scenarios using the `_protocolFeeCache`.
+- **Implement Fee Handling in Write Functions (Rest of 2.10):**
+  - Modify/Override `_buyOrder` and `_sellOrder` (or ensure base versions work with cached fees) to:
+    - Correctly use the `_protocolFeeCache` and project fees.
+    - Ensure `_calculateNetAndSplitFees` is applied appropriately.
+    - Ensure protocol fees are correctly sent to treasuries (from `_protocolFeeCache.collateralTreasury` / `_protocolFeeCache.issuanceTreasury`).
+    - Ensure project fees are correctly accounted for by incrementing the inherited `projectCollateralFeeCollected` state variable.
+  - Add tests for actual fee collection and distribution during buy/sell operations.
+- **Fee Withdrawal Mechanism:** Implement `withdrawProjectCollateralFee` if not fully covered by base, or test base implementation.
 
 ## 4. Active Decisions & Considerations
 

@@ -45,6 +45,17 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
     using DiscreteCurveMathLib_v1 for PackedSegment[];
 
+    // Protocol Fee Test Parameters
+    uint internal constant TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS = 50; // 0.5%
+    uint internal constant TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS = 20; // 0.2%
+    uint internal constant TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS = 40; // 0.4%
+    uint internal constant TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS = 30; // 0.3%
+    address internal constant TEST_PROTOCOL_TREASURY = address(0xFEE5); // Define a test treasury address
+
+    // Project Fee Constants (mirroring those in the contract for assertion)
+    uint internal constant TEST_PROJECT_BUY_FEE_BPS = 100;
+    uint internal constant TEST_PROJECT_SELL_FEE_BPS = 100;
+
     // Structs for organizing test data
     struct CurveTestData {
         PackedSegment[] packedSegmentsArray; // Array of PackedSegments for the library
@@ -100,7 +111,48 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         // and later to the bonding curve itself.
         issuanceToken.setMinter(address(this), true);
 
-        _setUpOrchestrator(fmBcDiscrete);
+        _setUpOrchestrator(fmBcDiscrete); // This also sets up feeManager via _createFeeManager in ModuleTest
+
+        // Configure FeeManager *before* fmBcDiscrete.init() is called later in this setUp.
+        // ModuleTest's _setUpOrchestrator should make `this` (the test contract) the owner of feeManager.
+        feeManager.setWorkflowTreasury(
+            address(_orchestrator), TEST_PROTOCOL_TREASURY
+        );
+
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            buyOrderSelector,
+            true,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            buyOrderSelector,
+            true,
+            TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS
+        );
+
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            sellOrderSelector,
+            true,
+            TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            sellOrderSelector,
+            true,
+            TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS
+        );
+
         _authorizer.setIsAuthorized(address(this), true);
         _authorizer.grantRole(_authorizer.getAdminRole(), address(this));
 
@@ -160,12 +212,14 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // Test: Initialization
 
     /* Test init()
-        └── Given valid initialization parameters
+        └── Given valid initialization parameters (including pre-configured FeeManager)
             └── When init() is called
                 └── Then the orchestrator should be set correctly
                     └── And the collateral token should be set correctly
                     └── And the issuance token should be set correctly
                     └── And the segments should be set correctly
+                    └── And project fees (buyFee, sellFee) should be set correctly
+                    └── And protocol fees should be cached correctly in _protocolFeeCache
     */
     function testInit() public override(ModuleTest) {
         assertEq(address(fmBcDiscrete.orchestrator()), address(_orchestrator));
@@ -197,6 +251,53 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
                 )
             );
         }
+
+        // --- Assertions for fee setup during init ---
+        assertEq(
+            fmBcDiscrete.buyFee(),
+            TEST_PROJECT_BUY_FEE_BPS,
+            "Project buy fee mismatch after init"
+        );
+        assertEq(
+            fmBcDiscrete.sellFee(),
+            TEST_PROJECT_SELL_FEE_BPS,
+            "Project sell fee mismatch after init"
+        );
+
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache memory cache =
+            fmBcDiscrete.exposed_getProtocolFeeCache();
+
+        assertEq(
+            cache.collateralTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Cached collateral treasury mismatch"
+        );
+        assertEq(
+            cache.issuanceTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Cached issuance treasury mismatch"
+        ); // FeeManager uses one workflow treasury for both
+
+        assertEq(
+            cache.collateralFeeBuyBps,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS,
+            "Cached collateralFeeBuyBps mismatch"
+        );
+        assertEq(
+            cache.issuanceFeeBuyBps,
+            TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS,
+            "Cached issuanceFeeBuyBps mismatch"
+        );
+        assertEq(
+            cache.collateralFeeSellBps,
+            TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS,
+            "Cached collateralFeeSellBps mismatch"
+        );
+        assertEq(
+            cache.issuanceFeeSellBps,
+            TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS,
+            "Cached issuanceFeeSellBps mismatch"
+        );
     }
 
     /* Test reinitFails()
@@ -816,11 +917,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             "Module initial balance mismatch"
         );
 
+        // Provider approves the fmBcDiscrete contract to spend tokens
+        vm.startPrank(_provider);
+        orchestratorToken.approve(address(fmBcDiscrete), _amount);
+        vm.stopPrank();
+
         // Expect the transferFrom call on the orchestratorToken
-        // Note: The `approve` call is handled by `safeTransferFrom` internally if needed,
-        // but for testing the direct transfer, we ensure the provider has approved the module or has enough allowance.
-        // For simplicity in this unit test, we assume the allowance is already set or not strictly checked by the mock.
-        // A more rigorous test might involve vm.prank(_provider) and orchestratorToken.approve(address(fmBcDiscrete), _amount);
         vm.expectCall(
             address(orchestratorToken),
             abi.encodeWithSelector(

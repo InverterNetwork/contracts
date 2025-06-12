@@ -69,4 +69,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
     function exposed_setVirtualIssuanceSupply(uint virtualSupply_) external {
         _setVirtualIssuanceSupply(virtualSupply_);
     }
+
+    function exposed_getProtocolFeeCache()
+        external
+        view
+        returns (ProtocolFeeCache memory)
+    {
+        return _protocolFeeCache;
+    }
 }

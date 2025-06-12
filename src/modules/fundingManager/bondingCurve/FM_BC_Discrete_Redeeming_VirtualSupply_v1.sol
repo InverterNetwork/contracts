@@ -66,6 +66,17 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
     /// @notice The array of packed segments that define the discrete bonding curve.
     PackedSegment[] internal _segments;
+    // Cached protocol fee data
+    IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache internal
+        _protocolFeeCache;
+
+    // --- Fee Related Storage ---
+    /// @dev Project fee for buy operations, in Basis Points (BPS). 100 BPS = 1%.
+    uint internal constant PROJECT_BUY_FEE_BPS = 100;
+    /// @dev Project fee for sell operations, in Basis Points (BPS). 100 BPS = 1%.
+    uint internal constant PROJECT_SELL_FEE_BPS = 100;
+
+    // --- End Fee Related Storage ---
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
@@ -113,6 +124,56 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             collateralTokenAddress_,
             IERC20Metadata(collateralTokenAddress_).decimals()
         );
+
+        // Initialize project fees
+        _setBuyFee(PROJECT_BUY_FEE_BPS);
+        _setSellFee(PROJECT_SELL_FEE_BPS);
+
+        // Fetch and cache protocol fees for buy operations
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+
+        // Populate the cache directly for buy operations
+        (
+            _protocolFeeCache.collateralTreasury,
+            _protocolFeeCache.issuanceTreasury,
+            _protocolFeeCache.collateralFeeBuyBps,
+            _protocolFeeCache.issuanceFeeBuyBps
+        ) = _getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+
+        // Fetch and cache protocol fees for sell operations
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+
+        address sellCollateralTreasury; // Temporary variable for sell collateral treasury
+        address sellIssuanceTreasury; // Temporary variable for sell issuance treasury
+        (
+            sellCollateralTreasury,
+            sellIssuanceTreasury,
+            _protocolFeeCache.collateralFeeSellBps,
+            _protocolFeeCache.issuanceFeeSellBps
+        ) = _getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
+
+        // Logic to ensure consistent treasury addresses are stored in the cache,
+        // prioritizing non-zero addresses from buy operations if FeeManager could return different ones.
+        // Typically, a FeeManager provides consistent treasuries for a given (orchestrator, module) pair.
+        if (
+            _protocolFeeCache.collateralTreasury == address(0)
+                && sellCollateralTreasury != address(0)
+        ) {
+            _protocolFeeCache.collateralTreasury = sellCollateralTreasury;
+        }
+        // Add assertion or handling if buyCollateralTreasury and sellCollateralTreasury are different and non-zero
+        // require(buyCollateralTreasury == sellCollateralTreasury || sellCollateralTreasury == address(0) || buyCollateralTreasury == address(0) , "Inconsistent collateral treasuries");
+
+        if (
+            _protocolFeeCache.issuanceTreasury == address(0)
+                && sellIssuanceTreasury != address(0)
+        ) {
+            _protocolFeeCache.issuanceTreasury = sellIssuanceTreasury;
+        }
+        // Add assertion or handling if buyIssuanceTreasury and sellIssuanceTreasury are different and non-zero
+        // require(buyIssuanceTreasury == sellIssuanceTreasury || sellIssuanceTreasury == address(0) || buyIssuanceTreasury == address(0), "Inconsistent issuance treasuries");
     }
 
     // =========================================================================
@@ -240,6 +301,67 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         }
 
         _setSegments(newSegments_);
+    }
+
+    // =========================================================================
+    // Public - View - Fee Calculations (Overrides)
+
+    /// @inheritdoc BondingCurveBase_v1
+    function calculatePurchaseReturn(uint _depositAmount)
+        public
+        view
+        virtual
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        returns (uint mintAmount)
+    {
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
+
+        uint netDeposit;
+        // Deduct protocol and project buy fee from collateral
+        (netDeposit,,) = _calculateNetAndSplitFees(
+            _depositAmount,
+            _protocolFeeCache.collateralFeeBuyBps, // Use cached protocol fee for buy collateral
+            buyFee // Use project buyFee state variable (set in init)
+        );
+
+        // Get issuance token return from formula (using our discrete math wrapper)
+        uint grossMintAmount = _issueTokensFormulaWrapper(netDeposit);
+
+        // Deduct protocol buy fee from issuance tokens, if applicable
+        (mintAmount,,) = _calculateNetAndSplitFees(
+            grossMintAmount,
+            _protocolFeeCache.issuanceFeeBuyBps, // Use cached protocol fee for buy issuance
+            0 // No project fee on issuance side for now
+        );
+    }
+
+    /// @inheritdoc RedeemingBondingCurveBase_v1
+    function calculateSaleReturn(uint _depositAmount)
+        public
+        view
+        virtual
+        override(RedeemingBondingCurveBase_v1)
+        returns (uint redeemAmount)
+    {
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
+
+        uint netIssuanceDeposit;
+        // Deduct protocol sell fee from deposited issuance tokens
+        (netIssuanceDeposit,,) = _calculateNetAndSplitFees(
+            _depositAmount,
+            _protocolFeeCache.issuanceFeeSellBps, // Use cached protocol fee for sell issuance
+            0 // No project fee on issuance side
+        );
+
+        // Get collateral token return from formula (using our discrete math wrapper)
+        uint grossRedeemAmount = _redeemTokensFormulaWrapper(netIssuanceDeposit);
+
+        // Deduct protocol and project sell fee from collateral tokens
+        (redeemAmount,,) = _calculateNetAndSplitFees(
+            grossRedeemAmount,
+            _protocolFeeCache.collateralFeeSellBps, // Use cached protocol fee for sell collateral
+            sellFee // Use project sellFee state variable (set in init)
+        );
     }
 
     // =========================================================================

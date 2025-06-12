@@ -10,10 +10,15 @@
   - **Segment Management:** Setting initial segments (`_setSegments`) and reconfiguring them (`reconfigureSegments`) with admin control and crucial invariance checks (`_calculateReserveForSupply`).
   - **Supply Management:** Setting virtual issuance (`setVirtualIssuanceSupply`) and virtual collateral (`setVirtualCollateralSupply`) supplies with admin control.
   - **Price Information:** `getStaticPriceForBuying()` and `getStaticPriceForSelling()` provide correct current step prices.
-  - **Core Mint/Redeem Logic (Wrappers):**
-    - `_issueTokensFormulaWrapper()` correctly calls `_calculatePurchaseReturn()`.
-    - `_redeemTokensFormulaWrapper()` correctly calls `_calculateSaleReturn()`.
-  - **Token Handling during Mint/Redeem:**
+  - **Fee-Aware View Functions (2.10.1 using `ProtocolFeeCache`):**
+    - `ProtocolFeeCache` struct defined in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
+    - `init` function in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` now sets project fees (`buyFee`, `sellFee`) using constants and populates a `_protocolFeeCache` (struct instance) with BPS values and treasury addresses from `FeeManager`.
+    - `calculatePurchaseReturn()` overridden to use project fees and BPS values from `_protocolFeeCache`.
+    - `calculateSaleReturn()` overridden to use project fees and BPS values from `_protocolFeeCache`.
+  - **Core Mint/Redeem Logic (Wrappers - Pre-Fee Collection):**
+    - `_issueTokensFormulaWrapper()` correctly calls `_calculatePurchaseReturn()` (from `DiscreteCurveMathLib_v1`).
+    - `_redeemTokensFormulaWrapper()` correctly calls `_calculateSaleReturn()` (from `DiscreteCurveMathLib_v1`).
+  - **Token Handling during Mint/Redeem (Pre-Fee Collection):**
     - `_handleCollateralTokensBeforeBuy()`: Correctly transfers collateral from user to FM.
     - `_handleIssuanceTokensAfterBuy()`: Correctly mints issuance tokens to user.
     - `_handleCollateralTokensAfterSell()`: Correctly transfers collateral from FM to user.
@@ -24,10 +29,11 @@
 
 - **`FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`:**
   - **Fee Implementation (Step 2.10 in plan):**
-    - Project fees (initially hardcoded constant, then dynamic).
-    - Protocol fees (caching and update logic).
-    - Fee collection during mint/redeem.
-    - Fee withdrawal mechanism.
+    - **View Functions & Init (2.10.1 Done, using `ProtocolFeeCache`):** `ProtocolFeeCache` struct defined and used. Project fee constants defined. `init` sets project fees and populates `_protocolFeeCache`. `calculatePurchaseReturn` and `calculateSaleReturn` are overridden to be fee-aware using the struct.
+    - **Write Functions (Pending):** Implement actual fee collection and distribution in `_buyOrder`/`_sellOrder` (or overrides). Ensure `projectCollateralFeeCollected` (inherited from `BondingCurveBase_v1`) is updated.
+    - **Testing for 2.10.1 (Pending):** Unit tests for fee setup in `init` (populating `_protocolFeeCache`) and accuracy of overridden `calculatePurchaseReturn`/`calculateSaleReturn`.
+    - **Project Fees (Dynamic - Future):** Transition from hardcoded constants to dynamic project fees.
+    - **Fee Withdrawal Mechanism (Pending/Verify):** Implement/test `withdrawProjectCollateralFee`.
 - **Future Modules (as per `context/Specs.md`):**
   - `DynamicFeeCalculator.sol`: For dynamic calculation of issuance, redemption, and loan origination fees.
   - `LM_PC_Credit_Facility.sol`: Lending facility for users to borrow against $HOUSE.
@@ -37,8 +43,9 @@
 ## 3. Current Status
 
 - `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are complete and considered stable.
-- `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` has its core non-fee-related functionality implemented and tested as per the implementation plan up to step 2.9.
-- **Current focus:** Implementing fee collection and management within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` (step 2.10).
+- `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` has its core non-fee-related functionality implemented (up to step 2.9).
+- Step 2.10.1 (fee setup in `init` using `ProtocolFeeCache` and fee-aware `calculatePurchaseReturn`/`calculateSaleReturn`) is implemented in the contract. Testing for this is pending.
+- **Current focus:** Testing for step 2.10.1, then implementing fee handling in write functions (rest of step 2.10).
 
 ## 4. Known Issues
 
