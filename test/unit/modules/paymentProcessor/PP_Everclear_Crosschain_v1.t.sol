@@ -12,19 +12,19 @@ import {IERC20PaymentClientBase_v2} from
 
 // External Imports
 import {Clones} from "@oz/proxy/Clones.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 
 // Tests and Mocks
-import {ModuleTest} from "test/modules/ModuleTest.sol";
+import {ModuleTest} from "@unitTest/modules/ModuleTest.sol";
 import {EverclearPaymentMock} from
-    "test/utils/mocks/external/EverclearPaymentMock.sol";
+    "@mocks/external/integrations/EverclearPaymentMock.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // SuT
 import {PP_Everclear_CrossChain_v1_Exposed} from
-    "test/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
+    "@mocks/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
 
 contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     // ========================================================================

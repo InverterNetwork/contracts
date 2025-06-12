@@ -1,12 +1,10 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {PP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {IEverclear} from
-    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
+import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 

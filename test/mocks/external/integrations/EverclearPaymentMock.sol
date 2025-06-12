@@ -3,8 +3,7 @@ pragma solidity 0.8.23;
 
 // External Imports
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IEverclear} from
-    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
+import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 
 contract EverclearPaymentMock {
     event IntentAdded(

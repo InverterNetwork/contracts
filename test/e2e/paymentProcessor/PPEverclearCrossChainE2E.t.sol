@@ -13,25 +13,20 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol"; // Added for casting
 
 // Modules to be tested and their dependencies
-import {PP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
 import {Mock_LM_PC_PaymentRouter_Everclear_v1} from
-    "test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
-import {IEverclear} from
-    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
+    "@mocks/modules/logicModule/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
+import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 import {IERC20PaymentClientBase_v2} from
-    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
-import {IPP_CrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_CrossChainBase_v1.sol";
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 import {IFM_DepositVault_v1} from
-    "src/modules/fundingManager/depositVault/interfaces/IFM_DepositVault_v1.sol";
-import {IFundingManager_v1} from
-    "src/modules/fundingManager/IFundingManager_v1.sol"; // For interfaceId check
+    "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol"; // For interfaceId check
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol"; // Added for event emission
 
 contract PPEverclearCrossChainE2E is E2ETest {
@@ -315,7 +310,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
         uint initialProcessorBalance,
         uint initialVaultBalance,
         uint paymentAmount_
-    ) internal view {
+    ) internal {
         assertEq(
             paymentToken.balanceOf(owner),
             initialOwnerBalance - paymentAmount_, // Owner pays into the vault
@@ -346,7 +341,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
         uint, /*targetChainId_*/
         uint24, /*everclearMaxFee_*/
         uint48 /*everclearTTL_*/
-    ) internal view {
+    ) internal {
         assertEq(
             paymentClient.paymentOrders().length,
             0, // Orders should be cleared after collection by paymentProcessor
@@ -370,7 +365,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
         uint targetChainId_,
         uint24 everclearMaxFee_,
         uint48 everclearTTL_
-    ) internal view {
+    ) internal {
         uint currentPaymentId = paymentProcessor.getPaymentId();
         assertEq(
             currentPaymentId,

@@ -10,22 +10,22 @@ import {IERC20PaymentClientBase_v2} from
 
 // External imports
 import {Clones} from "@oz/proxy/Clones.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Tests and Mocks
-import {ModuleTest} from "test/modules/ModuleTest.sol";
+import {ModuleTest} from "@unitTest/modules/ModuleTest.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {FundingManagerV1Mock} from
-    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+    "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // SuT
 import {PP_CrossChainBase_v1_Exposed} from
-    "test/modules/paymentProcessor/abstracts/PP_CrossChainBase_v1_Exposed.sol";
+    "@mocks/modules/paymentProcessor/abstracts/PP_CrossChainBase_v1_Exposed.sol";
 
 contract PP_CrossChainBase_v1_Test is ModuleTest {
     // ========================================================================

@@ -41,7 +41,7 @@ import {LM_Oracle_Permissioned_v1} from
 import {PP_Everclear_CrossChain_v1} from
     "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
 import {Mock_LM_PC_PaymentRouter_Everclear_v1} from
-    "test/utils/mocks/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
+    "@mocks/modules/logicModule/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
 
 // Beacon
 import {
