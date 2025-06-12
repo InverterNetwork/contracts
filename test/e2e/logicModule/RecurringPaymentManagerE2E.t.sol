@@ -10,10 +10,10 @@ import {
 
 // SuT
 import {
-    LM_PC_RecurringPayments_v2,
-    ILM_PC_RecurringPayments_v2,
+    LM_PC_RecurringPayments_v3,
+    ILM_PC_RecurringPayments_v3,
     IERC20PaymentClientBase_v2
-} from "@lm/LM_PC_RecurringPayments_v2.sol";
+} from "@lm/LM_PC_RecurringPayments_v3.sol";
 
 // Modules that are used in this E2E test
 import {
@@ -99,7 +99,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
-        LM_PC_RecurringPayments_v2 recurringPaymentManager;
+        LM_PC_RecurringPayments_v3 recurringPaymentManager;
 
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
@@ -121,11 +121,11 @@ contract RecurringPaymentManagerE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_RecurringPayments_v2).interfaceId
+                    type(ILM_PC_RecurringPayments_v3).interfaceId
                 )
             ) {
                 recurringPaymentManager =
-                    LM_PC_RecurringPayments_v2(modulesList[i]);
+                    LM_PC_RecurringPayments_v3(modulesList[i]);
                 break;
             }
         }

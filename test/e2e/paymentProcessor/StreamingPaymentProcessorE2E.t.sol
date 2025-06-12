@@ -11,9 +11,9 @@ import {
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 // SuT
 import {
-    LM_PC_RecurringPayments_v2,
-    ILM_PC_RecurringPayments_v2
-} from "@lm/LM_PC_RecurringPayments_v2.sol";
+    LM_PC_RecurringPayments_v3,
+    ILM_PC_RecurringPayments_v3
+} from "@lm/LM_PC_RecurringPayments_v3.sol";
 
 import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 
@@ -47,7 +47,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
     FM_DepositVault_v1 fundingManager;
-    LM_PC_RecurringPayments_v2 recurringPaymentManager;
+    LM_PC_RecurringPayments_v3 recurringPaymentManager;
     PP_Streaming_v2 streamingPaymentProcessor;
 
     function setUp() public override {
@@ -116,11 +116,11 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_RecurringPayments_v2).interfaceId
+                    type(ILM_PC_RecurringPayments_v3).interfaceId
                 )
             ) {
                 recurringPaymentManager =
-                    LM_PC_RecurringPayments_v2(modulesList[i]);
+                    LM_PC_RecurringPayments_v3(modulesList[i]);
                 break;
             }
         }

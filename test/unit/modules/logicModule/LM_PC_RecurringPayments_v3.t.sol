@@ -20,14 +20,14 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
-    LM_PC_RecurringPayments_v2,
-    ILM_PC_RecurringPayments_v2,
+    LM_PC_RecurringPayments_v3,
+    ILM_PC_RecurringPayments_v3,
     IERC20PaymentClientBase_v2
-} from "@lm/LM_PC_RecurringPayments_v2.sol";
+} from "@lm/LM_PC_RecurringPayments_v3.sol";
 
 contract LM_PC_RecurringV1Test is ModuleTest {
     // SuT
-    LM_PC_RecurringPayments_v2 recurringPaymentManager;
+    LM_PC_RecurringPayments_v3 recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
     bytes32 private constant _FLAGS_SET =
@@ -35,8 +35,8 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_RecurringPayments_v2());
-        recurringPaymentManager = LM_PC_RecurringPayments_v2(Clones.clone(impl));
+        address impl = address(new LM_PC_RecurringPayments_v3());
+        recurringPaymentManager = LM_PC_RecurringPayments_v3(Clones.clone(impl));
 
         _setUpOrchestrator(recurringPaymentManager);
         // Every caller has permission for every permissioned function
@@ -49,7 +49,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             recurringPaymentManager.supportsInterface(
-                type(ILM_PC_RecurringPayments_v2).interfaceId
+                type(ILM_PC_RecurringPayments_v3).interfaceId
             )
         );
     }
@@ -57,13 +57,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     // This function also tests all the getters
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidEpochLength
                 .selector
         );
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_RecurringPayments_v2.EpochLengthSet(1 weeks);
+        emit ILM_PC_RecurringPayments_v3.EpochLengthSet(1 weeks);
 
         // Init Module wrongly
         recurringPaymentManager.init(
@@ -71,7 +71,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
 
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidEpochLength
                 .selector
         );
@@ -119,7 +119,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         if (id > usedIds || id == 0) {
             vm.expectRevert(
-                ILM_PC_RecurringPayments_v2
+                ILM_PC_RecurringPayments_v3
                     .Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId
                     .selector
             );
@@ -135,7 +135,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         if (currentEpoch > startEpoch) {
             vm.expectRevert(
-                ILM_PC_RecurringPayments_v2
+                ILM_PC_RecurringPayments_v3
                     .Module__LM_PC_RecurringPayments__InvalidStartEpoch
                     .selector
             );
@@ -152,7 +152,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
     function testGetRecurringPaymentInformationModifierInPosition() public {
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId
                 .selector
         );
@@ -196,7 +196,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         startEpoch = bound(startEpoch, currentEpoch, type(uint).max);
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_RecurringPayments_v2.RecurringPaymentAdded(
+        emit ILM_PC_RecurringPayments_v3.RecurringPaymentAdded(
             1, // Id starts at 1
             amount,
             startEpoch,
@@ -216,7 +216,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint length = bound(amount, 1, 30); // Reasonable amount
         for (uint i = 2; i < length + 2; i++) {
             vm.expectEmit(true, true, true, true);
-            emit ILM_PC_RecurringPayments_v2.RecurringPaymentAdded(
+            emit ILM_PC_RecurringPayments_v3.RecurringPaymentAdded(
                 i, // Id starts at 1
                 1,
                 currentEpoch,
@@ -268,7 +268,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         // validStartEpoch
 
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidStartEpoch
                 .selector
         );
@@ -309,7 +309,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             uint id = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
-            emit ILM_PC_RecurringPayments_v2.RecurringPaymentRemoved(id);
+            emit ILM_PC_RecurringPayments_v3.RecurringPaymentRemoved(id);
 
             recurringPaymentManager.removeRecurringPayment(_SENTINEL, id);
             assertEq(
@@ -351,12 +351,12 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
             // Check if trigger was called
             vm.expectEmit(true, true, true, true);
-            emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+            emit ILM_PC_RecurringPayments_v3.RecurringPaymentsTriggered(
                 currentEpoch
             );
 
             vm.expectEmit(true, true, true, true);
-            emit ILM_PC_RecurringPayments_v2.RecurringPaymentRemoved(id);
+            emit ILM_PC_RecurringPayments_v3.RecurringPaymentRemoved(id);
 
             recurringPaymentManager.removeRecurringPayment(prevId, id);
             assertEq(
@@ -412,17 +412,17 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         _token.mint(address(_fundingManager), 10_000);
 
         // Copy Payments for later comparison
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             recurringPaymentsToBeChecked = fetchRecurringPayments();
 
         // Payout created Payments via trigger
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+        emit ILM_PC_RecurringPayments_v3.RecurringPaymentsTriggered(
             currentEpoch
         );
         recurringPaymentManager.trigger();
 
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             currentRecurringPayments = fetchRecurringPayments();
 
         // compare that Orders were placed and lastTriggered got updated accordingly
@@ -454,7 +454,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             );
             currentEpoch = recurringPaymentManager.getCurrentEpoch();
             vm.expectEmit(true, true, true, true);
-            emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+            emit ILM_PC_RecurringPayments_v3.RecurringPaymentsTriggered(
                 currentEpoch
             );
             recurringPaymentManager.trigger();
@@ -504,7 +504,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         _token.mint(address(_fundingManager), 500);
 
         // Copy Payments for later comparison
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             filteredRecurringPaymentsToBeChecked =
                 filterPayments(fetchRecurringPayments(), startId, endId);
 
@@ -519,13 +519,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+        emit ILM_PC_RecurringPayments_v3.RecurringPaymentsTriggered(
             currentEpoch
         );
         recurringPaymentManager.triggerFor(startId, endId);
 
         // Get currentPayments and filter them
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             currentRecurringPayments =
                 filterPayments(fetchRecurringPayments(), startId, endId);
 
@@ -549,21 +549,21 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
 
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId
                 .selector
         );
         recurringPaymentManager.triggerFor(0, 1);
 
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId
                 .selector
         );
         recurringPaymentManager.triggerFor(1, 0);
 
         vm.expectRevert(
-            ILM_PC_RecurringPayments_v2
+            ILM_PC_RecurringPayments_v3
                 .Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId
                 .selector
         );
@@ -614,7 +614,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint lastTriggeredEpoch,
         address recipient
     ) internal {
-        ILM_PC_RecurringPayments_v2.RecurringPayment memory payment =
+        ILM_PC_RecurringPayments_v3.RecurringPayment memory payment =
             recurringPaymentManager.getRecurringPaymentInformation(idToProve);
 
         assertEq(payment.amount, amount);
@@ -651,13 +651,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     function fetchRecurringPayments()
         internal
         view
-        returns (ILM_PC_RecurringPayments_v2.RecurringPayment[] memory)
+        returns (ILM_PC_RecurringPayments_v3.RecurringPayment[] memory)
     {
         uint[] memory ids = recurringPaymentManager.listRecurringPaymentIds();
         uint length = ids.length;
 
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory recurringPayments =
-            new ILM_PC_RecurringPayments_v2.RecurringPayment[](length);
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory recurringPayments =
+            new ILM_PC_RecurringPayments_v3.RecurringPayment[](length);
 
         for (uint i = 0; i < length; i++) {
             recurringPayments[i] =
@@ -667,16 +667,16 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     }
 
     function filterPayments(
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory paymentsToFilter,
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory paymentsToFilter,
         uint startId,
         uint endId
     )
         internal
         pure
-        returns (ILM_PC_RecurringPayments_v2.RecurringPayment[] memory)
+        returns (ILM_PC_RecurringPayments_v3.RecurringPayment[] memory)
     {
         uint filterArrayLength = endId - startId + 1; // even if endId and startId are the same its at least one order
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory returnArray = new ILM_PC_RecurringPayments_v2
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory returnArray = new ILM_PC_RecurringPayments_v3
             .RecurringPayment[](filterArrayLength);
         for (uint i = 0; i < filterArrayLength; i++) {
             returnArray[i] = paymentsToFilter[startId - 1 + i]; // because ids start at 1 substract 1 to get appropriate array position
@@ -686,9 +686,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
     // Note: this needs the old version of the orders before the trigger function was called to work
     function recurringPaymentsAreCorrect(
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             recurringPaymentsToBeChecked,
-        ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment[] memory
             currentRecurringPayments,
         uint currentEpoch
     ) internal {
@@ -701,13 +701,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         // prediction of how many orders have to be created for this recurring payment
         uint epochsTriggered;
 
-        // Amount of tokens that should be in the LM_PC_RecurringPayments_v2
+        // Amount of tokens that should be in the LM_PC_RecurringPayments_v3
         uint totalAmount;
 
         // Amount of tokens in a single order
         uint orderAmount;
 
-        ILM_PC_RecurringPayments_v2.RecurringPayment memory
+        ILM_PC_RecurringPayments_v3.RecurringPayment memory
             currentRecurringPaymentToBeChecked;
 
         // Because some of the RecurringPaymentOrders start only in the future we have to have a seperate index for that

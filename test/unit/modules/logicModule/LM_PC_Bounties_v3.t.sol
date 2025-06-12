@@ -916,15 +916,11 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         assertEq(length, orders.length);
 
-        // Amount of tokens that should be in the LM_PC_RecurringPayments_v2
-        uint totalAmount;
-
         // Amount of tokens in a single order
         uint claimAmount;
 
         for (uint i = 0; i < length; i++) {
             claimAmount = contribs[i].claimAmount;
-            totalAmount += claimAmount;
 
             assertEq(orders[i].recipient, contribs[i].addr);
 

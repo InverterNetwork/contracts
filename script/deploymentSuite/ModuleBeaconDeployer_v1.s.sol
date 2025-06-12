@@ -298,7 +298,7 @@ contract ModuleBeaconDeployer_v1 is
                     recurringPaymentsMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_RecurringPayments_v2,
+                    impl_mod_LM_PC_RecurringPayments_v3,
                     recurringPaymentsMetadata.majorVersion,
                     recurringPaymentsMetadata.minorVersion,
                     recurringPaymentsMetadata.patchVersion

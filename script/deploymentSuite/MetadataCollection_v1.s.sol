@@ -205,7 +205,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_RecurringPayments_v2"
+        "LM_PC_RecurringPayments_v3"
     );
 
     // Staking

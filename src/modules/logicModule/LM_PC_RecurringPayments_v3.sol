@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ILM_PC_RecurringPayments_v2} from
-    "@lm/interfaces/ILM_PC_RecurringPayments_v2.sol";
+import {ILM_PC_RecurringPayments_v3} from
+    "@lm/interfaces/ILM_PC_RecurringPayments_v3.sol";
 import {
     IERC20PaymentClientBase_v2,
     IPaymentProcessor_v2
@@ -40,10 +40,12 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
-contract LM_PC_RecurringPayments_v2 is
-    ILM_PC_RecurringPayments_v2,
+contract LM_PC_RecurringPayments_v3 is
+    ILM_PC_RecurringPayments_v3,
     ERC20PaymentClientBase_v2
 {
     /// @inheritdoc ERC165Upgradeable
@@ -54,7 +56,7 @@ contract LM_PC_RecurringPayments_v2 is
         override(ERC20PaymentClientBase_v2)
         returns (bool)
     {
-        return interfaceId == type(ILM_PC_RecurringPayments_v2).interfaceId
+        return interfaceId == type(ILM_PC_RecurringPayments_v3).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -153,12 +155,12 @@ contract LM_PC_RecurringPayments_v2 is
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getEpochLength() external view returns (uint) {
         return epochLength;
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getRecurringPaymentInformation(uint id)
         external
         view
@@ -168,17 +170,17 @@ contract LM_PC_RecurringPayments_v2 is
         return _paymentRegistry[id];
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function listRecurringPaymentIds() external view returns (uint[] memory) {
         return _paymentList.listIds();
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getPreviousPaymentId(uint id) external view returns (uint) {
         return _paymentList.getPreviousId(id);
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function isExistingRecurringPaymentId(uint id) public view returns (bool) {
         return _paymentList.isExistingId(id);
     }
@@ -186,7 +188,7 @@ contract LM_PC_RecurringPayments_v2 is
     //--------------------------------------------------------------------------
     // Epoch Functions
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getEpochFromTimestamp(uint timestamp)
         external
         view
@@ -195,12 +197,12 @@ contract LM_PC_RecurringPayments_v2 is
         return timestamp / epochLength;
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getCurrentEpoch() public view returns (uint epoch) {
         return block.timestamp / epochLength;
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
         view
@@ -212,7 +214,7 @@ contract LM_PC_RecurringPayments_v2 is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function addRecurringPayment(
         uint amount,
         uint startEpoch,
@@ -248,7 +250,7 @@ contract LM_PC_RecurringPayments_v2 is
         return recurringPaymentId;
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     function removeRecurringPayment(uint prevId, uint id)
         external
         permissioned
@@ -268,13 +270,13 @@ contract LM_PC_RecurringPayments_v2 is
     //--------------------------------------------------------------------------
     // Trigger
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     /// @dev    This function is always publicly callable.
     function trigger() external {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
 
-    /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @inheritdoc ILM_PC_RecurringPayments_v3
     /// @dev    This function is always publicly callable.
     function triggerFor(uint startId, uint endId)
         external

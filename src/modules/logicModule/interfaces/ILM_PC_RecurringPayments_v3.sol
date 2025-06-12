@@ -1,7 +1,27 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_RecurringPayments_v2 {
+/**
+ * @title   Inverter Recurring Payment Manager Interface
+ *
+ * @notice  Facilitates the creation, management, and execution of scheduled recurring
+ *          payments within the Inverter Network, allowing for systematic and timed
+ *          financial commitments or subscriptions.
+ *
+ * @dev     Uses epochs to define the period of recurring payments and supports operations
+ *          such as adding, removing, and triggering payments based on time cycles.
+ *          Integrates with {ERC20PaymentClientBase_v2} for handling actual payment
+ *          transactions. Note that it will use the token type stored in the FundingManager for the payments.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface ILM_PC_RecurringPayments_v3 {
     //--------------------------------------------------------------------------
     // Structs
 
