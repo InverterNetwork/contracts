@@ -46,6 +46,7 @@ interface IERC20PaymentClientBase_v2 {
     | 1    | uint256       | start      | Start date of the streaming period. | 
     | 2    | uint256       | cliff      | Duration of the cliff period.       |
     | 3    | uint256       | end        | Due Date of the order               |
+    | 4    | uint256       | projectFee | Project fee for the order           |
     | ...  | ...           | ...        | (yet unassigned)                    |
     | 255  | .             | .          | (Max Value).                        | 
     |------|---------------|------------|-------------------------------------|
