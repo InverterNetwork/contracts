@@ -1,7 +1,24 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_KPIRewarder_v2 {
+/**
+ * @title   Inverter KPI Rewarder Module Interface
+ *
+ * @notice  Provides a mechanism for distributing rewards to stakers based
+ *          on Key Performance Indicators (KPIs).
+ *
+ * @dev     Extends {LM_PC_Staking_v2} and integrates with {OptimisticOracleIntegrator}
+ *          to enable KPI-based reward distribution within the staking manager.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface ILM_PC_KPIRewarder_v3 {
     //--------------------------------------------------------------------------
     // Structs
 
@@ -35,33 +52,33 @@ interface ILM_PC_KPIRewarder_v2 {
     // Errors
 
     /// @notice The KPI beinge created has either no tranches or too many.
-    error Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber();
+    error Module__LM_PC_KPIRewarder_v3__InvalidTrancheNumber();
 
     /// @notice The number of tranches in the KPI does not match the number of rewards.
-    error Module__LM_PC_KPIRewarder_v2__InvalidKPIValueLengths();
+    error Module__LM_PC_KPIRewarder_v3__InvalidKPIValueLengths();
 
     /// @notice The values for the tranches are not in ascending order.
-    error Module__LM_PC_KPIRewarder_v2__InvalidKPITrancheValues();
+    error Module__LM_PC_KPIRewarder_v3__InvalidKPITrancheValues();
 
     /// @notice The KPI number is invalid.
-    error Module__LM_PC_KPIRewarder_v2__InvalidKPINumber();
+    error Module__LM_PC_KPIRewarder_v3__InvalidKPINumber();
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
-    error Module__LM_PC_KPIRewarder_v2__ModuleCannotUseStakingTokenAsBond();
+    error Module__LM_PC_KPIRewarder_v3__ModuleCannotUseStakingTokenAsBond();
 
     /// @notice An assertion can only by posted if the preceding one is resolved.
-    error Module__LM_PC_KPIRewarder_v2__UnresolvedAssertionExists();
+    error Module__LM_PC_KPIRewarder_v3__UnresolvedAssertionExists();
 
     /// @notice The user cannot stake while an assertion is unresolved.
-    error Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending();
+    error Module__LM_PC_KPIRewarder_v3__CannotStakeWhenAssertionPending();
 
     /// @notice Callback received references non existent assertionId.
-    error Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
+    error Module__LM_PC_KPIRewarder_v3__NonExistentAssertionId(
         bytes32 assertionId
     );
 
     /// @notice The assertion that is being removed was not stuck.
-    error Module__LM_PC_KPIRewarder_v2__AssertionNotStuck(bytes32 assertionId);
+    error Module__LM_PC_KPIRewarder_v3__AssertionNotStuck(bytes32 assertionId);
 
     //--------------------------------------------------------------------------
     // Events

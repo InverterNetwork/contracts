@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ILM_PC_KPIRewarder_v2} from "@lm/interfaces/ILM_PC_KPIRewarder_v2.sol";
+import {ILM_PC_KPIRewarder_v3} from "@lm/interfaces/ILM_PC_KPIRewarder_v3.sol";
 import {
     ILM_PC_Staking_v2,
     LM_PC_Staking_v2,
@@ -39,10 +39,12 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
-contract LM_PC_KPIRewarder_v2 is
-    ILM_PC_KPIRewarder_v2,
+contract LM_PC_KPIRewarder_v3 is
+    ILM_PC_KPIRewarder_v3,
     LM_PC_Staking_v2,
     OptimisticOracleIntegrator
 {
@@ -56,7 +58,7 @@ contract LM_PC_KPIRewarder_v2 is
         override(OptimisticOracleIntegrator, LM_PC_Staking_v2)
         returns (bool)
     {
-        return interfaceId == type(ILM_PC_KPIRewarder_v2).interfaceId
+        return interfaceId == type(ILM_PC_KPIRewarder_v3).interfaceId
             || interfaceId == type(ILM_PC_Staking_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -134,12 +136,12 @@ contract LM_PC_KPIRewarder_v2 is
     //--------------------------------------------------------------------------
     // View functions
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function getKPI(uint KPInum) external view returns (KPI memory) {
         return registryOfKPIs[KPInum];
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function getAssertionConfig(bytes32 assertionId)
         external
         view
@@ -148,12 +150,12 @@ contract LM_PC_KPIRewarder_v2 is
         return assertionConfig[assertionId];
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function getKPICounter() external view returns (uint) {
         return KPICounter;
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function getAssertionPending() external view returns (bool) {
         return assertionPending;
     }
@@ -161,7 +163,7 @@ contract LM_PC_KPIRewarder_v2 is
     // ========================================================================
     // Assertion Manager functions:
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     /// @dev    about the asserter address: any address can be set as asserter, it will be expected to pay for the
     ///         bond on posting.
     ///         The bond tokens can also be deposited in the Module and used to pay for itself,
@@ -177,7 +179,7 @@ contract LM_PC_KPIRewarder_v2 is
         // Pre-check
 
         if (assertionPending) {
-            revert Module__LM_PC_KPIRewarder_v2__UnresolvedAssertionExists();
+            revert Module__LM_PC_KPIRewarder_v3__UnresolvedAssertionExists();
         }
 
         //--------------------------------------------------------------------------
@@ -190,12 +192,12 @@ contract LM_PC_KPIRewarder_v2 is
                 && address(defaultCurrency) == stakingToken
         ) {
             revert
-                Module__LM_PC_KPIRewarder_v2__ModuleCannotUseStakingTokenAsBond();
+                Module__LM_PC_KPIRewarder_v3__ModuleCannotUseStakingTokenAsBond();
         }
 
         // Make sure that we are targeting an existing KPI
         if (KPICounter == 0 || targetKPI >= KPICounter) {
-            revert Module__LM_PC_KPIRewarder_v2__InvalidKPINumber();
+            revert Module__LM_PC_KPIRewarder_v3__InvalidKPINumber();
         }
 
         // =====================================================================
@@ -216,7 +218,7 @@ contract LM_PC_KPIRewarder_v2 is
     //--------------------------------------------------------------------------
     // Admin Configuration Functions:
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     /// @dev    Top up funds to pay the optimistic oracle fee
 
     function depositFeeFunds(uint amount)
@@ -229,7 +231,7 @@ contract LM_PC_KPIRewarder_v2 is
         emit FeeFundsDeposited(address(defaultCurrency), amount);
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,
@@ -238,18 +240,18 @@ contract LM_PC_KPIRewarder_v2 is
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {
-            revert Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber();
+            revert Module__LM_PC_KPIRewarder_v3__InvalidTrancheNumber();
         }
 
         if (_numOfTranches != _trancheRewards.length) {
-            revert Module__LM_PC_KPIRewarder_v2__InvalidKPIValueLengths();
+            revert Module__LM_PC_KPIRewarder_v3__InvalidKPIValueLengths();
         }
 
         uint _totalKPIRewards = _trancheRewards[0];
         if (_numOfTranches > 1) {
             for (uint i = 1; i < _numOfTranches; i++) {
                 if (_trancheValues[i - 1] >= _trancheValues[i]) {
-                    revert Module__LM_PC_KPIRewarder_v2__InvalidKPITrancheValues(
+                    revert Module__LM_PC_KPIRewarder_v3__InvalidKPITrancheValues(
                     );
                 }
 
@@ -295,7 +297,7 @@ contract LM_PC_KPIRewarder_v2 is
         // Pre-check
 
         if (assertionPending) {
-            revert Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending(
+            revert Module__LM_PC_KPIRewarder_v3__CannotStakeWhenAssertionPending(
             );
         }
 
@@ -307,11 +309,11 @@ contract LM_PC_KPIRewarder_v2 is
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v2
+    /// @inheritdoc ILM_PC_KPIRewarder_v3
     function deleteStuckAssertion(bytes32 assertionId) public permissioned {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
-            revert Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
+            revert Module__LM_PC_KPIRewarder_v3__NonExistentAssertionId(
                 assertionId
             );
         }
@@ -320,12 +322,12 @@ contract LM_PC_KPIRewarder_v2 is
             oo.getAssertion(assertionId).expirationTime;
 
         if (block.timestamp <= assertionExpirationTime) {
-            revert Module__LM_PC_KPIRewarder_v2__AssertionNotStuck(assertionId);
+            revert Module__LM_PC_KPIRewarder_v3__AssertionNotStuck(assertionId);
         }
 
         try oo.settleAssertion(assertionId) {
             // If the assertion can be settled, it doesn't qualify as stuck and we revert
-            revert Module__LM_PC_KPIRewarder_v2__AssertionNotStuck(assertionId);
+            revert Module__LM_PC_KPIRewarder_v3__AssertionNotStuck(assertionId);
         } catch {
             delete assertionConfig[assertionId];
             delete assertionData[assertionId];
@@ -344,7 +346,7 @@ contract LM_PC_KPIRewarder_v2 is
     ) public override {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
-            revert Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
+            revert Module__LM_PC_KPIRewarder_v3__NonExistentAssertionId(
                 assertionId
             );
         }

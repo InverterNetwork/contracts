@@ -24,12 +24,12 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
-    LM_PC_KPIRewarder_v2,
-    ILM_PC_KPIRewarder_v2,
+    LM_PC_KPIRewarder_v3,
+    ILM_PC_KPIRewarder_v3,
     IOptimisticOracleIntegrator,
     ILM_PC_Staking_v2,
     OptimisticOracleV3CallbackRecipientInterface
-} from "src/modules/logicModule/LM_PC_KPIRewarder_v2.sol";
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 
 import {
     OptimisticOracleV3Mock,
@@ -39,9 +39,9 @@ import {
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-contract LM_PC_KPIRewarder_v2Test is ModuleTest {
+contract LM_PC_KPIRewarder_v3Test is ModuleTest {
     // SuT
-    LM_PC_KPIRewarder_v2 kpiManager;
+    LM_PC_KPIRewarder_v3 kpiManager;
 
     OptimisticOracleV3Mock ooV3;
 
@@ -71,8 +71,8 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
         feeTokenBond = ooV3.getMinimumBond(address(feeToken));
 
         // Add Module to Mock Orchestrator
-        address impl = address(new LM_PC_KPIRewarder_v2());
-        kpiManager = LM_PC_KPIRewarder_v2(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v3());
+        kpiManager = LM_PC_KPIRewarder_v3(Clones.clone(impl));
 
         _setUpOrchestrator(kpiManager);
 
@@ -102,8 +102,8 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        address impl = address(new LM_PC_KPIRewarder_v2());
-        kpiManager = LM_PC_KPIRewarder_v2(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v3());
+        kpiManager = LM_PC_KPIRewarder_v3(Clones.clone(impl));
 
         _setUpOrchestrator(kpiManager);
 
@@ -186,7 +186,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             kpiManager.supportsInterface(
-                type(ILM_PC_KPIRewarder_v2).interfaceId
+                type(ILM_PC_KPIRewarder_v3).interfaceId
             )
         );
         assertTrue(
@@ -357,7 +357,7 @@ postAssertionTest
     └── it should return a correct assertionId
 */
 
-contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
+contract LM_PC_KPIRewarder_v3_postAssertionTest is LM_PC_KPIRewarder_v3Test {
     function test_ModifierInPositionCheck() external {
         // permissioned
 
@@ -377,9 +377,9 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
     function test_RevertWhen_TheBondConfigurationIsInvalid() external {
         // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
 
-        address impl = address(new LM_PC_KPIRewarder_v2());
-        LM_PC_KPIRewarder_v2 alt_kpiManager =
-            LM_PC_KPIRewarder_v2(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v3());
+        LM_PC_KPIRewarder_v3 alt_kpiManager =
+            LM_PC_KPIRewarder_v3(Clones.clone(impl));
 
         bytes memory configData = abi.encode(
             address(feeToken),
@@ -394,8 +394,8 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         // it should revert
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__ModuleCannotUseStakingTokenAsBond
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__ModuleCannotUseStakingTokenAsBond
                 .selector
         );
         alt_kpiManager.postAssertion(
@@ -406,8 +406,8 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
     function test_RevertWhen_ThereAreNoKPIs() external {
         // it should revert
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__InvalidKPINumber
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__InvalidKPINumber
                 .selector
         );
         kpiManager.postAssertion(
@@ -420,8 +420,8 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
 
         // it should revert
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__InvalidKPINumber
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__InvalidKPINumber
                 .selector
         );
         kpiManager.postAssertion(
@@ -465,8 +465,8 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
 
         // Posting another assertion should now fail
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__UnresolvedAssertionExists
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__UnresolvedAssertionExists
                 .selector
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
@@ -512,7 +512,7 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         ); // we don't know the last one
 
         vm.expectEmit(false, true, true, true, address(kpiManager));
-        emit ILM_PC_KPIRewarder_v2.RewardRoundConfigured(
+        emit ILM_PC_KPIRewarder_v3.RewardRoundConfigured(
             0x0, block.timestamp, 100, 0
         ); // we don't know the generated ID
 
@@ -531,7 +531,7 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         // check mock for stored data
         IOptimisticOracleIntegrator.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
-        ILM_PC_KPIRewarder_v2.RewardRoundConfiguration memory rewardRoundConfig =
+        ILM_PC_KPIRewarder_v3.RewardRoundConfiguration memory rewardRoundConfig =
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
@@ -600,7 +600,7 @@ createKPITest
 
 */
 
-contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
+contract LM_PC_KPIRewarder_v3_createKPITest is LM_PC_KPIRewarder_v3Test {
     function test_ModifierInPositionCheck() external {
         // permissioned
 
@@ -622,8 +622,8 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         uint[] memory trancheRewards;
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__InvalidTrancheNumber
                 .selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
@@ -637,8 +637,8 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         vm.assume(trancheValues.length >= 21);
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__InvalidTrancheNumber
                 .selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
@@ -656,8 +656,8 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
 
         if (rewardLength != valueLength) {
             vm.expectRevert(
-                ILM_PC_KPIRewarder_v2
-                    .Module__LM_PC_KPIRewarder_v2__InvalidKPIValueLengths
+                ILM_PC_KPIRewarder_v3
+                    .Module__LM_PC_KPIRewarder_v3__InvalidKPIValueLengths
                     .selector
             );
             kpiManager.createKPI(
@@ -691,8 +691,8 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         // Guarantee wrong value in the last tranche.
         valuesCapped[length - 1] = valuesCapped[length - 2] / 2;
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__InvalidKPITrancheValues
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__InvalidKPITrancheValues
                 .selector
         );
         kpiManager.createKPI(true, valuesCapped, rewardsCapped);
@@ -722,7 +722,7 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         }
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit ILM_PC_KPIRewarder_v2.KPICreated(
+        emit ILM_PC_KPIRewarder_v3.KPICreated(
             0,
             numOfTranches,
             totalRewards,
@@ -734,7 +734,7 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         uint kpiNum =
             kpiManager.createKPI(continuous, trancheValues, trancheRewards);
 
-        ILM_PC_KPIRewarder_v2.KPI memory generatedKPI =
+        ILM_PC_KPIRewarder_v3.KPI memory generatedKPI =
             kpiManager.getKPI(kpiNum);
 
         assertEq(generatedKPI.trancheValues.length, numOfTranches);
@@ -762,7 +762,7 @@ stakeTest
     ├── it should take the funds from the user
     └── it should stake the funds
 */
-contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
+contract LM_PC_KPIRewarder_v3_stakeTest is LM_PC_KPIRewarder_v3Test {
     function test_ModifierInPositionCheck() external {
         // permissioned
 
@@ -836,8 +836,8 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
         vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), stakeAmount);
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v2
-                .Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending
+            ILM_PC_KPIRewarder_v3
+                .Module__LM_PC_KPIRewarder_v3__CannotStakeWhenAssertionPending
                 .selector
         );
         kpiManager.stake(stakeAmount);
@@ -897,8 +897,8 @@ assertionresolvedCallbackTest
     └── it should emit an event
 */
 
-contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
-    LM_PC_KPIRewarder_v2Test
+contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
+    LM_PC_KPIRewarder_v3Test
 {
     function test_WhenTheAssertionResolvedToFalse(
         address[] memory users,
@@ -1190,8 +1190,8 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         vm.prank(address(ooV3));
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v2
-                    .Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId
+                ILM_PC_KPIRewarder_v3
+                    .Module__LM_PC_KPIRewarder_v3__NonExistentAssertionId
                     .selector,
                 fake_ID
             )
@@ -1223,8 +1223,8 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         └── It should emit an event
     */
 
-contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
-    LM_PC_KPIRewarder_v2Test
+contract LM_PC_KPIRewarder_v3_deleteStuckAssertionTest is
+    LM_PC_KPIRewarder_v3Test
 {
     function test_ModifierInPositionCheck() external {
         // permissioned
@@ -1247,8 +1247,8 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v2
-                    .Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId
+                ILM_PC_KPIRewarder_v3
+                    .Module__LM_PC_KPIRewarder_v3__NonExistentAssertionId
                     .selector,
                 assertionId
             )
@@ -1278,8 +1278,8 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v2
-                    .Module__LM_PC_KPIRewarder_v2__AssertionNotStuck
+                ILM_PC_KPIRewarder_v3
+                    .Module__LM_PC_KPIRewarder_v3__AssertionNotStuck
                     .selector,
                 createdID
             )
@@ -1309,8 +1309,8 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v2
-                    .Module__LM_PC_KPIRewarder_v2__AssertionNotStuck
+                ILM_PC_KPIRewarder_v3
+                    .Module__LM_PC_KPIRewarder_v3__AssertionNotStuck
                     .selector,
                 createdID
             )
@@ -1342,7 +1342,7 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
         feeToken.burn(address(ooV3), ooV3.getMinimumBond(address(feeToken)));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit ILM_PC_KPIRewarder_v2.DeletedStuckAssertion(createdID);
+        emit ILM_PC_KPIRewarder_v3.DeletedStuckAssertion(createdID);
         kpiManager.deleteStuckAssertion(createdID);
 
         // Check assertion data is deleted

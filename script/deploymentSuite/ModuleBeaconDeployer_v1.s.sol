@@ -266,7 +266,7 @@ contract ModuleBeaconDeployer_v1 is
                     kpiRewarderMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_KPIRewarder_v2,
+                    impl_mod_LM_PC_KPIRewarder_v3,
                     kpiRewarderMetadata.majorVersion,
                     kpiRewarderMetadata.minorVersion,
                     kpiRewarderMetadata.patchVersion

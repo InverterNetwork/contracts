@@ -18,11 +18,11 @@ import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 
 import {
-    LM_PC_KPIRewarder_v2,
-    ILM_PC_KPIRewarder_v2,
+    LM_PC_KPIRewarder_v3,
+    ILM_PC_KPIRewarder_v3,
     IOptimisticOracleIntegrator,
     ILM_PC_Staking_v2
-} from "src/modules/logicModule/LM_PC_KPIRewarder_v2.sol";
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 
 import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
@@ -43,7 +43,7 @@ Fork testing necessary. Make sure to have a sepolia rpc configured in foundry.to
 
 */
 
-contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
+contract LM_PC_KPIRewarder_v3Lifecycle is E2ETest {
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
@@ -83,7 +83,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     IOrchestrator_v1 orchestrator;
     FM_DepositVault_v1 fundingManager;
     AUT_Roles_v2 authorizer;
-    LM_PC_KPIRewarder_v2 kpiRewarder;
+    LM_PC_KPIRewarder_v3 kpiRewarder;
 
     ERC20Mock USDC;
     ERC20Mock rewardToken;
@@ -211,10 +211,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
 
         // KPI Rewarder
 
-        setUpLM_PC_KPIRewarder_v2();
+        setUpLM_PC_KPIRewarder_v3();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_KPIRewarder_v2Metadata,
+                LM_PC_KPIRewarder_v3Metadata,
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
@@ -228,7 +228,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         );
     }
 
-    function test_e2e_LM_PC_KPIRewarder_v2Lifecycle() public {
+    function test_e2e_LM_PC_KPIRewarder_v3Lifecycle() public {
         // NOTE: Temporary skip if the rpc is failing.
         if (skipTestsWithFailingRpc) {
             return;
@@ -256,10 +256,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_KPIRewarder_v2).interfaceId
+                    type(ILM_PC_KPIRewarder_v3).interfaceId
                 )
             ) {
-                kpiRewarder = LM_PC_KPIRewarder_v2(modulesList[i]);
+                kpiRewarder = LM_PC_KPIRewarder_v3(modulesList[i]);
                 break;
             }
         }
@@ -282,7 +282,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         _setupUSDC();
 
         // give the automation service the rights to post assertions
-        _prepareLM_PC_KPIRewarder_v2();
+        _prepareLM_PC_KPIRewarder_v3();
 
         // Initialize kpiRewarder setup:
         rewardToken.mint(address(this), REWARD_DEPOSIT_AMOUNT);
@@ -411,7 +411,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     //--------------------------------------------------------------------------
 
     function _getExpectedRewardAmount(
-        ILM_PC_KPIRewarder_v2.KPI memory resolvedKPI,
+        ILM_PC_KPIRewarder_v3.KPI memory resolvedKPI,
         uint assertedValue
     ) internal pure returns (uint) {
         uint rewardAmount;
@@ -474,7 +474,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         );
     }
 
-    function _prepareLM_PC_KPIRewarder_v2() internal {
+    function _prepareLM_PC_KPIRewarder_v3() internal {
         {
             address[] memory roleMembers = new address[](1);
             roleMembers[0] = AUTOMATION_SERVICE;
@@ -527,7 +527,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
             _trancheRewards[i] = trancheRewards[i];
         }
 
-        ILM_PC_KPIRewarder_v2(kpiManager).createKPI(
+        ILM_PC_KPIRewarder_v3(kpiManager).createKPI(
             true, _trancheValues, _trancheRewards
         );
     }

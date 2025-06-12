@@ -187,7 +187,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_KPIRewarder_v2"
+        "LM_PC_KPIRewarder_v3"
     );
 
     // PaymentRouter
