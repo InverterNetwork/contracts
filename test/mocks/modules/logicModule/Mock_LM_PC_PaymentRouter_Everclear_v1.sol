@@ -13,8 +13,8 @@ import {IERC20PaymentClientBase_v2} from
 
 contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
     // Local constants mirroring PP_Everclear_CrossChain_v1
-    uint8 public constant LOCAL_FLAG_MAX_FEE = 4;
-    uint8 public constant LOCAL_FLAG_TTL = 5;
+    uint8 public constant LOCAL_FLAG_MAX_FEE = 5;
+    uint8 public constant LOCAL_FLAG_TTL = 6;
 
     function init(
         IOrchestrator_v1 orchestrator_,

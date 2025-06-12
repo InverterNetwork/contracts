@@ -80,10 +80,10 @@ contract PP_Everclear_CrossChain_v1 is
     // Constants
 
     /// @notice Payment order flag for the Everclear max fee.
-    uint8 public constant FLAG_MAX_FEE = 4;
+    uint8 public constant FLAG_MAX_FEE = 5;
 
     /// @notice Payment order flag for the Everclear TTL.
-    uint8 public constant FLAG_TTL = 5;
+    uint8 public constant FLAG_TTL = 6;
 
     // -------------------------------------------------------------------------
     // State Variables

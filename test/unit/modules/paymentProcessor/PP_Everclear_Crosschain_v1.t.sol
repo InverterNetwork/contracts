@@ -51,9 +51,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     uint TARGET_CHAIN_ID;
 
     // Execution data storage
-    bytes32[] public EMPTY_EXECUTION_DATA = new bytes32[](6);
-    uint FLAG_MAX_FEE = 4;
-    uint FLAG_TTL = 5;
+    bytes32[] public EMPTY_EXECUTION_DATA = new bytes32[](7);
+    uint FLAG_MAX_FEE = 5;
+    uint FLAG_TTL = 6;
 
     // ========================================================================
     // Setup
@@ -201,7 +201,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             testAmount,
             ORIGIN_CHAIN_ID,
             TARGET_CHAIN_ID,
-            bytes32(uint(0x3F)),
+            bytes32(uint(0x7F)),
             expectedExecutionData
         );
         vm.prank(address(paymentClient));
@@ -283,7 +283,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
                 setupAmounts[i],
                 ORIGIN_CHAIN_ID,
                 TARGET_CHAIN_ID,
-                bytes32(uint(0x3F)), // Binary: ...0011 1111
+                bytes32(uint(0x7F)), // Binary: ...0111 1111
                 executionData
             );
         }
@@ -818,7 +818,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: testAmount,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)),
+            flags: bytes32(uint(0x7F)),
             data: customExecutionData
         });
 
@@ -853,7 +853,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: 10 ether,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            flags: bytes32(uint(0x7F)), // Binary: ...0111 1111
             data: _getExecutionData()
         });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
@@ -872,7 +872,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: 1,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            flags: bytes32(uint(0x7F)), // Binary: ...0111 1111
             data: _getExecutionData()
         });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
@@ -891,7 +891,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: 0,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            flags: bytes32(uint(0x7F)), // Binary: ...0111 1111
             data: _getExecutionData()
         });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
@@ -910,7 +910,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: 10 ether,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            flags: bytes32(uint(0x7F)), // Binary: ...0111 1111
             data: _getExecutionData()
         });
         assertEq(paymentProcessor.validPaymentOrder(order), true);
@@ -1060,11 +1060,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         vm.assume(ttl_ > 0);
 
         // Create test data array with known values
-        bytes32[] memory testData = new bytes32[](6);
-        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee_)); // This uses the global FLAG_MAX_FEE = 4
-        testData[FLAG_TTL] = bytes32(uint(ttl_)); // This uses the global FLAG_TTL = 5
+        bytes32[] memory testData = new bytes32[](7);
+        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee_)); // This uses the global FLAG_MAX_FEE = 5
+        testData[FLAG_TTL] = bytes32(uint(ttl_)); // This uses the global FLAG_TTL = 6
 
-        bytes32 testFlags = bytes32(uint(0x3F)); // Corresponds to 6 flags (0-5) being set
+        bytes32 testFlags = bytes32(uint(0x7F)); // Corresponds to 7 flags (0-6) being set
 
         // Get values using exposed function
         (uint24 returnedMaxFee, uint48 returnedTtl) = paymentProcessor
@@ -1139,9 +1139,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     function testInternalValidateFlagsAndData_worksGivenValidDataReturnsTrue()
         public
     {
-        // 0x3F = ...0011 1111 - has both MAX_FEE and TTL flags set
-        bytes32 flags = bytes32(uint(0x3F));
-        bytes32[] memory data = new bytes32[](6); // 6 flags are set in 0x3F
+        // 0x7F = ...0111 1111 - has both MAX_FEE and TTL flags set
+        bytes32 flags = bytes32(uint(0x7F));
+        bytes32[] memory data = new bytes32[](7); // 7 flags are set in 0x7F
 
         bool isValid =
             paymentProcessor.exposed_validateFlagsAndData(flags, data);
@@ -1405,9 +1405,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         address token,
         bytes32[] memory executionData
     ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
-        bytes32[] memory data = new bytes32[](6);
+        bytes32[] memory data = new bytes32[](7);
 
-        if (executionData.length == 6 && executionData[0] == bytes32(0)) {
+        if (executionData.length == 7 && executionData[0] == bytes32(0)) {
             data = _getExecutionData();
         } else {
             data = executionData;
@@ -1419,7 +1419,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amount: amount,
             originChainId: ORIGIN_CHAIN_ID,
             targetChainId: TARGET_CHAIN_ID,
-            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            flags: bytes32(uint(0x7F)), // Binary: ...0111 1111
             data: data
         });
     }
@@ -1447,7 +1447,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
     function _getExecutionData() internal view returns (bytes32[] memory) {
         // Pre-allocate with fixed size
-        bytes32[] memory executionData = new bytes32[](6);
+        bytes32[] memory executionData = new bytes32[](7);
 
         // Use unchecked for gas optimization where overflow is impossible
         unchecked {
@@ -1455,8 +1455,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             executionData[1] = bytes32(block.timestamp);
             executionData[2] = bytes32(uint(0));
             executionData[3] = bytes32(block.timestamp + 7 days);
-            executionData[4] = bytes32(uint(1)); // maxFee
-            executionData[5] = bytes32(uint(1)); // ttl
+            executionData[4] = bytes32(uint(0));
+            executionData[5] = bytes32(uint(1)); // maxFee
+            executionData[6] = bytes32(uint(1)); // ttl
         }
         return executionData;
     }
