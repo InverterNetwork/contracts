@@ -142,16 +142,15 @@ B) write functions: as well as in the buy and sell functions.
 Implementation:
 
 - project fees stubbed as constant state variables
-- in `init` get protocol fees & treasury address from `FeeManager` via `_getFunctionFeesAndTreasuryAddresses`
+- in `init` get protocol fees & treasury address from `FeeManager` via calling the inherited `_getFunctionFeesAndTreasuryAddresses` (via super)
 - store issuance fee and collateral fee in state
-- override `calculatePurchaseReturn` and `calculateSaleReturn` to use cached protocol fees and stubbed project fees
+- override `_getFunctionFeesAndTreasuryAddresses` to retrieve cached values so that the default call that happens within `calculatePurchaseReturn` and `calculateSaleReturn` uses cached values
 - update logic triggered when project fees are withdrawn
 
 Tests:
 
 - init gets protocol fees and treasury address from `FeeManager` and stores in state
-- protocol fees are correctly deducted and sent to treasury addresses
-- project fee withdrawal triggers protocol fee update
+- overriden `_getFunctionFeesAndTreasuryAddresses` retrieves correct protocol fees and treasury addresses from `_protocolFeeCache` struct.
 
 ##### Test Setup:
 

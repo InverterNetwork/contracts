@@ -139,7 +139,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             _protocolFeeCache.issuanceTreasury,
             _protocolFeeCache.collateralFeeBuyBps,
             _protocolFeeCache.issuanceFeeBuyBps
-        ) = _getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+        ) = super._getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
 
         // Fetch and cache protocol fees for sell operations
         bytes4 sellOrderSelector =
@@ -152,7 +152,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             sellIssuanceTreasury,
             _protocolFeeCache.collateralFeeSellBps,
             _protocolFeeCache.issuanceFeeSellBps
-        ) = _getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
+        ) = super._getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
 
         // Logic to ensure consistent treasury addresses are stored in the cache,
         // prioritizing non-zero addresses from buy operations if FeeManager could return different ones.
@@ -362,6 +362,63 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             _protocolFeeCache.collateralFeeSellBps, // Use cached protocol fee for sell collateral
             sellFee // Use project sellFee state variable (set in init)
         );
+    }
+
+    /**
+     * @notice  Overrides the base function to return cached protocol fees and treasury addresses
+     *          for buy and sell operations specific to this funding manager.
+     * @dev     This ensures that fee calculations within `calculatePurchaseReturn`, `calculateSaleReturn`,
+     *          `_buyOrder`, and `_sellOrder` use the fees fetched and cached during initialization,
+     *          avoiding repeated calls to the FeeManager for these operations.
+     *          For other function selectors, it defers to the super implementation.
+     * @param   functionSelector_ The selector of the function for which fees are being queried.
+     * @return  collateralTreasury_ The address of the protocol's collateral fee treasury.
+     * @return  issuanceTreasury_ The address of the protocol's issuance fee treasury.
+     * @return  collateralFeeBps_ The protocol fee percentage for collateral tokens.
+     * @return  issuanceFeeBps_ The protocol fee percentage for issuance tokens.
+     */
+    function _getFunctionFeesAndTreasuryAddresses(bytes4 functionSelector_)
+        internal
+        view
+        override // Overrides Module_v1._getFunctionFeesAndTreasuryAddresses
+        returns (
+            address collateralTreasury_,
+            address issuanceTreasury_,
+            uint collateralFeeBps_,
+            uint issuanceFeeBps_
+        )
+    {
+        // Selectors for the functions that will internally call _getFunctionFeesAndTreasuryAddresses
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+        bytes4 calculatePurchaseReturnSelector =
+            this.calculatePurchaseReturn.selector;
+
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+        bytes4 calculateSaleReturnSelector = this.calculateSaleReturn.selector;
+
+        if (
+            functionSelector_ == buyOrderSelector
+                || functionSelector_ == calculatePurchaseReturnSelector
+        ) {
+            collateralTreasury_ = _protocolFeeCache.collateralTreasury;
+            issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
+            collateralFeeBps_ = _protocolFeeCache.collateralFeeBuyBps;
+            issuanceFeeBps_ = _protocolFeeCache.issuanceFeeBuyBps;
+        } else if (
+            functionSelector_ == sellOrderSelector
+                || functionSelector_ == calculateSaleReturnSelector
+        ) {
+            collateralTreasury_ = _protocolFeeCache.collateralTreasury;
+            issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
+            collateralFeeBps_ = _protocolFeeCache.collateralFeeSellBps;
+            issuanceFeeBps_ = _protocolFeeCache.issuanceFeeSellBps;
+        } else {
+            // For any other selectors not handled by this cache, defer to the base implementation
+            // which would typically query the FeeManager directly.
+            return super._getFunctionFeesAndTreasuryAddresses(functionSelector_);
+        }
     }
 
     // =========================================================================
