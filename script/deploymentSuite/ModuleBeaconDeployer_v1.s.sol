@@ -250,7 +250,7 @@ contract ModuleBeaconDeployer_v1 is
                     bountiesMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Bounties_v2,
+                    impl_mod_LM_PC_Bounties_v3,
                     bountiesMetadata.majorVersion,
                     bountiesMetadata.minorVersion,
                     bountiesMetadata.patchVersion

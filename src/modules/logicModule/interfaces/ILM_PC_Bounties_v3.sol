@@ -4,7 +4,27 @@ pragma solidity ^0.8.0;
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
-interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
+/**
+ * @title   Inverter Bounty Manager Interface
+ *
+ * @notice  Provides functionality to manage bounties and process claims,
+ *          allowing participants to propose, update, and claim bounties securely
+ *          and transparently.
+ *
+ * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
+ *          bounty management, supporting dynamic additions, updates, and the locking
+ *          of bounties. Utilizes roles for managing permissions and maintaining robust
+ *          control over bounty operations.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface ILM_PC_Bounties_v3 is IERC20PaymentClientBase_v2 {
     //--------------------------------------------------------------------------
     // Structs
 

@@ -178,7 +178,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Bounties_v2"
+        "LM_PC_Bounties_v3"
     );
 
     // KPIRewarder

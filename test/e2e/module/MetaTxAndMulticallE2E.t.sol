@@ -16,8 +16,8 @@ import {
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 import {
-    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
-} from "@lm/LM_PC_Bounties_v2.sol";
+    LM_PC_Bounties_v3, ILM_PC_Bounties_v3
+} from "@lm/LM_PC_Bounties_v3.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
@@ -175,14 +175,14 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v2 bountyManager;
+        LM_PC_Bounties_v3 bountyManager;
 
         {
             address[] memory modulesList = orchestrator.listModules();
             for (uint i; i < modulesList.length; ++i) {
-                try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
+                try ILM_PC_Bounties_v3(modulesList[i]).isExistingBountyId(0)
                 returns (bool) {
-                    bountyManager = LM_PC_Bounties_v2(modulesList[i]);
+                    bountyManager = LM_PC_Bounties_v3(modulesList[i]);
                     break;
                 } catch {
                     continue;
@@ -311,13 +311,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v2 bountyManager;
+        LM_PC_Bounties_v3 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v3(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v3(modulesList[i]);
                 break;
             } catch {
                 continue;

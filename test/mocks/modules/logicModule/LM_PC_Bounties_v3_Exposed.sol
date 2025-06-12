@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {LM_PC_Bounties_v2} from "@lm/LM_PC_Bounties_v2.sol";
+import {LM_PC_Bounties_v3} from "@lm/LM_PC_Bounties_v3.sol";
 
-contract LM_PC_Bounties_v2_Exposed is LM_PC_Bounties_v2 {
+contract LM_PC_Bounties_v3_Exposed is LM_PC_Bounties_v3 {
     //--------------------------------------------------------------------------
     // Modifier Access
 

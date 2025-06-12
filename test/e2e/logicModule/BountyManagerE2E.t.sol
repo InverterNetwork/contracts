@@ -11,8 +11,8 @@ import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // SuT
 import {
-    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
-} from "@lm/LM_PC_Bounties_v2.sol";
+    LM_PC_Bounties_v3, ILM_PC_Bounties_v3
+} from "@lm/LM_PC_Bounties_v3.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -97,16 +97,16 @@ contract BountyManagerE2E is E2ETest {
         AUT_Roles_v2 authorizer =
             AUT_Roles_v2(address(orchestrator.authorizer()));
 
-        LM_PC_Bounties_v2 bountyManager;
+        LM_PC_Bounties_v3 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_Bounties_v2).interfaceId
+                    type(ILM_PC_Bounties_v3).interfaceId
                 )
             ) {
-                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v3(modulesList[i]);
                 break;
             }
         }
@@ -205,13 +205,13 @@ contract BountyManagerE2E is E2ETest {
         );
 
         // Workers submit bounty
-        ILM_PC_Bounties_v2.Contributor memory contrib1 =
-            ILM_PC_Bounties_v2.Contributor(address(0xA11CE), 150e18);
-        ILM_PC_Bounties_v2.Contributor memory contrib2 =
-            ILM_PC_Bounties_v2.Contributor(address(0xb0b), 150e18);
+        ILM_PC_Bounties_v3.Contributor memory contrib1 =
+            ILM_PC_Bounties_v3.Contributor(address(0xA11CE), 150e18);
+        ILM_PC_Bounties_v3.Contributor memory contrib2 =
+            ILM_PC_Bounties_v3.Contributor(address(0xb0b), 150e18);
 
-        ILM_PC_Bounties_v2.Contributor[] memory contribs =
-            new ILM_PC_Bounties_v2.Contributor[](2);
+        ILM_PC_Bounties_v3.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v3.Contributor[](2);
         contribs[0] = contrib1;
         contribs[1] = contrib2;
 

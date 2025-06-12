@@ -64,7 +64,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
     // Logic Modules
     address public impl_mod_LM_PC_Oracle_Permissioned_v1;
-    address public impl_mod_LM_PC_Bounties_v2;
+    address public impl_mod_LM_PC_Bounties_v3;
     address public impl_mod_LM_PC_KPIRewarder_v2;
     address public impl_mod_LM_PC_PaymentRouter_v2;
     address public impl_mod_LM_PC_RecurringPayments_v2;
@@ -230,9 +230,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
-        impl_mod_LM_PC_Bounties_v2 = deployAndLogWithCreate2(
-            "LM_PC_Bounties_v2",
-            vm.getCode("LM_PC_Bounties_v2.sol:LM_PC_Bounties_v2")
+        impl_mod_LM_PC_Bounties_v3 = deployAndLogWithCreate2(
+            "LM_PC_Bounties_v3",
+            vm.getCode("LM_PC_Bounties_v3.sol:LM_PC_Bounties_v3")
         );
         impl_mod_LM_PC_KPIRewarder_v2 = deployAndLogWithCreate2(
             "LM_PC_KPIRewarder_v2",
