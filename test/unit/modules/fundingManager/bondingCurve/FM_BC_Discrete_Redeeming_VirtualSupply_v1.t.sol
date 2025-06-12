@@ -45,6 +45,14 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
     using DiscreteCurveMathLib_v1 for PackedSegment[];
 
+    // Structs for organizing test data
+    struct CurveTestData {
+        PackedSegment[] packedSegmentsArray; // Array of PackedSegments for the library
+        uint totalCapacity; // Calculated: sum of segment capacities
+        uint totalReserve; // Calculated: sum of segment reserves
+        string description; // Optional: for logging or comments
+    }
+
     // Protocol Fee Test Parameters
     uint internal constant TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS = 50; // 0.5%
     uint internal constant TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS = 20; // 0.2%
@@ -55,21 +63,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     // Project Fee Constants (mirroring those in the contract for assertion)
     uint internal constant TEST_PROJECT_BUY_FEE_BPS = 100;
     uint internal constant TEST_PROJECT_SELL_FEE_BPS = 100;
-
-    // Structs for organizing test data
-    struct CurveTestData {
-        PackedSegment[] packedSegmentsArray; // Array of PackedSegments for the library
-        uint totalCapacity; // Calculated: sum of segment capacities
-        uint totalReserve; // Calculated: sum of segment reserves
-        string description; // Optional: for logging or comments
-    }
-
-    FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
-    ERC20Mock public orchestratorToken; // This is the collateral token
-    ERC20Issuance_v1 public issuanceToken; // This is the token to be issued
-    ERC20PaymentClientBaseV2Mock public paymentClient;
-    PackedSegment[] public initialTestSegments;
-    CurveTestData internal defaultCurve; // Declare defaultCurve variable
 
     address internal non_admin_address = address(0xB0B);
 
@@ -89,6 +82,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     string internal constant ISSUANCE_TOKEN_SYMBOL = "HOUSE";
     uint8 internal constant ISSUANCE_TOKEN_DECIMALS = 18;
     uint internal constant ISSUANCE_TOKEN_MAX_SUPPLY = type(uint).max;
+
+    FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
+    ERC20Mock public orchestratorToken; // This is the collateral token
+    ERC20Issuance_v1 public issuanceToken; // This is the token to be issued
+    ERC20PaymentClientBaseV2Mock public paymentClient;
+    PackedSegment[] public initialTestSegments;
+    CurveTestData internal defaultCurve; // Declare defaultCurve variable
 
     // =========================================================================
     // Setup
@@ -1024,6 +1024,56 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             orchestratorToken.balanceOf(address(fmBcDiscrete)),
             initialModuleBalance - _amount,
             "Module final balance mismatch"
+        );
+    }
+
+    /* Test calculatePurchaseReturn()
+        └── Given project fee is active (from setUp: TEST_PROJECT_BUY_FEE_BPS)
+            └── And protocol fees are all zeroed out in the cache
+            └── And a specific deposit amount
+                    └── When calculatePurchaseReturn() is called
+                        └── Then it should return the correctly calculated issuance amount after only project fee
+    */
+    function test_CalculatePurchaseReturn_GivenProjectFeeOnly_WhenProtocolFeesZeroedInCache_ShouldReturnCorrectAmount(
+    ) public {
+        uint depositAmount = 10 ether;
+
+        // Create a fee cache with zero protocol fees
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache memory
+            zeroProtocolFeeCache =
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache({
+                collateralTreasury: TEST_PROTOCOL_TREASURY, // Can be any address as fees are 0
+                issuanceTreasury: TEST_PROTOCOL_TREASURY, // Can be any address as fees are 0
+                collateralFeeBuyBps: 0,
+                issuanceFeeBuyBps: 0,
+                collateralFeeSellBps: 0, // Not relevant for purchase, but set to 0 for completeness
+                issuanceFeeSellBps: 0 // Not relevant for purchase, but set to 0 for completeness
+            });
+        fmBcDiscrete.exposed_setProtocolFeeCache(zeroProtocolFeeCache);
+
+        // Get project fee (should be TEST_PROJECT_BUY_FEE_BPS from setUp)
+        uint projectBuyFeeBps = fmBcDiscrete.buyFee();
+
+        // Stage 1: Fees on Deposited Collateral (only project fee)
+        uint collateralProtocolFeeAmount = 0; // Protocol fees are zeroed
+        uint projectFeeAmount = (depositAmount * projectBuyFeeBps) / 10_000;
+        uint netDeposit =
+            depositAmount - collateralProtocolFeeAmount - projectFeeAmount;
+
+        // Stage 2: Fees on Gross Issuance Tokens (protocol issuance fee is zero)
+        uint grossIssuanceTokenAmount =
+            fmBcDiscrete.exposed_issueTokensFormulaWrapper(netDeposit);
+        uint issuanceProtocolFeeAmount = 0; // Protocol fees are zeroed
+        uint expectedIssuanceTokens =
+            grossIssuanceTokenAmount - issuanceProtocolFeeAmount;
+
+        uint actualIssuanceTokens =
+            fmBcDiscrete.calculatePurchaseReturn(depositAmount);
+
+        assertEq(
+            actualIssuanceTokens,
+            expectedIssuanceTokens,
+            "Project fee only: Calculated purchase return mismatch"
         );
     }
 

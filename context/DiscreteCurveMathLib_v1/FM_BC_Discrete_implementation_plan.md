@@ -141,6 +141,7 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 
 - [x] 1. Define `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - [x] 2. Set constant project fees (`PROJECT_BUY_FEE_BPS`, `PROJECT_SELL_FEE_BPS`) in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and ensure `buyFee`/`sellFee` state vars are set in `init`.
-- [x] 3. `init` calls `_getFunctionFeesAndTreasuryAddresses` to get protocol fees (BPS for collateral/issuance, for buy/sell selectors) and treasury addresses from `FeeManager` and stores them in a new `_protocolFeeCache` (struct instance).
-- [x] 4. Override `calculatePurchaseReturn` and `calculateSaleReturn` to use cached protocol fees (from `_protocolFeeCache` struct) and project fees (from `buyFee`/`sellFee` state vars).
-- [ ] 5. Add unit tests for `init` fee setup (populating `_protocolFeeCache`) and accuracy of overridden `calculatePurchaseReturn`/`calculateSaleReturn` with various fee combinations.
+- [x] 3. `init` calls `super._getFunctionFeesAndTreasuryAddresses` to get protocol fees (BPS for collateral/issuance, for buy/sell selectors) and treasury addresses from `FeeManager` and stores them in a new `_protocolFeeCache` (struct instance).
+- [x] 4. Add unit tests for `init` fee setup (populating `_protocolFeeCache`) and
+- [ ] 5. Override `_getFunctionFeesAndTreasuryAddresses` to use cached protocol fees (from `_protocolFeeCache` struct) and project fees (from `buyFee`/`sellFee` state vars).
+- [ ] 6. Unit test for `_getFunctionFeesAndTreasuryAddresses`: retrieves correct protocol fees and treasury addresses from `_protocolFeeCache` struct.
