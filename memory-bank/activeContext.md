@@ -3,28 +3,26 @@
 ## 1. Current Work Focus
 
 - **Primary Task:** Implementation of fee mechanisms within `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` (Step 2.10 in `FM_BC_Discrete_implementation_plan.md`).
-  - **Current Sub-Task (2.10.1):** Implementing fee setup in `init` and overriding `calculatePurchaseReturn`/`calculateSaleReturn` to be fee-aware using `ProtocolFeeCache` struct.
-    - Defined `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-    - Added `PROJECT_BUY_FEE_BPS`, `PROJECT_SELL_FEE_BPS` constants in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
-    - Replaced individual fee cache state variables with `ProtocolFeeCache private _protocolFeeCache;`.
-    - Updated `init` to set project fees and populate `_protocolFeeCache` from `FeeManager`.
-    - Overridden `calculatePurchaseReturn` and `calculateSaleReturn` to use fees from `_protocolFeeCache` and project fee state vars.
-  - **Next Sub-Task:** Implementing actual fee collection and distribution in write functions (`_buyOrder`, `_sellOrder`) and updating `projectCollateralFeeCollected`.
+  - **Completed Sub-Task (2.10.1):** Fee setup in `init`, fee-aware `calculatePurchaseReturn`/`calculateSaleReturn` (using `ProtocolFeeCache`), and override of `_getFunctionFeesAndTreasuryAddresses` to use cached fees. All associated tests for 2.10.1 are passing.
+  - **Next Sub-Task (Remainder of 2.10):** Implementing actual fee collection and distribution in write functions (`_buyOrder`, `_sellOrder`) and updating `projectCollateralFeeCollected`.
   - Future: Integration with a dedicated `DynamicFeeCalculator` contract.
 
 ## 2. Recent Changes & Accomplishments
 
-**Fee Implementation (Step 2.10.1 - View Functions & Init using `ProtocolFeeCache`):**
+**Fee Implementation (Step 2.10.1 - Fully Completed):**
 
-- Defined `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` to hold all cached protocol fee BPS values and treasury addresses.
+- Defined `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - In `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`:
   - Added `PROJECT_BUY_FEE_BPS` and `PROJECT_SELL_FEE_BPS` constants.
-  - Replaced previous individual private state variables for protocol fees with a single `ProtocolFeeCache private _protocolFeeCache;` instance.
+  - Used `ProtocolFeeCache private _protocolFeeCache;` for storing protocol fee data.
   - Updated `__FM_BC_Discrete_Redeeming_VirtualSupply_v1_Init` to:
-    - Set `buyFee` and `sellFee` state variables using the project fee constants.
-    - Fetch protocol fees (for `_buyOrder` and `_sellOrder` selectors) from `FeeManager` via `_getFunctionFeesAndTreasuryAddresses`.
-    - Store all fetched protocol fee BPS values and treasury addresses into the `_protocolFeeCache` struct instance.
-  - Overridden `calculatePurchaseReturn` and `calculateSaleReturn` to use the project fee state variables (`buyFee`/`sellFee`) and the relevant BPS values from the `_protocolFeeCache` struct, ensuring these view functions now account for both fee types.
+    - Set `buyFee` and `sellFee` state variables.
+    - Populate `_protocolFeeCache` from `FeeManager` for buy/sell selectors.
+  - Overridden `calculatePurchaseReturn` and `calculateSaleReturn` to use `_protocolFeeCache` and project fees.
+  - **Overridden `_getFunctionFeesAndTreasuryAddresses` to return values from `_protocolFeeCache` for relevant selectors, falling back to `super` for others.**
+- **Testing for 2.10.1:**
+  - Unit tests in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` now verify: - Correct initialization of `buyFee`, `sellFee`, and population of `_protocolFeeCache` in `init`. - Accuracy of overridden `calculatePurchaseReturn` and `calculateSaleReturn` with fees. - **Correct behavior of overridden `_getFunctionFeesAndTreasuryAddresses` (returning cached values and falling back to super appropriately).**
+    All tests for step 2.10.1 are passing.
 
 **Previous Accomplishments (Up to step 2.9):**
 
@@ -47,12 +45,6 @@
 
 ## 3. Next Steps
 
-- **Testing for 2.10.1:**
-  - Write unit tests for `FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` to verify:
-    - Correct initialization of `buyFee` and `sellFee` state variables.
-    - Correct population of the `_protocolFeeCache` struct after `init` (requires mocking/configuring `FeeManager`).
-    - `calculatePurchaseReturn` returns correct values under various fee scenarios using the `_protocolFeeCache`.
-    - `calculateSaleReturn` returns correct values under various fee scenarios using the `_protocolFeeCache`.
 - **Implement Fee Handling in Write Functions (Rest of 2.10):**
   - Modify/Override `_buyOrder` and `_sellOrder` (or ensure base versions work with cached fees) to:
     - Correctly use the `_protocolFeeCache` and project fees.
