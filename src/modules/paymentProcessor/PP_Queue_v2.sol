@@ -13,7 +13,7 @@ import {IOrchestrator_v1} from
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
-import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
+import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
@@ -25,7 +25,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *          payments within the processPayments function.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_v1: Implementation interface.
+ *          - IPP_Queue_v2: Implementation interface.
  *          - IPaymentProcessor_v2: Payment processor interface.
  *          - Module_v2: Base module functionality.
  *
@@ -70,13 +70,13 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
+contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // Libraries
 
@@ -94,7 +94,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         override(Module_v2)
         returns (bool supported_)
     {
-        return interfaceId_ == type(IPP_Queue_v1).interfaceId
+        return interfaceId_ == type(IPP_Queue_v2).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -194,7 +194,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getMaxOrdersPerExecution()
         external
         view
@@ -204,7 +204,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         return _maxOrdersPerExecution;
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getCanceledOrdersTreasury()
         external
         view
@@ -214,7 +214,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         treasury_ = _cancelledOrdersTreasury;
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getFailedOrdersTreasury()
         external
         view
@@ -224,7 +224,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         treasury_ = _failedOrdersTreasury;
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getOrder(uint orderId_, IERC20PaymentClientBase_v3 client_)
         external
         view
@@ -237,7 +237,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         order_ = _orders[address(client_)][orderId_];
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getOrderQueue(address client_)
         external
         view
@@ -263,7 +263,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         queue_ = queue;
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getQueueHead(address client_)
         external
         view
@@ -277,7 +277,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         head_ = _queue[client_].getNextId(LinkedIdList._SENTINEL);
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getQueueTail(address client_)
         external
         view
@@ -287,7 +287,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         tail_ = _queue[client_].lastId();
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function getQueueSizeForClient(address client_)
         external
         view
@@ -317,7 +317,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function setMaxOrdersPerExecution(uint maxOrdersPerExecution_)
         external
         virtual
@@ -329,7 +329,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         _maxOrdersPerExecution = maxOrdersPerExecution_;
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function setCanceledOrdersTreasury(address treasury_)
         external
         virtual
@@ -338,7 +338,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         _setCanceledOrdersTreasury(treasury_);
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function setFailedOrdersTreasury(address treasury_) external permissioned {
         _setFailedOrdersTreasury(treasury_);
     }
@@ -387,7 +387,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         _claimPreviouslyUnclaimable(client_, token_, receiver_);
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function claimPreviouslyUnclaimableToTreasury(
         address client_,
         address token_,
@@ -414,7 +414,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v2 {
         );
     }
 
-    /// @inheritdoc IPP_Queue_v1
+    /// @inheritdoc IPP_Queue_v2
     function cancelPaymentOrderThroughQueueId(
         uint orderId_,
         IERC20PaymentClientBase_v3 client_

@@ -235,7 +235,7 @@ contract MetadataCollection_v1 {
     // QueuePaymentProcessor
     IModule_v2.Metadata public queuePaymentProcessorMetadata = IModule_v2
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v2"
     );
 
     // SimplePaymentProcessor

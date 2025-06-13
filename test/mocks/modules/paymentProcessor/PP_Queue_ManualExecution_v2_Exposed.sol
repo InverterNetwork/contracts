@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 import {PP_Queue_ManualExecution_v2} from "@pp/PP_Queue_ManualExecution_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
-import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
+import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 contract PP_Queue_ManualExecution_v2_Exposed is PP_Queue_ManualExecution_v2 {

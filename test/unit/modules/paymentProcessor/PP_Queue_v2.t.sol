@@ -19,8 +19,8 @@ import {
     IModule_v2,
     IOrchestrator_v1
 } from "@unitTest/modules/ModuleTest.sol";
-import {PP_Queue_v1_Exposed} from
-    "@mocks/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
+import {PP_Queue_v2_Exposed} from
+    "@mocks/modules/paymentProcessor/PP_Queue_v2_Exposed.sol";
 import {
     IERC20PaymentClientBase_v3,
     ERC20PaymentClientBaseV2Mock,
@@ -31,14 +31,14 @@ import {NonStandardTokenMock} from
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // System under testing
-import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
+import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
 
-contract PP_Queue_v1_Test is ModuleTest {
+contract PP_Queue_v2_Test is ModuleTest {
     // ================================================================================
     // Storage
 
     // SuT
-    PP_Queue_v1_Exposed queue;
+    PP_Queue_v2_Exposed queue;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -80,8 +80,8 @@ contract PP_Queue_v1_Test is ModuleTest {
         canceledOrdersTreasury = makeAddr("canceledOrdersTreasury");
         failedOrdersTreasury = makeAddr("failedOrdersTreasury");
 
-        address impl = address(new PP_Queue_v1_Exposed());
-        queue = PP_Queue_v1_Exposed(Clones.clone(impl));
+        address impl = address(new PP_Queue_v2_Exposed());
+        queue = PP_Queue_v2_Exposed(Clones.clone(impl));
 
         impl = address(new ERC20PaymentClientBaseV2Mock());
         paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
@@ -125,7 +125,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertTrue(
             queue.supportsInterface(type(IPaymentProcessor_v2).interfaceId)
         );
-        assertTrue(queue.supportsInterface(type(IPP_Queue_v1).interfaceId));
+        assertTrue(queue.supportsInterface(type(IPP_Queue_v2).interfaceId));
         assertTrue(queue.supportsInterface(type(IERC165).interfaceId));
     }
 
@@ -200,7 +200,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -481,7 +481,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testSetMaxOrdersPerExecution_revertGivenZeroAmount() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_Queue_v1.Module__PP_Queue_ZeroAmount.selector
+                IPP_Queue_v2.Module__PP_Queue_ZeroAmount.selector
             )
         );
         queue.setMaxOrdersPerExecution(0);
@@ -669,7 +669,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(this),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -712,7 +712,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -780,7 +780,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.CANCELLED
+            IPP_Queue_v2.RedemptionState.CANCELLED
         );
     }
 
@@ -816,7 +816,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         queue.exposed_updateOrderState(
             orderId_,
             address(paymentClient),
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
         queue.exposed_removeFromQueue(orderId_, address(paymentClient));
 
@@ -825,7 +825,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
     }
 
@@ -1080,7 +1080,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
 
         // Second order with different flags/data
@@ -1187,7 +1187,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -1382,7 +1382,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -1460,7 +1460,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient_,
             amount_,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -1569,14 +1569,14 @@ contract PP_Queue_v1_Test is ModuleTest {
             queue.exposed_addPaymentOrderToQueue(order, address(paymentClient));
 
         // Get value for pre-assertions
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder_ = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // Pre-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PENDING)
+            uint(IPP_Queue_v2.RedemptionState.PENDING)
         );
         assertEq(
             _token.balanceOf(recipient_), 0, "Recipient should have no balance"
@@ -1599,7 +1599,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Post-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PROCESSED)
+            uint(IPP_Queue_v2.RedemptionState.PROCESSED)
         );
         assertEq(_token.balanceOf(recipient_), amount_);
         assertEq(
@@ -1671,14 +1671,14 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint orderId_ =
             helper_addPaymentOrderToQueue(order, address(paymentClient));
         uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder_ = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // pre-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PENDING)
+            uint(IPP_Queue_v2.RedemptionState.PENDING)
         );
         assertEq(_token.balanceOf(recipient_), 0);
         assertEq(queueSize_, 1);
@@ -1695,7 +1695,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // post-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PROCESSED)
+            uint(IPP_Queue_v2.RedemptionState.PROCESSED)
         );
         assertEq(_token.balanceOf(recipient_), amount_);
         assertEq(queueSize_, 0);
@@ -1736,14 +1736,14 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint orderId_ =
             helper_addPaymentOrderToQueue(order, address(paymentClient));
         uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder_ = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // pre-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PENDING)
+            uint(IPP_Queue_v2.RedemptionState.PENDING)
         );
         assertEq(nonStandardToken.balanceOf(recipient_), 0);
         assertEq(nonStandardToken.balanceOf(address(paymentClient)), amount_);
@@ -1760,7 +1760,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // post-assertions
         assertEq(
-            uint(queuedOrder_.state_), uint(IPP_Queue_v1.RedemptionState.FAILED)
+            uint(queuedOrder_.state_), uint(IPP_Queue_v2.RedemptionState.FAILED)
         );
         assertEq(nonStandardToken.balanceOf(recipient_), 0);
         assertEq(nonStandardToken.balanceOf(address(queue)), amount_);
@@ -1873,11 +1873,11 @@ contract PP_Queue_v1_Test is ModuleTest {
             success, "Processing should fail due to insufficient balance"
         );
 
-        IPP_Queue_v1.QueuedOrder memory order =
+        IPP_Queue_v2.QueuedOrder memory order =
             queue.getOrder(orderId_, paymentClient);
         assertEq(
             uint(order.state_),
-            uint(IPP_Queue_v1.RedemptionState.PENDING),
+            uint(IPP_Queue_v2.RedemptionState.PENDING),
             "Order should remain in PENDING state"
         );
     }
@@ -2021,15 +2021,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         queue.exposed_updateOrderState(
             orderId_,
             address(paymentClient),
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
 
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder_ = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PROCESSED),
+            uint(IPP_Queue_v2.RedemptionState.PROCESSED),
             "State should be PROCESSED."
         );
     }
@@ -2595,11 +2595,11 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Verify order is in PROCESSED state
-        IPP_Queue_v1.QueuedOrder memory queuedOrder = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
         require(
-            queuedOrder.state_ == IPP_Queue_v1.RedemptionState.PROCESSED,
+            queuedOrder.state_ == IPP_Queue_v2.RedemptionState.PROCESSED,
             "Order should be in PROCESSED state"
         );
 
@@ -2608,8 +2608,8 @@ contract PP_Queue_v1_Test is ModuleTest {
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
                 orderId_,
-                uint8(IPP_Queue_v1.RedemptionState.PROCESSED),
-                uint8(IPP_Queue_v1.RedemptionState.CANCELLED)
+                uint8(IPP_Queue_v2.RedemptionState.PROCESSED),
+                uint8(IPP_Queue_v2.RedemptionState.CANCELLED)
             )
         );
 
@@ -2617,7 +2617,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         queue.exposed_updateOrderState(
             orderId_,
             address(paymentClient),
-            IPP_Queue_v1.RedemptionState.CANCELLED
+            IPP_Queue_v2.RedemptionState.CANCELLED
         );
     }
 
@@ -2752,7 +2752,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         queue.exposed_updateOrderState(
             orderId_,
             address(paymentClient),
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
 
         // Test function call
@@ -2853,14 +2853,14 @@ contract PP_Queue_v1_Test is ModuleTest {
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
                 orderId_,
-                uint8(IPP_Queue_v1.RedemptionState.PROCESSED),
-                uint8(IPP_Queue_v1.RedemptionState.PENDING)
+                uint8(IPP_Queue_v2.RedemptionState.PROCESSED),
+                uint8(IPP_Queue_v2.RedemptionState.PENDING)
             )
         );
         queue.exposed_updateOrderState(
             orderId_,
             address(paymentClient),
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -2969,14 +2969,14 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint orderId_ =
             helper_addPaymentOrderToQueue(order, address(paymentClient));
         uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+        IPP_Queue_v2.QueuedOrder memory queuedOrder_ = queue.getOrder(
             orderId_, IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // pre-assertions
         assertEq(
             uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.PENDING)
+            uint(IPP_Queue_v2.RedemptionState.PENDING)
         );
         assertEq(nonStandardToken.balanceOf(recipient_), 0);
         assertEq(nonStandardToken.balanceOf(address(paymentClient)), amount_);
@@ -3071,7 +3071,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient,
             amount,
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
     }
 
@@ -3133,7 +3133,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             recipient,
             amount,
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
 
         vm.expectRevert(
@@ -3778,14 +3778,14 @@ contract PP_Queue_v1_Test is ModuleTest {
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
                 1,
-                uint8(IPP_Queue_v1.RedemptionState.PROCESSED),
-                uint8(IPP_Queue_v1.RedemptionState.PENDING)
+                uint8(IPP_Queue_v2.RedemptionState.PROCESSED),
+                uint8(IPP_Queue_v2.RedemptionState.PENDING)
             )
         );
         queue.exposed_validStateTransition(
             1,
-            IPP_Queue_v1.RedemptionState.PROCESSED,
-            IPP_Queue_v1.RedemptionState.PENDING
+            IPP_Queue_v2.RedemptionState.PROCESSED,
+            IPP_Queue_v2.RedemptionState.PENDING
         );
     }
 
@@ -3801,22 +3801,22 @@ contract PP_Queue_v1_Test is ModuleTest {
         // PENDING -> PROCESSED
         queue.exposed_validStateTransition(
             1,
-            IPP_Queue_v1.RedemptionState.PENDING,
-            IPP_Queue_v1.RedemptionState.PROCESSED
+            IPP_Queue_v2.RedemptionState.PENDING,
+            IPP_Queue_v2.RedemptionState.PROCESSED
         );
 
         // PENDING -> CANCELLED
         queue.exposed_validStateTransition(
             1,
-            IPP_Queue_v1.RedemptionState.PENDING,
-            IPP_Queue_v1.RedemptionState.CANCELLED
+            IPP_Queue_v2.RedemptionState.PENDING,
+            IPP_Queue_v2.RedemptionState.CANCELLED
         );
 
         // PENDING -> FAILED
         queue.exposed_validStateTransition(
             1,
-            IPP_Queue_v1.RedemptionState.PENDING,
-            IPP_Queue_v1.RedemptionState.FAILED
+            IPP_Queue_v2.RedemptionState.PENDING,
+            IPP_Queue_v2.RedemptionState.FAILED
         );
     }
 
@@ -3986,9 +3986,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         address client_,
         address expectedRecipient_,
         uint96 expectedAmount_,
-        IPP_Queue_v1.RedemptionState expectedState_
+        IPP_Queue_v2.RedemptionState expectedState_
     ) internal {
-        IPP_Queue_v1.QueuedOrder memory queuedOrder =
+        IPP_Queue_v2.QueuedOrder memory queuedOrder =
             queue.getOrder(orderId_, IERC20PaymentClientBase_v3(client_));
         assertEq(
             queuedOrder.order_.recipient, expectedRecipient_, "Wrong recipient"

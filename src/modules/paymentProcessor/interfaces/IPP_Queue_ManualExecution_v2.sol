@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
+import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
@@ -15,7 +15,7 @@ import {IERC20PaymentClientBase_v3} from
  *
  * @dev     This contract inherits from:
  *          - IPP_Queue_ManualExecution_v2: Implementation interface.
- *          - PP_Queue_v1: Queue based payment processor.
+ *          - PP_Queue_v2: Queue based payment processor.
  *
  *          Key features:
  *              - FIFO queue management for payment orders.
@@ -59,13 +59,13 @@ import {IERC20PaymentClientBase_v3} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_ManualExecution_v2 is IPP_Queue_v1 {
+interface IPP_Queue_ManualExecution_v2 is IPP_Queue_v2 {
     // -------------------------------------------------------------------------
     // Functions
 

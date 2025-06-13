@@ -7,11 +7,11 @@ import {IOrchestrator_v1} from
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
-import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
+import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
 import {IPP_Queue_ManualExecution_v2} from
     "@pp/interfaces/IPP_Queue_ManualExecution_v2.sol";
 import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
-import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
+import {PP_Queue_v2} from "@pp/PP_Queue_v2.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,7 +25,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  * @dev     This contract inherits from:
  *          - IPP_Queue_ManualExecution_v2: Implementation interface.
- *          - PP_Queue_v1: Queue based payment processor.
+ *          - PP_Queue_v2: Queue based payment processor.
  *
  *          Key features:
  *              - FIFO queue management for payment orders.
@@ -69,7 +69,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
@@ -77,7 +77,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  */
 contract PP_Queue_ManualExecution_v2 is
     IPP_Queue_ManualExecution_v2,
-    PP_Queue_v1
+    PP_Queue_v2
 {
     // -------------------------------------------------------------------------
     // ERC165
@@ -87,7 +87,7 @@ contract PP_Queue_ManualExecution_v2 is
         public
         view
         virtual
-        override(PP_Queue_v1)
+        override(PP_Queue_v2)
         returns (bool)
     {
         return interfaceId_ == type(IPP_Queue_ManualExecution_v2).interfaceId
@@ -108,7 +108,7 @@ contract PP_Queue_ManualExecution_v2 is
     function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
-        override(PP_Queue_v1, IPaymentProcessor_v2)
+        override(PP_Queue_v2, IPaymentProcessor_v2)
         clientIsValid(address(client_))
         onlyModule
     {

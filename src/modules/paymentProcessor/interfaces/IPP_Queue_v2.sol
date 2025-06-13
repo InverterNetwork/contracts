@@ -14,7 +14,7 @@ import {IERC20PaymentClientBase_v3} from
  *          payments within the processPayments function.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_v1: Implementation interface.
+ *          - IPP_Queue_v2: Implementation interface.
  *          - IPaymentProcessor_v2: Payment processor interface.
  *          - Module_v2: Base module functionality.
  *
@@ -59,13 +59,13 @@ import {IERC20PaymentClientBase_v3} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_v1 is IPaymentProcessor_v2 {
+interface IPP_Queue_v2 is IPaymentProcessor_v2 {
     // -------------------------------------------------------------------------
     // Type Declarations
 
