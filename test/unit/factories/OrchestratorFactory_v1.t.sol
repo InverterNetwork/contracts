@@ -84,7 +84,7 @@ contract OrchestratorFactoryV1Test is Test {
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         IModule_v2.Metadata(
-            1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
+            1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v3"
         ),
         bytes("data")
     );

@@ -30,7 +30,7 @@ import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
-import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
+import {PP_Simple_v3, IPaymentProcessor_v2} from "@pp/PP_Simple_v3.sol";
 
 import {
     IFundingManager_v1,

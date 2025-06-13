@@ -32,9 +32,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
-contract PP_Simple_v2 is Module_v2, IPaymentProcessor_v2 {
+contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public

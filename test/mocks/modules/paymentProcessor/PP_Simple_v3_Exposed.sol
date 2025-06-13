@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 // Internal Dependencies
-import {PP_Simple_v2} from "@pp/PP_Simple_v2.sol";
+import {PP_Simple_v3} from "@pp/PP_Simple_v3.sol";
 
-contract PP_Simple_v2_Exposed is PP_Simple_v2 {
+contract PP_Simple_v3_Exposed is PP_Simple_v3 {
     function exposed_validPaymentReceiver(address addr)
         external
         view

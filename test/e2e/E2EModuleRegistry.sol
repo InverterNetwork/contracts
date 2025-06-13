@@ -21,7 +21,7 @@ import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {FM_EXT_TokenVault_v2} from "@fm/extensions/FM_EXT_TokenVault_v2.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-import {PP_Simple_v2} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
+import {PP_Simple_v3} from "src/modules/paymentProcessor/PP_Simple_v3.sol";
 import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 import {LM_PC_Bounties_v3} from "@lm/LM_PC_Bounties_v3.sol";
 import {LM_PC_RecurringPayments_v3} from "@lm/LM_PC_RecurringPayments_v3.sol";
@@ -520,12 +520,12 @@ contract E2EModuleRegistry is Test {
 
     // PP_Simple_v1
 
-    PP_Simple_v2 simplePaymentProcessorImpl;
+    PP_Simple_v3 simplePaymentProcessorImpl;
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
     IModule_v2.Metadata simplePaymentProcessorMetadata = IModule_v2.Metadata(
-        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v2"
+        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v3"
     );
 
     /*
@@ -537,7 +537,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpSimplePaymentProcessor() internal {
         // Deploy module implementations.
-        simplePaymentProcessorImpl = new PP_Simple_v2();
+        simplePaymentProcessorImpl = new PP_Simple_v3();
 
         // Deploy module beacons.
         simplePaymentProcessorBeacon = new InverterBeacon_v1(

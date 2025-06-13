@@ -14,13 +14,13 @@ import {
 
 // SuT
 
-import {PP_Simple_v2_Exposed} from
-    "@mocks/modules/paymentProcessor/PP_Simple_v2_Exposed.sol";
+import {PP_Simple_v3_Exposed} from
+    "@mocks/modules/paymentProcessor/PP_Simple_v3_Exposed.sol";
 
 import {
-    PP_Simple_v2,
+    PP_Simple_v3,
     IPaymentProcessor_v2
-} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
+} from "src/modules/paymentProcessor/PP_Simple_v3.sol";
 
 // Mocks
 import {
@@ -34,7 +34,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract PP_SimpleV2Test is ModuleTest {
     // SuT
-    PP_Simple_v2_Exposed paymentProcessor;
+    PP_Simple_v3_Exposed paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -53,8 +53,8 @@ contract PP_SimpleV2Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v2_Exposed());
-        paymentProcessor = PP_Simple_v2_Exposed(Clones.clone(impl));
+        address impl = address(new PP_Simple_v3_Exposed());
+        paymentProcessor = PP_Simple_v3_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 

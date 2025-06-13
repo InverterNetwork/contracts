@@ -241,7 +241,7 @@ contract MetadataCollection_v1 {
     // SimplePaymentProcessor
     IModule_v2.Metadata public simplePaymentProcessorMetadata = IModule_v2
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v2"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v3"
     );
 
     // StreamingPaymentProcessor

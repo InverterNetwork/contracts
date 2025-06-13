@@ -41,7 +41,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         IModule_v2.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
 
     IModule_v2.Metadata paymentProcessorMetadata = IModule_v2.Metadata(
-        1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
+        1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v3"
     );
 
     function createAndInitModule(
