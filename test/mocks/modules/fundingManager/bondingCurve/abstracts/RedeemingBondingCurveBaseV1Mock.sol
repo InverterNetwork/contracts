@@ -127,6 +127,10 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return BPS;
     }
 
+    function call_getSellFee() external view returns (uint) {
+        return _getSellFee();
+    }
+
     function call_sellOrder(
         address _receiver,
         uint _depositAmount,

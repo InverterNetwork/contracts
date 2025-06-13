@@ -94,6 +94,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return calculatePurchaseReturn(_depositAmount);
     }
 
+    function call_getBuyFee() external view returns (uint) {
+        return _getBuyFee();
+    }
+
     function call_withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
     {
