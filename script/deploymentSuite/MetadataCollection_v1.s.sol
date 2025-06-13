@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 // Interfaces
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
+// @todo update majorversion metadata
+
 /**
  * @title Inverter Metadata Collection
  *
