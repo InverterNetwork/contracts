@@ -383,10 +383,11 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @dev	The function reverts if the given address is not a module of the required type.
     /// @param  _contractAddr The address to be checked.
     /// @param  _privilegedInterfaceId The required interface id.
-    function _enforcePrivilegedModuleInterfaceCheck(
-        address _contractAddr,
-        bytes4 _privilegedInterfaceId
-    ) internal view {
+    function _enforcePrivilegedModuleInterfaceCheck( //@todo adapt to enable older interfaces too
+    address _contractAddr, bytes4 _privilegedInterfaceId)
+        internal
+        view
+    {
         bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
@@ -406,7 +407,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     {
         bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
-            !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
+            !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId) //@todo adapt to enable older interfaces too
                 || ERC165Checker.supportsInterface(
                     _contractAddr, type(IAuthorizer_v2).interfaceId
                 )
