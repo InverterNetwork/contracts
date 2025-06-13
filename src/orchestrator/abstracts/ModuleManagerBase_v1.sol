@@ -340,13 +340,16 @@ abstract contract ModuleManagerBase_v1 is
     /// @param  module The module address to check.
     function _ensureValidModule(address module) private view {
         if (
+            // If the address is not implementing either IModule_v1 or IModule_v2 revert
             module.code.length == 0 || module == address(0)
                 || module == address(this)
-                || !ERC165Checker.supportsInterface(
-                    module, type(IModule_v1).interfaceId
-                )
-                || !ERC165Checker.supportsInterface(
-                    module, type(IModule_v2).interfaceId
+                || (
+                    !ERC165Checker.supportsInterface(
+                        module, type(IModule_v1).interfaceId
+                    )
+                        && !ERC165Checker.supportsInterface(
+                            module, type(IModule_v2).interfaceId
+                        )
                 )
         ) {
             revert ModuleManagerBase__InvalidModuleAddress();
