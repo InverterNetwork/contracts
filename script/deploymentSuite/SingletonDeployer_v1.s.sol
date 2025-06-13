@@ -74,7 +74,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_PP_Queue_ManualExecution_v2;
     address public impl_mod_PP_Queue_v2;
     address public impl_mod_PP_Simple_v3;
-    address public impl_mod_PP_Streaming_v2;
+    address public impl_mod_PP_Streaming_v3;
 
     // Orchestrator
     address public impl_orc_Orchestrator_v1;
@@ -269,8 +269,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         impl_mod_PP_Simple_v3 = deployAndLogWithCreate2(
             "PP_Simple_v3", vm.getCode("PP_Simple_v3.sol:PP_Simple_v3")
         );
-        impl_mod_PP_Streaming_v2 = deployAndLogWithCreate2(
-            "PP_Streaming_v2", vm.getCode("PP_Streaming_v2.sol:PP_Streaming_v2")
+        impl_mod_PP_Streaming_v3 = deployAndLogWithCreate2(
+            "PP_Streaming_v3", vm.getCode("PP_Streaming_v3.sol:PP_Streaming_v3")
         );
 
         // Orchestrator

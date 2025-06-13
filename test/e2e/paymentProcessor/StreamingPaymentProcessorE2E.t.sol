@@ -15,9 +15,9 @@ import {
     ILM_PC_RecurringPayments_v3
 } from "@lm/LM_PC_RecurringPayments_v3.sol";
 
-import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+import {PP_Streaming_v3} from "src/modules/paymentProcessor/PP_Streaming_v3.sol";
 
-import {IPP_Streaming_v2} from "@pp/interfaces/IPP_Streaming_v2.sol";
+import {IPP_Streaming_v3} from "@pp/interfaces/IPP_Streaming_v3.sol";
 
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -48,7 +48,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     IOrchestrator_v1 orchestrator;
     FM_DepositVault_v1 fundingManager;
     LM_PC_RecurringPayments_v3 recurringPaymentManager;
-    PP_Streaming_v2 streamingPaymentProcessor;
+    PP_Streaming_v3 streamingPaymentProcessor;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -131,10 +131,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(IPP_Streaming_v2).interfaceId
+                    type(IPP_Streaming_v3).interfaceId
                 )
             ) {
-                streamingPaymentProcessor = PP_Streaming_v2(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v3(modulesList[i]);
                 break;
             }
         }
@@ -153,7 +153,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         init();
 
         // ---------------------------------------------------------------------------------------------------
-        // User side of the PP_Streaming_v2
+        // User side of the PP_Streaming_v3
 
         // Create 3 different Payments
 
@@ -177,7 +177,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // Check Payments
         // viewAllPaymentOrders
         // Lets see all avaialable orders
-        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v3.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 
@@ -292,7 +292,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.trigger();
 
         // Check if everyone has a running payment active
-        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v3.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 

@@ -5,10 +5,10 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
-    IPP_Streaming_v2,
+    IPP_Streaming_v3,
     IPaymentProcessor_v2,
     IERC20PaymentClientBase_v3
-} from "@pp/interfaces/IPP_Streaming_v2.sol";
+} from "@pp/interfaces/IPP_Streaming_v3.sol";
 
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
@@ -52,9 +52,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
-contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
+contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -63,7 +65,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId == type(IPP_Streaming_v2).interfaceId
+        return interfaceId == type(IPP_Streaming_v3).interfaceId
             || interfaceId == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -159,7 +161,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         _setDefaultTimes(_defaultStart, _defaultCliff, _defaultEnd);
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function claimAll(address client) external {
         if (activeStreams[client][_msgSender()].length == 0) {
             revert Module__PaymentProcessor__NothingToClaim(
@@ -185,7 +187,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function claimForSpecificStream(address client, uint streamId) external {
         if (
             activeStreams[client][_msgSender()].length == 0
@@ -272,7 +274,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         _cancelRunningOrders(address(client));
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function removeAllPaymentReceiverPayments(
         address client,
         address paymentReceiver
@@ -288,7 +290,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         _removePayment(client, paymentReceiver);
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
@@ -311,7 +313,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function isActivePaymentReceiver(address client, address paymentReceiver)
         public
         view
@@ -320,7 +322,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         return activeStreams[client][paymentReceiver].length > 0;
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function startForSpecificStream(
         address client,
         address paymentReceiver,
@@ -329,7 +331,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         return streams[client][paymentReceiver][streamId]._start;
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function cliffForSpecificStream(
         address client,
         address paymentReceiver,
@@ -338,7 +340,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         return streams[client][paymentReceiver][streamId]._cliff;
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function endForSpecificStream(
         address client,
         address paymentReceiver,
@@ -347,7 +349,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         return streams[client][paymentReceiver][streamId]._end;
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function releasedForSpecificStream(
         address client,
         address paymentReceiver,
@@ -356,7 +358,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         return streams[client][paymentReceiver][streamId]._released;
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function streamedAmountForSpecificStream(
         address client,
         address paymentReceiver,
@@ -368,7 +370,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         );
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function releasableForSpecificStream(
         address client,
         address paymentReceiver,
@@ -397,7 +399,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
         }
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function viewAllPaymentOrders(address client, address paymentReceiver)
         external
         view
@@ -436,7 +438,7 @@ contract PP_Streaming_v2 is Module_v2, IPP_Streaming_v2 {
             && _validOriginAndTargetChain(order.originChainId, order.targetChainId);
     }
 
-    /// @inheritdoc IPP_Streaming_v2
+    /// @inheritdoc IPP_Streaming_v3
     function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
         external
         permissioned

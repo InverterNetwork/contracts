@@ -383,7 +383,7 @@ contract ModuleBeaconDeployer_v1 is
                     streamingPaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Streaming_v2,
+                    impl_mod_PP_Streaming_v3,
                     streamingPaymentProcessorMetadata.majorVersion,
                     streamingPaymentProcessorMetadata.minorVersion,
                     streamingPaymentProcessorMetadata.patchVersion

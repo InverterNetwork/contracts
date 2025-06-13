@@ -17,10 +17,10 @@ import {
 
 // Modules that are used in this E2E test
 import {
-    PP_Streaming_v2,
-    IPP_Streaming_v2,
+    PP_Streaming_v3,
+    IPP_Streaming_v3,
     IERC20PaymentClientBase_v3
-} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+} from "src/modules/paymentProcessor/PP_Streaming_v3.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -173,12 +173,12 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
         // 4. Let the paymentReceivers claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
-        PP_Streaming_v2 streamingPaymentProcessor;
+        PP_Streaming_v3 streamingPaymentProcessor;
         for (uint i; i < modulesList.length; ++i) {
-            try IPP_Streaming_v2(modulesList[i]).unclaimable(
+            try IPP_Streaming_v3(modulesList[i]).unclaimable(
                 paymentReceiver1, address(token), paymentReceiver2
             ) returns (uint) {
-                streamingPaymentProcessor = PP_Streaming_v2(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v3(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -186,7 +186,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v3.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver1
         );

@@ -22,7 +22,7 @@ import {FM_EXT_TokenVault_v2} from "@fm/extensions/FM_EXT_TokenVault_v2.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v3} from "src/modules/paymentProcessor/PP_Simple_v3.sol";
-import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+import {PP_Streaming_v3} from "src/modules/paymentProcessor/PP_Streaming_v3.sol";
 import {LM_PC_Bounties_v3} from "@lm/LM_PC_Bounties_v3.sol";
 import {LM_PC_RecurringPayments_v3} from "@lm/LM_PC_RecurringPayments_v3.sol";
 import {LM_PC_PaymentRouter_v3} from "@lm/LM_PC_PaymentRouter_v3.sol";
@@ -557,9 +557,9 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // PP_Streaming_v2
+    // PP_Streaming_v3
 
-    PP_Streaming_v2 streamingPaymentProcessorImpl;
+    PP_Streaming_v3 streamingPaymentProcessorImpl;
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
@@ -568,7 +568,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/streaming-payment-processor",
-        "PP_Streaming_v2"
+        "PP_Streaming_v3"
     );
 
     /*
@@ -581,7 +581,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpStreamingPaymentProcessor() internal {
         // Deploy module implementations.
-        streamingPaymentProcessorImpl = new PP_Streaming_v2();
+        streamingPaymentProcessorImpl = new PP_Streaming_v3();
 
         // Deploy module beacons.
         streamingPaymentProcessorBeacon = new InverterBeacon_v1(

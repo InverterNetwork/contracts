@@ -10,7 +10,41 @@ import {IPaymentProcessor_v2} from
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IPP_Streaming_v2 is IPaymentProcessor_v2 {
+/**
+ * @title   Inverter Linear Streaming Payment Processor
+ *
+ * @notice  Manages continuous and linear streaming payment streams within the Inverter
+ *          Network, allowing multiple concurrent streams per recipient. Provides tools
+ *          to claim streamed amounts and manage payment schedules dynamically.
+ *
+ * @dev     Supports complex payment interactions including streaming based on time for
+ *          multiple clients and recipients, integrated with error handling for
+ *          payments and managing active streaming schedules and their cancellations.
+ *
+ *          DISCLAIMER: Known Limitations
+ *          This contract has a known limitation that could potentially lead to a Denial of Service
+ *          (DoS) attack. The `activePaymentReceivers` array for a client can grow unbounded,
+ *          which may cause gas-intensive operations to exceed block gas limits under certain
+ *          conditions. This could temporarily render some functions inoperable.
+ *
+ *          While this limitation does not directly risk user funds, it may temporarily prevent
+ *          users from staking, unstaking, or claiming rewards if exploited. The development
+ *          team is aware of this issue and may implement a fix in future upgrades if necessary.
+ *
+ *          CAUTION: Workflow deployers should be especially careful when using this payment processor
+ *          with contracts that allow users to directly initiate payment streams. Such setups
+ *          are particularly vulnerable to this limitation and could more easily trigger a DoS condition.
+ *
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface IPP_Streaming_v3 is IPaymentProcessor_v2 {
     //--------------------------------------------------------------------------
     // Structs
 

@@ -251,6 +251,6 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "PP_Streaming_v2"
+        "PP_Streaming_v3"
     );
 }

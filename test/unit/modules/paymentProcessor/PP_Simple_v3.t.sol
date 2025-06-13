@@ -32,7 +32,7 @@ import {
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
-contract PP_SimpleV2Test is ModuleTest {
+contract PP_Simple_v2_Test is ModuleTest {
     // SuT
     PP_Simple_v3_Exposed paymentProcessor;
 

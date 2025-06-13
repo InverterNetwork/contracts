@@ -17,14 +17,14 @@ import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 import {
-    PP_Streaming_v2,
-    IPP_Streaming_v2
-} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+    PP_Streaming_v3,
+    IPP_Streaming_v3
+} from "src/modules/paymentProcessor/PP_Streaming_v3.sol";
 
 // Mocks
 
-import {PP_Streaming_v2_Exposed} from
-    "@mocks/modules/paymentProcessor/PP_Streaming_v2_Exposed.sol";
+import {PP_Streaming_v3_Exposed} from
+    "@mocks/modules/paymentProcessor/PP_Streaming_v3_Exposed.sol";
 
 import {
     IERC20PaymentClientBase_v3,
@@ -35,7 +35,7 @@ import {
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
-contract PP_StreamingV1Test is ModuleTest {
+contract PP_Streaming_v3_Test is ModuleTest {
     bytes32 internal constant _START_END_CLIFF_FLAG =
         0x000000000000000000000000000000000000000000000000000000000000000e;
     uint internal constant defaultStart = 69;
@@ -43,7 +43,7 @@ contract PP_StreamingV1Test is ModuleTest {
     uint internal constant defaultEnd = 420;
 
     // SuT
-    PP_Streaming_v2_Exposed paymentProcessor;
+    PP_Streaming_v3_Exposed paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -90,8 +90,8 @@ contract PP_StreamingV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Streaming_v2_Exposed());
-        paymentProcessor = PP_Streaming_v2_Exposed(Clones.clone(impl));
+        address impl = address(new PP_Streaming_v3_Exposed());
+        paymentProcessor = PP_Streaming_v3_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -133,7 +133,7 @@ contract PP_StreamingV1Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPP_Streaming_v2).interfaceId
+                type(IPP_Streaming_v3).interfaceId
             )
         );
     }
@@ -753,7 +753,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // Now, let's check whether all streaming informations exist or not
         // checking for paymentReceiver2
-        IPP_Streaming_v2.Stream[] memory paymentReceiverStreams;
+        IPP_Streaming_v3.Stream[] memory paymentReceiverStreams;
         paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver2
         );
@@ -893,7 +893,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // This means, that when we call removePaymentForSpecificStream, that should increase the balance of the
         // paymentReceiver by 1/2 of the vested token amount
-        IPP_Streaming_v2.Stream[] memory paymentReceiverStreams =
+        IPP_Streaming_v3.Stream[] memory paymentReceiverStreams =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
@@ -1008,7 +1008,7 @@ contract PP_StreamingV1Test is ModuleTest {
         // Let's note down the current balance of the paymentReceiver1
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        IPP_Streaming_v2.Stream[] memory paymentReceiverStreams =
+        IPP_Streaming_v3.Stream[] memory paymentReceiverStreams =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
@@ -2226,7 +2226,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_Streaming_v2
+                IPP_Streaming_v3
                     .Module__PP_Streaming__InvalidDefaultTimes
                     .selector,
                 defaultStart,
