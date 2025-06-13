@@ -29,6 +29,8 @@
 
 ### 2. Implementation
 
+Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol`
+
 ### 2.0 `_init`
 
 #### 2.0.1 setting tokens [DONE]
@@ -113,9 +115,7 @@
 - tests (via exposed function)
   - returns expected value for given input (multiple curve scenarios)
 
-### 2.9. handle functions: token transfers & mints [BLOCKED]
-
-Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol`
+### 2.9. handle functions: token transfers & mints [DONE]
 
 #### 2.9.1. `_handleCollateralTokensBeforeBuy` [DONE]
 
@@ -144,8 +144,21 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 - [x] 5. Override `_getFunctionFeesAndTreasuryAddresses` to retrieve and returned cached protocol fees (from `_protocolFeeCache` struct) depending on the function selector
 - [x] 6. Unit test for `_getFunctionFeesAndTreasuryAddresses`: retrieves correct protocol fees and treasury addresses from `_protocolFeeCache` struct.
 
-### 2.11. Project Fees Preparation
+### 2.11. Project Fees Preparation [DONE]
 
 - [x] 1. Add `_getBuyFee() virtual` functions to `BondingCurveBase_v1`; update `calculatePurchaseReturn` and ; run tests to ensure nothing breaks; add tests for new getters (to be tested via `test/mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol`) to `test/unit/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.t.sol`
 - [x] 2. Add `_getSellFee() virtual` functions to `RedeemingBondingCurveBase_v1p`; udate `calculateSaleReturn` to use new getter; run tests to ensure nothing breaks; add tests for new getters (to be tested via `test/mocks/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol`) to `test/unit/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol`
-- [ ] 3. Add overwritten `_getBuyFee()` and `_getSellFee()` functions to `FM_BC_Discrete_Redeeming_VirtualSupply_v1` and `FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed`; for now they just return the constant values defined in the contract (should be covered by tests, can be existing tests)
+- [x] 3. Add overwritten `_getBuyFee()` and `_getSellFee()` functions to `FM_BC_Discrete_Redeeming_VirtualSupply_v1` and `FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed`; for now they just return the constant values defined in the contract (should be covered by tests, can be existing tests)
+
+### 2.12. Remove inheritance dependency from `VirtualIssuanceSupplyBase_v1` [DONE]
+
+- remove inheritance
+- remove `setVirtualIssuanceSupply` and internal `_setVirtualIssuanceSupply` functions, also from exposed contract
+- remove all related tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`
+- run tests to ensure nothing breaks
+
+### 2.13. Test: Buy & sell
+
+- [ ] 1. Add test for `buyTokens()` function in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` contract
+  - should use default values for fees
+  - should assert: token transfers, correct fee amounts

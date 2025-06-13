@@ -503,78 +503,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         assertEq(fmBcDiscrete.getVirtualCollateralSupply(), _newSupply);
     }
 
-    /* Test _setVirtualIssuanceSupply function (exposed)
-        └── Given a new virtual issuance supply
-            └── When exposed_setVirtualIssuanceSupply is called
-                └── Then it should set the new supply
-                    └── And it should emit a VirtualIssuanceSupplySet event
-    */
-    function testInternal_SetVirtualIssuanceSupply_WorksAndEmitsEvent(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
-        uint oldSupply = fmBcDiscrete.getVirtualIssuanceSupply();
-
-        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
-        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
-            _newSupply, oldSupply
-        );
-
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(_newSupply);
-        assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
-    }
-
-    /* Test setVirtualIssuanceSupply function
-        ├── Given caller is not the Orchestrator_v1 admin
-        │   └── When the function setVirtualIssuanceSupply() is called
-        │       └── Then it should revert
-        └── Given the caller is the Orchestrator_v1 admin
-            ├── And the new token supply is zero
-            │   └── When the setVirtualIssuanceSupply() is called
-            │       └── Then it should revert
-            └── And the new token supply is > zero
-                └── When the function setVirtualIssuanceSupply() is called
-                    └── Then it should set the new token supply
-                        └── And it should emit an event
-    */
-    function testSetVirtualIssuanceSupply_FailsGivenCallerNotOrchestratorAdmin(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                non_admin_address
-            )
-        );
-        vm.prank(non_admin_address);
-        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
-    }
-
-    function testSetVirtualIssuanceSupply_FailsIfZero() public {
-        uint _newSupply = 0;
-        vm.expectRevert(
-            IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
-                .selector
-        );
-        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
-    }
-
-    function testSetVirtualIssuanceSupply_Works(uint _newSupply) public {
-        vm.assume(_newSupply != 0);
-        uint oldSupply = fmBcDiscrete.getVirtualIssuanceSupply();
-
-        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
-        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
-            _newSupply, oldSupply
-        );
-
-        fmBcDiscrete.setVirtualIssuanceSupply(_newSupply);
-        assertEq(fmBcDiscrete.getVirtualIssuanceSupply(), _newSupply);
-    }
-
     /* Test reconfigureSegments function
         ├── given caller is not the Orchestrator_v1 admin
         │   └── when the function reconfigureSegments() is called
@@ -617,7 +545,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
 
         fmBcDiscrete.exposed_setSegments(currentSegments);
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(initialIssuanceSupply);
+        _ensureTotalIssuanceSupply(initialIssuanceSupply);
         fmBcDiscrete.exposed_setVirtualCollateralSupply(
             initialCollateralReserve
         );
@@ -647,7 +575,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             ._calculateReserveForSupply(currentSegments, initialIssuanceSupply);
 
         fmBcDiscrete.exposed_setSegments(currentSegments);
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(initialIssuanceSupply);
+        _ensureTotalIssuanceSupply(initialIssuanceSupply);
         fmBcDiscrete.exposed_setVirtualCollateralSupply(
             initialCollateralReserve
         );
@@ -703,7 +631,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     */
     function testGetStaticPriceForSelling_AtSegmentTransitionPoint() public {
         uint virtualIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
+        _ensureTotalIssuanceSupply(virtualIssuanceSupply);
         assertEq(
             fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG0_INITIAL_PRICE
         );
@@ -712,7 +640,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     function testGetStaticPriceForSelling_AtExactStepTransitionPoint() public {
         uint virtualIssuanceSupply =
             DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP;
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(virtualIssuanceSupply);
+        _ensureTotalIssuanceSupply(virtualIssuanceSupply);
         assertEq(
             fmBcDiscrete.getStaticPriceForSelling(), DEFAULT_SEG1_INITIAL_PRICE
         );
@@ -774,7 +702,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         public
     {
         uint startingIssuanceSupply = DEFAULT_SEG0_SUPPLY_PER_STEP;
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(startingIssuanceSupply);
+        _ensureTotalIssuanceSupply(startingIssuanceSupply);
         uint collateralToSpend = 20 ether;
         uint expectedTokensToMint = 25 ether;
         assertEq(
@@ -808,9 +736,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
                 └── Then it should revert with DiscreteCurveMathLib__InsufficientIssuanceToSell
     */
     function testRedeemTokensFormulaWrapper_FlatSegment() public {
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
-            DEFAULT_SEG0_SUPPLY_PER_STEP
-        );
+        _ensureTotalIssuanceSupply(DEFAULT_SEG0_SUPPLY_PER_STEP);
         uint tokensToRedeem = 20 ether;
         uint expectedCollateral = 10 ether;
         assertEq(
@@ -821,7 +747,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_SpanningSegments() public {
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+        _ensureTotalIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
         );
         uint tokensToRedeem = 35 ether;
@@ -834,9 +760,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_SlopedSegment() public {
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
-            defaultCurve.totalCapacity
-        );
+        _ensureTotalIssuanceSupply(defaultCurve.totalCapacity);
         uint tokensToRedeem = 30 ether;
         uint expectedCollateral = (25 ether * 82) / 100 + (5 ether * 80) / 100;
         assertEq(
@@ -847,7 +771,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_PartialStep() public {
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(
+        _ensureTotalIssuanceSupply(
             DEFAULT_SEG0_SUPPLY_PER_STEP + DEFAULT_SEG1_SUPPLY_PER_STEP
         );
         uint tokensToRedeem = 10 ether;
@@ -860,7 +784,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     function testRedeemTokensFormulaWrapper_RevertsOnZeroTokens() public {
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(50 ether);
+        _ensureTotalIssuanceSupply(50 ether);
         vm.expectRevert(
             IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroIssuanceInput
@@ -873,7 +797,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         public
     {
         uint currentSupply = 50 ether;
-        fmBcDiscrete.exposed_setVirtualIssuanceSupply(currentSupply);
+        _ensureTotalIssuanceSupply(currentSupply);
         uint tokensToRedeem = 51 ether;
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1320,6 +1244,31 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
     // =========================================================================
     // Helpers
+
+    function _ensureTotalIssuanceSupply(uint _targetSupply) internal {
+        uint currentTotalSupply = issuanceToken.totalSupply();
+        if (_targetSupply > currentTotalSupply) {
+            issuanceToken.mint(
+                address(this), _targetSupply - currentTotalSupply
+            );
+        } else if (_targetSupply < currentTotalSupply) {
+            uint amountToBurn = currentTotalSupply - _targetSupply;
+            // Ensure address(this) has enough tokens to burn.
+            // Mint to self if necessary, as address(this) is a minter.
+            if (issuanceToken.balanceOf(address(this)) < amountToBurn) {
+                issuanceToken.mint(
+                    address(this),
+                    amountToBurn - issuanceToken.balanceOf(address(this))
+                );
+            }
+            issuanceToken.burn(address(this), amountToBurn);
+        }
+        assertEq(
+            issuanceToken.totalSupply(),
+            _targetSupply,
+            "Failed to ensure total issuance supply"
+        );
+    }
 
     function helper_createSegment(
         uint _initialPrice,

@@ -73,12 +73,6 @@ interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
     function reconfigureSegments(PackedSegment[] memory newSegments_)
         external;
 
-    /// @notice Sets the virtual issuance supply.
-    /// @dev    Can only be called by the orchestrator admin.
-    ///         Curve interactions (buy/sell) must be closed.
-    /// @param  newSupply_ The new virtual issuance supply.
-    function setVirtualIssuanceSupply(uint newSupply_) external;
-
     /// @notice Sets the virtual collateral supply.
     /// @dev    Can only be called by the orchestrator admin.
     ///         Curve interactions (buy/sell) must be closed.

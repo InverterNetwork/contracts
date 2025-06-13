@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 // Internal
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {VirtualIssuanceSupplyBase_v1} from
-    "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
 import {VirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/abstracts/VirtualCollateralSupplyBase_v1.sol";
 import {RedeemingBondingCurveBase_v1} from
@@ -34,7 +32,6 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     IFM_BC_Discrete_Redeeming_VirtualSupply_v1,
     IFundingManager_v1,
-    VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
 {
@@ -43,11 +40,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         public
         view
         virtual
-        override(
-            RedeemingBondingCurveBase_v1,
-            VirtualCollateralSupplyBase_v1,
-            VirtualIssuanceSupplyBase_v1
-        )
+        override(RedeemingBondingCurveBase_v1, VirtualCollateralSupplyBase_v1)
         returns (bool)
     {
         return interfaceId
@@ -234,7 +227,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         returns (uint)
     {
         (,, uint priceAtCurrentStep) =
-            _segments._findPositionForSupply(virtualIssuanceSupply);
+            _segments._findPositionForSupply(issuanceToken.totalSupply());
         return priceAtCurrentStep;
     }
 
@@ -259,18 +252,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     }
 
     /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
-    function setVirtualIssuanceSupply(uint virtualSupply_)
-        external
-        virtual
-        override(
-            VirtualIssuanceSupplyBase_v1, IFM_BC_Discrete_Redeeming_VirtualSupply_v1
-        )
-        onlyOrchestratorAdmin
-    {
-        _setVirtualIssuanceSupply(virtualSupply_);
-    }
-
-    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function setVirtualCollateralSupply(uint virtualSupply_)
         external
         virtual
@@ -292,7 +273,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         uint currentVirtualCollateralSupply = virtualCollateralSupply;
 
         uint newCalculatedReserve =
-            newSegments_._calculateReserveForSupply(virtualIssuanceSupply);
+            newSegments_._calculateReserveForSupply(issuanceToken.totalSupply());
 
         if (newCalculatedReserve != currentVirtualCollateralSupply) {
             revert InvarianceCheckFailed(
@@ -463,15 +444,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         super._setVirtualCollateralSupply(virtualSupply_);
     }
 
-    /// @dev    Internal function to directly set the virtual issuance supply to a new value.
-    /// @param  virtualSupply_ The new value to set for the virtual issuance supply.
-    function _setVirtualIssuanceSupply(uint virtualSupply_)
-        internal
-        override(VirtualIssuanceSupplyBase_v1)
-    {
-        super._setVirtualIssuanceSupply(virtualSupply_);
-    }
-
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         view
@@ -480,7 +452,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         returns (uint)
     {
         (uint collateralToReturn,) = _segments._calculateSaleReturn(
-            _depositAmount, virtualIssuanceSupply
+            _depositAmount, issuanceToken.totalSupply()
         );
         return collateralToReturn;
     }
@@ -517,7 +489,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         returns (uint)
     {
         (uint tokensToMint,) = _segments._calculatePurchaseReturn(
-            _depositAmount, virtualIssuanceSupply
+            _depositAmount, issuanceToken.totalSupply()
         );
         return tokensToMint;
     }
