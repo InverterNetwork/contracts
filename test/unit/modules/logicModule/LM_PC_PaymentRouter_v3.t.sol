@@ -30,7 +30,7 @@ import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
-import {PP_Simple_v3, IPaymentProcessor_v2} from "@pp/PP_Simple_v3.sol";
+import {PP_Simple_v3, IPaymentProcessor_v3} from "@pp/PP_Simple_v3.sol";
 
 import {
     IFundingManager_v1,
@@ -309,7 +309,7 @@ contract LM_PC_PaymentRouter_v3_Test_pushPaymentBatched is
             );
         }
         vm.expectEmit(true, false, false, false);
-        emit IPaymentProcessor_v2.PaymentOrderProcessed(
+        emit IPaymentProcessor_v3.PaymentOrderProcessed(
             address(0),
             address(0),
             address(0),

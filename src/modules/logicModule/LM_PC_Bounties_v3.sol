@@ -8,7 +8,7 @@ import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {ILM_PC_Bounties_v3} from "@lm/interfaces/ILM_PC_Bounties_v3.sol";
 import {
     IERC20PaymentClientBase_v3,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Dependencies

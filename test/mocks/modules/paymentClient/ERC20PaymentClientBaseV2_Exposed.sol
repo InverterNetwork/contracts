@@ -17,8 +17,8 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Interfaces
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
@@ -71,14 +71,14 @@ contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v3 {
     }
 
     function exposed_ensureTokenAllowance(
-        IPaymentProcessor_v2 spender,
+        IPaymentProcessor_v3 spender,
         address token
     ) external {
         return _ensureTokenAllowance(spender, token);
     }
 
     function exposed_isAuthorizedPaymentProcessor(
-        IPaymentProcessor_v2 processor
+        IPaymentProcessor_v3 processor
     ) external view returns (bool) {
         return _isAuthorizedPaymentProcessor(processor);
     }

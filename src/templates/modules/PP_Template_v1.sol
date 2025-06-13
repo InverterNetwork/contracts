@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Template_v1} from "./IPP_Template_v1.sol";
@@ -23,7 +23,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *          processor. The contract showcases the following:
  *          - Inherit from the Module_v2 contract to enable interaction with
  *            the Inverter workflow.
- *          - Use of the IPaymentProcessor_v2 interface to facilitate
+ *          - Use of the IPaymentProcessor_v3 interface to facilitate
  *            interaction with a payment client.
  *          - Implement custom interface which has all the public facing
  *            functions, errors, events and structs.
@@ -59,7 +59,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         returns (bool)
     {
         return interfaceId_ == type(IPP_Template_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -122,7 +122,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Public (Mutating)
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         clientIsValid(address(client_))
@@ -146,7 +146,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         uint amount_ = orders[0].amount * _payoutAmountMultiplier;
         _paymentId = _paymentId + 1;
 
-        // Emit event of the IPaymentProcessor_v2. This is used by Inverter's
+        // Emit event of the IPaymentProcessor_v3. This is used by Inverter's
         // Indexer.
         emit PaymentOrderProcessed(
             address(client_),
@@ -172,12 +172,12 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         // the accounting correct.
         client_.amountPaid(token_, amount_);
 
-        // Emit event of the IPaymentProcessor_v2. This is used by Inverter's
+        // Emit event of the IPaymentProcessor_v3. This is used by Inverter's
         // Indexer.
         emit TokensReleased(recipient_, token_, amount_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function cancelRunningPayments(IERC20PaymentClientBase_v3 client_)
         external
         view
@@ -189,7 +189,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function unclaimable(
         address, /*client_*/
         address, /*token_*/
@@ -202,7 +202,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         return 0;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function claimPreviouslyUnclaimable(
         address, /*client_*/
         address, /*token_*/
@@ -211,7 +211,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v2 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function validPaymentOrder(
         IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) external view returns (bool) {

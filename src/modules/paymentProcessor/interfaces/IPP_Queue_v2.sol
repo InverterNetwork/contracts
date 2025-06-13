@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
@@ -15,7 +15,7 @@ import {IERC20PaymentClientBase_v3} from
  *
  * @dev     This contract inherits from:
  *          - IPP_Queue_v2: Implementation interface.
- *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - IPaymentProcessor_v3: Payment processor interface.
  *          - Module_v2: Base module functionality.
  *
  *          Key features:
@@ -65,7 +65,7 @@ import {IERC20PaymentClientBase_v3} from
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_v2 is IPaymentProcessor_v2 {
+interface IPP_Queue_v2 is IPaymentProcessor_v3 {
     // -------------------------------------------------------------------------
     // Type Declarations
 

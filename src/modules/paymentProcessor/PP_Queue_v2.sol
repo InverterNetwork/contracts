@@ -10,7 +10,7 @@ import {ERC165Upgradeable} from
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Queue_v2} from "@pp/interfaces/IPP_Queue_v2.sol";
@@ -26,7 +26,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *
  * @dev     This contract inherits from:
  *          - IPP_Queue_v2: Implementation interface.
- *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - IPaymentProcessor_v3: Payment processor interface.
  *          - Module_v2: Base module functionality.
  *
  *          Key features:
@@ -95,7 +95,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
         returns (bool supported_)
     {
         return interfaceId_ == type(IPP_Queue_v2).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -297,7 +297,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
         size_ = _queue[client_].length();
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function unclaimable(
         address client_,
         address token_,
@@ -307,7 +307,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
             _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function validPaymentOrder(
         IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) external view virtual returns (bool isValid_) {
@@ -343,7 +343,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
         _setFailedOrdersTreasury(treasury_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
@@ -364,7 +364,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
         _executePaymentQueue(address(client_));
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function cancelRunningPayments(IERC20PaymentClientBase_v3 client_)
         external
         view
@@ -374,7 +374,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function claimPreviouslyUnclaimable(
         address client_,
         address token_,

@@ -8,7 +8,7 @@ import {ILM_PC_RecurringPayments_v3} from
     "@lm/interfaces/ILM_PC_RecurringPayments_v3.sol";
 import {
     IERC20PaymentClientBase_v3,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Dependencies

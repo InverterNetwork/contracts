@@ -5,9 +5,9 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
-    IPaymentProcessor_v2,
+    IPaymentProcessor_v3,
     IERC20PaymentClientBase_v3
-} from "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+} from "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
@@ -24,7 +24,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @notice  Manages ERC20 payment processing for modules within the Inverter Network
  *          that are compliant with the {IERC20PaymentClientBase_v3} interface.
  *
- * @dev     Inherits {Module_v2} and implements {IPaymentProcessor_v2} to handle payment
+ * @dev     Inherits {Module_v2} and implements {IPaymentProcessor_v3} to handle payment
  *          orders from registered modules, ensuring only eligible modules can initiate
  *          payments. Utilizes {SafeERC20} for secure token transfers.
  *
@@ -36,7 +36,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
+contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v3 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -45,7 +45,7 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId == type(IPaymentProcessor_v2).interfaceId
+        return interfaceId == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -94,9 +94,9 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
     }
 
     //--------------------------------------------------------------------------
-    // IPaymentProcessor_v2 Functions
+    // IPaymentProcessor_v3 Functions
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function processPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
@@ -157,7 +157,7 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
         }
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function cancelRunningPayments(IERC20PaymentClientBase_v3 client)
         external
         view
@@ -168,7 +168,7 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function unclaimable(address client, address token, address paymentReceiver)
         public
         view
@@ -177,7 +177,7 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
         return unclaimableAmountsForRecipient[client][token][paymentReceiver];
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -192,7 +192,7 @@ contract PP_Simple_v3 is Module_v2, IPaymentProcessor_v2 {
         _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function validPaymentOrder(
         IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external returns (bool) {

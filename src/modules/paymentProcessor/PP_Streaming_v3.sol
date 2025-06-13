@@ -6,7 +6,7 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
     IPP_Streaming_v3,
-    IPaymentProcessor_v2,
+    IPaymentProcessor_v3,
     IERC20PaymentClientBase_v3
 } from "@pp/interfaces/IPP_Streaming_v3.sol";
 
@@ -66,7 +66,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         returns (bool)
     {
         return interfaceId == type(IPP_Streaming_v3).interfaceId
-            || interfaceId == type(IPaymentProcessor_v2).interfaceId
+            || interfaceId == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -172,7 +172,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         _claimAll(client, _msgSender());
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -208,7 +208,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         _claimForSpecificStream(client, _msgSender(), streamId);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function processPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
@@ -247,7 +247,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
                     numStreams[address(client)][orders[i].recipient] + 1
                 );
 
-                emit IPaymentProcessor_v2.PaymentOrderProcessed(
+                emit IPaymentProcessor_v3.PaymentOrderProcessed(
                     address(client),
                     orders[i].recipient,
                     orders[i].paymentToken,
@@ -265,7 +265,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         }
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function cancelRunningPayments(IERC20PaymentClientBase_v3 client)
         external
         onlyModule
@@ -381,7 +381,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         ) - releasedForSpecificStream(client, paymentReceiver, streamId);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function unclaimable(address client, address token, address paymentReceiver)
         public
         view
@@ -425,7 +425,7 @@ contract PP_Streaming_v3 is Module_v2, IPP_Streaming_v3 {
         return paymentReceiverStreams;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function validPaymentOrder(
         IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) public returns (bool) {

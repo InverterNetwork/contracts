@@ -7,7 +7,7 @@ import {IOrchestrator_v1} from
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 import {
     IERC20PaymentClientBase_v3,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 import {
     ERC20PaymentClientBase_v3,

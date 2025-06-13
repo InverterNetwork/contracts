@@ -29,7 +29,7 @@ import {Authorizer_v2_Mock} from
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
     PaymentProcessorV1Mock,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 // External Dependencies
 import {TransparentUpgradeableProxy} from
@@ -301,11 +301,11 @@ abstract contract ModuleTest is Test {
         internal
     {
         _orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v2(paymentProcessor_)
+            IPaymentProcessor_v3(paymentProcessor_)
         );
         vm.warp(block.timestamp + 73 hours);
         _orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v2(paymentProcessor_)
+            IPaymentProcessor_v3(paymentProcessor_)
         );
     }
 }

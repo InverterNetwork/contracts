@@ -18,7 +18,7 @@ import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {
     IOrchestrator_v1,
     IAuthorizer_v2,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {TransactionForwarder_v1} from
@@ -139,7 +139,7 @@ contract OrchestratorV1Test is Test {
             modules,
             fundingManager,
             authorizer,
-            IPaymentProcessor_v2(wrongModule),
+            IPaymentProcessor_v3(wrongModule),
             governor
         );
 
@@ -624,7 +624,7 @@ contract OrchestratorV1Test is Test {
 
         vm.prank(address(0xB0B));
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v2(address(0))
+            IPaymentProcessor_v3(address(0))
         );
     }
 
@@ -642,7 +642,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v2(address(0))
+            IPaymentProcessor_v3(address(0))
         );
     }
 
@@ -662,7 +662,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.cancelPaymentProcessorUpdate(
-            IPaymentProcessor_v2(address(0))
+            IPaymentProcessor_v3(address(0))
         );
     }
 
@@ -729,7 +729,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v2(newPaymentProcessor)
+            IPaymentProcessor_v3(newPaymentProcessor)
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
@@ -764,7 +764,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v2(newPaymentProcessor)
+            IPaymentProcessor_v3(newPaymentProcessor)
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);

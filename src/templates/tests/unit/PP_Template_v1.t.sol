@@ -24,7 +24,7 @@ import {
 // System under Test (SuT)
 import {
     IPP_Template_v1,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "src/templates/modules/PP_Template_v1.sol";
 
 /**
@@ -107,7 +107,7 @@ contract PP_Template_v1_Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPaymentProcessor_v2).interfaceId
+                type(IPaymentProcessor_v3).interfaceId
             )
         );
         assertTrue(

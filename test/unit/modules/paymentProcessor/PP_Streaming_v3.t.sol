@@ -13,8 +13,8 @@ import {
 } from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 import {
     PP_Streaming_v3,
@@ -198,7 +198,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
                 0,
                 block.timestamp + durations[i]
             );
-            emit IPaymentProcessor_v2.PaymentOrderProcessed(
+            emit IPaymentProcessor_v3.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
@@ -1120,7 +1120,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v2
+                IPaymentProcessor_v3
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -1145,7 +1145,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v2
+                IPaymentProcessor_v3
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -1360,7 +1360,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
                 0,
                 duration + block.timestamp
             );
-            emit IPaymentProcessor_v2.PaymentOrderProcessed(
+            emit IPaymentProcessor_v3.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
@@ -1445,7 +1445,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v2
+                IPaymentProcessor_v3
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -1470,7 +1470,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v2
+                IPaymentProcessor_v3
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -1544,7 +1544,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
             vm.startPrank(recipient);
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IPaymentProcessor_v2
+                    IPaymentProcessor_v3
                         .Module__PaymentProcessor__NothingToClaim
                         .selector,
                     address(paymentClient),
@@ -1723,7 +1723,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
     function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v2
+                IPaymentProcessor_v3
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 address(paymentClient),

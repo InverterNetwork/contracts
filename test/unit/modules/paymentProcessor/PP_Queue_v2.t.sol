@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 
 // External
 import {Test} from "forge-std/Test.sol";
@@ -123,7 +123,7 @@ contract PP_Queue_v2_Test is ModuleTest {
 
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
-            queue.supportsInterface(type(IPaymentProcessor_v2).interfaceId)
+            queue.supportsInterface(type(IPaymentProcessor_v3).interfaceId)
         );
         assertTrue(queue.supportsInterface(type(IPP_Queue_v2).interfaceId));
         assertTrue(queue.supportsInterface(type(IERC165).interfaceId));
@@ -2304,10 +2304,10 @@ contract PP_Queue_v2_Test is ModuleTest {
         );
 
         vm.expectEmit(true, true, true, true, address(queue));
-        emit IPaymentProcessor_v2.TokensReleased(
+        emit IPaymentProcessor_v3.TokensReleased(
             validRecipient_, address(_token), netAmount
         );
-        emit IPaymentProcessor_v2.TokensReleased(
+        emit IPaymentProcessor_v3.TokensReleased(
             protocolTreasury_, address(_token), protocolFeeAmount
         );
         emit IModule_v2.ProtocolFeeTransferred(

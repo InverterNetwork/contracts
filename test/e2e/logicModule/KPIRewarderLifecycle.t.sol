@@ -15,7 +15,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
-import {PP_Simple_v3, IPaymentProcessor_v2} from "@pp/PP_Simple_v3.sol";
+import {PP_Simple_v3, IPaymentProcessor_v3} from "@pp/PP_Simple_v3.sol";
 
 import {
     LM_PC_KPIRewarder_v3,

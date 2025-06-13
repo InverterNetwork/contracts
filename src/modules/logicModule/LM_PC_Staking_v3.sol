@@ -6,7 +6,7 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
     IERC20PaymentClientBase_v3,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {ILM_PC_Staking_v3} from "@lm/interfaces/ILM_PC_Staking_v3.sol";
 
