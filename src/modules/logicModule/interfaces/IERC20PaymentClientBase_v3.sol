@@ -33,6 +33,8 @@ import {IPaymentProcessor_v2} from
  *          contain 3 elements of the type specified in the master list, each
  *          stored as bytes32 value.
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
 interface IERC20PaymentClientBase_v3 {

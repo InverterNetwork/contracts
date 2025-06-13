@@ -36,6 +36,8 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
 abstract contract ERC20PaymentClientBase_v3 is
