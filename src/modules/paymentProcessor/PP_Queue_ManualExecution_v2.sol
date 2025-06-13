@@ -8,8 +8,8 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
-import {IPP_Queue_ManualExecution_v1} from
-    "@pp/interfaces/IPP_Queue_ManualExecution_v1.sol";
+import {IPP_Queue_ManualExecution_v2} from
+    "@pp/interfaces/IPP_Queue_ManualExecution_v2.sol";
 import {ERC165Upgradeable, Module_v2} from "src/modules/base/Module_v2.sol";
 import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
 
@@ -24,7 +24,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *          manual processing of payment orders in the queue.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_ManualExecution_v1: Implementation interface.
+ *          - IPP_Queue_ManualExecution_v2: Implementation interface.
  *          - PP_Queue_v1: Queue based payment processor.
  *
  *          Key features:
@@ -75,8 +75,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  * @author  Zealynx Security
  */
-contract PP_Queue_ManualExecution_v1 is
-    IPP_Queue_ManualExecution_v1,
+contract PP_Queue_ManualExecution_v2 is
+    IPP_Queue_ManualExecution_v2,
     PP_Queue_v1
 {
     // -------------------------------------------------------------------------
@@ -90,7 +90,7 @@ contract PP_Queue_ManualExecution_v1 is
         override(PP_Queue_v1)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_Queue_ManualExecution_v1).interfaceId
+        return interfaceId_ == type(IPP_Queue_ManualExecution_v2).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -124,7 +124,7 @@ contract PP_Queue_ManualExecution_v1 is
         }
     }
 
-    /// @inheritdoc IPP_Queue_ManualExecution_v1
+    /// @inheritdoc IPP_Queue_ManualExecution_v2
     function executePaymentQueue(IERC20PaymentClientBase_v3 client_)
         external
         virtual

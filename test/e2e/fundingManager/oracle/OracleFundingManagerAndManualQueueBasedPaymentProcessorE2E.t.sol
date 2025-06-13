@@ -17,9 +17,9 @@ import {
 
 // Import modules that are used in this E2E test
 import {
-    PP_Queue_ManualExecution_v1,
-    IPP_Queue_ManualExecution_v1
-} from "@pp/PP_Queue_ManualExecution_v1.sol";
+    PP_Queue_ManualExecution_v2,
+    IPP_Queue_ManualExecution_v2
+} from "@pp/PP_Queue_ManualExecution_v2.sol";
 import {
     FM_PC_Oracle_Redeeming_v2,
     IFM_PC_Oracle_Redeeming_v2
@@ -115,7 +115,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     ERC20Mock collateralToken;
     ERC20Issuance_Blacklist_v1 issuanceToken;
     FM_PC_Oracle_Redeeming_v2 fundingManager;
-    PP_Queue_ManualExecution_v1 paymentProcessor;
+    PP_Queue_ManualExecution_v2 paymentProcessor;
     AUT_Roles_v2 authorizer;
     LM_Oracle_Permissioned_v2 permissionedOracle;
     IOrchestrator_v1 orchestrator;
@@ -221,7 +221,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
             FM_PC_Oracle_Redeeming_v2(address(orchestrator.fundingManager()));
 
         // Get payment processor
-        paymentProcessor = PP_Queue_ManualExecution_v1(
+        paymentProcessor = PP_Queue_ManualExecution_v2(
             address(orchestrator.paymentProcessor())
         );
 
@@ -506,7 +506,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         uint orderId = data.orderId_;
 
         // Get order from payment processor
-        IPP_Queue_ManualExecution_v1.QueuedOrder memory order =
+        IPP_Queue_ManualExecution_v2.QueuedOrder memory order =
             paymentProcessor.getOrder(orderId, fundingManager);
         IERC20PaymentClientBase_v3.PaymentOrder memory paymentOrder =
             order.order_;

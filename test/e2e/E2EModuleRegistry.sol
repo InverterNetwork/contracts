@@ -32,7 +32,7 @@ import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 import {AUT_EXT_VotingRoles_v2} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v2.sol";
-import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
+import {PP_Queue_ManualExecution_v2} from "@pp/PP_Queue_ManualExecution_v2.sol";
 import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
 import {FM_PC_Oracle_Redeeming_v2} from
     "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
@@ -482,9 +482,9 @@ contract E2EModuleRegistry is Test {
             IInverterBeacon_v1(queueBasedPaymentProcessorBeacon)
         );
     }
-    // PP_Queue_ManualExecution_v1
+    // PP_Queue_ManualExecution_v2
 
-    PP_Queue_ManualExecution_v1 manualQueueBasedPaymentProcessor;
+    PP_Queue_ManualExecution_v2 manualQueueBasedPaymentProcessor;
     InverterBeacon_v1 manualQueueBasedPaymentProcessorBeacon;
 
     IModule_v2.Metadata manualQueueBasedPaymentProcessorMetadata = IModule_v2
@@ -498,7 +498,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpManualQueueBasedPaymentProcessor() internal {
         // Deploy module implementations.
-        manualQueueBasedPaymentProcessor = new PP_Queue_ManualExecution_v1();
+        manualQueueBasedPaymentProcessor = new PP_Queue_ManualExecution_v2();
 
         // Deploy module beacons.
         manualQueueBasedPaymentProcessorBeacon = new InverterBeacon_v1(

@@ -229,7 +229,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "PP_Queue_ManualExecution_v1"
+        "PP_Queue_ManualExecution_v2"
     );
 
     // QueuePaymentProcessor

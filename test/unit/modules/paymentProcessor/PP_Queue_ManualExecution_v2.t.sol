@@ -31,19 +31,19 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // System under testing
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
-import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
-import {PP_Queue_ManualExecution_v1_Exposed} from
-    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Exposed.sol";
+import {PP_Queue_ManualExecution_v2} from "@pp/PP_Queue_ManualExecution_v2.sol";
+import {PP_Queue_ManualExecution_v2_Exposed} from
+    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v2_Exposed.sol";
 import {PP_Queue_v1_Test} from "./PP_Queue_v1.t.sol";
 
-contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
+contract PP_Queue_ManualExecution_v2_Test is PP_Queue_v1_Test {
     // SuT
-    PP_Queue_ManualExecution_v1_Exposed queueManualExecution;
+    PP_Queue_ManualExecution_v2_Exposed queueManualExecution;
 
     function init() public {
-        address impl = address(new PP_Queue_ManualExecution_v1_Exposed());
+        address impl = address(new PP_Queue_ManualExecution_v2_Exposed());
         queueManualExecution =
-            PP_Queue_ManualExecution_v1_Exposed(Clones.clone(impl));
+            PP_Queue_ManualExecution_v2_Exposed(Clones.clone(impl));
 
         // Setup orchestrator once
         _setUpOrchestrator(queueManualExecution);

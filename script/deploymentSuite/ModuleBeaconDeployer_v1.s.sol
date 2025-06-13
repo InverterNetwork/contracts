@@ -335,7 +335,7 @@ contract ModuleBeaconDeployer_v1 is
                     queueManualExecutionPaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Queue_ManualExecution_v1,
+                    impl_mod_PP_Queue_ManualExecution_v2,
                     queueManualExecutionPaymentProcessorMetadata.majorVersion,
                     queueManualExecutionPaymentProcessorMetadata.minorVersion,
                     queueManualExecutionPaymentProcessorMetadata.patchVersion

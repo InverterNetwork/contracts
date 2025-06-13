@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import {PaymentProcessorV1Mock} from
     "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 
-contract PP_Queue_ManualExecution_v1_Mock is PaymentProcessorV1Mock {
+contract PP_Queue_ManualExecution_v2_Mock is PaymentProcessorV1Mock {
     //--------------------------------------------------------------------------
-    // PP_Queue_ManualExecution_v1_Mock Functions
+    // PP_Queue_ManualExecution_v2_Mock Functions
 
     function executePaymentQueue(address /*client_*/ ) external {
         emit PaymentOrderProcessed(

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
+import {PP_Queue_ManualExecution_v2} from "@pp/PP_Queue_ManualExecution_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
-contract PP_Queue_ManualExecution_v1_Exposed is PP_Queue_ManualExecution_v1 {
+contract PP_Queue_ManualExecution_v2_Exposed is PP_Queue_ManualExecution_v2 {
     using LinkedIdList for LinkedIdList.List;
 
     function exposed_addPaymentOrderToQueue(

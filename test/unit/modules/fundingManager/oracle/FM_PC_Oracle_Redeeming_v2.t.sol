@@ -32,8 +32,8 @@ import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {OraclePrice_Mock} from "@mocks/modules/logicModule/OraclePrice_Mock.sol";
 import {InvalidOraclePrice_Mock} from
     "@mocks/modules/logicModule/InvalidOraclePrice_Mock.sol";
-import {PP_Queue_ManualExecution_v1_Mock} from
-    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Mock.sol";
+import {PP_Queue_ManualExecution_v2_Mock} from
+    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v2_Mock.sol";
 
 // System under testing (SUT)
 import {FM_PC_Oracle_Redeeming_v2_Exposed} from
@@ -843,8 +843,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint protocolSellFeeAmount_ = 1e17;
         // Setup payment processor with the correct interface, so the low level call
         // does not fail
-        PP_Queue_ManualExecution_v1_Mock paymentProcessor =
-            new PP_Queue_ManualExecution_v1_Mock();
+        PP_Queue_ManualExecution_v2_Mock paymentProcessor =
+            new PP_Queue_ManualExecution_v2_Mock();
         _addPaymentProcessorToOrchestrator(address(paymentProcessor));
 
         // Setup - Create order

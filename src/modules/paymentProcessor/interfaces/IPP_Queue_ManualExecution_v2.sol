@@ -14,7 +14,7 @@ import {IERC20PaymentClientBase_v3} from
  *          manual processing of payment orders in the queue.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_ManualExecution_v1: Implementation interface.
+ *          - IPP_Queue_ManualExecution_v2: Implementation interface.
  *          - PP_Queue_v1: Queue based payment processor.
  *
  *          Key features:
@@ -65,7 +65,7 @@ import {IERC20PaymentClientBase_v3} from
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_ManualExecution_v1 is IPP_Queue_v1 {
+interface IPP_Queue_ManualExecution_v2 is IPP_Queue_v1 {
     // -------------------------------------------------------------------------
     // Functions
 
