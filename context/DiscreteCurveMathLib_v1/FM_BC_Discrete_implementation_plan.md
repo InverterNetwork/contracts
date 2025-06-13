@@ -135,9 +135,7 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
   - tests (via exposed function)
     - transfers tokens to receiver
 
-### 2.10. Fees [IN PROGRESS]
-
-#### 2.10.1. `calculatePurchaseReturn` and `calculateSaleReturn` [DONE]
+### 2.10. `_getFunctionFeesAndTreasuryAddresses` (Cached Protocol Fees) [DONE]
 
 - [x] 1. Define `ProtocolFeeCache` struct in `IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol`.
 - [x] 2. Set constant project fees (`PROJECT_BUY_FEE_BPS`, `PROJECT_SELL_FEE_BPS`) in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` and ensure `buyFee`/`sellFee` state vars are set in `init`.
@@ -146,4 +144,8 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 - [x] 5. Override `_getFunctionFeesAndTreasuryAddresses` to retrieve and returned cached protocol fees (from `_protocolFeeCache` struct) depending on the function selector
 - [x] 6. Unit test for `_getFunctionFeesAndTreasuryAddresses`: retrieves correct protocol fees and treasury addresses from `_protocolFeeCache` struct.
 
-#### 2.10.2. `_buyOrder` and `_sellOrder`
+### 2.11. Project Fees Preparation
+
+- [ ] 1. Add `_getBuyFee() virtual` functions to `BondingCurveBase_v1`; update `calculatePurchaseReturn` and ; run tests to ensure nothing breaks; add tests for new getters (to be tested via `test/mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol`) to `test/unit/modules/fundingManager/bondingCurve/abstracts/BondingCurveBase_v1.t.sol`
+- [ ] 2. Add `_getSellFee() virtual` functions to `RedeemingBondingCurveBase_v1p`; udate `calculateSaleReturn` to use new getter; run tests to ensure nothing breaks; add tests for new getters (to be tested via `test/mocks/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol`) to `test/unit/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol`
+- [ ] 3. Add overwritten `_getBuyFee()` and `_getSellFee()` functions to `FM_BC_Discrete_Redeeming_VirtualSupply_v1` and `FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed`; for now they just return the constant values defined in the contract

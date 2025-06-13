@@ -134,14 +134,17 @@ B) write functions: as well as in the buy and sell functions.
 
 #### Project Fees
 
-- here we will use a stub for now: we define a hardcoded constant on the top of the contract which defines the project fee
-- later on we will add dynamic fee logic as per the spec
+- in `BondingCurveBase_v1.sol` and `RedeemingBondingCurveBase_v1.sol` we add two new getters: `_getBuyFee()` and `_getSellFee()`
+- these should return the state variables `buyFee` and `sellFee` respectively
+- they should be virtual functions
+
+- in `FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol` we override the two new getters
+- for now they are supposed to return the hardcoded constant `PROJECT_BUY_FEE_BPS` and `PROJECT_SELL_FEE_BPS` respectively
 
 #### Protocol Fees
 
 Implementation:
 
-- project fees stubbed as constant state variables
 - in `init` get protocol fees & treasury address from `FeeManager` via calling the inherited `_getFunctionFeesAndTreasuryAddresses` (via super)
 - store issuance fee and collateral fee in state
 - override `_getFunctionFeesAndTreasuryAddresses` to retrieve cached values so that the default call that happens within `calculatePurchaseReturn` and `calculateSaleReturn` uses cached values
@@ -234,10 +237,3 @@ The primary fee processing logic resides within the `_buyOrder` (from `BondingCu
     - **Protocol Fees:**
       - `collateralProtocolFeeAmount` is transferred to the `_protocolCollateralTreasury` (via `_processProtocolFeeViaTransfer`).
       - `issuanceProtocolFeeAmount` is minted directly to the `_protocolIssuanceTreasury` (via `_processProtocolFeeViaMinting`).
-
-**Role of `FM_BC_Discrete_Redeeming_VirtualSupply_v1`:**
-
-- Ensure its `init` function correctly sets the `buyFee`/`sellFee` state variables and caches the protocol fee details in its own state variables.
-- Ensure that its specific `_issueTokensFormulaWrapper` and `_redeemTokensFormulaWrapper` are used by the `_buyOrder` and `_sellOrder` logic.
-- Implement or ensure correct usage of the mechanism to track `projectCollateralFeeCollected`.
-- Override `_buyOrder` and `_sellOrder` _only if_ the base implementations cannot correctly utilize the cached fee BPS values or the specific discrete formula wrappers without modification. Often, the base logic is designed to be flexible enough if the underlying fee state variables and formula wrappers are correctly set/overridden.
