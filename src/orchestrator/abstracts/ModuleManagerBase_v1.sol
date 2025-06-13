@@ -5,6 +5,7 @@ pragma solidity 0.8.23;
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IModuleFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // External Dependencies
@@ -15,6 +16,8 @@ import {
     ERC165Upgradeable
 } from "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 /**
  * @title   Inverter ModuleManagerBase
  *
@@ -32,6 +35,7 @@ import {
  * @author  Inverter Network
  *          Adapted from Gnosis Safe
  */
+
 abstract contract ModuleManagerBase_v1 is
     IModuleManagerBase_v1,
     Initializable,
@@ -112,7 +116,7 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev	Marks the maximum amount of Modules a {Orchestrator_v1} can have to avoid out-of-gas risk.
+    /// @dev	Marks the maximum amount of Modules a {Orchestrator_v2} can have to avoid out-of-gas risk.
     uint private constant MAX_MODULE_AMOUNT = 128;
     /// @dev	Timelock used between initiating adding or removing a module and executing it.
     uint public constant MODULE_UPDATE_TIMELOCK = 72 hours;
@@ -126,7 +130,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev	List of modules.
     address[] private _modules;
 
-    /// @dev	Mapping to keep track of whether a module is used in the {Orchestrator_v1}
+    /// @dev	Mapping to keep track of whether a module is used in the {Orchestrator_v2}
     ///         address => isModule.
     mapping(address => bool) private _isModule;
 
@@ -237,7 +241,7 @@ abstract contract ModuleManagerBase_v1 is
         emit ModuleUpdateCanceled(module);
     }
 
-    /// @notice Initiates adding of a module to the {Orchestrator_v1} on a timelock.
+    /// @notice Initiates adding of a module to the {Orchestrator_v2} on a timelock.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
     /// @param  module The module address to add.
@@ -249,7 +253,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Initiates removing of a module from the {Orchestrator_v1} on a timelock.
+    /// @notice Initiates removing of a module from the {Orchestrator_v2} on a timelock.
     /// @dev	Fails if address not added as module.
     /// @param  module The module address to remove.
     function _initiateRemoveModuleWithTimelock(address module)
@@ -259,7 +263,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Executes adding of a module to the {Orchestrator_v1}.
+    /// @notice Executes adding of a module to the {Orchestrator_v2}.
     /// @dev	Fails if adding of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
     /// @param  module The module address to add.
@@ -274,7 +278,7 @@ abstract contract ModuleManagerBase_v1 is
         __ModuleManager_addModule(module);
     }
 
-    /// @notice Executes removing of a module from the {Orchestrator_v1}.
+    /// @notice Executes removing of a module from the {Orchestrator_v2}.
     /// @dev	Fails if removing of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
     /// @param  module The module address to remove.
@@ -338,8 +342,11 @@ abstract contract ModuleManagerBase_v1 is
         if (
             module.code.length == 0 || module == address(0)
                 || module == address(this)
-                || !ERC165Upgradeable(module).supportsInterface(
-                    type(IModule_v2).interfaceId
+                || !ERC165Checker.supportsInterface(
+                    module, type(IModule_v1).interfaceId
+                )
+                || !ERC165Checker.supportsInterface(
+                    module, type(IModule_v2).interfaceId
                 )
         ) {
             revert ModuleManagerBase__InvalidModuleAddress();
@@ -377,7 +384,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @inheritdoc IModuleManagerBase_v1
     // @dev Because we want to expose the isTrustedForwarder function from the ERC2771ContextUpgradeable
-    //      Contract in the IOrchestrator_v1 we have to override it here as the original openzeppelin version
+    //      Contract in the IOrchestrator_v2 we have to override it here as the original openzeppelin version
     //      doesnt contain a interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public

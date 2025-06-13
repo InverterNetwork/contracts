@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
@@ -45,7 +45,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     uint defaultEnd = 30;
 
     // Modules, for reference between functions
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
     FM_DepositVault_v1 fundingManager;
     LM_PC_RecurringPayments_v3 recurringPaymentManager;
     PP_Streaming_v3 streamingPaymentProcessor;
@@ -98,7 +98,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
     function init() private {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({

@@ -5,15 +5,15 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
 // SuT
 import {
-    IOrchestrator_v1,
-    Orchestrator_v1
-} from "src/orchestrator/Orchestrator_v1.sol";
+    IOrchestrator_v2,
+    Orchestrator_v2
+} from "src/orchestrator/Orchestrator_v2.sol";
 
 // Modules that are used in this E2E test
 import {IPaymentProcessor_v3} from
@@ -83,11 +83,11 @@ contract OrchestratorE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         uint timelock =
-            Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
+            Orchestrator_v2(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
         //------------------------------------------------------------------------------------------
         // Adding Module
 

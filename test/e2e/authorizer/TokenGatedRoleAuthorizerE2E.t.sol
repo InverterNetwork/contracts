@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     ERC20Mock
 } from "test/e2e/E2ETest.sol";
 
@@ -76,7 +76,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
     function test_e2e_TokenGatedRoleAuthorizer() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -84,7 +84,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_TokenGated_Roles_v2 authorizer =
@@ -111,7 +111,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Set up Bounty Manager Roles with different thresholds
         //--------------------------------------------------------------------------
 
-        // Give the Orchestrator_v1 Admin the power to change module roles
+        // Give the Orchestrator_v2 Admin the power to change module roles
         authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin);
 
         vm.startPrank(orchestratorAdmin);

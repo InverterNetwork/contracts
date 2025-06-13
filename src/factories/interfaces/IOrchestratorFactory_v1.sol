@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -30,8 +30,8 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new {Orchestrator_v1} is created.
-    /// @param  orchestratorId The id of the {Orchestrator_v1}.
+    /// @notice Event emitted when a new {Orchestrator_v2} is created.
+    /// @param  orchestratorId The id of the {Orchestrator_v2}.
     /// @param  orchestratorAddress The address of the {Orchestrator.
     event OrchestratorCreated(
         uint indexed orchestratorId, address indexed orchestratorAddress
@@ -69,11 +69,11 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Creates a new {Orchestrator_v1}.
+    /// @notice Creates a new {Orchestrator_v2}.
     /// @param  workflowConfig The workflow's config data.
     /// @param  fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
     ///                             instance.
-    /// @param  authorizerConfig The config data for the {Orchestrator_v1}'s {IAuthorizer_v2}
+    /// @param  authorizerConfig The config data for the {Orchestrator_v2}'s {IAuthorizer_v2}
     ///                         instance.
     /// @param  paymentProcessorConfig The config data for the orchestrator's
     ///                               {IPaymentProcessor_v1} instance.
@@ -86,22 +86,22 @@ interface IOrchestratorFactory_v1 {
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IOrchestrator_v1);
+    ) external returns (IOrchestrator_v2);
 
-    /// @notice Returns the {IOrchestrator_v1} {IInverterBeacon_v1} address.
-    /// @return OrchestratorImplementationBeacon The {IInverterBeacon_v1} of the {Orchestrator_v1} Implementation.
+    /// @notice Returns the {IOrchestrator_v2} {IInverterBeacon_v1} address.
+    /// @return OrchestratorImplementationBeacon The {IInverterBeacon_v1} of the {Orchestrator_v2} Implementation.
     function beacon() external view returns (IInverterBeacon_v1);
 
     /// @notice Returns the {IModuleFactory_v1} implementation address.
     /// @return ModuleFactoryAddress The address of the linked {ModuleFactory_v1}.
     function moduleFactory() external view returns (address);
 
-    /// @notice Returns the {IOrchestrator_v1} address that corresponds to the given id.
+    /// @notice Returns the {IOrchestrator_v2} address that corresponds to the given id.
     /// @param  id The requested orchestrator's id.
-    /// @return orchestratorAddress The address of the corresponding {Orchestrator_v1}.
+    /// @return orchestratorAddress The address of the corresponding {Orchestrator_v2}.
     function getOrchestratorByID(uint id) external view returns (address);
 
-    /// @notice Returns the counter of the current {Orchestrator_v1} id.
-    /// @return id The id of the next created {Orchestrator_v1}.
+    /// @notice Returns the counter of the current {Orchestrator_v2} id.
+    /// @return id The id of the next created {Orchestrator_v2}.
     function getOrchestratorIDCounter() external view returns (uint);
 }

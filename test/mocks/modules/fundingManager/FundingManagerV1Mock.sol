@@ -8,7 +8,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     Module_v2,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
@@ -34,7 +34,7 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v2 {
     IERC20 private _token;
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) public override(Module_v2) initializer {

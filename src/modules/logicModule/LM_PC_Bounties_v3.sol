@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {ILM_PC_Bounties_v3} from "@lm/interfaces/ILM_PC_Bounties_v3.sol";
 import {
@@ -265,7 +265,7 @@ contract LM_PC_Bounties_v3 is ILM_PC_Bounties_v3, ERC20PaymentClientBase_v3 {
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) external override(Module_v2) initializer {

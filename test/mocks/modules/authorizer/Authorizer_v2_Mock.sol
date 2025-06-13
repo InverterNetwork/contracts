@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import {
     Module_v2,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "src/modules/base/Module_v2.sol";
 
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
@@ -54,7 +54,7 @@ contract Authorizer_v2_Mock is IAuthorizer_v2, Module_v2 {
     // IModule_v2 Functions
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) public override(Module_v2) initializer {

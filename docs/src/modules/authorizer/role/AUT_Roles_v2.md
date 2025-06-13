@@ -60,7 +60,7 @@ classDiagram
 
     note for Module "Base contract for every module implementation"
     class Module{
-        -IOrchestrator_v1 __Module_orchestrator
+        -IOrchestrator_v2 __Module_orchestrator
         + permissioned
     }
 

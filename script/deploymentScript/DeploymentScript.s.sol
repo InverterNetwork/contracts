@@ -22,7 +22,7 @@ import {
     InverterBeacon_v1,
     IInverterBeacon_v1
 } from "src/proxies/InverterBeacon_v1.sol";
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {EIP712} from "@oz/utils/cryptography/EIP712.sol";
@@ -395,7 +395,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
 
         // Verify that the TransactionForwarder is linked correctly in the Orchestrator
         require(
-            Orchestrator_v1(orchestratorBeacon.getImplementationAddress())
+            Orchestrator_v2(orchestratorBeacon.getImplementationAddress())
                 .trustedForwarder() == forwarder,
             "Deployment failed - Orchestrator Beacon not initialized correctly, Forwarder is not correct."
         );

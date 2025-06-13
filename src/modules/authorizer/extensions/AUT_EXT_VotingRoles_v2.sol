@@ -3,8 +3,8 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IAUT_EXT_VotingRoles_v2} from
     "src/modules/authorizer/extensions/interfaces/IAUT_EXT_VotingRoles_v2.sol";
 
@@ -116,7 +116,7 @@ contract AUT_EXT_VotingRoles_v2 is IAUT_EXT_VotingRoles_v2, Module_v2 {
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override initializer {

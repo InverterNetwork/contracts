@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 // SuT
 import {
@@ -30,7 +30,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v2 {
     // Override Functions
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module_v2) initializer {

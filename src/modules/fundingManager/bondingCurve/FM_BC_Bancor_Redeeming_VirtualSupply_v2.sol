@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 
@@ -56,7 +56,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          {VirtualIssuanceSupplyBase_v1}, and
  *          {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper
  *          functions for bonding curve calculations using the {BancorFormula}.
- *          {Orchestrator_v1} Admin manages configuration such as virtual
+ *          {Orchestrator_v2} Admin manages configuration such as virtual
  *          supplies and reserve ratios. Ensure interaction adheres to defined
  *          transactional limits and decimal precision requirements to prevent
  *          computational overflows or underflows.
@@ -142,7 +142,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v2 is
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module_v2) initializer {

@@ -33,11 +33,11 @@ import {
     IOrchestratorFactory_v1
 } from "src/factories/OrchestratorFactory_v1.sol";
 
-// Orchestrator_v1
+// Orchestrator_v2
 import {
-    Orchestrator_v1,
-    IOrchestrator_v1
-} from "src/orchestrator/Orchestrator_v1.sol";
+    Orchestrator_v2,
+    IOrchestrator_v2
+} from "src/orchestrator/Orchestrator_v2.sol";
 
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
@@ -57,10 +57,10 @@ contract E2ETest is E2EModuleRegistry {
     // Factory instances.
     OrchestratorFactory_v1 orchestratorFactory;
 
-    // Orchestrator_v1 implementation.
-    Orchestrator_v1 orchestratorImpl;
+    // Orchestrator_v2 implementation.
+    Orchestrator_v2 orchestratorImpl;
 
-    // Beacon of the Orchestrator_v1 implementation
+    // Beacon of the Orchestrator_v2 implementation
     InverterBeacon_v1 orchestratorBeacon;
 
     // Mock token for funding.
@@ -150,8 +150,8 @@ contract E2ETest is E2EModuleRegistry {
 
         token = new ERC20Mock("Mock", "MOCK", 18);
 
-        // Deploy Orchestrator_v1 implementation.
-        orchestratorImpl = new Orchestrator_v1(address(forwarder));
+        // Deploy Orchestrator_v2 implementation.
+        orchestratorImpl = new Orchestrator_v2(address(forwarder));
 
         orchestratorBeacon = new InverterBeacon_v1(
             address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
@@ -194,7 +194,7 @@ contract E2ETest is E2EModuleRegistry {
     function _create_E2E_Orchestrator(
         IOrchestratorFactory_v1.WorkflowConfig memory _config,
         IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigurations
-    ) internal virtual returns (IOrchestrator_v1) {
+    ) internal virtual returns (IOrchestrator_v2) {
         // Prepare array of optional modules (hopefully can be made more succinct in the future)
         uint amtOfOptionalModules = _moduleConfigurations.length - 3;
 

@@ -18,7 +18,7 @@ import {TransactionForwarder_v1} from
 import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 
 // Internal Interfaces
-import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
+import {IModule_v2, IOrchestrator_v2} from "src/modules/base/IModule_v2.sol";
 
 // Mocks
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
@@ -56,7 +56,7 @@ abstract contract ModuleTest is Test {
     // Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder = new TransactionForwarder_v1();
 
-    // Orchestrator_v1 Constants
+    // Orchestrator_v2 Constants
     uint constant _ORCHESTRATOR_ID = 1;
 
     // Module_v2 Constants

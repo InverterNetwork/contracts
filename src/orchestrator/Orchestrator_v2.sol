@@ -3,12 +3,12 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     IFundingManager_v1,
     IPaymentProcessor_v3,
     IAuthorizer_v2,
     IGovernor_v1
-} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+} from "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
@@ -49,9 +49,11 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v2.0.0
+ *
  * @author  Inverter Network
  */
-contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
+contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -60,7 +62,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         override(ModuleManagerBase_v1)
         returns (bool)
     {
-        return interfaceId == type(IOrchestrator_v1).interfaceId
+        return interfaceId == type(IOrchestrator_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -94,20 +96,20 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc IOrchestrator_v1
-    uint public override(IOrchestrator_v1) orchestratorId;
+    /// @inheritdoc IOrchestrator_v2
+    uint public override(IOrchestrator_v2) orchestratorId;
 
-    /// @inheritdoc IOrchestrator_v1
-    IFundingManager_v1 public override(IOrchestrator_v1) fundingManager;
+    /// @inheritdoc IOrchestrator_v2
+    IFundingManager_v1 public override(IOrchestrator_v2) fundingManager;
 
-    /// @inheritdoc IOrchestrator_v1
-    IAuthorizer_v2 public override(IOrchestrator_v1) authorizer;
+    /// @inheritdoc IOrchestrator_v2
+    IAuthorizer_v2 public override(IOrchestrator_v2) authorizer;
 
-    /// @inheritdoc IOrchestrator_v1
-    IPaymentProcessor_v3 public override(IOrchestrator_v1) paymentProcessor;
+    /// @inheritdoc IOrchestrator_v2
+    IPaymentProcessor_v3 public override(IOrchestrator_v2) paymentProcessor;
 
-    /// @inheritdoc IOrchestrator_v1
-    IGovernor_v1 public override(IOrchestrator_v1) governor;
+    /// @inheritdoc IOrchestrator_v2
+    IGovernor_v1 public override(IOrchestrator_v2) governor;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -121,7 +123,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _disableInitializers();
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function init(
         uint orchestratorId_,
         address moduleFactory_,
@@ -130,7 +132,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         IAuthorizer_v2 authorizer_,
         IPaymentProcessor_v3 paymentProcessor_,
         IGovernor_v1 governor_
-    ) external override(IOrchestrator_v1) initializer {
+    ) external override(IOrchestrator_v2) initializer {
         // Initialize upstream contracts.
         __ModuleManager_init(moduleFactory_, modules);
 
@@ -175,7 +177,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // onlyOrchestratorAdmin Functions
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function initiateSetAuthorizerWithTimelock(IAuthorizer_v2 newAuthorizer)
         external
         permissioned
@@ -189,7 +191,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _initiateRemoveModuleWithTimelock(address(authorizer));
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function executeSetAuthorizer(IAuthorizer_v2 newAuthorizer)
         external
         permissioned
@@ -212,7 +214,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         emit AuthorizerUpdated(newAuthorizerAddress);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function cancelAuthorizerUpdate(IAuthorizer_v2 authorizer_)
         external
         permissioned
@@ -221,7 +223,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _cancelModuleUpdate(address(authorizer_));
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function initiateSetFundingManagerWithTimelock(
         IFundingManager_v1 newFundingManager
     ) external permissioned {
@@ -242,7 +244,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         }
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function executeSetFundingManager(IFundingManager_v1 newFundingManager)
         external
         permissioned
@@ -258,7 +260,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         emit FundingManagerUpdated(newFundingManagerAddress);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
         external
         permissioned
@@ -267,7 +269,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _cancelModuleUpdate(address(fundingManager_));
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function initiateSetPaymentProcessorWithTimelock(
         IPaymentProcessor_v3 newPaymentProcessor
     ) external permissioned {
@@ -281,7 +283,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _initiateRemoveModuleWithTimelock(address(paymentProcessor));
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function executeSetPaymentProcessor(
         IPaymentProcessor_v3 newPaymentProcessor
     ) external permissioned {
@@ -297,7 +299,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         emit PaymentProcessorUpdated(newPaymentProcessorAddress);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v3 paymentProcessor_
     ) external permissioned {
@@ -305,7 +307,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _cancelModuleUpdate(address(paymentProcessor_));
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function initiateAddModuleWithTimelock(address module_)
         external
         permissioned
@@ -314,13 +316,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _initiateAddModuleWithTimelock(module_);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function executeAddModule(address module_) external permissioned {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _executeAddModule(module_);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function initiateRemoveModuleWithTimelock(address module_)
         external
         onlyLogicModules(module_)
@@ -329,7 +331,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _initiateRemoveModuleWithTimelock(module_);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function executeRemoveModule(address module_)
         external
         onlyLogicModules(module_)
@@ -338,7 +340,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _executeRemoveModule(module_);
     }
 
-    /// @inheritdoc IOrchestrator_v1
+    /// @inheritdoc IOrchestrator_v2
     function cancelModuleUpdate(address module_) external permissioned {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _cancelModuleUpdate(module_);
@@ -427,7 +429,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @inheritdoc IModuleManagerBase_v1
     /// @dev	Because we want to expose the `isTrustedForwarder` function from the {ERC2771Context} Contract in the
-    ///         {IOrchestrator_v1} we have to override it here as the original openzeppelin version doesnt contain an
+    ///         {IOrchestrator_v2} we have to override it here as the original openzeppelin version doesnt contain an
     ///         interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public

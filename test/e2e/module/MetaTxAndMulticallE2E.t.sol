@@ -10,7 +10,7 @@ import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
@@ -75,7 +75,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMetaTransaction() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -84,7 +84,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_Roles_v2 authorizer =
@@ -152,7 +152,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMetaTransaction_WithRole() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -161,7 +161,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_Roles_v2 authorizer =
@@ -256,7 +256,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMulticall_WithRole() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -265,7 +265,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         // lets use this example user

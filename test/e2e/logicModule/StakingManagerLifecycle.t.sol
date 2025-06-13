@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
@@ -117,7 +117,7 @@ contract LM_PC_Staking_v3Lifecycle is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_Roles_v2 authorizer =

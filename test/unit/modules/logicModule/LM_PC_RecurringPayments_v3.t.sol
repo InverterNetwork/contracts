@@ -12,7 +12,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
@@ -34,7 +34,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         0x000000000000000000000000000000000000000000000000000000000000000a;
 
     function setUp() public {
-        // Add Module to Mock Orchestrator_v1
+        // Add Module to Mock Orchestrator_v2
         address impl = address(new LM_PC_RecurringPayments_v3());
         recurringPaymentManager = LM_PC_RecurringPayments_v3(Clones.clone(impl));
 

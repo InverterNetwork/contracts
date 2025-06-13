@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {ILM_PC_RecurringPayments_v3} from
     "@lm/interfaces/ILM_PC_RecurringPayments_v3.sol";
 import {
@@ -126,7 +126,7 @@ contract LM_PC_RecurringPayments_v3 is
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module_v2) initializer {

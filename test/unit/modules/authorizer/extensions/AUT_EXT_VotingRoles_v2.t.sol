@@ -17,15 +17,15 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Internal Dependencies
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 
 // Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // Mocks
@@ -45,7 +45,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
     // SuT
     AUT_EXT_VotingRoles_v2 _votingRoles;
 
-    // Orchestrator_v1 _orchestrator;
+    // Orchestrator_v2 _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
@@ -114,7 +114,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
         uint _startingDuration = DEFAULT_DURATION;
 
         _votingRoles.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
@@ -316,7 +316,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
         }
 
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -362,7 +362,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -389,7 +389,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -405,7 +405,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -419,7 +419,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -433,7 +433,7 @@ contract AUT_EXT_VotingRoles_v2Test is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator_v1(_orchestrator),
+            IOrchestrator_v2(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );

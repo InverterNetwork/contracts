@@ -20,7 +20,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
@@ -99,7 +99,7 @@ contract OptimisticOracleIntegrator_v3_Test is ModuleTest {
 
         // Init Module wrongly
         vm.expectRevert(IModule_v2.Module__InvalidOrchestratorAddress.selector);
-        ooIntegrator.init(IOrchestrator_v1(address(0)), _METADATA, _configData);
+        ooIntegrator.init(IOrchestrator_v2(address(0)), _METADATA, _configData);
 
         // Test invalid token
         vm.expectRevert();

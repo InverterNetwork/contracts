@@ -51,7 +51,7 @@ contract ModuleBeaconDeployer_v1 is
                 orchestratorMetadata.title,
                 reverter,
                 governor,
-                impl_orc_Orchestrator_v1,
+                impl_orc_Orchestrator_v2,
                 orchestratorMetadata.majorVersion,
                 orchestratorMetadata.minorVersion,
                 orchestratorMetadata.patchVersion

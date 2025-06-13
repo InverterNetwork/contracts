@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {ILM_Oracle_Permissioned_v2} from
     "@lm/interfaces/ILM_Oracle_Permissioned_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
 
 // External
@@ -114,7 +114,7 @@ contract LM_Oracle_Permissioned_v2 is ILM_Oracle_Permissioned_v2, Module_v2 {
     /// @param configData_ The config data of the module, comprised of:
     ///     - address: collateralToken: The collateral token address.
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v2) initializer {

@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";

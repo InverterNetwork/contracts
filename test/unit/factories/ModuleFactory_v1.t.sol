@@ -13,7 +13,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory_v1,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {IOrchestratorFactory_v1} from
@@ -319,7 +319,7 @@ contract ModuleFactoryV1Test is Test {
         IModule_v2 newModule = IModule_v2(
             factory.createAndInitModule(
                 metadata,
-                IOrchestrator_v1(orchestrator),
+                IOrchestrator_v2(orchestrator),
                 configData,
                 workflowConfig
             )
@@ -358,7 +358,7 @@ contract ModuleFactoryV1Test is Test {
         // Create new module instance.
         IModule_v2 newModule = IModule_v2(
             factory.createModuleProxy(
-                metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                metadata, IOrchestrator_v2(orchestrator), workflowConfig
             )
         );
 
@@ -420,7 +420,7 @@ contract ModuleFactoryV1Test is Test {
             // Create new module instance.
             originalModule = IModule_v2(
                 factory.createModuleProxy(
-                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                    metadata, IOrchestrator_v2(orchestrator), workflowConfig
                 )
             );
         }
@@ -463,7 +463,7 @@ contract ModuleFactoryV1Test is Test {
             // Create new module instance.
             redeployedModule_bob = IModule_v2(
                 factory.createModuleProxy(
-                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                    metadata, IOrchestrator_v2(orchestrator), workflowConfig
                 )
             );
         }
@@ -485,7 +485,7 @@ contract ModuleFactoryV1Test is Test {
             // Create new module instance.
             redeployedModule_alice = IModule_v2(
                 factory.createModuleProxy(
-                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                    metadata, IOrchestrator_v2(orchestrator), workflowConfig
                 )
             );
         }
@@ -510,7 +510,7 @@ contract ModuleFactoryV1Test is Test {
         );
         factory.createAndInitModule(
             metadata,
-            IOrchestrator_v1(orchestrator),
+            IOrchestrator_v2(orchestrator),
             configData,
             workflowConfigNoIndependentUpdates
         );

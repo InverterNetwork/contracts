@@ -8,8 +8,8 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
@@ -175,7 +175,7 @@ contract PP_Queue_v2 is IPP_Queue_v2, Module_v2 {
     ///     - address: failedOrdersTreasury: The treasury address which
     ///       receives collateral from failed orders.
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v2) initializer {

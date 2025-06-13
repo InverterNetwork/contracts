@@ -23,8 +23,8 @@ contract TypeSanityHelper is Test {
     }
 
     //--------------------------------------------------------------------------
-    // Types for Orchestrator_v1
-    // Contract: Orchestrator_v1.sol
+    // Types for Orchestrator_v2
+    // Contract: Orchestrator_v2.sol
 
     function assumeValidOrchestratorId(uint id) public pure {
         vm.assume(id != 0);

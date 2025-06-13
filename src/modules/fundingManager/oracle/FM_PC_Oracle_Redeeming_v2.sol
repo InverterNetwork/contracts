@@ -7,8 +7,8 @@ import {IFM_PC_Oracle_Redeeming_v2} from
 import {IERC20Issuance_Blacklist_v1} from
     "@ex/token/interfaces/IERC20Issuance_Blacklist_v1.sol";
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v2} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
@@ -255,7 +255,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
     ///     - bool: isDirectOperationsOnly: Whether only direct operations
     ///       are allowed.
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v2) initializer {

@@ -14,16 +14,16 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
+import {IModule_v2, IOrchestrator_v2} from "src/modules/base/IModule_v2.sol";
 
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IAUT_TokenGated_Roles_v2} from

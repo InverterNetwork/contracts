@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {
     Module_v2,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "src/modules/base/Module_v2.sol";
 
 contract Module_v2_Mock is Module_v2 {
@@ -26,7 +26,7 @@ contract Module_v2_Mock is Module_v2 {
     // Initialization
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) public virtual override(Module_v2) initializer {
@@ -35,7 +35,7 @@ contract Module_v2_Mock is Module_v2 {
 
     // Note that the `initializer` modifier is missing.
     function initNoInitializer(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) external {

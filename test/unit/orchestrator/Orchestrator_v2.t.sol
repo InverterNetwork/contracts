@@ -10,16 +10,16 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Orchestrator_v1_Exposed} from
-    "@mocks/orchestrator/Orchestrator_v1_Exposed.sol";
+import {Orchestrator_v2_Exposed} from
+    "@mocks/orchestrator/Orchestrator_v2_Exposed.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // Internal Interfaces
 import {
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     IAuthorizer_v2,
     IPaymentProcessor_v3
-} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+} from "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
@@ -46,7 +46,7 @@ import {TypeSanityHelper} from "@testUtilities/TypeSanityHelper.sol";
 
 contract OrchestratorV1Test is Test {
     // SuT
-    Orchestrator_v1_Exposed orchestrator;
+    Orchestrator_v2_Exposed orchestrator;
 
     // Helper
     TypeSanityHelper types;
@@ -69,8 +69,8 @@ contract OrchestratorV1Test is Test {
         forwarder = new TransactionForwarder_v1();
         token = new ERC20Mock("TestToken", "TST", 18);
 
-        address impl = address(new Orchestrator_v1_Exposed(address(forwarder)));
-        orchestrator = Orchestrator_v1_Exposed(Clones.clone(impl));
+        address impl = address(new Orchestrator_v2_Exposed(address(forwarder)));
+        orchestrator = Orchestrator_v2_Exposed(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));
 
@@ -97,7 +97,7 @@ contract OrchestratorV1Test is Test {
         // We expect reverts when trying to set the wrong module as any of the privileged modules
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 wrongModule
             )
         );
@@ -113,7 +113,7 @@ contract OrchestratorV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 wrongModule
             )
         );
@@ -129,7 +129,7 @@ contract OrchestratorV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 wrongModule
             )
         );
@@ -145,7 +145,7 @@ contract OrchestratorV1Test is Test {
 
         // Now we test correct initialization
         vm.expectEmit(true, true, true, false);
-        emit IOrchestrator_v1.OrchestratorInitialized(
+        emit IOrchestrator_v2.OrchestratorInitialized(
             orchestratorId,
             address(fundingManager),
             address(authorizer),
@@ -222,7 +222,7 @@ contract OrchestratorV1Test is Test {
         vm.assume(data_.length >= 4);
 
         bytes4 targetSelector =
-            Orchestrator_v1_Exposed.modifierPermissionedCheck.selector;
+            Orchestrator_v2_Exposed.modifierPermissionedCheck.selector;
 
         // Proof
         authorizer.setHasPermission(
@@ -257,7 +257,7 @@ contract OrchestratorV1Test is Test {
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
         orchestrator.initiateSetAuthorizerWithTimelock(
@@ -276,7 +276,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.executeSetAuthorizer(IAuthorizer_v2(address(0)));
     }
@@ -292,7 +292,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.cancelAuthorizerUpdate(IAuthorizer_v2(address(0)));
     }
@@ -324,7 +324,7 @@ contract OrchestratorV1Test is Test {
 
         // set the new authorizer module
         vm.expectEmit(true, true, true, true);
-        emit IOrchestrator_v1.AuthorizerUpdated(address(newAuthorizer));
+        emit IOrchestrator_v2.AuthorizerUpdated(address(newAuthorizer));
         orchestrator.executeSetAuthorizer(newAuthorizer);
 
         assertTrue(orchestrator.authorizer() == newAuthorizer);
@@ -363,7 +363,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newAuthorizer
             )
         );
@@ -396,7 +396,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newAuthorizer
             )
         );
@@ -419,7 +419,7 @@ contract OrchestratorV1Test is Test {
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
         orchestrator.initiateSetFundingManagerWithTimelock(
@@ -438,7 +438,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.executeSetFundingManager(IFundingManager_v1(address(0)));
     }
@@ -454,7 +454,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.cancelFundingManagerUpdate(IFundingManager_v1(address(0)));
     }
@@ -489,7 +489,7 @@ contract OrchestratorV1Test is Test {
 
         // set the new funding manager module
         vm.expectEmit(true, true, true, true);
-        emit IOrchestrator_v1.FundingManagerUpdated(address(newFundingManager));
+        emit IOrchestrator_v2.FundingManagerUpdated(address(newFundingManager));
         orchestrator.executeSetFundingManager(newFundingManager);
         assertTrue(orchestrator.fundingManager() == newFundingManager);
         assertTrue(
@@ -524,7 +524,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newFundingManager
             )
         );
@@ -561,7 +561,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newFundingManager
             )
         );
@@ -597,7 +597,7 @@ contract OrchestratorV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1
+                IOrchestrator_v2
                     .Orchestrator__MismatchedTokenForFundingManager
                     .selector,
                 orchestrator.fundingManager().token(),
@@ -620,7 +620,7 @@ contract OrchestratorV1Test is Test {
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
         orchestrator.initiateSetPaymentProcessorWithTimelock(
@@ -639,7 +639,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.executeSetPaymentProcessor(
             IPaymentProcessor_v3(address(0))
@@ -659,7 +659,7 @@ contract OrchestratorV1Test is Test {
 
         // Turn off all adresses are permissioned to call all functions
         authorizer.setAllAuthorized(false);
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
         orchestrator.cancelPaymentProcessorUpdate(
             IPaymentProcessor_v3(address(0))
@@ -693,7 +693,7 @@ contract OrchestratorV1Test is Test {
 
         // set the new payment processor module
         vm.expectEmit(true, true, true, true);
-        emit IOrchestrator_v1.PaymentProcessorUpdated(
+        emit IOrchestrator_v2.PaymentProcessorUpdated(
             address(newPaymentProcessor)
         );
         orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
@@ -724,7 +724,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newPaymentProcessor
             )
         );
@@ -759,7 +759,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
                 newPaymentProcessor
             )
         );
@@ -797,7 +797,7 @@ contract OrchestratorV1Test is Test {
         address currentAuthorizer = address(orchestrator.authorizer());
 
         vm.expectRevert(
-            IOrchestrator_v1.Orchestrator__InvalidRemovalOfAuthorizer.selector
+            IOrchestrator_v2.Orchestrator__InvalidRemovalOfAuthorizer.selector
         );
         orchestrator.initiateRemoveModuleWithTimelock(currentAuthorizer);
     }
@@ -816,7 +816,7 @@ contract OrchestratorV1Test is Test {
         address currentFundingManager = address(orchestrator.fundingManager());
 
         vm.expectRevert(
-            IOrchestrator_v1
+            IOrchestrator_v2
                 .Orchestrator__InvalidRemovalOfFundingManager
                 .selector
         );
@@ -838,7 +838,7 @@ contract OrchestratorV1Test is Test {
             address(orchestrator.paymentProcessor());
 
         vm.expectRevert(
-            IOrchestrator_v1
+            IOrchestrator_v2
                 .Orchestrator__InvalidRemovalOfPaymentProcessor
                 .selector
         );
@@ -871,7 +871,7 @@ contract OrchestratorV1Test is Test {
         address currentAuthorizer = address(orchestrator.authorizer());
 
         vm.expectRevert(
-            IOrchestrator_v1.Orchestrator__InvalidRemovalOfAuthorizer.selector
+            IOrchestrator_v2.Orchestrator__InvalidRemovalOfAuthorizer.selector
         );
         orchestrator.executeRemoveModule(currentAuthorizer);
     }
@@ -890,7 +890,7 @@ contract OrchestratorV1Test is Test {
         address currentFundingManager = address(orchestrator.fundingManager());
 
         vm.expectRevert(
-            IOrchestrator_v1
+            IOrchestrator_v2
                 .Orchestrator__InvalidRemovalOfFundingManager
                 .selector
         );
@@ -912,7 +912,7 @@ contract OrchestratorV1Test is Test {
             address(orchestrator.paymentProcessor());
 
         vm.expectRevert(
-            IOrchestrator_v1
+            IOrchestrator_v2
                 .Orchestrator__InvalidRemovalOfPaymentProcessor
                 .selector
         );
@@ -948,7 +948,7 @@ contract OrchestratorV1Test is Test {
 
         if (!hasPermission_) {
             vm.expectRevert(
-                IOrchestrator_v1.Orchestrator__NotPermissioned.selector
+                IOrchestrator_v2.Orchestrator__NotPermissioned.selector
             );
         }
 

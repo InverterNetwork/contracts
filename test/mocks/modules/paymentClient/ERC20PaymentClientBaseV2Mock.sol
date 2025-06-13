@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 // SuT
 import {
@@ -30,7 +30,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v3 {
         authorized[who] = to;
     }
 
-    function setOrchestrator(IOrchestrator_v1 orchestrator) external {
+    function setOrchestrator(IOrchestrator_v2 orchestrator) external {
         __Module_orchestrator = orchestrator;
     }
 

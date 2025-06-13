@@ -14,7 +14,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";

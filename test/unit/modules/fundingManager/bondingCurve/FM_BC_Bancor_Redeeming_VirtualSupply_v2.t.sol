@@ -23,7 +23,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
@@ -1518,7 +1518,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
     /* Test setReserveRatioForBuying and _setReserveRatioForBuying function
         ├── when caller is not permissioned
         │       └── it should revert (modifier in position test)
-        └── when caller is the Orchestrator_v1 admin
+        └── when caller is the Orchestrator_v2 admin
                 ├── when buy | sell is still open (modifier test)
                 │       └── it should revert
                 ├── when reserve ratio is  0% 
@@ -1798,7 +1798,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         │       └── it should return the amount without change
         ├── when the token decimals are higher than the required decimals
         │       └── it should cut the excess decimals from the amount and return it
-        └── when caller is the Orchestrator_v1 admin
+        └── when caller is the Orchestrator_v2 admin
                 └── it should pad the amount by the missing decimals and return it
         */
 

@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IModuleFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     IModule_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 import {IOrchestratorFactory_v1} from
@@ -109,7 +109,7 @@ contract ModuleFactory_v1 is
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     /// @dev	Mapping of proxy address to orchestrator address.
-    /// @dev	moduleProxy => {IOrchestrator_v1}.
+    /// @dev	moduleProxy => {IOrchestrator_v2}.
     mapping(address => address) private _orchestratorOfProxy;
 
     /// @dev	Maps a users address to a nonce used for the create2-based deployment.
@@ -167,7 +167,7 @@ contract ModuleFactory_v1 is
     /// @inheritdoc IModuleFactory_v1
     function createAndInitModule(
         IModule_v2.Metadata memory metadata,
-        IOrchestrator_v1 orchestrator,
+        IOrchestrator_v2 orchestrator,
         bytes memory configData,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
@@ -182,7 +182,7 @@ contract ModuleFactory_v1 is
     /// @inheritdoc IModuleFactory_v1
     function createModuleProxy(
         IModule_v2.Metadata memory metadata,
-        IOrchestrator_v1 orchestrator,
+        IOrchestrator_v2 orchestrator,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) public returns (address) {
         // Note that the metadata's validity is not checked because the

@@ -25,7 +25,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {IBondingCurveBase_v2} from

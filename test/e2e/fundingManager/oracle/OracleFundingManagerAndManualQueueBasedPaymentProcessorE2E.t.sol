@@ -12,7 +12,7 @@ import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 // Import modules that are used in this E2E test
@@ -118,7 +118,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     PP_Queue_ManualExecution_v2 paymentProcessor;
     AUT_Roles_v2 authorizer;
     LM_Oracle_Permissioned_v2 permissionedOracle;
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
 
     // Define struct to hold all event parameters
     struct RedemptionOrderCreatedEventData {
@@ -203,7 +203,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
 
     function _init() internal {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({

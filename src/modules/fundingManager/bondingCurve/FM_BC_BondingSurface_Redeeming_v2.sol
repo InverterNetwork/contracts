@@ -17,8 +17,8 @@ import {
     IFundingManager_v1
 } from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IAuthorizer_v2} from "src/modules/authorizer/IAuthorizer_v2.sol";
 
@@ -106,7 +106,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external virtual override(Module_v2) initializer {

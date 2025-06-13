@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 import {
     OptimisticOracleIntegrator_v3,

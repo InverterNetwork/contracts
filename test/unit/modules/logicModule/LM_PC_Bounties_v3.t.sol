@@ -12,7 +12,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
@@ -44,7 +44,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     ILM_PC_Bounties_v3.Contributor[] INVALID_CONTRIBUTORS;
 
     function setUp() public {
-        // Add Module to Mock Orchestrator_v1
+        // Add Module to Mock Orchestrator_v2
         address impl = address(new LM_PC_Bounties_v3_Exposed());
         bountyManager = LM_PC_Bounties_v3_Exposed(Clones.clone(impl));
 

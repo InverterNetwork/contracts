@@ -7,7 +7,7 @@ import {
     IModuleFactory_v1,
     IInverterBeacon_v1,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {IOrchestratorFactory_v1} from
@@ -46,7 +46,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     function createAndInitModule(
         IModule_v2.Metadata memory metadata,
-        IOrchestrator_v1,
+        IOrchestrator_v2,
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
@@ -73,7 +73,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     function createModuleProxy(
         IModule_v2.Metadata memory,
-        IOrchestrator_v1,
+        IOrchestrator_v2,
         IOrchestratorFactory_v1.WorkflowConfig memory
     ) external returns (address) {
         return Clones.clone(address(new Module_v2_Mock()));

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";

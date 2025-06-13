@@ -14,16 +14,16 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
+import {IModule_v2, IOrchestrator_v2} from "src/modules/base/IModule_v2.sol";
 
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 
 // Mocks
 import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
@@ -78,7 +78,7 @@ contract ModuleBaseV1Test is ModuleTest {
     }
 
     function testInit() public override {
-        // Orchestrator_v1 correctly written to storage.
+        // Orchestrator_v2 correctly written to storage.
         assertEq(address(module.orchestrator()), address(_orchestrator));
 
         // Identifier correctly computed.
@@ -118,7 +118,7 @@ contract ModuleBaseV1Test is ModuleTest {
         module = Module_v2_Mock(Clones.clone(impl));
 
         vm.expectRevert(IModule_v2.Module__InvalidOrchestratorAddress.selector);
-        module.init(IOrchestrator_v1(address(0)), _METADATA, _CONFIGDATA);
+        module.init(IOrchestrator_v2(address(0)), _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {

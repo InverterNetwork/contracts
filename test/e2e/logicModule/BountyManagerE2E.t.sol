@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
@@ -80,7 +80,7 @@ contract BountyManagerE2E is E2ETest {
 
     function test_e2e_BountyManagerLifecycle() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -88,7 +88,7 @@ contract BountyManagerE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         FM_DepositVault_v1 fundingManager =

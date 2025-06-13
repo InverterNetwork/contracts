@@ -22,8 +22,8 @@ import {IFM_BC_BondingSurface_Redeeming_v2} from
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
@@ -130,7 +130,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override(FM_BC_BondingSurface_Redeeming_v2) initializer {

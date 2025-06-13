@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
@@ -75,7 +75,7 @@ contract FM_DepositVault_v1 is
 
     /// @inheritdoc Module_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override initializer {

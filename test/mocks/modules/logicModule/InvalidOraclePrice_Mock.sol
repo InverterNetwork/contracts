@@ -5,7 +5,7 @@ import "src/modules/base/Module_v2.sol";
 
 contract InvalidOraclePrice_Mock is Module_v2 {
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory /* configData */
     ) public override(Module_v2) initializer {

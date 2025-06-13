@@ -5,7 +5,7 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {ModuleTest, IOrchestrator_v1} from "@unitTest/modules/ModuleTest.sol";
+import {ModuleTest, IOrchestrator_v2} from "@unitTest/modules/ModuleTest.sol";
 import {IModule_v2, ERC165Upgradeable} from "src/modules/base/Module_v2.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
@@ -80,7 +80,7 @@ contract LM_PC_KPIRewarder_v3Lifecycle is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
     FM_DepositVault_v1 fundingManager;
     AUT_Roles_v2 authorizer;
     LM_PC_KPIRewarder_v3 kpiRewarder;

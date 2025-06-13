@@ -15,7 +15,7 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
@@ -848,7 +848,7 @@ contract BondingCurveBaseV2Test is ModuleTest {
     /* Test openBuy and _openBuy function
         ├── when caller is not permissioned
         │      └── it should revert (modifier in position)
-        └── when caller is the Orchestrator_v1 admin
+        └── when caller is the Orchestrator_v2 admin
                └── when buy functionality is already open
                 │      └── it should stay as is
                 │      └── it should emit an event

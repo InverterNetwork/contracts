@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
@@ -102,7 +102,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_Roles_v2 authorizer =

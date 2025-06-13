@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 import {
     IERC20PaymentClientBase_v3,
@@ -140,7 +140,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v3 {
     /// @param  configData_ The config data of the module, comprised of:
     ///     - address: paymentToken: The payment token address.
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v2) initializer {

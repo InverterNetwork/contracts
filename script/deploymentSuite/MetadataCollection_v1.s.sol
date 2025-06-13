@@ -67,7 +67,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "Orchestrator_v1"
+        "Orchestrator_v2"
     );
 
     // ------------------------------------------------------------------------

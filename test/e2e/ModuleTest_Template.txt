@@ -8,7 +8,7 @@ import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory_v1, IOrchestrator_v1
+    E2ETest, IOrchestratorFactory_v1, IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 // Import modules that are used in this E2E test
@@ -42,7 +42,7 @@ contract RoleAuthorizerE2E is E2ETest {
 
     function test_e2e_RoleAuthorizer() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -51,7 +51,7 @@ contract RoleAuthorizerE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------

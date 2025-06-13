@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IModule_v2, IOrchestrator_v1} from "src/modules/base/IModule_v2.sol";
+import {IModule_v2, IOrchestrator_v2} from "src/modules/base/IModule_v2.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
@@ -38,9 +38,9 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *          metadata to identify the module type as well as utility functions for general
  *          module interactions.
  *
- *          This contract provides a framework for triggering and receiving {Orchestrator_v1}
+ *          This contract provides a framework for triggering and receiving {Orchestrator_v2}
  *          callbacks (via `call`) and a modifier to authenticate
- *          callers via the module's {Orchestrator_v1}.
+ *          callers via the module's {Orchestrator_v2}.
  *
  *          Each module is identified via a unique identifier based on its major
  *          version, title, and url given in the metadata.
@@ -80,7 +80,7 @@ abstract contract Module_v2 is
     /// @dev	The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
-    IOrchestrator_v1 internal __Module_orchestrator;
+    IOrchestrator_v2 internal __Module_orchestrator;
 
     /// @dev	The module's metadata.
     ///
@@ -103,7 +103,7 @@ abstract contract Module_v2 is
     }
 
     /// @dev    Modifier to guarantee function is only callable by a module registered within the
-    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v3} interface.
+    ///         workflows's {Orchestrator_v2} and the module is implementing the {IERC20PaymentClientBase_v3} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
         _;
@@ -125,7 +125,7 @@ abstract contract Module_v2 is
 
     /// @inheritdoc IModule_v2
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
     ) external virtual initializer {
@@ -134,9 +134,9 @@ abstract contract Module_v2 is
 
     /// @dev	The initialization function MUST be called by the upstream
     ///      contract in their overridden `init()` function.
-    /// @param  orchestrator_ The module's {Orchestrator_v1}.
+    /// @param  orchestrator_ The module's {Orchestrator_v2}.
     function __Module_init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata
     ) internal onlyInitializing {
         // Write orchestrator to storage.
@@ -185,7 +185,7 @@ abstract contract Module_v2 is
     }
 
     /// @inheritdoc IModule_v2
-    function orchestrator() public view returns (IOrchestrator_v1) {
+    function orchestrator() public view returns (IOrchestrator_v2) {
         return __Module_orchestrator;
     }
 

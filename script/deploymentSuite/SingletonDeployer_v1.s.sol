@@ -77,7 +77,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_PP_Streaming_v3;
 
     // Orchestrator
-    address public impl_orc_Orchestrator_v1;
+    address public impl_orc_Orchestrator_v2;
 
     //--------------------------------------------------------------------------
     // Factory Usage
@@ -276,10 +276,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Orchestrator
         console2.log("  - Orchestrator");
 
-        impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(
-            "Orchestrator_v1",
+        impl_orc_Orchestrator_v2 = deployAndLogWithCreate2(
+            "Orchestrator_v2",
             abi.encodePacked(
-                vm.getCode("Orchestrator_v1.sol:Orchestrator_v1"),
+                vm.getCode("Orchestrator_v2.sol:Orchestrator_v2"),
                 abi.encode(transactionForwarder)
             )
         );

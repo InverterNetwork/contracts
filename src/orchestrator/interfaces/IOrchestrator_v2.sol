@@ -13,14 +13,40 @@ import {IPaymentProcessor_v3} from
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IOrchestrator_v1 is IModuleManagerBase_v1 {
+/**
+ * @title   Inverter Orchestrator Interface
+ *
+ * @dev     This Contract is the center and connecting block of all Modules in a
+ *          Inverter Network Workflow. It contains references to the essential contracts
+ *          that make up a workflow. By inheriting the ModuleManager it allows for managing
+ *          which modules make up the workflow.
+ *
+ *          An orchestrator is composed of a funding mechanism
+ *          and a set of modules.
+ *
+ *          The token being accepted for funding is non-changeable and set during
+ *          initialization. Authorization is performed via calling a non-changeable
+ *          {IAuthorizer_v2} instance. Payments, initiated by modules, are processed
+ *          via a non-changeable {IPaymentProcessor_v3} instance.
+ *
+ *          Each orchestrator has a unique id set during initialization.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v2.0.0
+ *
+ * @author  Inverter Network
+ */
+interface IOrchestrator_v2 is IModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.
     error Orchestrator__NotPermissioned();
 
-    /// @notice The given module is not used in the {Orchestrator_v1}.
+    /// @notice The given module is not used in the {Orchestrator_v2}.
     /// @param  module The module address.
     error Orchestrator__InvalidModuleType(address module);
 
@@ -31,7 +57,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         address currentToken, address newToken
     );
 
-    /// @notice The given module is not used in the {Orchestrator_v1}.
+    /// @notice The given module is not used in the {Orchestrator_v2}.
     error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
     /// @notice The Authorizer can not be removed through this function.
@@ -58,12 +84,12 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @param  _address The new address.
     event PaymentProcessorUpdated(address indexed _address);
 
-    /// @notice {Orchestrator_v1} has been initialized with the corresponding modules.
-    /// @param  orchestratorId_ The id of the {Orchestrator_v1}.
+    /// @notice {Orchestrator_v2} has been initialized with the corresponding modules.
+    /// @param  orchestratorId_ The id of the {Orchestrator_v2}.
     /// @param  fundingManager The address of the funding manager module.
     /// @param  authorizer The address of the authorizer module.
     /// @param  paymentProcessor The address of the payment processor module.
-    /// @param  modules The addresses of the other modules used in the {Orchestrator_v1}.
+    /// @param  modules The addresses of the other modules used in the {Orchestrator_v2}.
     /// @param  governor The address of the {Governor_v1} contract used to reference protocol level interactions.
     event OrchestratorInitialized(
         uint indexed orchestratorId_,
@@ -77,9 +103,9 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @notice Returns the {Orchestrator_v1}'s id.
+    /// @notice Returns the {Orchestrator_v2}'s id.
     /// @dev	Unique id set by the {OrchestratorFactory_v1} during initialization.
-    /// @return The {Orchestrator_v1}'s id.
+    /// @return The {Orchestrator_v2}'s id.
     function orchestratorId() external view returns (uint);
 
     /// @notice The {IFundingManager_v1} implementation used to hold and distribute Funds.
@@ -103,9 +129,9 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Initialization
 
     /// @notice Initialization function.
-    /// @param  orchestratorId The id of the {Orchestrator_v1}.
+    /// @param  orchestratorId The id of the {Orchestrator_v2}.
     /// @param  moduleFactory_ The address of the module factory.
-    /// @param  modules The addresses of the modules used in the {Orchestrator_v1}.
+    /// @param  modules The addresses of the modules used in the {Orchestrator_v2}.
     /// @param  fundingManager The address of the funding manager module.
     /// @param  authorizer The address of the authorizer module.
     /// @param  paymentProcessor The address of the payment processor module.
@@ -184,14 +210,14 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     function executeSetPaymentProcessor(IPaymentProcessor_v3 paymentProcessor_)
         external;
 
-    /// @notice Initiates the adding of a module to the {Orchestrator_v1} on a timelock.
+    /// @notice Initiates the adding of a module to the {Orchestrator_v2} on a timelock.
     /// @dev    Function access controlled by authorizer.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
     /// @param  module The module address to add.
     function initiateAddModuleWithTimelock(address module) external;
 
-    /// @notice Initiate the removal of a module from the {Orchestrator_v1} on a timelock.
+    /// @notice Initiate the removal of a module from the {Orchestrator_v2} on a timelock.
     /// @dev	Reverts if module to be removed is the current authorizer/fundingManager/paymentProcessor.
     ///         The functions specific to updating these 3 module categories should be used instead.
     /// @dev    Function access controlled by authorizer.
@@ -214,7 +240,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     function executeRemoveModule(address module) external;
 
     /// @notice Cancels an initiated update for a module. Can be adding or removing a module
-    ///         from the {Orchestrator_v1}.
+    ///         from the {Orchestrator_v2}.
     /// @dev    Function access controlled by authorizer.
     /// @dev	Fails if module update has not been initiated.
     /// @param  module The module address to remove.

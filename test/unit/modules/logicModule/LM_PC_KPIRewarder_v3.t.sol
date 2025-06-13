@@ -13,7 +13,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     ModuleTest,
     IModule_v2,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 import {IERC20PaymentClientBase_v3} from
@@ -113,7 +113,7 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
 
         // Init Module wrongly
         vm.expectRevert(IModule_v2.Module__InvalidOrchestratorAddress.selector);
-        kpiManager.init(IOrchestrator_v1(address(0)), _METADATA, configData);
+        kpiManager.init(IOrchestrator_v2(address(0)), _METADATA, configData);
 
         // Test invalid staking token
         vm.expectRevert(
