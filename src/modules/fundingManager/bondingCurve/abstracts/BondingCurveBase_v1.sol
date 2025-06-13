@@ -19,6 +19,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 /**
  * @title   Inverter Bonding Curve Funding Manager Base
  *
@@ -249,7 +251,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Effects
 
         // Cache Collateral Token
-        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+        IERC20 collateralToken = IFundingManager_v1(address(this)).token();
 
         // Get protocol fee percentages and treasury addresses
         (
@@ -423,6 +425,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         IERC20 _token,
         uint _feeAmount
     ) internal {
+        console2.log("process protocol fee via transfer");
+        console2.log("fee amount: ", _feeAmount);
+        console2.log("balance: ", _token.balanceOf(address(this)));
         // skip protocol fee collection if fee percentage set to zero
         if (_feeAmount > 0) {
             _validateRecipient(_treasury);
@@ -433,6 +438,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
                 address(_token), _treasury, _feeAmount
             );
         }
+        console2.log("process protocol fee via transfer end");
     }
 
     function _processProtocolFeeViaMinting(address _treasury, uint _feeAmount)
