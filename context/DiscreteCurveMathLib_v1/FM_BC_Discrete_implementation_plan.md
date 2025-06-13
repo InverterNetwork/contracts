@@ -157,8 +157,13 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 - remove all related tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`
 - run tests to ensure nothing breaks
 
-### 2.13. Buy
+### 2.13. Buy [DONE]
 
-- [ ] 1. adds `buyFor` function to `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, inheritdoc from `IBondingCurveBase`
-  => check out `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol` l.216 for inspiration (you don't need to update virtual issuance supply)
-- [ ] 2. add test for `buyFor`; asserts token transfers, correct fees
+- [x] 1. adds `buyFor` function to `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, inheritdoc from `IBondingCurveBase`
+     => check out `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol` l.216 for inspiration (you don't need to update virtual issuance supply)
+- [x] 2. add test for `buyFor`; asserts token transfers, correct fees
+
+### 2.14. Sell [DONE]
+
+- [x] 1. add `sellTo` function to `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, inheritdoc from `IRedeemingVirtualSupplyBase`
+- [x] 2. add test for `sellTo`; asserts token transfers, correct fees

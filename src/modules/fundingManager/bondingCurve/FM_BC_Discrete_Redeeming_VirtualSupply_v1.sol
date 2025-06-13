@@ -13,6 +13,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -257,6 +259,23 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         emit TokensBought(
             _receiver, _depositAmount, totalIssuanceTokenMinted, msg.sender
         );
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(RedeemingBondingCurveBase_v1)
+        sellingIsEnabled
+        validReceiver(_receiver)
+    {
+        (uint totalCollateralTokenMovedOut,) =
+            _sellOrder(_receiver, _depositAmount, _minAmountOut);
+
+        // Update virtual collateral supply by subtracting the total collateral that left the FM.
+        _subVirtualCollateralAmount(totalCollateralTokenMovedOut);
+
+        // Event TokensSold is emitted by _sellOrder in RedeemingBondingCurveBase_v1
     }
 
     /// @inheritdoc IFundingManager_v1

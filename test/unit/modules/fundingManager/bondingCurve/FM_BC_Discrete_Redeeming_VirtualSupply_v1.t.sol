@@ -10,6 +10,8 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IVirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
@@ -1384,6 +1386,171 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     }
 
     // =========================================================================
+    // Test: sellTo()
+
+    /* Test sellTo()
+    └── Given the sell operation is open
+        └── And the seller has sufficient issuance tokens and has approved the FM
+            └── When sellTo() is called
+                ├── Then (Issuance Token Movements):
+                │   └── And the seller's issuance balance should decrease by the deposit amount
+                │   └── And the FM should burn the net deposit of issuance tokens (deposit - protocol issuance fee)
+                │   └── And the protocol treasury should be minted the issuance protocol fee tokens (if applicable on sell)
+                │   └── And the total supply of issuance tokens should decrease by the net deposit amount
+                ├── Then (Collateral Token Movements):
+                │   └── And the receiver's collateral balance should increase by the net collateral out
+                │   └── And the FM's collateral balance should decrease by the total collateral moved out (net to receiver + protocol collateral fee)
+                │   └── And the protocol treasury's collateral balance should increase by the protocol collateral fee
+                ├── Then (Fee and Virtual Supply Accounting):
+                │   └── And the FM's projectCollateralFeeCollected should increase by the project collateral fee amount
+                │   └── And the FM's virtualCollateralSupply should decrease by the total collateral moved out
+                └── Then (Event Emissions):
+                    └── And it should emit a TokensSold event with correct parameters
+                    └── And it should emit a VirtualCollateralAmountSubtracted event with correct parameters
+    */
+
+    function testSellTo_IssuanceTokenMovements() public {
+        (
+            uint depositAmount, // Issuance tokens to sell
+            , // minCollateralAmountOut
+            uint expectedIssuanceProtocolFee, // Fee on issuance tokens
+            , // expectedCollateralProtocolFee, // Fee on collateral tokens
+            , // expectedProjectCollateralFee, // Project fee on collateral
+            , // netCollateralToReceiver
+            uint netIssuanceToBurn // depositAmount - expectedIssuanceProtocolFee
+        ) = helper_prepareSellToTest();
+
+        uint initialSellerIssuance = issuanceToken.balanceOf(address(this));
+        uint initialTreasuryIssuance =
+            issuanceToken.balanceOf(TEST_PROTOCOL_TREASURY);
+        uint initialTotalIssuanceSupply = issuanceToken.totalSupply();
+
+        fmBcDiscrete.sellTo(address(this), depositAmount, 1); // minAmountOut = 1 wei
+
+        assertEq(
+            issuanceToken.balanceOf(address(this)),
+            initialSellerIssuance - depositAmount,
+            "Seller issuance after"
+        );
+        assertEq(
+            issuanceToken.balanceOf(TEST_PROTOCOL_TREASURY),
+            initialTreasuryIssuance + expectedIssuanceProtocolFee,
+            "Treasury issuance after (protocol fee)"
+        );
+        assertEq(
+            issuanceToken.totalSupply(),
+            initialTotalIssuanceSupply - netIssuanceToBurn,
+            "Total issuance supply after (net burn)"
+        );
+    }
+
+    function testSellTo_CollateralTokenMovements() public {
+        (
+            uint depositAmount, // Issuance tokens to sell
+            uint minCollateralAmountOut,
+            , // expectedIssuanceProtocolFee, // Fee on issuance tokens
+            uint expectedCollateralProtocolFee, // Fee on collateral tokens
+            , // expectedProjectCollateralFee, // Project fee on collateral
+            uint netCollateralToReceiver, // netIssuanceToBurn // depositAmount - expectedIssuanceProtocolFee
+        ) = helper_prepareSellToTest();
+
+        uint initialReceiverCollateral =
+            orchestratorToken.balanceOf(address(this));
+        uint initialFmCollateral =
+            orchestratorToken.balanceOf(address(fmBcDiscrete));
+        uint initialTreasuryCollateral =
+            orchestratorToken.balanceOf(TEST_PROTOCOL_TREASURY);
+
+        fmBcDiscrete.sellTo(
+            address(this), depositAmount, minCollateralAmountOut
+        );
+
+        assertEq(
+            orchestratorToken.balanceOf(address(this)), // Receiver is self
+            initialReceiverCollateral + netCollateralToReceiver,
+            "Receiver collateral after"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(address(fmBcDiscrete)),
+            initialFmCollateral
+                - (netCollateralToReceiver + expectedCollateralProtocolFee),
+            "FM collateral after"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(TEST_PROTOCOL_TREASURY),
+            initialTreasuryCollateral + expectedCollateralProtocolFee,
+            "Treasury collateral after (protocol fee)"
+        );
+    }
+
+    function testSellTo_FeeAndVirtualSupplyAccounting() public {
+        (
+            uint depositAmount, // Issuance tokens to sell
+            uint minCollateralAmountOut,
+            , // expectedIssuanceProtocolFee, // Fee on issuance tokens
+            uint expectedCollateralProtocolFee, // Fee on collateral tokens
+            uint expectedProjectCollateralFee, // Project fee on collateral
+            uint netCollateralToReceiver, // netIssuanceToBurn // depositAmount - expectedIssuanceProtocolFee
+        ) = helper_prepareSellToTest();
+
+        uint initialFmProjectFeeCollected =
+            fmBcDiscrete.projectCollateralFeeCollected();
+        uint initialVirtualCollateralSupply =
+            fmBcDiscrete.getVirtualCollateralSupply();
+        uint totalCollateralMovedOut = netCollateralToReceiver
+            + expectedCollateralProtocolFee + expectedProjectCollateralFee;
+
+        fmBcDiscrete.sellTo(
+            address(this), depositAmount, minCollateralAmountOut
+        );
+
+        assertEq(
+            fmBcDiscrete.projectCollateralFeeCollected(),
+            initialFmProjectFeeCollected + expectedProjectCollateralFee,
+            "Project fee collected after sell"
+        );
+        assertEq(
+            fmBcDiscrete.getVirtualCollateralSupply(),
+            initialVirtualCollateralSupply - totalCollateralMovedOut,
+            "Virtual collateral supply after sell"
+        );
+    }
+
+    function testSellTo_EventEmissions() public {
+        (
+            uint depositAmount, // Issuance tokens to sell
+            uint minCollateralAmountOut,
+            , // expectedIssuanceProtocolFee, // Fee on issuance tokens
+            uint expectedCollateralProtocolFee, // Fee on collateral tokens
+            uint expectedProjectCollateralFee, // Project fee on collateral
+            uint netCollateralToReceiver, // netIssuanceToBurn // depositAmount - expectedIssuanceProtocolFee
+        ) = helper_prepareSellToTest();
+
+        uint initialVirtualCollateralSupply =
+            fmBcDiscrete.getVirtualCollateralSupply();
+        uint totalCollateralMovedOut = netCollateralToReceiver
+            + expectedCollateralProtocolFee + expectedProjectCollateralFee;
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IRedeemingBondingCurveBase_v1.TokensSold(
+            address(this), // receiver
+            depositAmount,
+            netCollateralToReceiver,
+            address(this)
+        );
+
+        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountSubtracted(
+            totalCollateralMovedOut,
+            initialVirtualCollateralSupply - totalCollateralMovedOut
+        );
+
+        fmBcDiscrete.sellTo(
+            address(this), depositAmount, minCollateralAmountOut
+        );
+    }
+
+    // =========================================================================
     // Helpers
 
     function _ensureTotalIssuanceSupply(uint _targetSupply) internal {
@@ -1446,6 +1613,58 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             );
         }
         return segments;
+    }
+
+    function helper_prepareSellToTest()
+        internal
+        returns (
+            uint depositAmount, // Issuance tokens to sell
+            uint minCollateralAmountOut,
+            uint expectedIssuanceProtocolFee, // Fee on issuance tokens
+            uint expectedCollateralProtocolFee, // Fee on collateral tokens
+            uint expectedProjectCollateralFee, // Project fee on collateral
+            uint netCollateralToReceiver,
+            uint netIssuanceToBurn // depositAmount - expectedIssuanceProtocolFee
+        )
+    {
+        fmBcDiscrete.openSell();
+        assertTrue(fmBcDiscrete.sellIsOpen(), "Selling should be open");
+
+        depositAmount = 20 ether; // Example amount of issuance tokens to sell
+        minCollateralAmountOut = 1 wei; // Minimal expectation for collateral
+
+        // Ensure FM has some collateral to pay out and seller has issuance tokens
+        orchestratorToken.mint(address(fmBcDiscrete), 100 ether); // FM has collateral
+        fmBcDiscrete.exposed_setVirtualCollateralSupply(100 ether); // Sync virtual supply
+
+        _ensureTotalIssuanceSupply(depositAmount * 2); // Make sure total supply is ample
+        issuanceToken.mint(address(this), depositAmount); // Seller gets tokens
+        issuanceToken.approve(address(fmBcDiscrete), depositAmount); // Seller approves FM
+
+        // Calculate expected fees and net amounts based on current FM state and constants
+        // Stage 1: Fees on Deposited Issuance Tokens (Protocol Fee)
+        expectedIssuanceProtocolFee =
+            (depositAmount * TEST_PROTOCOL_ISSUANCE_SELL_FEE_BPS) / 10_000;
+        netIssuanceToBurn = depositAmount - expectedIssuanceProtocolFee; // This is what's used in formula
+
+        // Stage 2: Calculate Gross Collateral from Formula
+        uint grossCollateralOut =
+            fmBcDiscrete.exposed_redeemTokensFormulaWrapper(netIssuanceToBurn);
+
+        // Stage 3: Fees on Gross Collateral Out (Protocol and Project Fees)
+        expectedCollateralProtocolFee = (
+            grossCollateralOut * TEST_PROTOCOL_COLLATERAL_SELL_FEE_BPS
+        ) / 10_000;
+        expectedProjectCollateralFee =
+            (grossCollateralOut * TEST_PROJECT_SELL_FEE_BPS) / 10_000; // Using TEST_PROJECT_SELL_FEE_BPS
+
+        netCollateralToReceiver = grossCollateralOut
+            - expectedCollateralProtocolFee - expectedProjectCollateralFee;
+
+        assertTrue(
+            netCollateralToReceiver >= minCollateralAmountOut,
+            "Calculated net collateral is less than minAmountOut for test setup"
+        );
     }
 
     function helper_prepareBuyForTest()
