@@ -83,6 +83,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
     uint8 internal constant ISSUANCE_TOKEN_DECIMALS = 18;
     uint internal constant ISSUANCE_TOKEN_MAX_SUPPLY = type(uint).max;
 
+    //
+    uint collateralAmountIn = 10 ether;
+    uint minIssuanceAmountOut = 1 ether;
+
     FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed public fmBcDiscrete;
     ERC20Mock public orchestratorToken; // This is the collateral token
     ERC20Issuance_v1 public issuanceToken; // This is the token to be issued
@@ -120,7 +124,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
 
         bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(fmBcDiscrete),
@@ -137,7 +141,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
 
         bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(fmBcDiscrete),
@@ -495,6 +499,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         uint oldSupply = fmBcDiscrete.getVirtualCollateralSupply();
 
         vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+
         emit IVirtualCollateralSupplyBase_v1.VirtualCollateralSupplySet(
             _newSupply, oldSupply
         );
@@ -1028,7 +1033,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         bytes4 calculatePurchaseReturnSelector =
             fmBcDiscrete.calculatePurchaseReturn.selector;
         bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
 
         // Act & Assert for calculatePurchaseReturn.selector
         (
@@ -1099,7 +1104,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         bytes4 calculateSaleReturnSelector =
             fmBcDiscrete.calculateSaleReturn.selector;
         bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
 
         // Act & Assert for calculateSaleReturn.selector
         (
@@ -1242,6 +1247,142 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test buyFor()
+    └── Given the buy operation is open
+        └── And the buyer has sufficient collateral and has approved the FM
+            └── When buyFor() is called
+                ├── Then (Collateral Token Movements):
+                │   └── And the buyer's collateral balance should decrease by the deposit amount
+                │   └── And the FM's collateral balance should increase by the net deposit (deposit - protocol collateral fee)
+                │   └── And the protocol treasury's collateral balance should increase by the protocol collateral fee
+                ├── Then (Issuance Token Minting and Supply):
+                │   └── And the receiver should be minted the net issuance tokens
+                │   └── And the protocol treasury should be minted the issuance protocol fee tokens
+                │   └── And the total supply of issuance tokens should increase by the sum of net issuance to receiver and issuance protocol fee
+                ├── Then (Fee and Virtual Supply Accounting):
+                │   └── And the FM's projectCollateralFeeCollected should increase by the project collateral fee amount
+                │   └── And the FM's virtualCollateralSupply should increase by the net deposit amount (deposit - protocol collateral fee - project collateral fee)
+                └── Then (Event Emissions):
+                    └── And it should emit a TokensBought event with correct parameters
+                    └── And it should emit a VirtualCollateralAmountAdded event with correct parameters
+    */
+    function testBuyFor_CollateralTokenMovements() public {
+        (uint expectedCollateralProtocolFee,,,,) = helper_prepareBuyForTest();
+
+        uint initialBuyerCollateral = orchestratorToken.balanceOf(address(this));
+        uint initialFmCollateral =
+            orchestratorToken.balanceOf(address(fmBcDiscrete));
+        uint initialTreasuryCollateral =
+            orchestratorToken.balanceOf(TEST_PROTOCOL_TREASURY);
+
+        fmBcDiscrete.buyFor(
+            address(this), collateralAmountIn, minIssuanceAmountOut
+        );
+
+        assertEq(
+            orchestratorToken.balanceOf(address(this)),
+            initialBuyerCollateral - collateralAmountIn,
+            "Buyer collateral after"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(address(fmBcDiscrete)),
+            initialFmCollateral + collateralAmountIn
+                - expectedCollateralProtocolFee,
+            "FM collateral after"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(TEST_PROTOCOL_TREASURY),
+            initialTreasuryCollateral + expectedCollateralProtocolFee,
+            "Treasury collateral after"
+        );
+    }
+
+    function testBuyFor_IssuanceTokenMintingAndSupply() public {
+        (
+            ,
+            ,
+            ,
+            uint expectedNetIssuanceToReceiver,
+            uint expectedIssuanceProtocolFee
+        ) = helper_prepareBuyForTest();
+
+        uint initialReceiverIssuance = issuanceToken.balanceOf(address(this));
+        uint initialTreasuryIssuance =
+            issuanceToken.balanceOf(TEST_PROTOCOL_TREASURY);
+        uint initialTotalIssuanceSupply = issuanceToken.totalSupply();
+
+        fmBcDiscrete.buyFor(
+            address(this), collateralAmountIn, minIssuanceAmountOut
+        );
+
+        assertEq(
+            issuanceToken.balanceOf(address(this)),
+            initialReceiverIssuance + expectedNetIssuanceToReceiver,
+            "Receiver issuance after"
+        );
+        assertEq(
+            issuanceToken.balanceOf(TEST_PROTOCOL_TREASURY),
+            initialTreasuryIssuance + expectedIssuanceProtocolFee,
+            "Treasury issuance after"
+        );
+        assertEq(
+            issuanceToken.totalSupply(),
+            initialTotalIssuanceSupply + expectedNetIssuanceToReceiver
+                + expectedIssuanceProtocolFee,
+            "Total issuance supply after"
+        );
+    }
+
+    function testBuyFor_FeeAndVirtualSupplyAccounting() public {
+        (, uint expectedProjectCollateralFee, uint netDepositForPurchase,,) =
+            helper_prepareBuyForTest();
+
+        uint initialFmProjectFeeCollected =
+            fmBcDiscrete.projectCollateralFeeCollected();
+        uint initialVirtualCollateralSupply =
+            fmBcDiscrete.getVirtualCollateralSupply();
+
+        fmBcDiscrete.buyFor(
+            address(this), collateralAmountIn, minIssuanceAmountOut
+        );
+
+        assertEq(
+            fmBcDiscrete.projectCollateralFeeCollected(),
+            initialFmProjectFeeCollected + expectedProjectCollateralFee,
+            "Project fee collected after"
+        );
+        assertEq(
+            fmBcDiscrete.getVirtualCollateralSupply(),
+            initialVirtualCollateralSupply + netDepositForPurchase,
+            "Virtual collateral supply after"
+        );
+    }
+
+    function testBuyFor_EventEmissions() public {
+        (,, uint netDepositForPurchase, uint expectedNetIssuanceToReceiver,) =
+            helper_prepareBuyForTest();
+        uint initialVirtualCollateralSupply =
+            fmBcDiscrete.getVirtualCollateralSupply();
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IBondingCurveBase_v1.TokensBought(
+            address(this),
+            collateralAmountIn,
+            expectedNetIssuanceToReceiver,
+            address(this)
+        );
+
+        vm.expectEmit(true, true, false, false, address(fmBcDiscrete));
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountAdded(
+            netDepositForPurchase,
+            initialVirtualCollateralSupply + netDepositForPurchase
+        );
+
+        fmBcDiscrete.buyFor(
+            address(this), collateralAmountIn, minIssuanceAmountOut
+        );
+    }
+
     // =========================================================================
     // Helpers
 
@@ -1305,5 +1446,41 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             );
         }
         return segments;
+    }
+
+    function helper_prepareBuyForTest()
+        internal
+        returns (
+            uint expectedCollateralProtocolFee,
+            uint expectedProjectCollateralFee,
+            uint netDepositForPurchase,
+            uint expectedNetIssuanceToReceiver,
+            uint expectedIssuanceProtocolFee
+        )
+    {
+        fmBcDiscrete.openBuy();
+        assertTrue(fmBcDiscrete.buyIsOpen(), "Buying should be open");
+
+        orchestratorToken.mint(address(this), collateralAmountIn);
+        orchestratorToken.approve(address(fmBcDiscrete), collateralAmountIn);
+
+        expectedCollateralProtocolFee =
+            (collateralAmountIn * TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS) / 10_000;
+        expectedProjectCollateralFee =
+            (collateralAmountIn * TEST_PROJECT_BUY_FEE_BPS) / 10_000;
+        netDepositForPurchase = collateralAmountIn
+            - expectedCollateralProtocolFee - expectedProjectCollateralFee;
+        uint grossIssuance = fmBcDiscrete.exposed_issueTokensFormulaWrapper(
+            netDepositForPurchase
+        );
+        expectedIssuanceProtocolFee =
+            (grossIssuance * TEST_PROTOCOL_ISSUANCE_BUY_FEE_BPS) / 10_000;
+        expectedNetIssuanceToReceiver =
+            grossIssuance - expectedIssuanceProtocolFee;
+
+        assertTrue(
+            expectedNetIssuanceToReceiver >= minIssuanceAmountOut,
+            "Calculated net issuance is less than minAmountOut"
+        );
     }
 }

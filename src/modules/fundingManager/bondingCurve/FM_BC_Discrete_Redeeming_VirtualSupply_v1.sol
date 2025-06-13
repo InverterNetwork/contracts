@@ -107,7 +107,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         PackedSegment[] memory initialSegments_
     ) internal onlyInitializing {
         // Set issuance token.
-        _setIssuanceToken(ERC20Issuance_v1(issuanceTokenAddress_)); // collateralDecimals argument removed
+        _setIssuanceToken(ERC20Issuance_v1(issuanceTokenAddress_));
 
         // Set initial segments.
         _setSegments(initialSegments_);
@@ -124,7 +124,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
         // Fetch and cache protocol fees for buy operations
         bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
 
         // Populate the cache directly for buy operations
         (
@@ -136,7 +136,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
         // Fetch and cache protocol fees for sell operations
         bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
 
         address sellCollateralTreasury; // Temporary variable for sell collateral treasury
         address sellIssuanceTreasury; // Temporary variable for sell issuance treasury
@@ -233,6 +233,31 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
     // =========================================================================
     // Public - Mutating
+
+    /// @inheritdoc IBondingCurveBase_v1
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        buyingIsEnabled
+        validReceiver(_receiver)
+    {
+        uint totalIssuanceTokenMinted;
+        uint collateralFeeAmount;
+        (totalIssuanceTokenMinted, collateralFeeAmount) =
+            _buyOrder(_receiver, _depositAmount, _minAmountOut);
+
+        // Add the net collateral (after fees) to the virtual collateral supply
+        uint netCollateralAdded = _depositAmount - collateralFeeAmount;
+        _addVirtualCollateralAmount(netCollateralAdded);
+
+        // Note: _addVirtualIssuanceAmount is intentionally omitted as per requirements
+        // for this discrete curve implementation, as issuanceToken.totalSupply() is used directly
+        // in relevant calculations or virtualIssuanceSupply is managed elsewhere if needed.
+        emit TokensBought(
+            _receiver, _depositAmount, totalIssuanceTokenMinted, msg.sender
+        );
+    }
 
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to_, uint amount_)
@@ -371,12 +396,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     {
         // Selectors for the functions that will internally call _getFunctionFeesAndTreasuryAddresses
         bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
         bytes4 calculatePurchaseReturnSelector =
             this.calculatePurchaseReturn.selector;
 
         bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint256,uint256)")));
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
         bytes4 calculateSaleReturnSelector = this.calculateSaleReturn.selector;
 
         if (

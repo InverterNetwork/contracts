@@ -157,8 +157,8 @@ Note: exposed contract can be found here: `test/mocks/modules/fundingManager/bon
 - remove all related tests in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol`
 - run tests to ensure nothing breaks
 
-### 2.13. Test: Buy & sell
+### 2.13. Buy
 
-- [ ] 1. Add test for `buyTokens()` function in `test/unit/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.t.sol` contract
-  - should use default values for fees
-  - should assert: token transfers, correct fee amounts
+- [ ] 1. adds `buyFor` function to `FM_BC_Discrete_Redeeming_VirtualSupply_v1`, inheritdoc from `IBondingCurveBase`
+  => check out `src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol` l.216 for inspiration (you don't need to update virtual issuance supply)
+- [ ] 2. add test for `buyFor`; asserts token transfers, correct fees

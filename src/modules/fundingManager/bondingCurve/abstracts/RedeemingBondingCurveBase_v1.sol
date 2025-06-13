@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
 import {BondingCurveBase_v1} from
