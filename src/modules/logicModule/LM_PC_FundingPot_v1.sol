@@ -463,7 +463,8 @@ contract LM_PC_FundingPot_v1 is
         uint8 accessCriteriaId_, // Optional: 0 for new, non-zero for edit
         address nftContract_,
         bytes32 merkleRoot_,
-        address[] calldata allowedAddresses_
+        address[] calldata allowedAddresses_,
+        address[] calldata removedAddresses_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
@@ -529,6 +530,13 @@ contract LM_PC_FundingPot_v1 is
         } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
             round.accessCriterias[criteriaId].merkleRoot = merkleRoot_;
         } else if (accessCriteriaType == AccessCriteriaType.LIST) {
+            // Remove the addresses from the allowed list if any
+            if (removedAddresses_.length > 0) {
+                for (uint i = 0; i < removedAddresses_.length; i++) {
+                    round.accessCriterias[criteriaId].allowedAddresses[removedAddresses_[i]]
+                    = false;
+                }
+            }
             // For LIST type, update the allowed addresses
             for (uint i = 0; i < allowedAddresses_.length; i++) {
                 round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]

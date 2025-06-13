@@ -492,13 +492,15 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  nftContract_ Address of the NFT contract.
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
+    /// @param  removedAddresses_ List of addresses to remove from the allowed list.
     function setAccessCriteria(
         uint32 roundId_,
         uint8 accessCriteriaType_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,
-        address[] memory allowedAddresses_
+        address[] memory allowedAddresses_,
+        address[] memory removedAddresses_
     ) external;
 
     /// @notice Removes addresses from the allowed list for a specific access criteria.

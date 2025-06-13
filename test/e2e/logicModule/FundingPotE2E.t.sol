@@ -199,13 +199,16 @@ contract FundingPotE2E is E2ETest {
         allowedAddresses[0] = contributor1;
         allowedAddresses[1] = contributor2;
 
+        address[] memory removedAddresses = new address[](0);
+
         fundingPot.setAccessCriteria(
             round1Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
             0,
             address(0),
             bytes32(0),
-            allowedAddresses
+            allowedAddresses,
+            removedAddresses
         );
 
         // Add access criteria to round 2
@@ -218,7 +221,8 @@ contract FundingPotE2E is E2ETest {
             0,
             address(0),
             bytes32(0),
-            allowedAddresses
+            allowedAddresses,
+            removedAddresses
         );
 
         // 5. Set access criteria privileges for the rounds
