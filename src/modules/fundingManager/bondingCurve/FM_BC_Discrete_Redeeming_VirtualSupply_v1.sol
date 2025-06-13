@@ -252,13 +252,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         // Add the net collateral (after fees) to the virtual collateral supply
         uint netCollateralAdded = _depositAmount - collateralFeeAmount;
         _addVirtualCollateralAmount(netCollateralAdded);
-
-        // Note: _addVirtualIssuanceAmount is intentionally omitted as per requirements
-        // for this discrete curve implementation, as issuanceToken.totalSupply() is used directly
-        // in relevant calculations or virtualIssuanceSupply is managed elsewhere if needed.
-        emit TokensBought(
-            _receiver, _depositAmount, totalIssuanceTokenMinted, msg.sender
-        );
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -274,8 +267,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
         // Update virtual collateral supply by subtracting the total collateral that left the FM.
         _subVirtualCollateralAmount(totalCollateralTokenMovedOut);
-
-        // Event TokensSold is emitted by _sellOrder in RedeemingBondingCurveBase_v1
     }
 
     /// @inheritdoc IFundingManager_v1
