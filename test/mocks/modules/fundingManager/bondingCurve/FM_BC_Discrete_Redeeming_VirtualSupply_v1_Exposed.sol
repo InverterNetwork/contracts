@@ -102,4 +102,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
     {
         return _getFunctionFeesAndTreasuryAddresses(functionSelector_);
     }
+
+    function exposed_getBuyFee() external view returns (uint) {
+        return _getBuyFee();
+    }
+
+    function exposed_getSellFee() external view returns (uint) {
+        return _getSellFee();
+    }
 }

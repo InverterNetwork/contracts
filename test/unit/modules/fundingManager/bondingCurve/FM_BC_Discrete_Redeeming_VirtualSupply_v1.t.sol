@@ -1292,6 +1292,32 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         );
     }
 
+    /* Test _getBuyFee() (exposed)
+        └── Given the contract is initialized
+            └── When exposed_getBuyFee() is called
+                └── Then it should return the PROJECT_BUY_FEE_BPS constant
+    */
+    function testGetBuyFee_ReturnsProjectConstant() public {
+        assertEq(
+            fmBcDiscrete.exposed_getBuyFee(),
+            TEST_PROJECT_BUY_FEE_BPS,
+            "Incorrect buy fee returned"
+        );
+    }
+
+    /* Test _getSellFee() (exposed)
+        └── Given the contract is initialized
+            └── When exposed_getSellFee() is called
+                └── Then it should return the PROJECT_SELL_FEE_BPS constant
+    */
+    function testGetSellFee_ReturnsProjectConstant() public {
+        assertEq(
+            fmBcDiscrete.exposed_getSellFee(),
+            TEST_PROJECT_SELL_FEE_BPS,
+            "Incorrect sell fee returned"
+        );
+    }
+
     // =========================================================================
     // Helpers
 

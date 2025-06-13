@@ -424,6 +424,16 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // =========================================================================
     // Internal
 
+    /// @inheritdoc BondingCurveBase_v1
+    function _getBuyFee() internal view virtual override returns (uint) {
+        return PROJECT_BUY_FEE_BPS;
+    }
+
+    /// @inheritdoc RedeemingBondingCurveBase_v1
+    function _getSellFee() internal view virtual override returns (uint) {
+        return PROJECT_SELL_FEE_BPS;
+    }
+
     /// @notice Sets the issuance token for the bonding curve.
     /// @param  newIssuanceToken_ The new issuance token.
     function _setIssuanceToken(ERC20Issuance_v1 newIssuanceToken_) internal {
