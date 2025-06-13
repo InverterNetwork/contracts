@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {OptimisticOracleIntegratorMock} from
-    "@mocks/modules/logicModule/oracle/OptimisiticOracleIntegratorMock.sol";
+import {OptimisticOracleIntegrator_v3_Mock} from
+    "@mocks/modules/logicModule/oracle/OptimisticOracleIntegrator_v3_Mock.sol";
 
 import {OptimisticOracleV3CallbackRecipientInterface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
@@ -28,14 +28,14 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
-    OptimisticOracleIntegrator,
-    IOptimisticOracleIntegrator
+    OptimisticOracleIntegrator_v3,
+    IOptimisticOracleIntegrator_v3
 } from
-    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator_v3.sol";
 
-contract OptimisticOracleIntegratorTest is ModuleTest {
+contract OptimisticOracleIntegrator_v3_Test is ModuleTest {
     address ooIntegratorImplementation;
-    OptimisticOracleIntegratorMock ooIntegrator;
+    OptimisticOracleIntegrator_v3_Mock ooIntegrator;
     OptimisticOracleV3Mock ooV3;
 
     uint64 immutable DEFAULT_LIVENESS = 25_000;
@@ -54,8 +54,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         // Add Module to Mock Orchestrator
         ooIntegratorImplementation =
-            address(new OptimisticOracleIntegratorMock());
-        ooIntegrator = OptimisticOracleIntegratorMock(
+            address(new OptimisticOracleIntegrator_v3_Mock());
+        ooIntegrator = OptimisticOracleIntegrator_v3_Mock(
             Clones.clone(ooIntegratorImplementation)
         );
 
@@ -88,8 +88,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     function testInit() public override(ModuleTest) {
         // set up new orchestrator
         ooIntegratorImplementation =
-            address(new OptimisticOracleIntegratorMock());
-        ooIntegrator = OptimisticOracleIntegratorMock(
+            address(new OptimisticOracleIntegrator_v3_Mock());
+        ooIntegrator = OptimisticOracleIntegrator_v3_Mock(
             Clones.clone(ooIntegratorImplementation)
         );
         _setUpOrchestrator(ooIntegrator);
@@ -126,7 +126,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             ooIntegrator.supportsInterface(
-                type(IOptimisticOracleIntegrator).interfaceId
+                type(IOptimisticOracleIntegrator_v3).interfaceId
             )
         );
         assertTrue(
@@ -212,8 +212,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         public
     {
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__InvalidDefaultCurrency
                 .selector
         );
         ooIntegrator.setDefaultCurrencyAndBond(address(0), 0);
@@ -231,8 +231,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooV3.whitelistCurrency(whitelisted, minimumBond);
 
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__CurrencyBondTooLow
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__CurrencyBondTooLow
                 .selector
         );
         ooIntegrator.setDefaultCurrencyAndBond(whitelisted, proposedBond);
@@ -281,8 +281,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     function testSetOptimisticOracleFails_WhenNewOracleIsZero() public {
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__InvalidOOInstance
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__InvalidOOInstance
                 .selector
         );
         ooIntegrator.setOptimisticOracle(address(0));
@@ -335,8 +335,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     ) public {
         vm.assume(newLiveness < 21_600);
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__InvalidDefaultLiveness
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__InvalidDefaultLiveness
                 .selector
         );
         ooIntegrator.setDefaultAssertionLiveness(newLiveness);
@@ -404,8 +404,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOptimisticOracleIntegrator
-                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                IOptimisticOracleIntegrator_v3
+                    .Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond
                     .selector
             )
         );
@@ -435,8 +435,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.prank(prankUser);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOptimisticOracleIntegrator
-                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                IOptimisticOracleIntegrator_v3
+                    .Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond
                     .selector
             )
         );
@@ -465,8 +465,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.prank(prankUser);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOptimisticOracleIntegrator
-                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                IOptimisticOracleIntegrator_v3
+                    .Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond
                     .selector
             )
         );
@@ -573,8 +573,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOptimisticOracleIntegrator
-                    .Module__OptimisticOracleIntegrator__CallerNotOO
+                IOptimisticOracleIntegrator_v3
+                    .Module__OptimisticOracleIntegrator_v3__CallerNotOO
                     .selector
             )
         );

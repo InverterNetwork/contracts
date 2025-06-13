@@ -4,7 +4,20 @@ pragma solidity ^0.8.0;
 import {OptimisticOracleV3CallbackRecipientInterface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 
-interface IOptimisticOracleIntegrator is
+/**
+ * @title   Inverter Optimistic Oracle Integrator Interface
+ *
+ * @notice  This module allows for the integration of the UMA OptimisticOracleV3 contract with our modules.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v3.0.0
+ *
+ * @author  Inverter Network
+ */
+interface IOptimisticOracleIntegrator_v3 is
     OptimisticOracleV3CallbackRecipientInterface
 {
     //--------------------------------------------------------------------------
@@ -55,22 +68,22 @@ interface IOptimisticOracleIntegrator is
     // Errors
 
     /// @notice Invalid default currency.
-    error Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
+    error Module__OptimisticOracleIntegrator_v3__InvalidDefaultCurrency();
 
     /// @notice Invalid default liveness.
-    error Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
+    error Module__OptimisticOracleIntegrator_v3__InvalidDefaultLiveness();
 
     /// @notice Invalid Optimistic Oracle instance.
-    error Module__OptimisticOracleIntegrator__InvalidOOInstance();
+    error Module__OptimisticOracleIntegrator_v3__InvalidOOInstance();
 
     /// @notice Caller is not Optimistic Oracle instance.
-    error Module__OptimisticOracleIntegrator__CallerNotOO();
+    error Module__OptimisticOracleIntegrator_v3__CallerNotOO();
 
     /// @notice Bond given for the specified currency is below minimum.
-    error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+    error Module__OptimisticOracleIntegrator_v3__CurrencyBondTooLow();
 
     /// @notice Asserter holds insufficient funds to pay for bond.
-    error Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond();
+    error Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond();
 
     //==========================================================================
     // Functions

@@ -26,7 +26,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
     LM_PC_KPIRewarder_v3,
     ILM_PC_KPIRewarder_v3,
-    IOptimisticOracleIntegrator,
+    IOptimisticOracleIntegrator_v3,
     ILM_PC_Staking_v3,
     OptimisticOracleV3CallbackRecipientInterface
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
@@ -135,8 +135,8 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
 
         // Test invalid reward token
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__InvalidDefaultCurrency
                 .selector
         );
         kpiManager.init(
@@ -153,8 +153,8 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
 
         // Test invalid token bond
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__CurrencyBondTooLow
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__CurrencyBondTooLow
                 .selector
         );
         kpiManager.init(
@@ -194,7 +194,7 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
         );
         assertTrue(
             kpiManager.supportsInterface(
-                type(IOptimisticOracleIntegrator).interfaceId
+                type(IOptimisticOracleIntegrator_v3).interfaceId
             )
         );
         assertTrue(
@@ -320,7 +320,7 @@ contract LM_PC_KPIRewarder_v3Test is ModuleTest {
         // SuT
 
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAsserted(
+        emit IOptimisticOracleIntegrator_v3.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(valueToAssert),
             MOCK_ASSERTER_ADDRESS,
@@ -446,7 +446,7 @@ contract LM_PC_KPIRewarder_v3_postAssertionTest is LM_PC_KPIRewarder_v3Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAsserted(
+        emit IOptimisticOracleIntegrator_v3.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -504,7 +504,7 @@ contract LM_PC_KPIRewarder_v3_postAssertionTest is LM_PC_KPIRewarder_v3Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAsserted(
+        emit IOptimisticOracleIntegrator_v3.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -529,7 +529,7 @@ contract LM_PC_KPIRewarder_v3_postAssertionTest is LM_PC_KPIRewarder_v3Test {
         assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
 
         // check mock for stored data
-        IOptimisticOracleIntegrator.DataAssertion memory assertion =
+        IOptimisticOracleIntegrator_v3.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
         ILM_PC_KPIRewarder_v3.RewardRoundConfiguration memory rewardRoundConfig =
             kpiManager.getAssertionConfig(assertionId);
@@ -815,7 +815,7 @@ contract LM_PC_KPIRewarder_v3_stakeTest is LM_PC_KPIRewarder_v3Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAsserted(
+        emit IOptimisticOracleIntegrator_v3.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -918,7 +918,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
         vm.expectEmit(true, true, true, true, address(kpiManager));
         // vm.expectEmit(false, false, false, false);
 
-        emit IOptimisticOracleIntegrator.DataAssertionResolved(
+        emit IOptimisticOracleIntegrator_v3.DataAssertionResolved(
             false,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -962,7 +962,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAssertionResolved(
+        emit IOptimisticOracleIntegrator_v3.DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -1054,7 +1054,7 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit IOptimisticOracleIntegrator.DataAssertionResolved(
+        emit IOptimisticOracleIntegrator_v3.DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -1137,8 +1137,8 @@ contract LM_PC_KPIRewarder_v3_assertionresolvedCallbackTest is
             setUpStateForAssertionResolution(users, amounts, 250, false);
 
         vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__CallerNotOO
+            IOptimisticOracleIntegrator_v3
+                .Module__OptimisticOracleIntegrator_v3__CallerNotOO
                 .selector
         );
         kpiManager.assertionResolvedCallback(createdID, true);

@@ -20,7 +20,7 @@ import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 import {
     LM_PC_KPIRewarder_v3,
     ILM_PC_KPIRewarder_v3,
-    IOptimisticOracleIntegrator,
+    IOptimisticOracleIntegrator_v3,
     ILM_PC_Staking_v3
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 

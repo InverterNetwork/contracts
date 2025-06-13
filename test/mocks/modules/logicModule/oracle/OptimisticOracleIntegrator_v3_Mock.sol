@@ -9,10 +9,10 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {
-    OptimisticOracleIntegrator,
-    IOptimisticOracleIntegrator
+    OptimisticOracleIntegrator_v3,
+    IOptimisticOracleIntegrator_v3
 } from
-    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator_v3.sol";
 
 // External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from
@@ -22,7 +22,7 @@ import {OptimisticOracleV3Interface} from
 import {ClaimData} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
 
-contract OptimisticOracleIntegratorMock is OptimisticOracleIntegrator {
+contract OptimisticOracleIntegrator_v3_Mock is OptimisticOracleIntegrator_v3 {
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully

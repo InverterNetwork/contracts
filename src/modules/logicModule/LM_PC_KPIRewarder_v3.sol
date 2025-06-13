@@ -13,11 +13,11 @@ import {
     ERC20PaymentClientBase_v3
 } from "./LM_PC_Staking_v3.sol";
 import {
-    IOptimisticOracleIntegrator,
-    OptimisticOracleIntegrator,
+    IOptimisticOracleIntegrator_v3,
+    OptimisticOracleIntegrator_v3,
     OptimisticOracleV3CallbackRecipientInterface
 } from
-    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator_v3.sol";
 
 // Internal Dependencies
 import {Module_v2} from "src/modules/base/Module_v2.sol";
@@ -32,7 +32,7 @@ import {ERC165Upgradeable} from
  * @notice  Provides a mechanism for distributing rewards to stakers based
  *          on Key Performance Indicators (KPIs).
  *
- * @dev     Extends {LM_PC_Staking_v3} and integrates with {OptimisticOracleIntegrator}
+ * @dev     Extends {LM_PC_Staking_v3} and integrates with {OptimisticOracleIntegrator_v3}
  *          to enable KPI-based reward distribution within the staking manager.
  *
  * @custom:security-contact security@inverter.network
@@ -46,7 +46,7 @@ import {ERC165Upgradeable} from
 contract LM_PC_KPIRewarder_v3 is
     ILM_PC_KPIRewarder_v3,
     LM_PC_Staking_v3,
-    OptimisticOracleIntegrator
+    OptimisticOracleIntegrator_v3
 {
     using SafeERC20 for IERC20;
 
@@ -55,7 +55,7 @@ contract LM_PC_KPIRewarder_v3 is
         public
         view
         virtual
-        override(OptimisticOracleIntegrator, LM_PC_Staking_v3)
+        override(OptimisticOracleIntegrator_v3, LM_PC_Staking_v3)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v3).interfaceId
@@ -114,7 +114,7 @@ contract LM_PC_KPIRewarder_v3 is
     )
         external
         virtual
-        override(LM_PC_Staking_v3, OptimisticOracleIntegrator)
+        override(LM_PC_Staking_v3, OptimisticOracleIntegrator_v3)
         initializer
     {
         __Module_init(orchestrator_, metadata);
@@ -128,7 +128,7 @@ contract LM_PC_KPIRewarder_v3 is
         ) = abi.decode(configData, (address, address, uint, address, uint64));
 
         __LM_PC_Staking_v3_init(stakingTokenAddr);
-        __OptimisticOracleIntegrator_init(
+        __OptimisticOracleIntegrator_v3_init(
             currencyAddr, defaultBond, ooAddr, liveness
         );
     }

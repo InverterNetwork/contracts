@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOptimisticOracleIntegrator} from
-    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/IOptimisticOracleIntegrator.sol";
+import {IOptimisticOracleIntegrator_v3} from
+    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/IOptimisticOracleIntegrator_v3.sol";
 
 // Internal Dependencies
 import {Module_v2} from "src/modules/base/Module_v2.sol";
@@ -32,11 +32,13 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v3.0.0
+ *
  * @author  Inverter Network
  */
 
-abstract contract OptimisticOracleIntegrator is
-    IOptimisticOracleIntegrator,
+abstract contract OptimisticOracleIntegrator_v3 is
+    IOptimisticOracleIntegrator_v3,
     Module_v2
 {
     using SafeERC20 for IERC20;
@@ -49,7 +51,7 @@ abstract contract OptimisticOracleIntegrator is
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId == type(IOptimisticOracleIntegrator).interfaceId
+        return interfaceId == type(IOptimisticOracleIntegrator_v3).interfaceId
             || interfaceId
                 == type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
             || super.supportsInterface(interfaceId);
@@ -90,12 +92,12 @@ abstract contract OptimisticOracleIntegrator is
         (address currencyAddr, uint bondAmount, address ooAddr, uint64 liveness)
         = abi.decode(configData, (address, uint, address, uint64));
 
-        __OptimisticOracleIntegrator_init(
+        __OptimisticOracleIntegrator_v3_init(
             currencyAddr, bondAmount, ooAddr, liveness
         );
     }
 
-    function __OptimisticOracleIntegrator_init(
+    function __OptimisticOracleIntegrator_v3_init(
         address currencyAddr,
         uint bondAmount,
         address ooAddr,
@@ -109,13 +111,13 @@ abstract contract OptimisticOracleIntegrator is
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     function getData(bytes32 assertionId) public view returns (bool, bytes32) {
         if (!assertionData[assertionId].resolved) return (false, 0);
         return (true, assertionData[assertionId].data);
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     function getAssertion(bytes32 assertionId)
         public
         view
@@ -127,7 +129,7 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Setter Functions
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         public
         permissioned
@@ -135,12 +137,12 @@ abstract contract OptimisticOracleIntegrator is
         _setDefaultCurrencyAndBond(_newCurrency, _newBond);
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     function setOptimisticOracle(address _newOO) public permissioned {
         _setOptimisticOracle(_newOO);
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     function setDefaultAssertionLiveness(uint64 _newLiveness)
         public
         permissioned
@@ -158,10 +160,11 @@ abstract contract OptimisticOracleIntegrator is
         internal
     {
         if (address(_newCurrency) == address(0)) {
-            revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
+            revert Module__OptimisticOracleIntegrator_v3__InvalidDefaultCurrency(
+            );
         }
         if (_newBond < oo.getMinimumBond(address(_newCurrency))) {
-            revert Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+            revert Module__OptimisticOracleIntegrator_v3__CurrencyBondTooLow();
         }
 
         defaultCurrency = IERC20(_newCurrency);
@@ -172,7 +175,7 @@ abstract contract OptimisticOracleIntegrator is
     /// @param  _newOO The address of the new OptimisticOracleV3 instance.
     function _setOptimisticOracle(address _newOO) internal {
         if (_newOO == address(0)) {
-            revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
+            revert Module__OptimisticOracleIntegrator_v3__InvalidOOInstance();
         }
         oo = OptimisticOracleV3Interface(_newOO);
         defaultIdentifier = oo.defaultIdentifier();
@@ -183,7 +186,8 @@ abstract contract OptimisticOracleIntegrator is
     function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
         if (_newLiveness < 21_600) {
             // 21600 seconds = 6 hours
-            revert Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
+            revert Module__OptimisticOracleIntegrator_v3__InvalidDefaultLiveness(
+            );
         }
         assertionLiveness = _newLiveness;
     }
@@ -191,7 +195,7 @@ abstract contract OptimisticOracleIntegrator is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc IOptimisticOracleIntegrator_v3
     /// @dev	Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds.
     ///         This is because the block.timestamp is included in the claim. The consumer contract must
     ///         store the returned assertionId identifiers to able to get the information using getData.
@@ -206,7 +210,7 @@ abstract contract OptimisticOracleIntegrator is
             // ensure we have enough balance
             if (defaultCurrency.balanceOf(address(this)) < defaultBond) {
                 revert
-                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                    Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond(
                 );
             }
         } else {
@@ -226,7 +230,7 @@ abstract contract OptimisticOracleIntegrator is
                     || address(defaultCurrency).code.length == 0
             ) {
                 revert
-                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                    Module__OptimisticOracleIntegrator_v3_InsufficientFundsToPayForBond(
                 );
             }
         }
@@ -277,7 +281,7 @@ abstract contract OptimisticOracleIntegrator is
         bool assertedTruthfully
     ) public virtual {
         if (_msgSender() != address(oo)) {
-            revert Module__OptimisticOracleIntegrator__CallerNotOO();
+            revert Module__OptimisticOracleIntegrator_v3__CallerNotOO();
         }
 
         DataAssertion memory dataAssertion = assertionData[assertionId];
