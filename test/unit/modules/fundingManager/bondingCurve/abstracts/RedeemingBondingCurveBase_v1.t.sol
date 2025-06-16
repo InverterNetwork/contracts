@@ -96,6 +96,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 SELL_IS_OPEN
             )
         );
+
+        bondingCurveFundingManager.setCollateralTokenHelper(address(_token));
     }
 
     function testSupportsInterface() public {

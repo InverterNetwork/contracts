@@ -88,6 +88,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
             _METADATA,
             abi.encode(address(issuanceToken), formula, BUY_FEE, BUY_IS_OPEN)
         );
+
+        bondingCurveFundingManager.setCollateralTokenHelper(address(_token));
     }
 
     function testSupportsInterface() public {
@@ -260,8 +262,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address buyer = makeAddr("buyer");
 
         // Pre-checks
-        assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(
+            _token.balanceOf(buyer),
+            0,
+            "Should hold no collateral tokens initially"
+        );
+        assertEq(
+            issuanceToken.balanceOf(buyer),
+            0,
+            "Should hold no issuace tokens initially"
+        );
 
         // Emit event
         vm.expectEmit(
@@ -274,17 +284,19 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
-        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
-        assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0, "1");
+        assertEq(_token.balanceOf(buyer), 0, "2");
+        assertEq(issuanceToken.balanceOf(buyer), 0, "3");
         assertEq(
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
-            1
+            1,
+            "4"
         );
         assertEq(
             bondingCurveFundingManager
                 .distributeCollateralTokenBeforeBuyFunctionCalled(),
-            1
+            1,
+            "5"
         );
     }
 

@@ -18,8 +18,9 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
+contract BondingCurveBaseV1Mock is BondingCurveBase_v1, IFundingManager_v1 {
     IBancorFormula public formula;
+    IERC20 internal _token;
 
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -82,6 +83,12 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     ) internal virtual override {
         distributeCollateralTokenBeforeBuyFunctionCalled++;
     }
+
+    function token() public view returns (IERC20) {
+        return _token;
+    }
+
+    function transferOrchestratorToken(address to, uint amount) external {}
 
     // -------------------------------------------------------------------------
     // Mock access for internal functions
@@ -183,5 +190,9 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         uint _minAmountOut
     ) external pure {
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+    }
+
+    function setCollateralTokenHelper(address _collateralToken) external {
+        _token = IERC20(_collateralToken);
     }
 }

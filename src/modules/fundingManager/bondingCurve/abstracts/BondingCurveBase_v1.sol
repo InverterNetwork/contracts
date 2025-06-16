@@ -267,7 +267,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint collateralProtocolFeeAmount,
             uint projectFeeAmount
         ) = _calculateNetAndSplitFees(
-            _depositAmount, collateralBuyFeePercentage, buyFee
+            _depositAmount, collateralBuyFeePercentage, _getBuyFee()
         );
 
         // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
