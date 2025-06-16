@@ -6117,31 +6117,4 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             removedAddresses
         );
     }
-
-    // Helper function to set up access criteria for an existing round
-    function _helper_setupAccessCriteriaForRound(
-        uint32 roundId_,
-        uint8 accessCriteriaEnum_,
-        uint8 accessCriteriaId_,
-        uint personalCap_
-    ) internal {
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessCriteriaEnum_, roundId_);
-
-        fundingPot.setAccessCriteria(
-            roundId_,
-            accessCriteriaEnum_,
-            0,
-            nftContract,
-            merkleRoot,
-            allowedAddresses,
-            removedAddresses
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId_, accessCriteriaId_, personalCap_, false, 0, 0, 0
-        );
-    }
 }

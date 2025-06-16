@@ -247,7 +247,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified.
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
-    /// @notice Thrown when a hook contract is specified with a hook function that has a non-empty implementation.
+    /// @notice Thrown when a hook contract is specified without a hook function.
     error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
 
     /// @notice Thrown when a hook function is specified without a hook contract.
