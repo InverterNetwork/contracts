@@ -247,7 +247,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified.
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
-    /// @notice Thrown when a hook contract is specified without a hook function.
+    /// @notice Thrown when a hook contract is specified with a hook function that has a non-empty implementation.
     error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
 
     /// @notice Thrown when a hook function is specified without a hook contract.
@@ -320,8 +320,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Thrown when round IDs in UnspentPersonalRoundCap array are not strictly increasing.
     error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing();
 
-    /// @notice Unspent personal round cap references a round that is not previous to the current round.
+    /// @notice Unspent caps must be from previous rounds.
     error Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+
+    /// @notice The round IDs for unspent caps must be contiguous.
+    error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotContiguous();
 
     // -------------------------------------------------------------------------
     // Public - Getters

@@ -626,7 +626,7 @@ contract LM_PC_FundingPot_v1 is
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
-        bytes32[] calldata merkleProof_
+        bytes32[] memory merkleProof_
     ) external {
         // Call the internal function with no additional unspent personal cap
         _contributeToRoundFor(
@@ -643,68 +643,9 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] memory merkleProof_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external {
-        uint unspentPersonalCap = 0; // Initialize to 0
-        uint32 lastSeenRoundId = 0; // Tracks the last seen roundId to ensure strictly increasing order
-
-        // Process each previous round cap that the user wants to carry over
-        for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
-            UnspentPersonalRoundCap memory roundCapInfo =
-                unspentPersonalRoundCaps_[i];
-            uint32 currentProcessingRoundId = roundCapInfo.roundId;
-
-            // Enforcement: Round IDs in the array must be strictly increasing.
-            if (currentProcessingRoundId <= lastSeenRoundId) {
-                revert
-                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing(
-                );
-            }
-
-            // Enforcement: Round IDs must be strictly before the current roundId_
-            if (currentProcessingRoundId >= roundId_) {
-                revert
-                    Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
-            }
-
-            lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
-
-            // Skip if this round is before the global accumulation start round
-            if (currentProcessingRoundId < globalAccumulationStartRoundId) {
-                continue;
-            }
-
-            // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All).
-            if (
-                rounds[currentProcessingRoundId].accumulationMode
-                    != AccumulationMode.Personal
-                    && rounds[currentProcessingRoundId].accumulationMode
-                        != AccumulationMode.All
-            ) {
-                continue;
-            }
-
-            if (
-                _checkAccessCriteriaEligibility(
-                    currentProcessingRoundId,
-                    roundCapInfo.accessCriteriaId,
-                    roundCapInfo.merkleProof,
-                    user_
-                )
-            ) {
-                AccessCriteriaPrivileges storage privileges =
-                roundIdToAccessCriteriaIdToPrivileges[currentProcessingRoundId][roundCapInfo
-                    .accessCriteriaId];
-
-                uint userContribution =
-                    roundIdToUserToContribution[currentProcessingRoundId][user_];
-                uint personalCap = privileges.personalCap;
-                uint unspentForThisEntry = 0;
-
-                if (userContribution < personalCap) {
-                    unspentForThisEntry = personalCap - userContribution;
-                }
-                unspentPersonalCap += unspentForThisEntry;
-            }
-        }
+        uint unspentPersonalCap = _calculateUnspentPersonalCap(
+            user_, roundId_, unspentPersonalRoundCaps_
+        );
 
         _contributeToRoundFor(
             user_,
@@ -816,6 +757,94 @@ contract LM_PC_FundingPot_v1 is
 
     // -------------------------------------------------------------------------
     // Internal
+
+    /// @notice Calculates the unspent personal capacity from previous rounds.
+    /// @param user_ The user address to calculate unspent capacity for.
+    /// @param roundId_ The current round ID.
+    /// @param unspentPersonalRoundCaps_ Array of previous rounds and access criteria to calculate unused capacity from.
+    /// @return unspentPersonalCap The amount of unspent personal capacity that can be used.
+    function _calculateUnspentPersonalCap(
+        address user_,
+        uint32 roundId_,
+        UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
+    ) internal view returns (uint unspentPersonalCap) {
+        if (unspentPersonalRoundCaps_.length == 0) {
+            return 0;
+        }
+
+        uint totalAggregatedPersonalCap = 0;
+        uint totalSpentInPastRounds = 0;
+        uint32 firstRoundId = unspentPersonalRoundCaps_[0].roundId;
+        uint32 lastSeenRoundId = 0;
+        // Enforcement: All rounds from the start of the array to the end must be contiguous.
+        for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
+            UnspentPersonalRoundCap memory roundCapInfo =
+                unspentPersonalRoundCaps_[i];
+            uint32 currentProcessingRoundId = roundCapInfo.roundId;
+
+            // Check for strictly increasing first (order matters)
+            if (currentProcessingRoundId <= lastSeenRoundId) {
+                revert
+                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing(
+                );
+            }
+            lastSeenRoundId = currentProcessingRoundId;
+
+            // Check for contiguity (consecutive sequence)
+            if (currentProcessingRoundId != firstRoundId + i) {
+                revert
+                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotContiguous();
+            }
+
+            // Enforcement: Round IDs must be strictly before the current roundId_
+            if (currentProcessingRoundId >= roundId_) {
+                revert
+                    Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+            }
+
+            // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All).
+            if (
+                rounds[currentProcessingRoundId].accumulationMode
+                    != AccumulationMode.Personal
+                    && rounds[currentProcessingRoundId].accumulationMode
+                        != AccumulationMode.All
+            ) {
+                continue;
+            }
+
+            // Skip if this round is before the global accumulation start round
+            if (currentProcessingRoundId < globalAccumulationStartRoundId) {
+                continue;
+            }
+
+            // Only count spent amounts from rounds that meet the accumulation criteria
+            totalSpentInPastRounds +=
+                roundIdToUserToContribution[currentProcessingRoundId][user_];
+
+            // Check eligibility for the past round
+            if (
+                _checkAccessCriteriaEligibility(
+                    currentProcessingRoundId,
+                    roundCapInfo.accessCriteriaId,
+                    roundCapInfo.merkleProof,
+                    user_
+                )
+            ) {
+                AccessCriteriaPrivileges storage privileges =
+                roundIdToAccessCriteriaIdToPrivileges[currentProcessingRoundId][roundCapInfo
+                    .accessCriteriaId];
+
+                totalAggregatedPersonalCap += privileges.personalCap;
+            }
+        }
+
+        if (totalAggregatedPersonalCap > totalSpentInPastRounds) {
+            unspentPersonalCap =
+                totalAggregatedPersonalCap - totalSpentInPastRounds;
+        }
+
+        return unspentPersonalCap;
+    }
 
     /// @notice Validates the round parameters.
     /// @param  round_ The round to validate.
