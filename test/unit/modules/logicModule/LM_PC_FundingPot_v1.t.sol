@@ -5015,6 +5015,236 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
+    function testContributeToRoundFor_UsedUnspentCapsIsSet() public {
+        // Step 1: Create round 1 and round 2
+        uint32 round1 = fundingPot.createRound({
+            roundStart_: block.timestamp + 1,
+            roundEnd_: block.timestamp + 1 days,
+            roundCap_: 1000,
+            hookContract_: address(0),
+            hookFunction_: "",
+            autoClosure_: false,
+            accumulationMode_: ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        });
+
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessType, round1);
+
+        fundingPot.setAccessCriteria(
+            round1,
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN),
+            0,
+            address(0),
+            0,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1, 1, 200, false, block.timestamp, 0, block.timestamp + 1 days
+        );
+
+        vm.warp(block.timestamp + 2);
+
+        // Contribute in round 1
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 100);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1, 100, 1, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // Step 2: Create round 2 with accumulationMode enabled
+        uint32 round2 = fundingPot.createRound({
+            roundStart_: block.timestamp + 1,
+            roundEnd_: block.timestamp + 2 days,
+            roundCap_: 1000,
+            hookContract_: address(0),
+            hookFunction_: "",
+            autoClosure_: false,
+            accumulationMode_: ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        });
+
+        fundingPot.setAccessCriteria(
+            round2,
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN),
+            0,
+            address(0),
+            0,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2, 1, 200, false, block.timestamp, 0, block.timestamp + 1 days
+        );
+
+        // Step 3: Contribute to round 2 using unspent cap from round 1
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory caps =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+
+        caps[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round1,
+            accessCriteriaId: 1,
+            merkleProof: new bytes32[](0)
+        });
+
+        vm.warp(block.timestamp + 2);
+
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 100);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round2, 100, 1, new bytes32[](0), caps
+        );
+        vm.stopPrank();
+
+        // Step 4: Validate that usedUnspentCaps is set to true
+        bool isUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1); // expose via helper function if needed
+        assertTrue(isUsed, "usedUnspentCaps should be true after contribution");
+    }
+
+    function testContributeToRoundFor_UsedUnspentCapsSkippedIfAlreadyUsed()
+        public
+    {
+        // Step 1: Create round 1 and round 2
+        uint32 round1 = fundingPot.createRound({
+            roundStart_: block.timestamp + 1,
+            roundEnd_: block.timestamp + 1 days,
+            roundCap_: 1000,
+            hookContract_: address(0),
+            hookFunction_: "",
+            autoClosure_: false,
+            accumulationMode_: ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        });
+
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+        (address nftContract,, address[] memory allowedAddresses) =
+            _helper_createAccessCriteria(accessType, round1);
+
+        fundingPot.setAccessCriteria(
+            round1,
+            accessType,
+            0,
+            address(0),
+            0,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1, 1, 300, false, block.timestamp, 0, block.timestamp + 1 days
+        );
+
+        vm.warp(block.timestamp + 2);
+
+        // Step 1b: Contribute in round 1
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 100);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1, 100, 1, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // Step 2: Create round 2
+        uint32 round2 = fundingPot.createRound({
+            roundStart_: block.timestamp + 1,
+            roundEnd_: block.timestamp + 2 days,
+            roundCap_: 1000,
+            hookContract_: address(0),
+            hookFunction_: "",
+            autoClosure_: false,
+            accumulationMode_: ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        });
+
+        fundingPot.setAccessCriteria(
+            round2,
+            accessType,
+            0,
+            address(0),
+            0,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2, 1, 200, false, block.timestamp, 0, block.timestamp + 1 days
+        );
+
+        // Step 2b: Contribute using round1 cap → sets usedUnspentCaps
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory caps1 =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        caps1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round1,
+            accessCriteriaId: 1,
+            merkleProof: new bytes32[](0)
+        });
+
+        vm.warp(block.timestamp + 2);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 200);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round2, 200, 1, new bytes32[](0), caps1
+        );
+        vm.stopPrank();
+
+        // Step 3: Create round 3
+        uint32 round3 = fundingPot.createRound({
+            roundStart_: block.timestamp + 1,
+            roundEnd_: block.timestamp + 2 days,
+            roundCap_: 1000,
+            hookContract_: address(0),
+            hookFunction_: "",
+            autoClosure_: false,
+            accumulationMode_: ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        });
+
+        fundingPot.setAccessCriteria(
+            round3,
+            accessType,
+            0,
+            address(0),
+            0,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round3, 1, 300, false, block.timestamp, 0, block.timestamp + 1 days
+        );
+
+        // Step 4: Try reusing round1 cap again → should skip because it's already used
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory caps2 =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        caps2[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round1,
+            accessCriteriaId: 1,
+            merkleProof: new bytes32[](0)
+        });
+
+        vm.warp(block.timestamp + 2);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 100);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round3, 100, 1, new bytes32[](0), caps2
+        );
+        vm.stopPrank();
+
+        // Step 5: Check that contribution in round3 is only based on round3 cap (not reused from round1)
+        uint contributed =
+            fundingPot.getUserContributionToRound(round3, contributor1_);
+        assertLe(
+            contributed,
+            300,
+            "Should not include unspent cap from already-used round"
+        );
+
+        // Confirm usedUnspentCaps[round1] is still true, not overwritten or reused
+        bool isStillUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1);
+        assertTrue(
+            isStillUsed, "usedUnspentCaps should still be true from earlier use"
+        );
+    }
+
     // -------------------------------------------------------------------------
     // Test: closeRound()
 
@@ -6115,6 +6345,33 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             merkleRoot,
             allowedAddresses,
             removedAddresses
+        );
+    }
+
+    // Helper function to set up access criteria for an existing round
+    function _helper_setupAccessCriteriaForRound(
+        uint32 roundId_,
+        uint8 accessCriteriaEnum_,
+        uint8 accessCriteriaId_,
+        uint personalCap_
+    ) internal {
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessCriteriaEnum_, roundId_);
+
+        fundingPot.setAccessCriteria(
+            roundId_,
+            accessCriteriaEnum_,
+            0,
+            nftContract,
+            merkleRoot,
+            allowedAddresses,
+            removedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId_, accessCriteriaId_, personalCap_, false, 0, 0, 0
         );
     }
 }

@@ -157,6 +157,10 @@ contract LM_PC_FundingPot_v1 is
     ///         only previous rounds with roundId >= globalAccumulationStartRoundId will be included.
     uint32 internal globalAccumulationStartRoundId;
 
+    /// @notice Maps user addresses to a mapping of round IDs to a mapping of access criteria IDs to whether their unspent cap has been used
+    mapping(address => mapping(uint32 => mapping(uint8 => bool))) public
+        usedUnspentCaps;
+
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -647,6 +651,16 @@ contract LM_PC_FundingPot_v1 is
             user_, roundId_, unspentPersonalRoundCaps_
         );
 
+        if (unspentPersonalCap > 0) {
+            // Mark the specific caps that were used in this contribution
+            for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
+                UnspentPersonalRoundCap memory roundCapInfo =
+                    unspentPersonalRoundCaps_[i];
+                usedUnspentCaps[user_][roundCapInfo.roundId][roundCapInfo
+                    .accessCriteriaId] = true;
+            }
+        }
+
         _contributeToRoundFor(
             user_,
             roundId_,
@@ -808,6 +822,13 @@ contract LM_PC_FundingPot_v1 is
                     != AccumulationMode.Personal
                     && rounds[currentProcessingRoundId].accumulationMode
                         != AccumulationMode.All
+            ) {
+                continue;
+            }
+
+            if (
+                usedUnspentCaps[user_][currentProcessingRoundId][roundCapInfo
+                    .accessCriteriaId]
             ) {
                 continue;
             }
