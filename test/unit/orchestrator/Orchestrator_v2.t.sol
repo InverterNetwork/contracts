@@ -29,10 +29,26 @@ import {
     FundingManagerV1Mock,
     IFundingManager_v1
 } from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {Authorizer_v2_Mock} from
-    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
-import {PaymentProcessorV1Mock} from
-    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {
+    Authorizer_v1_Mock,
+    IAuthorizer_v1
+} from "@mocks/modules/authorizer/Authorizer_v1_Mock.sol";
+import {
+    Authorizer_v2_Mock,
+    IAuthorizer_v2
+} from "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
+import {
+    PaymentProcessor_v1_Mock,
+    IPaymentProcessor_v1
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v1_Mock.sol";
+import {
+    PaymentProcessor_v2_Mock,
+    IPaymentProcessor_v2
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v2_Mock.sol";
+import {
+    PaymentProcessor_v3_Mock,
+    IPaymentProcessor_v3
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
 import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
@@ -43,6 +59,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Helper
 import {TypeSanityHelper} from "@testUtilities/TypeSanityHelper.sol";
+import {ERC165InterfaceMock} from "@testUtilities/ERC165InterfaceMock.sol";
 
 contract OrchestratorV1Test is Test {
     // SuT
@@ -54,7 +71,7 @@ contract OrchestratorV1Test is Test {
     // Mocks
     FundingManagerV1Mock fundingManager;
     Authorizer_v2_Mock authorizer;
-    PaymentProcessorV1Mock paymentProcessor;
+    PaymentProcessor_v3_Mock paymentProcessor;
     GovernorV1Mock governor;
     ModuleFactoryV1Mock moduleFactory;
     ERC20Mock token;
@@ -63,7 +80,7 @@ contract OrchestratorV1Test is Test {
     function setUp() public {
         fundingManager = new FundingManagerV1Mock();
         authorizer = new Authorizer_v2_Mock();
-        paymentProcessor = new PaymentProcessorV1Mock();
+        paymentProcessor = new PaymentProcessor_v3_Mock();
         governor = new GovernorV1Mock();
         moduleFactory = new ModuleFactoryV1Mock();
         forwarder = new TransactionForwarder_v1();

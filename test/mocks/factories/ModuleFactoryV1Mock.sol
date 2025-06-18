@@ -18,8 +18,8 @@ import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
 import {Authorizer_v2_Mock} from
     "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
-import {PaymentProcessorV1Mock} from
-    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {PaymentProcessor_v3_Mock} from
+    "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -65,7 +65,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
             LibMetadata.identifier(metadata)
                 == LibMetadata.identifier(paymentProcessorMetadata)
         ) {
-            return address(new PaymentProcessorV1Mock());
+            return address(new PaymentProcessor_v3_Mock());
         } else {
             return address(new Module_v2_Mock());
         }

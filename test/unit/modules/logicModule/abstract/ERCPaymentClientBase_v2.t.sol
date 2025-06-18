@@ -24,9 +24,9 @@ import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
 import {
-    PaymentProcessorV1Mock,
+    PaymentProcessor_v3_Mock,
     IPaymentProcessor_v3
-} from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock

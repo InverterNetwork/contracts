@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {PaymentProcessorV1Mock} from
-    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {PaymentProcessor_v3_Mock} from
+    "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 
-contract PP_Queue_ManualExecution_v2_Mock is PaymentProcessorV1Mock {
+contract PP_Queue_ManualExecution_v2_Mock is PaymentProcessor_v3_Mock {
     //--------------------------------------------------------------------------
     // PP_Queue_ManualExecution_v2_Mock Functions
 

@@ -189,7 +189,7 @@ contract PP_Simple_v2_Test is ModuleTest {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorV1Mock gets deployed and initialized in ModuleTest,
+        // PaymentProcessor_v3_Mock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
@@ -211,7 +211,7 @@ contract PP_Simple_v2_Test is ModuleTest {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorV1Mock gets deployed and initialized in ModuleTest,
+        // PaymentProcessor_v3_Mock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
@@ -236,7 +236,7 @@ contract PP_Simple_v2_Test is ModuleTest {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorV1Mock gets deployed and initialized in ModuleTest,
+        // PaymentProcessor_v3_Mock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
@@ -258,7 +258,7 @@ contract PP_Simple_v2_Test is ModuleTest {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorV1Mock gets deployed and initialized in ModuleTest,
+        // PaymentProcessor_v3_Mock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));

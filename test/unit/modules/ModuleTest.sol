@@ -28,9 +28,9 @@ import {Authorizer_v2_Mock} from
     "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
-    PaymentProcessorV1Mock,
+    PaymentProcessor_v3_Mock,
     IPaymentProcessor_v3
-} from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 // External Dependencies
 import {TransparentUpgradeableProxy} from
     "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -45,7 +45,7 @@ abstract contract ModuleTest is Test {
     FundingManagerV1Mock _fundingManager;
     Authorizer_v2_Mock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK", 18);
-    PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
+    PaymentProcessor_v3_Mock _paymentProcessor = new PaymentProcessor_v3_Mock();
 
     GovernorV1Mock governor = new GovernorV1Mock();
     ModuleFactoryV1Mock moduleFactory = new ModuleFactoryV1Mock();
