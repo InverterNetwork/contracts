@@ -106,7 +106,7 @@ interface IModule_v1 {
 
     /// @notice Returns the module's {Orchestrator_v2} interface, {IOrchestrator_v2}.
     /// @return The module's {Orchestrator_1}.
-    function orchestrator() external view returns (IOrchestrator_v2);
+    function orchestrator() external view returns (IOrchestrator_v2); //@todo what to do with this? Should this be version 1?
 
     /// @notice Grants a module role to a target address.
     /// @param  role The role to grant.
