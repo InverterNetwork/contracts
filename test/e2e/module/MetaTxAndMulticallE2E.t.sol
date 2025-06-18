@@ -87,9 +87,6 @@ contract MetaTxAndMulticallE2E is E2ETest {
         IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v2 authorizer =
-            AUT_Roles_v2(address(orchestrator.authorizer()));
-
         //--------------------------------------------------------------------------
         // Module E2E Test
         //--------------------------------------------------------------------------

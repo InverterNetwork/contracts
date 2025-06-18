@@ -94,9 +94,6 @@ contract VotingRoleManagerE2E is E2ETest {
         IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_Roles_v2 authorizer =
-            AUT_Roles_v2(address(orchestrator.authorizer()));
-
         // Find LM_PC_Bounties_v3
         LM_PC_Bounties_v3 bountyManager;
 
