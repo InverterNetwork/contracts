@@ -5,13 +5,13 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-import {IPaymentProcessor_v3} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IModule_v2} from "src/modules/base/Module_v2.sol";
 
-contract PaymentProcessorV1Mock is IPaymentProcessor_v3, ERC165 {
+contract PaymentProcessor_v1_Mock is IPaymentProcessor_v1, ERC165 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -19,11 +19,8 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v3, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IPaymentProcessor =
-            type(IPaymentProcessor_v3).interfaceId;
-        bytes4 interfaceId_IModule = type(IModule_v2).interfaceId;
-        return interfaceId == interfaceId_IPaymentProcessor
-            || interfaceId == interfaceId_IModule
+        return interfaceId == type(IPaymentProcessor_v1).interfaceId
+            || interfaceId == type(IModule_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -31,7 +28,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v3, ERC165 {
     bool public validOrder = true;
 
     //--------------------------------------------------------------------------
-    // IPaymentProcessor_v3 Functions
+    // IPaymentProcessor_v1 Functions
 
     function processPayments(IERC20PaymentClientBase_v3 /*client*/ ) external {
         emit PaymentOrderProcessed(
