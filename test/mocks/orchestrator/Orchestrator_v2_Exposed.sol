@@ -31,4 +31,19 @@ contract Orchestrator_v2_Exposed is Orchestrator_v2 {
     {
         _checkAuthorization(caller_, data_);
     }
+
+    function _enforcePrivilegedModuleInterfaceCheck_exposed(
+        address _contractAddr,
+        bytes4[] memory _privilegedInterfaceId
+    ) external view {
+        _enforcePrivilegedModuleInterfaceCheck(
+            _contractAddr, _privilegedInterfaceId
+        );
+    }
+
+    function _enforceNonPrivilegedModuleInterfaceCheck_exposed(
+        address _contractAddr
+    ) external {
+        _enforceNonPrivilegedModuleInterfaceCheck(_contractAddr);
+    }
 }

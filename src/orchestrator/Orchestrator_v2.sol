@@ -4,11 +4,17 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IOrchestrator_v2,
-    IFundingManager_v1,
-    IPaymentProcessor_v3,
-    IAuthorizer_v2,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v2.sol";
+
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
+import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
+
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
@@ -148,21 +154,34 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
         // is (most probably) not authorized.
+        {
+            bytes4[] memory privilegedInterfaceIds = new bytes4[](1);
+            privilegedInterfaceIds[0] = type(IFundingManager_v1).interfaceId;
 
-        _enforcePrivilegedModuleInterfaceCheck(
-            address(fundingManager_), type(IFundingManager_v1).interfaceId
-        );
-        __ModuleManager_addModule(address(fundingManager_));
+            _enforcePrivilegedModuleInterfaceCheck(
+                address(fundingManager_), privilegedInterfaceIds
+            );
+            __ModuleManager_addModule(address(fundingManager_));
 
-        _enforcePrivilegedModuleInterfaceCheck(
-            address(authorizer_), type(IAuthorizer_v2).interfaceId
-        );
-        __ModuleManager_addModule(address(authorizer_));
+            privilegedInterfaceIds = new bytes4[](2);
+            privilegedInterfaceIds[0] = type(IAuthorizer_v1).interfaceId;
+            privilegedInterfaceIds[1] = type(IAuthorizer_v2).interfaceId;
 
-        _enforcePrivilegedModuleInterfaceCheck(
-            address(paymentProcessor_), type(IPaymentProcessor_v3).interfaceId
-        );
-        __ModuleManager_addModule(address(paymentProcessor_));
+            _enforcePrivilegedModuleInterfaceCheck(
+                address(authorizer_), privilegedInterfaceIds
+            );
+            __ModuleManager_addModule(address(authorizer_));
+
+            privilegedInterfaceIds = new bytes4[](3);
+            privilegedInterfaceIds[0] = type(IPaymentProcessor_v1).interfaceId;
+            privilegedInterfaceIds[1] = type(IPaymentProcessor_v2).interfaceId;
+            privilegedInterfaceIds[2] = type(IPaymentProcessor_v3).interfaceId;
+
+            _enforcePrivilegedModuleInterfaceCheck(
+                address(paymentProcessor_), privilegedInterfaceIds
+            );
+            __ModuleManager_addModule(address(paymentProcessor_));
+        }
 
         emit OrchestratorInitialized(
             orchestratorId_,
@@ -178,13 +197,16 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     // onlyOrchestratorAdmin Functions
 
     /// @inheritdoc IOrchestrator_v2
-    function initiateSetAuthorizerWithTimelock(IAuthorizer_v2 newAuthorizer)
+    function initiateSetAuthorizerWithTimelock(address newAuthorizerAddress)
         external
         permissioned
     {
-        address newAuthorizerAddress = address(newAuthorizer);
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](2);
+        privilegedInterfaceIds[0] = type(IAuthorizer_v1).interfaceId;
+        privilegedInterfaceIds[1] = type(IAuthorizer_v2).interfaceId;
+
         _enforcePrivilegedModuleInterfaceCheck(
-            newAuthorizerAddress, type(IAuthorizer_v2).interfaceId
+            newAuthorizerAddress, privilegedInterfaceIds
         );
 
         _initiateAddModuleWithTimelock(newAuthorizerAddress);
@@ -192,15 +214,18 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function executeSetAuthorizer(IAuthorizer_v2 newAuthorizer)
+    function executeSetAuthorizer(address newAuthorizerAddress)
         external
         permissioned
-        updatingModuleAlreadyStarted(address(newAuthorizer))
-        timelockExpired(address(newAuthorizer))
+        updatingModuleAlreadyStarted(newAuthorizerAddress)
+        timelockExpired(newAuthorizerAddress)
     {
-        address newAuthorizerAddress = address(newAuthorizer);
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](2);
+        privilegedInterfaceIds[0] = type(IAuthorizer_v1).interfaceId;
+        privilegedInterfaceIds[1] = type(IAuthorizer_v2).interfaceId;
+
         _enforcePrivilegedModuleInterfaceCheck(
-            newAuthorizerAddress, type(IAuthorizer_v2).interfaceId
+            newAuthorizerAddress, privilegedInterfaceIds
         );
 
         _executeRemoveModule(address(authorizer));
@@ -210,33 +235,38 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         // Use _commitAddModule directly as it doesnt need the authorization of the by now none existing Authorizer
         _commitAddModule(newAuthorizerAddress);
 
-        authorizer = newAuthorizer;
+        authorizer = IAuthorizer_v2(newAuthorizerAddress);
         emit AuthorizerUpdated(newAuthorizerAddress);
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function cancelAuthorizerUpdate(IAuthorizer_v2 authorizer_)
+    function cancelAuthorizerUpdate(address authorizer_)
         external
         permissioned
     {
         _cancelModuleUpdate(address(authorizer));
-        _cancelModuleUpdate(address(authorizer_));
+        _cancelModuleUpdate(authorizer_);
     }
 
     /// @inheritdoc IOrchestrator_v2
     function initiateSetFundingManagerWithTimelock(
-        IFundingManager_v1 newFundingManager
+        address newFundingManagerAddress
     ) external permissioned {
-        address newFundingManagerAddress = address(newFundingManager);
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](1);
+        privilegedInterfaceIds[0] = type(IFundingManager_v1).interfaceId;
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newFundingManagerAddress, type(IFundingManager_v1).interfaceId
+            newFundingManagerAddress, privilegedInterfaceIds
         );
 
-        if (fundingManager.token() != newFundingManager.token()) {
+        // Check if the token is the same as the current one
+        if (
+            fundingManager.token()
+                != IFundingManager_v1(newFundingManagerAddress).token()
+        ) {
             revert Orchestrator__MismatchedTokenForFundingManager(
                 address(fundingManager.token()),
-                address(newFundingManager.token())
+                address(IFundingManager_v1(newFundingManagerAddress).token())
             );
         } else {
             _initiateAddModuleWithTimelock(newFundingManagerAddress);
@@ -245,38 +275,42 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function executeSetFundingManager(IFundingManager_v1 newFundingManager)
+    function executeSetFundingManager(address newFundingManagerAddress)
         external
         permissioned
     {
-        address newFundingManagerAddress = address(newFundingManager);
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](1);
+        privilegedInterfaceIds[0] = type(IFundingManager_v1).interfaceId;
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newFundingManagerAddress, type(IFundingManager_v1).interfaceId
+            newFundingManagerAddress, privilegedInterfaceIds
         );
         _executeRemoveModule(address(fundingManager));
         _executeAddModule(newFundingManagerAddress);
-        fundingManager = newFundingManager;
+        fundingManager = IFundingManager_v1(newFundingManagerAddress);
         emit FundingManagerUpdated(newFundingManagerAddress);
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
+    function cancelFundingManagerUpdate(address fundingManager_)
         external
         permissioned
     {
         _cancelModuleUpdate(address(fundingManager));
-        _cancelModuleUpdate(address(fundingManager_));
+        _cancelModuleUpdate(fundingManager_);
     }
 
     /// @inheritdoc IOrchestrator_v2
     function initiateSetPaymentProcessorWithTimelock(
-        IPaymentProcessor_v3 newPaymentProcessor
+        address newPaymentProcessorAddress
     ) external permissioned {
-        address newPaymentProcessorAddress = address(newPaymentProcessor);
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](3);
+        privilegedInterfaceIds[0] = type(IPaymentProcessor_v1).interfaceId;
+        privilegedInterfaceIds[1] = type(IPaymentProcessor_v2).interfaceId;
+        privilegedInterfaceIds[2] = type(IPaymentProcessor_v3).interfaceId;
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newPaymentProcessorAddress, type(IPaymentProcessor_v3).interfaceId
+            newPaymentProcessorAddress, privilegedInterfaceIds
         );
 
         _initiateAddModuleWithTimelock(newPaymentProcessorAddress);
@@ -284,27 +318,33 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function executeSetPaymentProcessor(
-        IPaymentProcessor_v3 newPaymentProcessor
-    ) external permissioned {
-        address newPaymentProcessorAddress = address(newPaymentProcessor);
+    function executeSetPaymentProcessor(address newPaymentProcessorAddress)
+        external
+        permissioned
+    {
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](3);
+        privilegedInterfaceIds[0] = type(IPaymentProcessor_v1).interfaceId;
+        privilegedInterfaceIds[1] = type(IPaymentProcessor_v2).interfaceId;
+        privilegedInterfaceIds[2] = type(IPaymentProcessor_v3).interfaceId;
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newPaymentProcessorAddress, type(IPaymentProcessor_v3).interfaceId
+            newPaymentProcessorAddress, privilegedInterfaceIds
         );
 
         _executeRemoveModule(address(paymentProcessor));
         _executeAddModule(newPaymentProcessorAddress);
-        paymentProcessor = newPaymentProcessor;
+
+        paymentProcessor = IPaymentProcessor_v3(newPaymentProcessorAddress);
         emit PaymentProcessorUpdated(newPaymentProcessorAddress);
     }
 
     /// @inheritdoc IOrchestrator_v2
-    function cancelPaymentProcessorUpdate(
-        IPaymentProcessor_v3 paymentProcessor_
-    ) external permissioned {
+    function cancelPaymentProcessorUpdate(address paymentProcessor_)
+        external
+        permissioned
+    {
         _cancelModuleUpdate(address(paymentProcessor));
-        _cancelModuleUpdate(address(paymentProcessor_));
+        _cancelModuleUpdate(paymentProcessor_);
     }
 
     /// @inheritdoc IOrchestrator_v2
@@ -381,22 +421,43 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Internal - Enforce Module Interface Check
+
     /// @notice Enforces that the address is in fact a Module of the required type.
     /// @dev	The function reverts if the given address is not a module of the required type.
     /// @param  _contractAddr The address to be checked.
     /// @param  _privilegedInterfaceId The required interface id.
-    function _enforcePrivilegedModuleInterfaceCheck( //@todo adapt to enable older interfaces too
-    address _contractAddr, bytes4 _privilegedInterfaceId)
-        internal
-        view
-    {
-        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
+    function _enforcePrivilegedModuleInterfaceCheck(
+        address _contractAddr,
+        bytes4[] memory _privilegedInterfaceId
+    ) internal view {
+        // If address is not a module, revert
         if (
-            !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
-                || !ERC165Checker.supportsInterface(
-                    _contractAddr, _privilegedInterfaceId
+            !ERC165Checker.supportsInterface(
+                _contractAddr, type(IModule_v1).interfaceId
+            )
+                && !ERC165Checker.supportsInterface(
+                    _contractAddr, type(IModule_v2).interfaceId
                 )
         ) {
+            revert Orchestrator__InvalidModuleType(_contractAddr);
+        }
+
+        bool isInterfaceSupported;
+        // Check if the module supports the required interface
+        for (uint i = 0; i < _privilegedInterfaceId.length; i++) {
+            if (
+                ERC165Checker.supportsInterface(
+                    _contractAddr, _privilegedInterfaceId[i]
+                )
+            ) {
+                isInterfaceSupported = true;
+                break;
+            }
+        }
+
+        if (!isInterfaceSupported) {
             revert Orchestrator__InvalidModuleType(_contractAddr);
         }
     }
@@ -407,9 +468,20 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         internal
         view
     {
-        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
-            !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId) //@todo adapt to enable older interfaces too
+            // If the given address is not a module
+            // If the given address is any of the following interfaces
+            (
+                !ERC165Checker.supportsInterface(
+                    _contractAddr, type(IModule_v1).interfaceId
+                )
+                    && !ERC165Checker.supportsInterface(
+                        _contractAddr, type(IModule_v2).interfaceId
+                    )
+            )
+                || ERC165Checker.supportsInterface(
+                    _contractAddr, type(IAuthorizer_v1).interfaceId
+                )
                 || ERC165Checker.supportsInterface(
                     _contractAddr, type(IAuthorizer_v2).interfaceId
                 )
@@ -417,9 +489,16 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
                     _contractAddr, type(IFundingManager_v1).interfaceId
                 )
                 || ERC165Checker.supportsInterface(
+                    _contractAddr, type(IPaymentProcessor_v1).interfaceId
+                )
+                || ERC165Checker.supportsInterface(
+                    _contractAddr, type(IPaymentProcessor_v2).interfaceId
+                )
+                || ERC165Checker.supportsInterface(
                     _contractAddr, type(IPaymentProcessor_v3).interfaceId
                 )
         ) {
+            // Then revert
             revert Orchestrator__InvalidModuleType(_contractAddr);
         }
     }

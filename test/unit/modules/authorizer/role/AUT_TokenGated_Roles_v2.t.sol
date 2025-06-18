@@ -89,11 +89,9 @@ contract AUT_TokenGated_Roles_v2_Test is ModuleTest {
         _authSuT.init(_orchestrator, _METADATA, abi.encode(address(this)));
 
         // Change Authorizer of Module Test to SuT
-        _orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v2(_authSuT)
-        );
+        _orchestrator.initiateSetAuthorizerWithTimelock(address(_authSuT));
         vm.warp(72 hours + 1);
-        _orchestrator.executeSetAuthorizer(IAuthorizer_v2(_authSuT));
+        _orchestrator.executeSetAuthorizer(address(_authSuT));
     }
 
     ///////////////////////////////////////////////////////////////////////////

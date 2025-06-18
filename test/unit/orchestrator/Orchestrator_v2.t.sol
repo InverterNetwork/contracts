@@ -12,6 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {Orchestrator_v2_Exposed} from
     "@mocks/orchestrator/Orchestrator_v2_Exposed.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 // Internal Interfaces
@@ -277,9 +278,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
-        orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v2(address(0))
-        );
+        orchestrator.initiateSetAuthorizerWithTimelock(address(0));
     }
 
     /*
@@ -295,7 +294,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.executeSetAuthorizer(IAuthorizer_v2(address(0)));
+        orchestrator.executeSetAuthorizer(address(0));
     }
 
     /*
@@ -311,7 +310,111 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.cancelAuthorizerUpdate(IAuthorizer_v2(address(0)));
+        orchestrator.cancelAuthorizerUpdate(address(0));
+    }
+
+    function testInitiateSetAuthorizerWithTimelock_SupportsIAuthorizer_v1()
+        public
+    {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new authorizer module
+        Authorizer_v1_Mock newAuthorizer_v1 = new Authorizer_v1_Mock();
+
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            address(newAuthorizer_v1)
+        );
+    }
+
+    function testInitiateSetAuthorizerWithTimelock_SupportsIAuthorizer_v2()
+        public
+    {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new authorizer module
+        Authorizer_v2_Mock newAuthorizer_v2 = new Authorizer_v2_Mock();
+
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            address(newAuthorizer_v2)
+        );
+    }
+
+    function testExecuteSetAuthorizerWithTimelock_SupportsIAuthorizer_v1()
+        public
+    {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new authorizer module
+        Authorizer_v1_Mock newAuthorizer_v1 = new Authorizer_v1_Mock();
+
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            address(newAuthorizer_v1)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetAuthorizer(address(newAuthorizer_v1));
+    }
+
+    function testExecuteSetAuthorizerWithTimelock_SupportsIAuthorizer_v2()
+        public
+    {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new authorizer module
+        Authorizer_v2_Mock newAuthorizer_v2 = new Authorizer_v2_Mock();
+
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            address(newAuthorizer_v2)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetAuthorizer(address(newAuthorizer_v2));
     }
 
     function testInitiateAndExecuteSetAuthorizer(
@@ -336,13 +439,13 @@ contract OrchestratorV1Test is Test {
 
         newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
 
-        orchestrator.initiateSetAuthorizerWithTimelock(newAuthorizer);
+        orchestrator.initiateSetAuthorizerWithTimelock(address(newAuthorizer));
         vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
 
         // set the new authorizer module
         vm.expectEmit(true, true, true, true);
         emit IOrchestrator_v2.AuthorizerUpdated(address(newAuthorizer));
-        orchestrator.executeSetAuthorizer(newAuthorizer);
+        orchestrator.executeSetAuthorizer(address(newAuthorizer));
 
         assertTrue(orchestrator.authorizer() == newAuthorizer);
 
@@ -384,7 +487,7 @@ contract OrchestratorV1Test is Test {
                 newAuthorizer
             )
         );
-        orchestrator.executeSetAuthorizer(IAuthorizer_v2(newAuthorizer));
+        orchestrator.executeSetAuthorizer(newAuthorizer);
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
@@ -417,9 +520,7 @@ contract OrchestratorV1Test is Test {
                 newAuthorizer
             )
         );
-        orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v2(newAuthorizer)
-        );
+        orchestrator.initiateSetAuthorizerWithTimelock(newAuthorizer);
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
@@ -439,9 +540,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(address(0))
-        );
+        orchestrator.initiateSetFundingManagerWithTimelock(address(0));
     }
 
     /*
@@ -457,7 +556,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.executeSetFundingManager(IFundingManager_v1(address(0)));
+        orchestrator.executeSetFundingManager(address(0));
     }
 
     /*
@@ -473,7 +572,57 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.cancelFundingManagerUpdate(IFundingManager_v1(address(0)));
+        orchestrator.cancelFundingManagerUpdate(address(0));
+    }
+
+    function testInitiateSetFundingmanagerWithTimelock_SupportsIFundingManager_v1(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new funding manager module
+        FundingManagerV1Mock newFundingManager_v1 = new FundingManagerV1Mock();
+
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            address(newFundingManager_v1)
+        );
+    }
+
+    function testExecuteSetFundingmanagerWithTimelock_SupportsIFundingManager_v1(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new funding manager module
+        FundingManagerV1Mock newFundingManager_v1 = new FundingManagerV1Mock();
+
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            address(newFundingManager_v1)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetFundingManager(address(newFundingManager_v1));
     }
 
     function testInitiateAndExecuteSetFundingManager(
@@ -501,13 +650,15 @@ contract OrchestratorV1Test is Test {
         FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
         newFundingManager.setToken(IERC20(address(0xA11CE)));
 
-        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            address(newFundingManager)
+        );
         vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
 
         // set the new funding manager module
         vm.expectEmit(true, true, true, true);
         emit IOrchestrator_v2.FundingManagerUpdated(address(newFundingManager));
-        orchestrator.executeSetFundingManager(newFundingManager);
+        orchestrator.executeSetFundingManager(address(newFundingManager));
         assertTrue(orchestrator.fundingManager() == newFundingManager);
         assertTrue(
             address((orchestrator.fundingManager()).token()) == address(0xA11CE)
@@ -545,9 +696,7 @@ contract OrchestratorV1Test is Test {
                 newFundingManager
             )
         );
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(newFundingManager)
-        );
+        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
@@ -582,9 +731,7 @@ contract OrchestratorV1Test is Test {
                 newFundingManager
             )
         );
-        orchestrator.executeSetFundingManager(
-            IFundingManager_v1(newFundingManager)
-        );
+        orchestrator.executeSetFundingManager(newFundingManager);
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
@@ -621,7 +768,9 @@ contract OrchestratorV1Test is Test {
                 newFundingManager.token()
             )
         );
-        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            address(newFundingManager)
+        );
     }
 
     /*
@@ -640,9 +789,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
 
         vm.prank(address(0xB0B));
-        orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v3(address(0))
-        );
+        orchestrator.initiateSetPaymentProcessorWithTimelock(address(0));
     }
 
     /*
@@ -658,9 +805,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v3(address(0))
-        );
+        orchestrator.executeSetPaymentProcessor(address(0));
     }
 
     /*
@@ -678,9 +823,157 @@ contract OrchestratorV1Test is Test {
         authorizer.setAllAuthorized(false);
         vm.expectRevert(IOrchestrator_v2.Orchestrator__NotPermissioned.selector);
         vm.prank(address(0xB0B));
-        orchestrator.cancelPaymentProcessorUpdate(
-            IPaymentProcessor_v3(address(0))
+        orchestrator.cancelPaymentProcessorUpdate(address(0));
+    }
+
+    function testInitiateSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v1(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
         );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v1 = address(new PaymentProcessor_v1_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v1)
+        );
+    }
+
+    function testInitiateSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v2(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v2 = address(new PaymentProcessor_v2_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v2)
+        );
+    }
+
+    function testInitiateSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v3(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v3 = address(new PaymentProcessor_v3_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v3)
+        );
+    }
+
+    function testExecuteSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v1(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v1 = address(new PaymentProcessor_v1_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v1)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetPaymentProcessor(address(newPaymentProcessor_v1));
+    }
+
+    function testExecuteSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v2(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v2 = address(new PaymentProcessor_v2_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v2)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetPaymentProcessor(address(newPaymentProcessor_v2));
+    }
+
+    function testExecuteSetpaymentProcessorWithTimelock_SupportsIPaymentProcessor_v3(
+    ) public {
+        address[] memory modules;
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            1,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        // Create new payment processor module
+        address newPaymentProcessor_v3 = address(new PaymentProcessor_v3_Mock());
+
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            address(newPaymentProcessor_v3)
+        );
+
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
+        orchestrator.executeSetPaymentProcessor(address(newPaymentProcessor_v3));
     }
 
     function testInitiateAndExecuteSetPaymentProcessor(
@@ -700,8 +993,7 @@ contract OrchestratorV1Test is Test {
         );
 
         // Create new payment processor module
-        PaymentProcessorV1Mock newPaymentProcessor =
-            new PaymentProcessorV1Mock();
+        address newPaymentProcessor = address(new PaymentProcessor_v3_Mock());
 
         orchestrator.initiateSetPaymentProcessorWithTimelock(
             newPaymentProcessor
@@ -710,11 +1002,11 @@ contract OrchestratorV1Test is Test {
 
         // set the new payment processor module
         vm.expectEmit(true, true, true, true);
-        emit IOrchestrator_v2.PaymentProcessorUpdated(
-            address(newPaymentProcessor)
-        );
+        emit IOrchestrator_v2.PaymentProcessorUpdated(newPaymentProcessor);
         orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
-        assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
+        assertTrue(
+            address(orchestrator.paymentProcessor()) == newPaymentProcessor
+        );
     }
 
     /// forge-config: default.allow_internal_expect_revert = true
@@ -746,7 +1038,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v3(newPaymentProcessor)
+            newPaymentProcessor
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
@@ -780,9 +1072,7 @@ contract OrchestratorV1Test is Test {
                 newPaymentProcessor
             )
         );
-        orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v3(newPaymentProcessor)
-        );
+        orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
     }
@@ -934,6 +1224,190 @@ contract OrchestratorV1Test is Test {
                 .selector
         );
         orchestrator.executeRemoveModule(currentPaymentProcessor);
+    }
+
+    // ========================================================================
+    // Internal Functions
+
+    // ------------------------------------------------------------------------
+    // Internal - Enforce Module Interface Check
+
+    function test_enforcePrivilegedModuleInterfaceCheck_failsIfContractIsNotAModule(
+    ) public {
+        // Create a mock that mocks ERC165
+        ERC165InterfaceMock iMock = new ERC165InterfaceMock();
+        address contractAddr = address(iMock);
+
+        // if the contract address is not a module, it should revert
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforcePrivilegedModuleInterfaceCheck_exposed(
+                contractAddr, new bytes4[](0)
+            );
+        }
+    }
+
+    function test_enforcePrivilegedModuleInterfaceCheck_succeedsIfContractIsEitherModule_v1Or_v2(
+    ) public {
+        // Create a mock that mocks ERC165
+        ERC165InterfaceMock iMock = new ERC165InterfaceMock();
+        address contractAddr = address(iMock);
+
+        // We need to check for a single interface for the call to be successful
+        bytes4[] memory privilegedInterfaceIds = new bytes4[](1);
+        privilegedInterfaceIds[0] = bytes4(0);
+        iMock.registerInterface(bytes4(0));
+
+        // if the contract address implements IModule_v1 it should not revert
+        {
+            iMock.registerInterface(type(IModule_v1).interfaceId);
+            orchestrator._enforcePrivilegedModuleInterfaceCheck_exposed(
+                contractAddr, privilegedInterfaceIds
+            );
+            iMock.unregisterInterface(type(IModule_v1).interfaceId);
+        }
+        // if the contract address implements IModule_v2 it should not revert
+        {
+            iMock.registerInterface(type(IModule_v2).interfaceId);
+            orchestrator._enforcePrivilegedModuleInterfaceCheck_exposed(
+                contractAddr, privilegedInterfaceIds
+            );
+        }
+    }
+
+    function test_enforceNonPrivilegedModuleInterfaceCheck_failsGivenModuleIsPrivileged(
+    ) public {
+        // Create a mock that mocks ERC165
+        ERC165InterfaceMock iMock = new ERC165InterfaceMock();
+        address contractAddr = address(iMock);
+
+        // if the contract address is not a module, it should revert
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+        }
+
+        // If the contract address is Module_v1, it should not revert
+        {
+            iMock.registerInterface(type(IModule_v1).interfaceId);
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IModule_v1).interfaceId);
+        }
+
+        // If the contract address is Module_v2, it should not revert
+        {
+            iMock.registerInterface(type(IModule_v2).interfaceId);
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IModule_v2).interfaceId);
+        }
+
+        // All the following tests will revert automatically if the contract address is not a module
+        iMock.registerInterface(type(IModule_v2).interfaceId);
+
+        // If the contract address is IAuthorizer_v1, it should revert
+        {
+            iMock.registerInterface(type(IAuthorizer_v1).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IAuthorizer_v1).interfaceId);
+        }
+
+        // If the contract address is IAuthorizer_v2, it should revert
+        {
+            iMock.registerInterface(type(IAuthorizer_v2).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IAuthorizer_v2).interfaceId);
+        }
+
+        // If the contract address is IFundingManager_v1, it should revert
+        {
+            iMock.registerInterface(type(IFundingManager_v1).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IFundingManager_v1).interfaceId);
+        }
+
+        // If the contract address is IPaymentProcessor_v1, it should revert
+        {
+            iMock.registerInterface(type(IPaymentProcessor_v1).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IPaymentProcessor_v1).interfaceId);
+        }
+
+        // If the contract address is IPaymentProcessor_v2, it should revert
+        {
+            iMock.registerInterface(type(IPaymentProcessor_v2).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+            iMock.unregisterInterface(type(IPaymentProcessor_v2).interfaceId);
+        }
+
+        // If the contract address is IPaymentProcessor_v3, it should revert
+        {
+            iMock.registerInterface(type(IPaymentProcessor_v3).interfaceId);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IOrchestrator_v2.Orchestrator__InvalidModuleType.selector,
+                    contractAddr
+                )
+            );
+            orchestrator._enforceNonPrivilegedModuleInterfaceCheck_exposed(
+                contractAddr
+            );
+        }
     }
 
     // ------------------------------------------------------------------------

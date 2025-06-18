@@ -301,11 +301,9 @@ abstract contract ModuleTest is Test {
         internal
     {
         _orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v3(paymentProcessor_)
+            address(paymentProcessor_)
         );
         vm.warp(block.timestamp + 73 hours);
-        _orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v3(paymentProcessor_)
-        );
+        _orchestrator.executeSetPaymentProcessor(address(paymentProcessor_));
     }
 }

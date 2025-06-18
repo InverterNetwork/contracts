@@ -201,16 +201,12 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         );
 
         // Initiate setting of new Funding Manager
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(newBondingCurve)
-        );
+        orchestrator.initiateSetFundingManagerWithTimelock(newBondingCurve);
 
         // wait for timelock to expire
         vm.warp(block.timestamp + 1 weeks);
 
-        orchestrator.executeSetFundingManager(
-            IFundingManager_v1(newBondingCurve)
-        );
+        orchestrator.executeSetFundingManager(newBondingCurve);
 
         // Enable Minting again for new BC
 

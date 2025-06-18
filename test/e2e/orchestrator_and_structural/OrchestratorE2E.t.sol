@@ -154,27 +154,19 @@ contract OrchestratorE2E is E2ETest {
 
         // Replace the old modules with the new ones
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v3(newPaymentProcessor)
+            newPaymentProcessor
         );
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v3(newPaymentProcessor)
-        );
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(newFundingManager)
-        );
+        orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
+        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetFundingManager(
-            IFundingManager_v1(newFundingManager)
-        );
-        orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v2(newAuthorizer)
-        );
+        orchestrator.executeSetFundingManager(newFundingManager);
+        orchestrator.initiateSetAuthorizerWithTimelock(newAuthorizer);
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetAuthorizer(IAuthorizer_v2(newAuthorizer));
+        orchestrator.executeSetAuthorizer(newAuthorizer);
 
         // Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules
