@@ -5102,7 +5102,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Step 4: Validate that usedUnspentCaps is set to true
-        bool isUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1); // expose via helper function if needed
+        bool isUsed =
+            fundingPot.getUserUsedUnspendCaps(contributor1_, round1, 1); // expose via helper function if needed
         assertTrue(isUsed, "usedUnspentCaps should be true after contribution");
     }
 
@@ -5239,7 +5240,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Confirm usedUnspentCaps[round1] is still true, not overwritten or reused
-        bool isStillUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1);
+        bool isStillUsed =
+            fundingPot.getUserUsedUnspendCaps(contributor1_, round1, 1);
         assertTrue(
             isStillUsed, "usedUnspentCaps should still be true from earlier use"
         );

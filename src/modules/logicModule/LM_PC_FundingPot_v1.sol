@@ -158,7 +158,7 @@ contract LM_PC_FundingPot_v1 is
     uint32 internal globalAccumulationStartRoundId;
 
     /// @notice Maps user addresses to a mapping of round IDs to a mapping of access criteria IDs to whether their unspent cap has been used
-    mapping(address => mapping(uint32 => mapping(uint8 => bool))) public
+    mapping(address => mapping(uint32 => mapping(uint8 => bool))) private
         usedUnspentCaps;
 
     /// @notice Storage gap for future upgrades.
@@ -377,6 +377,14 @@ contract LM_PC_FundingPot_v1 is
         return globalAccumulationStartRoundId;
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getUserUsedUnspendCaps(
+        address user_,
+        uint32 roundId_,
+        uint8 accessCriteriaId_
+    ) external view returns (bool) {
+        return usedUnspentCaps[user_][roundId_][accessCriteriaId_];
+    }
     // -------------------------------------------------------------------------
     // Public - Mutating
 

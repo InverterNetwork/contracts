@@ -443,6 +443,20 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (uint32);
 
+    /// @notice Checks whether a user has already used their unspent caps from previous rounds for a specific round and access criteria combination.
+    /// @dev    This function is used to prevent double-counting of unspent caps when users contribute to rounds
+    ///         with accumulation enabled. It tracks whether the user has already utilized their carry-over capacity
+    ///         from previous rounds for the specified round and access criteria.
+    /// @param  user_ The address of the user to check.
+    /// @param  roundId_ The ID of the round to check for unspent cap usage.
+    /// @param  accessCriteriaId_ The ID of the access criteria to check for unspent cap usage.
+    /// @return True if the user has already used their unspent caps for this round and access criteria combination, false otherwise.
+    function getUserUsedUnspendCaps(
+        address user_,
+        uint32 roundId_,
+        uint8 accessCriteriaId_
+    ) external view returns (bool);
+
     // -------------------------------------------------------------------------
     // Public - Mutating
 
