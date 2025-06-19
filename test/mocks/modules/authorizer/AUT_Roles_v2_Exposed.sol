@@ -35,6 +35,11 @@ contract AUT_Roles_v2_Exposed is AUT_Roles_v2 {
         idExists(roleId_)
     {}
 
+    function idExistsOrWillBeCreatedModifier_exposed(bytes32 roleId_)
+        public
+        idExistsOrWillBeCreated(roleId_)
+    {}
+
     //==========================================================================
     // Helper Functions
 }

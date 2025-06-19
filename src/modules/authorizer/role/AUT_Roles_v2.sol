@@ -94,6 +94,18 @@ contract AUT_Roles_v2 is
         _;
     }
 
+    /// @notice Verifies that the roleId is already existing or will be
+    ///         created.
+    /// @param  roleId_ The id of the role.
+    modifier idExistsOrWillBeCreated(bytes32 roleId_) {
+        // If the given roleId is greater than the last assigned roleId or the
+        // newly created roleId, then it is not existing.
+        if (uint(roleId_) > _lastAssignedRoleId + 1) {
+            revert Module__Authorizer__RoleIdNotExistingOrWillNotBeCreated();
+        }
+        _;
+    }
+
     // ========================================================================
     // Storage
 
@@ -265,7 +277,7 @@ contract AUT_Roles_v2 is
         public
         virtual
         permissioned
-        idExists(respectiveAdminRole_)
+        idExistsOrWillBeCreated(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
         newRoleId_ = bytes32(++_lastAssignedRoleId);
@@ -366,7 +378,7 @@ contract AUT_Roles_v2 is
     )
         external
         permissioned
-        idExists(respectiveAdminRole_)
+        idExistsOrWillBeCreated(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
         uint targetsLength = targets_.length;

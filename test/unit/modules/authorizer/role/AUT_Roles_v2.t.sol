@@ -170,6 +170,32 @@ contract AUT_Roles_v2_Test is ModuleTest {
         _authSuT.idExistsModifier_exposed(_givenRoleId);
     }
 
+    /*
+    Test: idExistsOrWillBeCreated Modifier
+    └── Given: Role ID is not existing/will be created and is not Public Role
+        └── When: function with idExistsOrWillBeCreated modifier is called
+            └── Then: the function should revert
+    */
+    function testIdExistsOrWillBeCreatedModifier(
+        uint _lastAssignedRoleIdValue,
+        bytes32 _givenRoleId
+    ) public {
+        _authSuT.changeLastAssignedRoleId(_lastAssignedRoleIdValue);
+        if (
+            _givenRoleId != _authSuT.PUBLIC_ROLE()
+                && uint(_givenRoleId) > _lastAssignedRoleIdValue + 1
+        ) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAuthorizer_v2
+                        .Module__Authorizer__RoleIdNotExistingOrWillNotBeCreated
+                        .selector
+                )
+            );
+        }
+        _authSuT.idExistsOrWillBeCreatedModifier_exposed(_givenRoleId);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test External Functions
 
@@ -577,7 +603,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
     │   └── When: createRole is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given roleId is not existing
+    ├── And: The given roleId is not existing or will be created
     │   └── When: createRole is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
@@ -598,14 +624,16 @@ contract AUT_Roles_v2_Test is ModuleTest {
         );
         _authSuT.createRole("RoleName", bytes32(uint(0)), new address[](0));
 
-        //idExists(respectiveAdminRole_)
+        //idExistsOrWillBeCreated(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2
+                    .Module__Authorizer__RoleIdNotExistingOrWillNotBeCreated
+                    .selector
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.createRole("RoleName", bytes32(uint(2)), new address[](0));
+        _authSuT.createRole("RoleName", bytes32(uint(3)), new address[](0));
     }
 
     function testCreateRole_RoleIdIsExisting(
@@ -884,7 +912,7 @@ contract AUT_Roles_v2_Test is ModuleTest {
     │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given roleId is not existing
+    ├── And: The given roleId is not existing or will be created
     │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
@@ -916,16 +944,18 @@ contract AUT_Roles_v2_Test is ModuleTest {
             new bytes4[][](0)
         );
 
-        //idExists(respectiveAdminRole_)
+        //idExistsOrWillBeCreated(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v2.Module__Authorizer__RoleIdNotExisting.selector
+                IAuthorizer_v2
+                    .Module__Authorizer__RoleIdNotExistingOrWillNotBeCreated
+                    .selector
             )
         );
         vm.prank(_initialAdmin);
         _authSuT.createRoleAndAddAccessPermissions(
             "RoleName",
-            bytes32(uint(2)),
+            bytes32(uint(3)),
             new address[](0),
             new address[](0),
             new bytes4[][](0)

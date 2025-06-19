@@ -53,6 +53,10 @@ interface IAuthorizer_v2 is IAccessControlEnumerable {
     /// @notice The provided role ID is not existing.
     error Module__Authorizer__RoleIdNotExisting();
 
+    /// @notice The provided role ID is not existing or will not be created
+    ///         during this function call.
+    error Module__Authorizer__RoleIdNotExistingOrWillNotBeCreated();
+
     /// @notice The provided input length is not valid.
     error Module__Authorizer__InvalidInputLength();
 
@@ -169,7 +173,8 @@ interface IAuthorizer_v2 is IAccessControlEnumerable {
 
     /// @notice Creates a new role and adds initial members to it.
     /// @dev    Function access controlled by authorizer.
-    /// @dev    The role of the admin has to be created already.
+    /// @dev    The role of the admin has to either be created already or will
+    ///         be created during this function call.
     /// @param  roleName_ The name of the role to create.
     /// @param  respectiveAdminRole_ The role ID of the admin role.
     /// @param  initialMembers_ The addresses of the initial members.
@@ -243,7 +248,8 @@ interface IAuthorizer_v2 is IAccessControlEnumerable {
     /// @notice Creates a new role, adds initial members to it and adds
     ///         permission to call to the respective functions.
     /// @dev    Function access controlled by authorizer.
-    /// @dev    The role of the admin has to be created already.
+    /// @dev    The role of the admin has to either be created already or will
+    ///         be created during this function call.
     /// @dev    The array of targets corresponds with the two dimensional array
     ///         of selectors. The first position of targets therefore is
     ///         assigned to the first position of the selector array. The
