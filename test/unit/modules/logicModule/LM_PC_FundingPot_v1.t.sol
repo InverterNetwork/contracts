@@ -1588,7 +1588,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__AccessCriteriaNftFailed
+                    .Module__LM_PC_FundingPot__AccessCriteriaFailed
                     .selector
             )
         );
@@ -1641,7 +1641,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed
+                    .Module__LM_PC_FundingPot__AccessCriteriaFailed
                     .selector
             )
         );
@@ -1690,7 +1690,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__AccessCriteriaListFailed
+                    .Module__LM_PC_FundingPot__AccessCriteriaFailed
                     .selector
             )
         );

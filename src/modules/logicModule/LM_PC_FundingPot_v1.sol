@@ -987,19 +987,7 @@ contract LM_PC_FundingPot_v1 is
             roundId_, accessCriteriaId_, merkleProof_, user_
         );
 
-        if (!isEligible) {
-            if (accessCriteria.accessCriteriaType == AccessCriteriaType.NFT) {
-                revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
-            }
-            if (accessCriteria.accessCriteriaType == AccessCriteriaType.MERKLE)
-            {
-                revert Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
-            }
 
-            if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST) {
-                revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
-            }
-        }
     }
 
     /// @notice Validates and adjusts the contribution amount considering caps and unspent capacity.

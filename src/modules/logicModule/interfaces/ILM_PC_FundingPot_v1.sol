@@ -246,14 +246,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already ended.
     error Module__LM_PC_FundingPot__RoundHasEnded();
 
-    /// @notice User does not meet the NFT access criteria.
-    error Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
-
-    /// @notice User does not meet the merkle proof access criteria.
-    error Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
-
-    /// @notice User is not on the allowlist.
-    error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
+    error Module__LM_PC_FundingPot__AccessCriteriaFailed();
 
     /// @notice User has reached their personal contribution cap.
     error Module__LM_PC_FundingPot__PersonalCapReached();
