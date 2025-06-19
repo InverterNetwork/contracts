@@ -18,18 +18,19 @@ import {TransactionForwarder_v1} from
 import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2, IOrchestrator_v2} from "src/modules/base/IModule_v2.sol";
 
 // Mocks
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
-    PaymentProcessorV1Mock,
-    IPaymentProcessor_v2
-} from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+    PaymentProcessor_v3_Mock,
+    IPaymentProcessor_v3
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 // External Dependencies
 import {TransparentUpgradeableProxy} from
     "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -42,9 +43,9 @@ abstract contract ModuleTest is Test {
 
     // Mocks
     FundingManagerV1Mock _fundingManager;
-    AuthorizerV1Mock _authorizer;
+    Authorizer_v2_Mock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK", 18);
-    PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
+    PaymentProcessor_v3_Mock _paymentProcessor = new PaymentProcessor_v3_Mock();
 
     GovernorV1Mock governor = new GovernorV1Mock();
     ModuleFactoryV1Mock moduleFactory = new ModuleFactoryV1Mock();
@@ -55,23 +56,23 @@ abstract contract ModuleTest is Test {
     // Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder = new TransactionForwarder_v1();
 
-    // Orchestrator_v1 Constants
+    // Orchestrator_v2 Constants
     uint constant _ORCHESTRATOR_ID = 1;
 
-    // Module_v1 Constants
+    // Module_v2 Constants
     uint constant _MAJOR_VERSION = 1;
     uint constant _MINOR_VERSION = 0;
     uint constant _PATCH_VERSION = 0;
     string constant _URL = "https://github.com/organization/module";
-    string constant _TITLE = "Module_v1";
+    string constant _TITLE = "Module_v2";
 
-    IModule_v1.Metadata _METADATA = IModule_v1.Metadata(
+    IModule_v2.Metadata _METADATA = IModule_v2.Metadata(
         _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, _URL, _TITLE
     );
 
     //--------------------------------------------------------------------------
     // Setup
-    function _setUpOrchestrator(IModule_v1 module) internal virtual {
+    function _setUpOrchestrator(IModule_v2 module) internal virtual {
         // Needs to be a proxy for the notInitialized Check
         feeManager = FeeManager_v1(
             address(
@@ -94,8 +95,49 @@ abstract contract ModuleTest is Test {
         impl = address(new FundingManagerV1Mock());
         _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
 
-        impl = address(new AuthorizerV1Mock());
-        _authorizer = AuthorizerV1Mock(Clones.clone(impl));
+        impl = address(new Authorizer_v2_Mock());
+        _authorizer = Authorizer_v2_Mock(Clones.clone(impl));
+
+        _orchestrator.init(
+            _ORCHESTRATOR_ID,
+            address(moduleFactory),
+            modules,
+            _fundingManager,
+            _authorizer,
+            _paymentProcessor,
+            governor
+        );
+
+        _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
+
+        _fundingManager.init(_orchestrator, _METADATA, abi.encode(""));
+        _fundingManager.setToken(IERC20(address(_token)));
+    }
+
+    function _setUpOrchestrator() internal virtual {
+        // Needs to be a proxy for the notInitialized Check
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    address(this), // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+        feeManager.init(address(this), treasury, 0, 0);
+        governor.setFeeManager(address(feeManager));
+
+        address[] memory modules = new address[](0);
+
+        address impl = address(new OrchestratorV1Mock(address(_forwarder)));
+        _orchestrator = OrchestratorV1Mock(Clones.clone(impl));
+
+        impl = address(new FundingManagerV1Mock());
+        _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
+
+        impl = address(new Authorizer_v2_Mock());
+        _authorizer = Authorizer_v2_Mock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
@@ -121,6 +163,8 @@ abstract contract ModuleTest is Test {
     function testInit() public virtual;
 
     function testReinitFails() public virtual;
+
+    function testSupportsInterface() public virtual;
 
     //--------------------------------------------------------------------------
     // Assertion Helper Functions
@@ -257,11 +301,9 @@ abstract contract ModuleTest is Test {
         internal
     {
         _orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v2(paymentProcessor_)
+            address(paymentProcessor_)
         );
         vm.warp(block.timestamp + 73 hours);
-        _orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v2(paymentProcessor_)
-        );
+        _orchestrator.executeSetPaymentProcessor(address(paymentProcessor_));
     }
 }

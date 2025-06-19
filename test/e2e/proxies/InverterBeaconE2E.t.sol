@@ -6,12 +6,12 @@ import "forge-std/Test.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 import {
     IModuleFactory_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -45,7 +45,7 @@ contract InverterBeaconE2E is E2ETest {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule_v1.Metadata DATA = IModule_v1.Metadata(
+    IModule_v2.Metadata DATA = IModule_v2.Metadata(
         MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
     );
 
@@ -75,10 +75,10 @@ contract InverterBeaconE2E is E2ETest {
         );
 
         // Authorizer
-        setUpTokenGatedRoleAuthorizer();
+        setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata, abi.encode(address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 
@@ -123,7 +123,7 @@ contract InverterBeaconE2E is E2ETest {
 
     function test_e2e_InverterBeaconUpgrade() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -132,7 +132,7 @@ contract InverterBeaconE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------
@@ -170,7 +170,7 @@ contract InverterBeaconE2E is E2ETest {
 
     function test_e2e_InverterBeaconShutdown() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -179,7 +179,7 @@ contract InverterBeaconE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
         //--------------------------------------------------------------------------
         // Module E2E Test
@@ -243,7 +243,7 @@ contract InverterBeaconE2E is E2ETest {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule_v1.Metadata memory metadata)
+    function _assumeValidMetadata(IModule_v2.Metadata memory metadata)
         public
         pure
     {

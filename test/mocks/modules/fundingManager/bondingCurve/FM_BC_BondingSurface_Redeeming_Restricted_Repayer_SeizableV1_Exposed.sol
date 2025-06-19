@@ -4,19 +4,19 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 // SuT
 import {
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
-    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
+    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
 } from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
 {
     // -------------------------------------------------------------------------
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
@@ -31,10 +31,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
 
     // -------------------------------------------------------------------------
     // Mock access for internal functions
-
-    function exposed_onlyIfNotBuyAndSellRestrictedModifier() external view {
-        _onlyIfNotBuyAndSellRestrictedModifier();
-    }
 
     function exposed_getRepayableAmount()
         external

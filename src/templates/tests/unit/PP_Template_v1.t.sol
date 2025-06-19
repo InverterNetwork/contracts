@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 // Internal
 import {
     ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
@@ -16,15 +16,15 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {PP_Template_v1_Exposed} from
     "src/templates/tests/unit/PP_Template_v1_Exposed.sol";
 import {
-    IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock,
+    IERC20PaymentClientBase_v3,
+    ERC20PaymentClientBase_v3_Mock,
     ERC20Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 
 // System under Test (SuT)
 import {
     IPP_Template_v1,
-    IPaymentProcessor_v2
+    IPaymentProcessor_v3
 } from "src/templates/modules/PP_Template_v1.sol";
 
 /**
@@ -58,7 +58,7 @@ contract PP_Template_v1_Test is ModuleTest {
     // System under test (SuT)
     PP_Template_v1_Exposed paymentProcessor;
     // Mocks
-    ERC20PaymentClientBaseV2Mock paymentClient;
+    ERC20PaymentClientBase_v3_Mock paymentClient;
 
     //--------------------------------------------------------------------------
     // Setup
@@ -81,8 +81,8 @@ contract PP_Template_v1_Test is ModuleTest {
 
         // Setup other modules needed in the unit tests.
         // In this case a payment client is needed to test the PP_Template_v1.
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBase_v3_Mock());
+        paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
         // Adding the payment client is done through a timelock mechanism
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -104,10 +104,10 @@ contract PP_Template_v1_Test is ModuleTest {
     }
 
     // Test the interface support
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPaymentProcessor_v2).interfaceId
+                type(IPaymentProcessor_v3).interfaceId
             )
         );
         assertTrue(
@@ -134,8 +134,8 @@ contract PP_Template_v1_Test is ModuleTest {
                 └── Then it should revert
     */
     function testProcessPayments_modifierInPlace() public {
-        ERC20PaymentClientBaseV2Mock nonRegisteredClient =
-            new ERC20PaymentClientBaseV2Mock();
+        ERC20PaymentClientBase_v3_Mock nonRegisteredClient =
+            new ERC20PaymentClientBase_v3_Mock();
 
         vm.expectRevert(
             IPP_Template_v1.Module__PP_Template__ClientNotValid.selector

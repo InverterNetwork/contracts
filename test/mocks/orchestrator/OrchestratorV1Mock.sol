@@ -5,13 +5,13 @@ import {
     ModuleManagerBase_v1,
     IModuleManagerBase_v1
 } from "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 
-contract OrchestratorV1Mock is Orchestrator_v1 {
+contract OrchestratorV1Mock is Orchestrator_v2 {
     bool connectToTrustedForwarder = false;
     bool public interceptData;
 
-    constructor(address _trustedForwarder) Orchestrator_v1(_trustedForwarder) {}
+    constructor(address _trustedForwarder) Orchestrator_v2(_trustedForwarder) {}
 
     function flipConnectToTrustedForwarder() external {
         connectToTrustedForwarder = !connectToTrustedForwarder;
@@ -21,7 +21,7 @@ contract OrchestratorV1Mock is Orchestrator_v1 {
         public
         view
         virtual
-        override(Orchestrator_v1)
+        override(Orchestrator_v2)
         returns (bool)
     {
         if (connectToTrustedForwarder) {

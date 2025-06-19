@@ -10,16 +10,16 @@ import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
-import {ERC20PaymentClientBaseV2Mock} from
-    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20PaymentClientBase_v3_Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {FM_DepositVault_v1_Exposed} from
     "@mocks/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
 // Internal Dependencies
 import {
     ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
@@ -31,7 +31,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 contract FM_DepositVaultV1Test is ModuleTest {
     // SuT
     FM_DepositVault_v1_Exposed vault;
-    ERC20PaymentClientBaseV2Mock client;
+    ERC20PaymentClientBase_v3_Mock client;
 
     uint internal constant BPS = 10_000;
 
@@ -44,14 +44,14 @@ contract FM_DepositVaultV1Test is ModuleTest {
         // Init Module
         vault.init(_orchestrator, _METADATA, abi.encode(address(_token)));
 
-        client = new ERC20PaymentClientBaseV2Mock();
+        client = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(client));
 
         vm.prank(address(governor));
         feeManager.setMaxFee(feeManager.BPS());
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             vault.supportsInterface(type(IFM_DepositVault_v1).interfaceId)
         );
@@ -109,7 +109,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         // Deposit
         if (expectedFeeAmount != 0) {
             vm.expectEmit(true, true, true, true);
-            emit IModule_v1.ProtocolFeeTransferred(
+            emit IModule_v2.ProtocolFeeTransferred(
                 address(_token),
                 feeManager.getDefaultProtocolTreasury(),
                 expectedFeeAmount
@@ -144,10 +144,10 @@ contract FM_DepositVaultV1Test is ModuleTest {
     }
 
     function testTransferOrchestratorTokenModifierInPosition() public {
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
         vault.transferOrchestratorToken(address(this), 0);
 
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(IModule_v2.Module__InvalidAddress.selector);
         vm.prank(address(client));
         vault.transferOrchestratorToken(address(0), 0);
     }
@@ -166,7 +166,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(vault)), amount_);
 
         vm.expectEmit(true, true, true, true);
-        emit IModule_v1.ProtocolFeeTransferred(
+        emit IModule_v2.ProtocolFeeTransferred(
             address(_token), treasury_, amount_
         );
 

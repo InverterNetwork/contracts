@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.0;
+
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
+
+// SuT
+import {
+    ERC20PaymentClientBase_v3,
+    IERC20PaymentClientBase_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
+
+// Internal Interfaces
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
+
+// Mocks
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+
+contract ERC20PaymentClientBase_v3_Mock is ERC20PaymentClientBase_v3 {
+    ERC20Mock token;
+
+    mapping(address => uint) public amountPaidCounter;
+    mapping(address => bool) authorized;
+
+    //--------------------------------------------------------------------------
+    // Mock Functions
+
+    function setIsAuthorized(address who, bool to) external {
+        authorized[who] = to;
+    }
+
+    function setOrchestrator(IOrchestrator_v2 orchestrator) external {
+        __Module_orchestrator = orchestrator;
+    }
+
+    function setToken(ERC20Mock token_) external {
+        token = token_;
+    }
+    //--------------------------------------------------------------------------
+    // IERC20PaymentClientBase_v3 Wrapper Functions
+
+    function exposed_addPaymentOrder(PaymentOrder memory order) external {
+        _addPaymentOrder(order);
+    }
+
+    // add a payment order without checking the arguments
+    function addPaymentOrderUnchecked(PaymentOrder memory order) external {
+        // Add order's token amount to current outstanding amount.
+        _outstandingTokenAmounts[order.paymentToken] += order.amount;
+
+        // Add new order to list of oustanding orders.
+        _orders.push(order);
+
+        emit PaymentOrderAdded(
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
+        );
+    }
+
+    function exposed_addPaymentOrders(PaymentOrder[] memory orders) external {
+        _addPaymentOrders(orders);
+    }
+
+    function exposed_addToOutstandingTokenAmounts(address token_, uint amount_)
+        external
+    {
+        _outstandingTokenAmounts[token_] += amount_;
+    }
+
+    //--------------------------------------------------------------------------
+    // IERC20PaymentClientBase_v3 Overriden Functions
+
+    function _ensureTokenBalance(address token_)
+        internal
+        override(ERC20PaymentClientBase_v3)
+    {
+        uint amount = _outstandingTokenAmounts[token_];
+
+        if (ERC20Mock(token_).balanceOf(address(this)) >= amount) {
+            return;
+        } else {
+            uint amtToMint = amount - ERC20Mock(token_).balanceOf(address(this));
+            token.mint(address(this), amtToMint);
+        }
+    }
+
+    function _ensureTokenAllowance(IPaymentProcessor_v3 spender, address _token)
+        internal
+        override(ERC20PaymentClientBase_v3)
+    {
+        token.approve(address(spender), _outstandingTokenAmounts[_token]);
+    }
+
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor_v3)
+        internal
+        view
+        override(ERC20PaymentClientBase_v3)
+        returns (bool)
+    {
+        return authorized[_msgSender()];
+    }
+
+    function amountPaid(address _token, uint amount)
+        public
+        override(ERC20PaymentClientBase_v3)
+    {
+        amountPaidCounter[_token] += amount;
+
+        _outstandingTokenAmounts[_token] -= amount;
+    }
+}

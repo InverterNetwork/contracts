@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 /**
  * @title   Inverter ERC20 Payment Client Base Interface
@@ -32,6 +32,8 @@ import {IPaymentProcessor_v2} from
  *          Afterwards, to be correct, the following data variable should
  *          contain 3 elements of the type specified in the master list, each
  *          stored as bytes32 value.
+ *
+ * @custom:version  v2.0.0
  *
  * @author  Inverter Network
  */

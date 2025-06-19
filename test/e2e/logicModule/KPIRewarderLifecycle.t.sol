@@ -5,24 +5,24 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {ModuleTest, IOrchestrator_v1} from "@unitTest/modules/ModuleTest.sol";
-import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
+import {ModuleTest, IOrchestrator_v2} from "@unitTest/modules/ModuleTest.sol";
+import {IModule_v2, ERC165Upgradeable} from "src/modules/base/Module_v2.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
-import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
+import {PP_Simple_v3, IPaymentProcessor_v3} from "@pp/PP_Simple_v3.sol";
 
 import {
-    LM_PC_KPIRewarder_v2,
-    ILM_PC_KPIRewarder_v2,
-    IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v2
-} from "src/modules/logicModule/LM_PC_KPIRewarder_v2.sol";
+    LM_PC_KPIRewarder_v3,
+    ILM_PC_KPIRewarder_v3,
+    IOptimisticOracleIntegrator_v3,
+    ILM_PC_Staking_v3
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v3.sol";
 
 import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
@@ -43,7 +43,7 @@ Fork testing necessary. Make sure to have a sepolia rpc configured in foundry.to
 
 */
 
-contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
+contract LM_PC_KPIRewarder_v3Lifecycle is E2ETest {
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
@@ -80,9 +80,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
     FM_DepositVault_v1 fundingManager;
-    LM_PC_KPIRewarder_v2 kpiRewarder;
+    AUT_Roles_v2 authorizer;
+    LM_PC_KPIRewarder_v3 kpiRewarder;
 
     ERC20Mock USDC;
     ERC20Mock rewardToken;
@@ -210,10 +211,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
 
         // KPI Rewarder
 
-        setUpLM_PC_KPIRewarder_v2();
+        setUpLM_PC_KPIRewarder_v3();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_KPIRewarder_v2Metadata,
+                LM_PC_KPIRewarder_v3Metadata,
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
@@ -227,7 +228,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         );
     }
 
-    function test_e2e_LM_PC_KPIRewarder_v2Lifecycle() public {
+    function test_e2e_LM_PC_KPIRewarder_v3Lifecycle() public {
         // NOTE: Temporary skip if the rpc is failing.
         if (skipTestsWithFailingRpc) {
             return;
@@ -245,6 +246,8 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
+        authorizer = AUT_Roles_v2(address(orchestrator.authorizer()));
+
         fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
@@ -253,10 +256,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_KPIRewarder_v2).interfaceId
+                    type(ILM_PC_KPIRewarder_v3).interfaceId
                 )
             ) {
-                kpiRewarder = LM_PC_KPIRewarder_v2(modulesList[i]);
+                kpiRewarder = LM_PC_KPIRewarder_v3(modulesList[i]);
                 break;
             }
         }
@@ -279,7 +282,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         _setupUSDC();
 
         // give the automation service the rights to post assertions
-        _prepareLM_PC_KPIRewarder_v2();
+        _prepareLM_PC_KPIRewarder_v3();
 
         // Initialize kpiRewarder setup:
         rewardToken.mint(address(this), REWARD_DEPOSIT_AMOUNT);
@@ -408,7 +411,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     //--------------------------------------------------------------------------
 
     function _getExpectedRewardAmount(
-        ILM_PC_KPIRewarder_v2.KPI memory resolvedKPI,
+        ILM_PC_KPIRewarder_v3.KPI memory resolvedKPI,
         uint assertedValue
     ) internal pure returns (uint) {
         uint rewardAmount;
@@ -471,10 +474,46 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         );
     }
 
-    function _prepareLM_PC_KPIRewarder_v2() internal {
-        kpiRewarder.grantModuleRole(
-            kpiRewarder.ASSERTER_ROLE(), AUTOMATION_SERVICE
-        );
+    function _prepareLM_PC_KPIRewarder_v3() internal {
+        {
+            address[] memory roleMembers = new address[](1);
+            roleMembers[0] = AUTOMATION_SERVICE;
+
+            // Then we select the target contract and function selectors
+            address[] memory targets = new address[](1);
+            targets[0] = address(kpiRewarder);
+
+            bytes4[][] memory selectors = new bytes4[][](1);
+            selectors[0] = new bytes4[](1);
+            selectors[0][0] = kpiRewarder.postAssertion.selector;
+
+            // Create role, adapt permissions and set members
+            orchestrator.authorizer().createRoleAndAddAccessPermissions(
+                "ASSERTER_ROLE",
+                authorizer.getAdminRole(),
+                roleMembers,
+                targets,
+                selectors
+            );
+
+            // make stake, unstake, claimRewards public
+            authorizer.addAccessPermission(
+                address(kpiRewarder),
+                kpiRewarder.stake.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            authorizer.addAccessPermission(
+                address(kpiRewarder),
+                kpiRewarder.unstake.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            authorizer.addAccessPermission(
+                address(kpiRewarder),
+                kpiRewarder.claimRewards.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+        }
+
         _createDummyContinuousKPI(address(kpiRewarder));
     }
 
@@ -488,7 +527,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
             _trancheRewards[i] = trancheRewards[i];
         }
 
-        ILM_PC_KPIRewarder_v2(kpiManager).createKPI(
+        ILM_PC_KPIRewarder_v3(kpiManager).createKPI(
             true, _trancheValues, _trancheRewards
         );
     }

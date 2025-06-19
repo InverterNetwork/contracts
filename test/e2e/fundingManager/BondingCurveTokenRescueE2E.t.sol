@@ -7,20 +7,21 @@ import "forge-std/console.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
+
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
-import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
+import {LM_PC_PaymentRouter_v3} from "@lm/LM_PC_PaymentRouter_v3.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // SuT
 import {
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-} from
-    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+    FM_BC_Bancor_Redeeming_VirtualSupply_v2,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
+import {IBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
 
 contract BondingCurveTokenRescueE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -28,7 +29,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
     ERC20Issuance_v1 issuanceToken;
 
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v2.BondingCurveProperties
         bc_properties;
 
     address alice = address(0xA11CE);
@@ -56,7 +57,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         );
         issuanceToken.setMinter(address(this), true);
 
-        bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+        bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v2
             .BondingCurveProperties({
             formula: address(formula),
             reserveRatioForBuying: 333_333,
@@ -101,15 +102,26 @@ contract BondingCurveTokenRescueE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
+
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v2(
             address(orchestrator.fundingManager())
         );
 
         issuanceToken.setMinter(address(fundingManager), true);
+
+        // Set up Roles
+        // Make buy public
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
+        );
 
         // Mint some tokens to alice in order to fund the fundingmanager.
 
@@ -177,12 +189,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
         // Transfer all collateral to the new BC
 
-        LM_PC_PaymentRouter_v2(paymentRouter).grantModuleRole(
-            LM_PC_PaymentRouter_v2(paymentRouter).PAYMENT_PUSHER_ROLE(),
-            address(this)
-        );
-
-        LM_PC_PaymentRouter_v2(paymentRouter).pushPayment(
+        LM_PC_PaymentRouter_v3(paymentRouter).pushPayment(
             newBondingCurve, // recipient
             address(token), // token
             // This represented the allowed amount of collateral token to be transferred
@@ -194,16 +201,12 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         );
 
         // Initiate setting of new Funding Manager
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(newBondingCurve)
-        );
+        orchestrator.initiateSetFundingManagerWithTimelock(newBondingCurve);
 
         // wait for timelock to expire
         vm.warp(block.timestamp + 1 weeks);
 
-        orchestrator.executeSetFundingManager(
-            IFundingManager_v1(newBondingCurve)
-        );
+        orchestrator.executeSetFundingManager(newBondingCurve);
 
         // Enable Minting again for new BC
 
@@ -218,11 +221,19 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         assertEq(address(orchestrator.fundingManager()), newBondingCurve);
 
         fundingManager =
-            FM_BC_Bancor_Redeeming_VirtualSupply_v1(newBondingCurve);
+            FM_BC_Bancor_Redeeming_VirtualSupply_v2(newBondingCurve);
 
         assertEq(oldIssuanceSupply, fundingManager.getVirtualIssuanceSupply());
         assertEq(
             oldCollateralSupply, fundingManager.getVirtualCollateralSupply()
+        );
+
+        // Assign new Permissions to the new BC
+
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
         );
 
         // Bob performs a buy

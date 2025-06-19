@@ -18,7 +18,7 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 import {
     IModuleFactory_v1,
-    IModule_v1
+    IModule_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {InverterBeaconV1OwnableMock} from
@@ -118,7 +118,7 @@ contract GovernorV1Test is Test {
     }
 
     function testLinkedBeaconsEmpty(bool empty) public {
-        IModule_v1.Metadata memory metadata;
+        IModule_v2.Metadata memory metadata;
         if (!empty) {
             vm.prank(communityMultisig);
             gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
@@ -432,7 +432,7 @@ contract GovernorV1Test is Test {
         gov.moduleFactoryInitCallback(newBeacons);
 
         // linkedBeaconsEmpty
-        IModule_v1.Metadata memory metadata;
+        IModule_v2.Metadata memory metadata;
         vm.prank(communityMultisig);
         gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
         vm.expectRevert(
@@ -609,7 +609,7 @@ contract GovernorV1Test is Test {
     // Test: Register Beacons
 
     function testRegisterMetadataInModuleFactory() public {
-        IModule_v1.Metadata memory metadata;
+        IModule_v2.Metadata memory metadata;
 
         vm.prank(communityMultisig);
         gov.registerMetadataInModuleFactory(
@@ -631,7 +631,7 @@ contract GovernorV1Test is Test {
             )
         );
 
-        IModule_v1.Metadata memory metadata;
+        IModule_v2.Metadata memory metadata;
         gov.registerMetadataInModuleFactory(
             metadata, IInverterBeacon_v1(ownedBeaconMock)
         );

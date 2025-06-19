@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import "@lm/interfaces/IOraclePrice_v1.sol";
-import "src/modules/base/Module_v1.sol";
+import "src/modules/base/Module_v2.sol";
 
-contract OraclePrice_Mock is IOraclePrice_v1, Module_v1 {
+contract OraclePrice_Mock is IOraclePrice_v1, Module_v2 {
     uint private _priceForIssuance;
     uint private _priceForRedemption;
 
@@ -20,10 +20,10 @@ contract OraclePrice_Mock is IOraclePrice_v1, Module_v1 {
     }
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory /* configData */
-    ) public override(Module_v1) initializer {
+    ) public override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
         _priceForIssuance = 1e6; // Default price 1:1
         _priceForRedemption = 1e6; // Default price 1:1

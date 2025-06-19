@@ -1,0 +1,326 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
+
+// Internal Interfaces
+import {IRedeemingBondingCurveBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
+
+// Internal Dependencies
+import {BondingCurveBase_v2} from
+    "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
+/**
+ * @title   Inverter Redeeming Bonding Curve Funding Manager Base
+ *
+ * @notice  Manages the redemption of issuance for collateral along a bonding curve in the
+ *          Inverter Network, including fee handling and sell functionality control.
+ *
+ * @dev     Inherits from {BondingCurveBase_v2}. Extends by providing core functionalities for
+ *          redeem operations, fee adjustments, and redemption calculations.
+ *          Fee calculations utilize BPS for precision. Redeem-specific calculations should be
+ *          implemented in derived contracts.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 2.0.0
+ *
+ * @author  Inverter Network
+ */
+abstract contract RedeemingBondingCurveBase_v2 is
+    IRedeemingBondingCurveBase_v2,
+    BondingCurveBase_v2
+{
+    /// @inheritdoc ERC165Upgradeable
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(BondingCurveBase_v2)
+        returns (bool)
+    {
+        return interfaceId == type(IRedeemingBondingCurveBase_v2).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
+    using SafeERC20 for IERC20;
+
+    // -------------------------------------------------------------------------
+    // Storage
+
+    /// @dev	Indicates whether the sell functionality is open or not.
+    ///         Enabled = true || disabled = false.
+    bool public sellIsOpen;
+    /// @dev	Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
+    uint public sellFee;
+
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
+    // -------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev	Modifier to guarantee the selling functionality is enabled.
+    modifier sellingIsEnabled() {
+        _sellingIsEnabledModifier();
+        _;
+    }
+
+    // -------------------------------------------------------------------------
+    // Public Functions
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        permissioned
+        sellingIsEnabled
+        validReceiver(_receiver)
+    {
+        _sellOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function sell(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        permissioned
+        sellingIsEnabled
+    {
+        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+    }
+
+    // -------------------------------------------------------------------------
+    // Permissioned Functions
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function openSell() external virtual permissioned {
+        sellIsOpen = true;
+        emit SellingEnabled();
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function closeSell() external virtual permissioned {
+        sellIsOpen = false;
+        emit SellingDisabled();
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function setSellFee(uint _fee) external virtual permissioned {
+        _setSellFee(_fee);
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function calculateSaleReturn(uint _depositAmount)
+        public
+        view
+        virtual
+        returns (uint redeemAmount)
+    {
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
+
+        // Get protocol fee percentages
+        (
+            /* collateralTreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
+        );
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        // Calculate redeem amount from formula
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Public Functions Implemented in Downstream Contract
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v2
+    function getStaticPriceForSelling() external view virtual returns (uint);
+
+    // -------------------------------------------------------------------------
+    // Internal Functions Implemented in Downstream Contract
+
+    /// @dev    Function used for wrapping the call to the external contract responsible for
+    ///         calculating the redeeming amount. This function is an abstract function and must be
+    ///         implemented in the downstream contract.
+    /// @param  _depositAmount The amount of issuing token that is deposited.
+    /// @return uint Return the amount of collateral to be redeemed.
+    function _redeemTokensFormulaWrapper(uint _depositAmount)
+        internal
+        view
+        virtual
+        returns (uint);
+
+    // -------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev    Executes a sell order by transferring tokens from the receiver to the contract,.
+    ///         calculating the redeem amount, and finally transferring the redeem amount back to the receiver.
+    ///         This function is internal and not intended for end-user interaction.
+    ///         PLEASE NOTE:
+    ///         The current implementation only requires that enough collateral token is held for redeeming
+    ///         to be possible. No further functionality is implemented which would manages the outflow of
+    ///         collateral, e.g., restricting max Redeeming amount per user, or a Redeeming amount which
+    ///         differes from the actual balance.
+    ///         Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
+    ///         contract for redemption.
+    /// @param  _receiver The address receiving the redeem amount.
+    /// @param  _depositAmount The amount of tokens being sold by the receiver.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from
+    ///         the collateral token amount of this contract.
+    /// @return issuanceFeeAmount The amount of issuance token subtracted as fee.
+    function _sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        internal
+        virtual
+        returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
+    {
+        // ------------------------------------------------------------
+        // Checks
+
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+
+        // ------------------------------------------------------------
+        // Effects
+
+        // Get protocol fee percentages and treasury addresses
+        (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
+        );
+
+        uint issuanceProtocolFeeAmount;
+        uint projectFeeAmount;
+        uint netDeposit;
+
+        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
+        // fee enabled
+        (netDeposit, issuanceProtocolFeeAmount, /* projectFee */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        issuanceFeeAmount = issuanceProtocolFeeAmount;
+
+        // Calculate redeem amount based on upstream formula
+        uint collateralRedeemAmount = _redeemTokensFormulaWrapper(netDeposit);
+
+        totalCollateralTokenMovedOut = collateralRedeemAmount;
+
+        // Cache Collateral Token
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+
+        uint collateralProtocolFeeAmount;
+
+        // Get net amount, protocol and project fee amounts
+        (collateralRedeemAmount, collateralProtocolFeeAmount, projectFeeAmount)
+        = _calculateNetAndSplitFees(
+            collateralRedeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Require that enough collateral tokens are held to cover the project
+        // collateral fee.
+        if (
+            projectCollateralFeeCollected + projectFeeAmount
+                > collateralToken.balanceOf(address(this))
+        ) {
+            revert
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee(
+            );
+        }
+
+        // Revert when the redeem amount is lower than minimum amount the user expects
+        if (collateralRedeemAmount < _minAmountOut) {
+            revert Module__BondingCurveBase__InsufficientOutputAmount();
+        }
+
+        // ------------------------------------------------------------
+        // Interactions
+
+        // Burn issued token from user
+        _burn(_msgSender(), _depositAmount);
+
+        // Process the protocol fee on incoming issuance tokens. We can
+        // re-mint since we aren't paying out the backing collateral.
+        _processProtocolFeeViaMinting(
+            issuanceTreasury, issuanceProtocolFeeAmount
+        );
+
+        // Process protocol fee on outgoing collateral tokens
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, collateralToken, collateralProtocolFeeAmount
+        );
+
+        // Process project fee if applicable
+        if (projectFeeAmount > 0) {
+            _projectFeeCollected(projectFeeAmount);
+        }
+
+        // Use virtual function to handle collateral tokens
+        _handleCollateralTokensAfterSell(_receiver, collateralRedeemAmount);
+
+        // Emit event
+        emit TokensSold(
+            _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
+        );
+    }
+
+    /// @notice Virtual function to handle collateral tokens after a successful sell.
+    /// @dev    The downstream contract is responsible for implementing checks
+    ///         to ensure the contract has the right balance.
+    /// @param  _receiver The address for which the collateral tokens will be handled.
+    /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
+    function _handleCollateralTokensAfterSell(
+        address _receiver,
+        uint _collateralTokenAmount
+    ) internal virtual;
+
+    ///  @dev    Checks if the sell functionality is enabled.
+    function _sellingIsEnabledModifier() internal view {
+        if (!sellIsOpen) {
+            revert
+                Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
+        }
+    }
+
+    /// @dev	Sets the sell transaction fee, expressed in BPS.
+    /// @param  _fee The fee percentage to set for sell transactions.
+    function _setSellFee(uint _fee) internal virtual {
+        _validateProjectFee(_fee);
+        emit SellFeeUpdated(_fee, sellFee);
+        sellFee = _fee;
+    }
+}

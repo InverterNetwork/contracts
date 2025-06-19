@@ -4,15 +4,15 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
-    IModule_v1
+    IOrchestrator_v2,
+    IModule_v2
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
     IFundingManager_v1,
-    IAuthorizer_v1,
-    IPaymentProcessor_v2,
+    IAuthorizer_v2,
+    IPaymentProcessor_v3,
     IGovernor_v1
-} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+} from "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
@@ -40,12 +40,12 @@ import {
 /**
  * @title   Inverter Orchestrator Factory
  *
- * @notice  {OrchestratorFactory_v1} facilitates the deployment of {Orchestrator_v1}s and their
+ * @notice  {OrchestratorFactory_v1} facilitates the deployment of {Orchestrator_v2}s and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
  * @dev     Utilizes {ERC2771ContextUpgradeable} for meta-transaction capabilities and {ERC165Upgradeable} for interface
- *          detection. {Orchestrator_v1}s are deployed through EIP-1167 minimal proxies for efficiency.
+ *          detection. {Orchestrator_v2}s are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
  *
@@ -82,10 +82,10 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
 
-    /// @dev	Maps the `id` to the {Orchestrator_v1}s.
+    /// @dev	Maps the `id` to the {Orchestrator_v2}s.
     mapping(uint => address) private _orchestrators;
 
-    /// @dev	The counter of the current {Orchestrator_v1} `id`.
+    /// @dev	The counter of the current {Orchestrator_v2} `id`.
     /// @dev	Starts counting from 1.
     uint private _orchestratorIdCounter;
 
@@ -118,7 +118,7 @@ contract OrchestratorFactory_v1 is
 
     /// @notice The factories initializer function.
     /// @param  governor_ The address of the {Governor_v1} contract.
-    /// @param  beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v1} implementation.
+    /// @param  beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v2} implementation.
     /// @param  moduleFactory_ The address of the {ModuleFactory_v1} contract.
     function init(
         address governor_,
@@ -149,7 +149,7 @@ contract OrchestratorFactory_v1 is
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IOrchestrator_v1) {
+    ) external returns (IOrchestrator_v2) {
         address proxy;
         // If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
@@ -183,25 +183,25 @@ contract OrchestratorFactory_v1 is
         address fundingManager = IModuleFactory_v1(moduleFactory)
             .createAndInitModule(
             fundingManagerConfig.metadata,
-            IOrchestrator_v1(proxy),
+            IOrchestrator_v2(proxy),
             fundingManagerConfig.configData,
             workflowConfig
         );
 
-        // Deploy and cache {IAuthorizer_v1} module.
+        // Deploy and cache {IAuthorizer_v2} module.
         address authorizer = IModuleFactory_v1(moduleFactory)
             .createAndInitModule(
             authorizerConfig.metadata,
-            IOrchestrator_v1(proxy),
+            IOrchestrator_v2(proxy),
             authorizerConfig.configData,
             workflowConfig
         );
 
-        // Deploy and cache {IPaymentProcessor_v2} module.
+        // Deploy and cache {IPaymentProcessor_v3} module.
         address paymentProcessor = IModuleFactory_v1(moduleFactory)
             .createAndInitModule(
             paymentProcessorConfig.metadata,
-            IOrchestrator_v1(proxy),
+            IOrchestrator_v2(proxy),
             paymentProcessorConfig.configData,
             workflowConfig
         );
@@ -213,20 +213,20 @@ contract OrchestratorFactory_v1 is
         emit OrchestratorCreated(_orchestratorIdCounter, proxy);
 
         // Initialize orchestrator.
-        IOrchestrator_v1(proxy).init(
+        IOrchestrator_v2(proxy).init(
             _orchestratorIdCounter,
             moduleFactory,
             modules,
             IFundingManager_v1(fundingManager),
-            IAuthorizer_v1(authorizer),
-            IPaymentProcessor_v2(paymentProcessor),
+            IAuthorizer_v2(authorizer),
+            IPaymentProcessor_v3(paymentProcessor),
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
         // Init the rest of the modules
         _initModules(modules, moduleConfigs, proxy);
 
-        return IOrchestrator_v1(proxy);
+        return IOrchestrator_v2(proxy);
     }
 
     /// @inheritdoc IOrchestratorFactory_v1
@@ -249,7 +249,7 @@ contract OrchestratorFactory_v1 is
 
     /// @dev	Creates the modules based on their `moduleConfigs.
     /// @param  moduleConfigs The config data of the modules that will be created with this function call.
-    /// @param  orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    /// @param  orchestratorProxy The address of the {Orchestrator_v2} Proxy that will be linked to the modules.
     /// @param  workflowConfig The workflow's config data.
     function _createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
@@ -262,7 +262,7 @@ contract OrchestratorFactory_v1 is
         for (uint i; i < moduleConfigs.length; ++i) {
             modules[i] = IModuleFactory_v1(moduleFactory).createModuleProxy(
                 moduleConfigs[i].metadata,
-                IOrchestrator_v1(orchestratorProxy),
+                IOrchestrator_v2(orchestratorProxy),
                 workflowConfig
             );
         }
@@ -272,7 +272,7 @@ contract OrchestratorFactory_v1 is
     /// @dev	Internal function to initialize the modules.
     /// @param  modules The modules to initialize.
     /// @param  moduleConfigs The config data of the modules that will be initialized.
-    /// @param  proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    /// @param  proxy The address of the {Orchestrator_v2} Proxy that will be linked to the modules.
     function _initModules(
         address[] memory modules,
         ModuleConfig[] memory moduleConfigs,
@@ -281,8 +281,8 @@ contract OrchestratorFactory_v1 is
         // Deploy and cache optional modules.
 
         for (uint i; i < modules.length; ++i) {
-            IModule_v1(modules[i]).init(
-                IOrchestrator_v1(proxy),
+            IModule_v2(modules[i]).init(
+                IOrchestrator_v2(proxy),
                 moduleConfigs[i].metadata,
                 moduleConfigs[i].configData
             );

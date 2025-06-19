@@ -5,19 +5,19 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 // SuT
 import {
-    LM_PC_RecurringPayments_v2,
-    ILM_PC_RecurringPayments_v2
-} from "@lm/LM_PC_RecurringPayments_v2.sol";
+    LM_PC_RecurringPayments_v3,
+    ILM_PC_RecurringPayments_v3
+} from "@lm/LM_PC_RecurringPayments_v3.sol";
 
-import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+import {PP_Streaming_v3} from "src/modules/paymentProcessor/PP_Streaming_v3.sol";
 
-import {IPP_Streaming_v2} from "@pp/interfaces/IPP_Streaming_v2.sol";
+import {IPP_Streaming_v3} from "@pp/interfaces/IPP_Streaming_v3.sol";
 
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -45,10 +45,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     uint defaultEnd = 30;
 
     // Modules, for reference between functions
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
     FM_DepositVault_v1 fundingManager;
-    LM_PC_RecurringPayments_v2 recurringPaymentManager;
-    PP_Streaming_v2 streamingPaymentProcessor;
+    LM_PC_RecurringPayments_v3 recurringPaymentManager;
+    PP_Streaming_v3 streamingPaymentProcessor;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -98,7 +98,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
     function init() private {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -116,11 +116,11 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_RecurringPayments_v2).interfaceId
+                    type(ILM_PC_RecurringPayments_v3).interfaceId
                 )
             ) {
                 recurringPaymentManager =
-                    LM_PC_RecurringPayments_v2(modulesList[i]);
+                    LM_PC_RecurringPayments_v3(modulesList[i]);
                 break;
             }
         }
@@ -131,10 +131,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(IPP_Streaming_v2).interfaceId
+                    type(IPP_Streaming_v3).interfaceId
                 )
             ) {
-                streamingPaymentProcessor = PP_Streaming_v2(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v3(modulesList[i]);
                 break;
             }
         }
@@ -153,7 +153,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         init();
 
         // ---------------------------------------------------------------------------------------------------
-        // User side of the PP_Streaming_v2
+        // User side of the PP_Streaming_v3
 
         // Create 3 different Payments
 
@@ -177,7 +177,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // Check Payments
         // viewAllPaymentOrders
         // Lets see all avaialable orders
-        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v3.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 
@@ -292,7 +292,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.trigger();
 
         // Check if everyone has a running payment active
-        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v3.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 

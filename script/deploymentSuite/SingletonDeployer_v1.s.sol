@@ -47,38 +47,37 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     // Modules
 
     // Authorizer
-    address public impl_mod_Aut_Roles_v1;
-    address public impl_mod_Aut_TokenGated_Roles_v1;
-    address public impl_mod_Aut_Ext_VotingRoles_v1;
+    address public impl_mod_AUT_Roles_v2;
+    address public impl_mod_AUT_TokenGated_Roles_v2;
+    address public impl_mod_AUT_EXT_VotingRoles_v2;
 
     // Funding Managers
-    address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
-    address public impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1;
-    address public impl_mod_FM_BC_BondingSurface_Redeeming_v1;
+    address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v2;
+    address public impl_mod_FM_BC_BondingSurface_Redeeming_v2;
     address public
-        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1;
+        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2;
     address public impl_mod_FM_DepositVault_v1;
-    address public impl_mod_FM_PC_Oracle_Redeeming_v1;
+    address public impl_mod_FM_PC_Oracle_Redeeming_v2;
 
     // Funding Managers - Extensions
-    address public impl_mod_FM_EXT_TokenVault_v1;
+    address public impl_mod_FM_EXT_TokenVault_v2;
 
     // Logic Modules
     address public impl_mod_LM_PC_Oracle_Permissioned_v1;
-    address public impl_mod_LM_PC_Bounties_v2;
-    address public impl_mod_LM_PC_KPIRewarder_v2;
-    address public impl_mod_LM_PC_PaymentRouter_v2;
-    address public impl_mod_LM_PC_RecurringPayments_v2;
-    address public impl_mod_LM_PC_Staking_v2;
+    address public impl_mod_LM_PC_Bounties_v3;
+    address public impl_mod_LM_PC_KPIRewarder_v3;
+    address public impl_mod_LM_PC_PaymentRouter_v3;
+    address public impl_mod_LM_PC_RecurringPayments_v3;
+    address public impl_mod_LM_PC_Staking_v3;
 
     // Payment Processors
-    address public impl_mod_PP_Queue_ManualExecution_v1;
-    address public impl_mod_PP_Queue_v1;
-    address public impl_mod_PP_Simple_v2;
-    address public impl_mod_PP_Streaming_v2;
+    address public impl_mod_PP_Queue_ManualExecution_v2;
+    address public impl_mod_PP_Queue_v2;
+    address public impl_mod_PP_Simple_v3;
+    address public impl_mod_PP_Streaming_v3;
 
     // Orchestrator
-    address public impl_orc_Orchestrator_v1;
+    address public impl_orc_Orchestrator_v2;
 
     //--------------------------------------------------------------------------
     // Factory Usage
@@ -164,47 +163,40 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Authorizer
         console2.log("  -- Authorizer");
 
-        impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
-            "AUT_Roles_v1", vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
+        impl_mod_AUT_Roles_v2 = deployAndLogWithCreate2(
+            "AUT_Roles_v2", vm.getCode("AUT_Roles_v2.sol:AUT_Roles_v2")
         );
-        impl_mod_Aut_TokenGated_Roles_v1 = deployAndLogWithCreate2(
-            "AUT_TokenGated_Roles_v1",
-            vm.getCode("AUT_TokenGated_Roles_v1.sol:AUT_TokenGated_Roles_v1")
+        impl_mod_AUT_TokenGated_Roles_v2 = deployAndLogWithCreate2(
+            "AUT_TokenGated_Roles_v2",
+            vm.getCode("AUT_TokenGated_Roles_v2.sol:AUT_TokenGated_Roles_v2")
         );
-        impl_mod_Aut_Ext_VotingRoles_v1 = deployAndLogWithCreate2(
-            "AUT_EXT_VotingRoles_v1",
-            vm.getCode("AUT_EXT_VotingRoles_v1.sol:AUT_EXT_VotingRoles_v1")
+        impl_mod_AUT_EXT_VotingRoles_v2 = deployAndLogWithCreate2(
+            "AUT_EXT_VotingRoles_v2",
+            vm.getCode("AUT_EXT_VotingRoles_v2.sol:AUT_EXT_VotingRoles_v2")
         );
 
         // Funding Managers
         console2.log("  -- Funding Managers");
 
-        impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
+        impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v2 =
         deployAndLogWithCreate2(
-            "FM_BC_Bancor_Redeeming_VirtualSupply_v1",
+            "FM_BC_Bancor_Redeeming_VirtualSupply_v2",
             vm.getCode(
-                "FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v1"
-            )
-        );
-        impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 =
-        deployAndLogWithCreate2(
-            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1",
-            vm.getCode(
-                "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
+                "FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v2"
             )
         );
 
-        impl_mod_FM_BC_BondingSurface_Redeeming_v1 = deployAndLogWithCreate2(
-            "FM_BC_BondingSurface_Redeeming_v1",
+        impl_mod_FM_BC_BondingSurface_Redeeming_v2 = deployAndLogWithCreate2(
+            "FM_BC_BondingSurface_Redeeming_v2",
             vm.getCode(
-                "FM_BC_BondingSurface_Redeeming_v1.sol:FM_BC_BondingSurface_Redeeming_v1"
+                "FM_BC_BondingSurface_Redeeming_v2.sol:FM_BC_BondingSurface_Redeeming_v2"
             )
         );
-        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 =
+        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 =
         deployAndLogWithCreate2(
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1",
+            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2",
             vm.getCode(
-                "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol:FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1"
+                "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol:FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
             )
         );
 
@@ -213,81 +205,81 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         );
 
-        impl_mod_FM_PC_Oracle_Redeeming_v1 = deployAndLogWithCreate2(
-            "FM_PC_Oracle_Redeeming_v1",
+        impl_mod_FM_PC_Oracle_Redeeming_v2 = deployAndLogWithCreate2(
+            "FM_PC_Oracle_Redeeming_v2",
             vm.getCode(
-                "FM_PC_Oracle_Redeeming_v1.sol:FM_PC_Oracle_Redeeming_v1"
+                "FM_PC_Oracle_Redeeming_v2.sol:FM_PC_Oracle_Redeeming_v2"
             )
         );
 
         // Funding Manager - Extensions
         console2.log("  --- Funding Managers - Extensions");
 
-        impl_mod_FM_EXT_TokenVault_v1 = deployAndLogWithCreate2(
-            "FM_EXT_TokenVault_v1",
-            vm.getCode("FM_EXT_TokenVault_v1.sol:FM_EXT_TokenVault_v1")
+        impl_mod_FM_EXT_TokenVault_v2 = deployAndLogWithCreate2(
+            "FM_EXT_TokenVault_v2",
+            vm.getCode("FM_EXT_TokenVault_v2.sol:FM_EXT_TokenVault_v2")
         );
 
         // Logic Modules
         console2.log("  -- Logic Modules");
 
         impl_mod_LM_PC_Oracle_Permissioned_v1 = deployAndLogWithCreate2(
-            "LM_Oracle_Permissioned_v1",
+            "LM_Oracle_Permissioned_v2",
             vm.getCode(
-                "LM_Oracle_Permissioned_v1.sol:LM_Oracle_Permissioned_v1"
+                "LM_Oracle_Permissioned_v2.sol:LM_Oracle_Permissioned_v2"
             )
         );
 
-        impl_mod_LM_PC_Bounties_v2 = deployAndLogWithCreate2(
-            "LM_PC_Bounties_v2",
-            vm.getCode("LM_PC_Bounties_v2.sol:LM_PC_Bounties_v2")
+        impl_mod_LM_PC_Bounties_v3 = deployAndLogWithCreate2(
+            "LM_PC_Bounties_v3",
+            vm.getCode("LM_PC_Bounties_v3.sol:LM_PC_Bounties_v3")
         );
-        impl_mod_LM_PC_KPIRewarder_v2 = deployAndLogWithCreate2(
-            "LM_PC_KPIRewarder_v2",
-            vm.getCode("LM_PC_KPIRewarder_v2.sol:LM_PC_KPIRewarder_v2")
+        impl_mod_LM_PC_KPIRewarder_v3 = deployAndLogWithCreate2(
+            "LM_PC_KPIRewarder_v3",
+            vm.getCode("LM_PC_KPIRewarder_v3.sol:LM_PC_KPIRewarder_v3")
         );
-        impl_mod_LM_PC_PaymentRouter_v2 = deployAndLogWithCreate2(
-            "LM_PC_PaymentRouter_v2",
-            vm.getCode("LM_PC_PaymentRouter_v2.sol:LM_PC_PaymentRouter_v2")
+        impl_mod_LM_PC_PaymentRouter_v3 = deployAndLogWithCreate2(
+            "LM_PC_PaymentRouter_v3",
+            vm.getCode("LM_PC_PaymentRouter_v3.sol:LM_PC_PaymentRouter_v3")
         );
-        impl_mod_LM_PC_RecurringPayments_v2 = deployAndLogWithCreate2(
-            "LM_PC_RecurringPayments_v2",
+        impl_mod_LM_PC_RecurringPayments_v3 = deployAndLogWithCreate2(
+            "LM_PC_RecurringPayments_v3",
             vm.getCode(
-                "LM_PC_RecurringPayments_v2.sol:LM_PC_RecurringPayments_v2"
+                "LM_PC_RecurringPayments_v3.sol:LM_PC_RecurringPayments_v3"
             )
         );
-        impl_mod_LM_PC_Staking_v2 = deployAndLogWithCreate2(
-            "LM_PC_Staking_v2",
-            vm.getCode("LM_PC_Staking_v2.sol:LM_PC_Staking_v2")
+        impl_mod_LM_PC_Staking_v3 = deployAndLogWithCreate2(
+            "LM_PC_Staking_v3",
+            vm.getCode("LM_PC_Staking_v3.sol:LM_PC_Staking_v3")
         );
 
         // Payment Processors
         console2.log("  -- Payment Processors");
 
-        impl_mod_PP_Queue_ManualExecution_v1 = deployAndLogWithCreate2(
-            "PP_Queue_ManualExecution_v1",
+        impl_mod_PP_Queue_ManualExecution_v2 = deployAndLogWithCreate2(
+            "PP_Queue_ManualExecution_v2",
             vm.getCode(
-                "PP_Queue_ManualExecution_v1.sol:PP_Queue_ManualExecution_v1"
+                "PP_Queue_ManualExecution_v2.sol:PP_Queue_ManualExecution_v2"
             )
         );
-        impl_mod_PP_Queue_v1 = deployAndLogWithCreate2(
-            "PP_Queue_v1", vm.getCode("PP_Queue_v1.sol:PP_Queue_v1")
+        impl_mod_PP_Queue_v2 = deployAndLogWithCreate2(
+            "PP_Queue_v2", vm.getCode("PP_Queue_v2.sol:PP_Queue_v2")
         );
 
-        impl_mod_PP_Simple_v2 = deployAndLogWithCreate2(
-            "PP_Simple_v2", vm.getCode("PP_Simple_v2.sol:PP_Simple_v2")
+        impl_mod_PP_Simple_v3 = deployAndLogWithCreate2(
+            "PP_Simple_v3", vm.getCode("PP_Simple_v3.sol:PP_Simple_v3")
         );
-        impl_mod_PP_Streaming_v2 = deployAndLogWithCreate2(
-            "PP_Streaming_v2", vm.getCode("PP_Streaming_v2.sol:PP_Streaming_v2")
+        impl_mod_PP_Streaming_v3 = deployAndLogWithCreate2(
+            "PP_Streaming_v3", vm.getCode("PP_Streaming_v3.sol:PP_Streaming_v3")
         );
 
         // Orchestrator
         console2.log("  - Orchestrator");
 
-        impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(
-            "Orchestrator_v1",
+        impl_orc_Orchestrator_v2 = deployAndLogWithCreate2(
+            "Orchestrator_v2",
             abi.encodePacked(
-                vm.getCode("Orchestrator_v1.sol:Orchestrator_v1"),
+                vm.getCode("Orchestrator_v2.sol:Orchestrator_v2"),
                 abi.encode(transactionForwarder)
             )
         );

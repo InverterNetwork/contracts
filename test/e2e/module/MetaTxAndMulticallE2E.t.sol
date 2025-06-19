@@ -4,20 +4,20 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 
 // Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v2
 } from "test/e2e/E2ETest.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 import {
-    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
-} from "@lm/LM_PC_Bounties_v2.sol";
+    LM_PC_Bounties_v3, ILM_PC_Bounties_v3
+} from "@lm/LM_PC_Bounties_v3.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
@@ -49,11 +49,10 @@ contract MetaTxAndMulticallE2E is E2ETest {
         );
 
         // Authorizer
-        setUpTokenGatedRoleAuthorizer();
+        setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 
@@ -76,7 +75,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMetaTransaction() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -85,7 +84,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------
@@ -146,32 +145,79 @@ contract MetaTxAndMulticallE2E is E2ETest {
             FM_DepositVault_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
+    }
 
-        //-----------------------------------------------------
-        // Call Function with role
+    function test_e2e_SendMetaTransaction_WithRole() public {
+        //--------------------------------------------------------------------------
+        // Orchestrator_v2 Initialization
+        //--------------------------------------------------------------------------
+
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
+        });
+
+        IOrchestrator_v2 orchestrator =
+            _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
+
+        AUT_Roles_v2 authorizer =
+            AUT_Roles_v2(address(orchestrator.authorizer()));
+
+        //--------------------------------------------------------------------------
+        // Module E2E Test
+        //--------------------------------------------------------------------------
+
         // In this example we're gonna call the bountyManagers createBounty Function
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v2 bountyManager;
+        LM_PC_Bounties_v3 bountyManager;
 
-        address[] memory modulesList = orchestrator.listModules();
-        for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
-            returns (bool) {
-                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
-                break;
-            } catch {
-                continue;
+        {
+            address[] memory modulesList = orchestrator.listModules();
+            for (uint i; i < modulesList.length; ++i) {
+                try ILM_PC_Bounties_v3(modulesList[i]).isExistingBountyId(0)
+                returns (bool) {
+                    bountyManager = LM_PC_Bounties_v3(modulesList[i]);
+                    break;
+                } catch {
+                    continue;
+                }
             }
         }
-        // Give the signer address the according role
-        bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), signer
+        //-----------------------------------------------------
+        // Create signer
+
+        uint signerPrivateKey = 0xa11ce;
+        address signer = vm.addr(signerPrivateKey);
+
+        // Create and assign role for the signer
+
+        // Members of the role
+        address[] memory roleMembers = new address[](1);
+        roleMembers[0] = signer;
+        // Target contract and function selectors
+        address[] memory targets = new address[](1);
+        targets[0] = address(bountyManager);
+        bytes4[][] memory selectors = new bytes4[][](1);
+        selectors[0] = new bytes4[](1);
+        selectors[0][0] = bountyManager.addBounty.selector;
+
+        // Create role and set members
+        orchestrator.authorizer().createRoleAndAddAccessPermissions(
+            "BOUNTY_ISSUER",
+            authorizer.getAdminRole(),
+            roleMembers,
+            targets,
+            selectors
         );
 
+        //-----------------------------------------------------
         // Then we need to create the ForwardRequest
-        req = ERC2771ForwarderUpgradeable.ForwardRequestData({
+
+        ERC2771ForwarderUpgradeable.ForwardRequestData memory req =
+        ERC2771ForwarderUpgradeable.ForwardRequestData({
             from: signer,
             to: address(bountyManager),
             value: 0,
@@ -189,12 +235,12 @@ contract MetaTxAndMulticallE2E is E2ETest {
         });
 
         // Create the digest needed to create the signature
-        digest = forwarder.createDigest(req);
+        bytes32 digest = forwarder.createDigest(req);
 
         // Create Signature with digest (This has to be handled by the frontend)
         vm.prank(signer);
-        (v, r, s) = vm.sign(signerPrivateKey, digest);
-        signature = abi.encodePacked(r, s, v);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
 
         req.signature = signature;
 
@@ -205,9 +251,9 @@ contract MetaTxAndMulticallE2E is E2ETest {
         assertTrue(bountyManager.isExistingBountyId(1));
     }
 
-    function test_e2e_SendMulticall() public {
+    function test_e2e_SendMulticall_WithRole() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -216,7 +262,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         // lets use this example user
@@ -262,21 +308,39 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v2 bountyManager;
+        LM_PC_Bounties_v3 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v3(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v3(modulesList[i]);
                 break;
             } catch {
                 continue;
             }
         }
 
-        // Give the signer address the according role
-        bountyManager.grantModuleRole(bountyManager.BOUNTY_ISSUER_ROLE(), user);
+        // Create and assign role for the user
+
+        // Members of the role
+        address[] memory roleMembers = new address[](1);
+        roleMembers[0] = user;
+        // Target contract and function selectors
+        address[] memory targets = new address[](1);
+        targets[0] = address(bountyManager);
+        bytes4[][] memory selectors = new bytes4[][](1);
+        selectors[0] = new bytes4[](1);
+        selectors[0][0] = bountyManager.addBounty.selector;
+
+        // Create role and set members
+        orchestrator.authorizer().createRoleAndAddAccessPermissions(
+            "BOUNTY_ISSUER",
+            orchestrator.authorizer().getAdminRole(),
+            roleMembers,
+            targets,
+            selectors
+        );
 
         // We create a call struct containing the call we want to make
         ITransactionForwarder_v1.SingleCall memory call2 =

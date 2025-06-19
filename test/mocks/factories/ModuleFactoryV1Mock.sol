@@ -6,19 +6,20 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory_v1,
     IInverterBeacon_v1,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
-import {PaymentProcessorV1Mock} from
-    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
+import {PaymentProcessor_v3_Mock} from
+    "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -32,20 +33,20 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
-    IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
+    IModule_v2.Metadata fundingManagerMetadata = IModule_v2.Metadata(
         1, 0, 0, "https://fundingmanager.com", "FundingManager"
     );
 
-    IModule_v1.Metadata authorizerMetadata =
-        IModule_v1.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
+    IModule_v2.Metadata authorizerMetadata =
+        IModule_v2.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
 
-    IModule_v1.Metadata paymentProcessorMetadata = IModule_v1.Metadata(
-        1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
+    IModule_v2.Metadata paymentProcessorMetadata = IModule_v2.Metadata(
+        1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v3"
     );
 
     function createAndInitModule(
-        IModule_v1.Metadata memory metadata,
-        IOrchestrator_v1,
+        IModule_v2.Metadata memory metadata,
+        IOrchestrator_v2,
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
@@ -59,26 +60,26 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
             LibMetadata.identifier(metadata)
                 == LibMetadata.identifier(authorizerMetadata)
         ) {
-            return address(new AuthorizerV1Mock());
+            return address(new Authorizer_v2_Mock());
         } else if (
             LibMetadata.identifier(metadata)
                 == LibMetadata.identifier(paymentProcessorMetadata)
         ) {
-            return address(new PaymentProcessorV1Mock());
+            return address(new PaymentProcessor_v3_Mock());
         } else {
-            return address(new ModuleV1Mock());
+            return address(new Module_v2_Mock());
         }
     }
 
     function createModuleProxy(
-        IModule_v1.Metadata memory,
-        IOrchestrator_v1,
+        IModule_v2.Metadata memory,
+        IOrchestrator_v2,
         IOrchestratorFactory_v1.WorkflowConfig memory
     ) external returns (address) {
-        return Clones.clone(address(new ModuleV1Mock()));
+        return Clones.clone(address(new Module_v2_Mock()));
     }
 
-    function getBeaconAndId(IModule_v1.Metadata memory metadata)
+    function getBeaconAndId(IModule_v2.Metadata memory metadata)
         external
         view
         returns (IInverterBeacon_v1, bytes32)
@@ -99,7 +100,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         return msg.sender;
     }
 
-    function registerMetadata(IModule_v1.Metadata memory, IInverterBeacon_v1)
+    function registerMetadata(IModule_v2.Metadata memory, IInverterBeacon_v1)
         external
     {
         howManyCalls++;

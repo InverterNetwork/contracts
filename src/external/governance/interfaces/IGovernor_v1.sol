@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -267,7 +267,7 @@ interface IGovernor_v1 {
     /// @param  metadata The metadata that will be registered.
     /// @param  beacon The {IInverterBeacon_v1} that will be registered.
     function registerMetadataInModuleFactory(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;
 

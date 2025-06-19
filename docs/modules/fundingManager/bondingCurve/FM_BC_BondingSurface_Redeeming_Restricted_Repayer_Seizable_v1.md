@@ -5,7 +5,7 @@ This is a basic description of the bonding surface redeeming restricted repayer 
 ## Basic Functionality of the underlying Bonding Surface Redeeming Contract
 
 Because the Bonding Surface Redeeming Restricted Repayer Seizable Contract is based on the Bonding Surface Redeeming Contract, it inherits the functionalities of this contract. These functionalities are described in the linked document:
-[FM_BC_BondingSurface_Redeeming_v1.md](FM_BC_BondingSurface_Redeeming_v1.md)
+[FM_BC_BondingSurface_Redeeming_v2.md](FM_BC_BondingSurface_Redeeming_v2.md)
 
 ## Added Functionalities
 
@@ -49,7 +49,7 @@ For the Bonding Surface Redeeming Restricted Repayer Seizable Contract setup the
 
 As the Bonding Surface Redeeming Restricted Repayer Seizable Contract is based on the Bonding Surface Redeeming Contract, this contract needs the same basic setup as the Bonding Surface Redeeming Contract:
 
-See [FM_BC_BondingSurface_Redeeming_v1.md](FM_BC_BondingSurface_Redeeming_v1.md)
+See [FM_BC_BondingSurface_Redeeming_v2.md](FM_BC_BondingSurface_Redeeming_v2.md)
 
 The Setup differs in the following steps.
 

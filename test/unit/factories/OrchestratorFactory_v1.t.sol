@@ -13,11 +13,11 @@ import {Ownable} from "@oz/access/Ownable.sol";
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v2} from "src/orchestrator/Orchestrator_v2.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
@@ -38,7 +38,7 @@ contract OrchestratorFactoryV1Test is Test {
     // SuT
     OrchestratorFactory_v1 factory;
 
-    Orchestrator_v1 target;
+    Orchestrator_v2 target;
 
     InverterBeaconV1OwnableMock beacon;
 
@@ -69,7 +69,7 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(
+        IModule_v2.Metadata(
             1, 0, 0, "https://fundingmanager.com", "FundingManager"
         ),
         bytes("data")
@@ -77,28 +77,28 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer"),
+        IModule_v2.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this))
     );
 
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule_v1.Metadata(
-            1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v2"
+        IModule_v2.Metadata(
+            1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v3"
         ),
         bytes("data")
     );
 
     IOrchestratorFactory_v1.ModuleConfig moduleConfig = IOrchestratorFactory_v1
         .ModuleConfig(
-        IModule_v1.Metadata(1, 0, 0, "https://module.com", "Module_v1"),
+        IModule_v2.Metadata(1, 0, 0, "https://module.com", "Module_v2"),
         bytes("")
     );
 
     function setUp() public {
         moduleFactory = new ModuleFactoryV1Mock();
 
-        target = new Orchestrator_v1(address(0));
+        target = new Orchestrator_v2(address(0));
 
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
         beacon.overrideImplementation(address(target));
@@ -153,8 +153,8 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(1, address(0)); // Since we don't know the address of the orchestrator
 
-        // Deploy Orchestrator_v1 with id=1
-        IOrchestrator_v1 orchestrator = factory.createOrchestrator(
+        // Deploy Orchestrator_v2 with id=1
+        IOrchestrator_v2 orchestrator = factory.createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
@@ -187,7 +187,7 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0)); // since we don't know the address of the orchestrator
 
-        // Deploy Orchestrator_v1 with id=2
+        // Deploy Orchestrator_v2 with id=2
         orchestrator = factory.createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
@@ -257,7 +257,7 @@ contract OrchestratorFactoryV1Test is Test {
         emit OrchestratorCreated(1, address(0));
 
         // Alice deploys original orchestrator
-        IOrchestrator_v1 orchestrator;
+        IOrchestrator_v2 orchestrator;
         vm.startPrank(alice);
         {
             orchestrator = factory.createOrchestrator(
@@ -303,7 +303,7 @@ contract OrchestratorFactoryV1Test is Test {
         // after the reorg
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(1, address(0));
-        IOrchestrator_v1 orchestrator_retry_bob;
+        IOrchestrator_v2 orchestrator_retry_bob;
         vm.startPrank(bob);
         {
             orchestrator_retry_bob = factory.createOrchestrator(
@@ -323,7 +323,7 @@ contract OrchestratorFactoryV1Test is Test {
         // Now Alice deploys the workflow again, after the reorg
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0));
-        IOrchestrator_v1 orchestrator_retry_alice;
+        IOrchestrator_v2 orchestrator_retry_alice;
         vm.startPrank(alice);
         {
             orchestrator_retry_alice = factory.createOrchestrator(
@@ -350,8 +350,8 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(false, false, false, false);
         emit OrchestratorCreated(0, address(0)); // Since we don't know the id/address of the orchestrator
 
-        // Deploy Orchestrator_v1
-        IOrchestrator_v1 orchestrator = factory.createOrchestrator(
+        // Deploy Orchestrator_v2
+        IOrchestrator_v2 orchestrator = factory.createOrchestrator(
             workflowConfigNoIndependentUpdates,
             fundingManagerConfig,
             authorizerConfig,

@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.0;
+
+// Internal Interfaces
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
+// Internal Dependencies
+import {PP_Simple_v3} from "@pp/PP_Simple_v3.sol";
+
+contract PP_Simple_v3_Exposed is PP_Simple_v3 {
+    function exposed_validPaymentReceiver(address addr)
+        external
+        view
+        returns (bool)
+    {
+        return _validPaymentReceiver(addr);
+    }
+
+    function exposed__validTotal(uint _total) external pure returns (bool) {
+        return _validTotal(_total);
+    }
+
+    function exposed_validOriginAndTargetChain(
+        uint originChainId,
+        uint targetChainId
+    ) external view returns (bool) {
+        return _validOriginAndTargetChain(originChainId, targetChainId);
+    }
+
+    function exposed_validPaymentToken(address _token)
+        external
+        returns (bool)
+    {
+        return _validPaymentToken(_token);
+    }
+}

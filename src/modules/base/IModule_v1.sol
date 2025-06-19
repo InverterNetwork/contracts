@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 interface IModule_v1 {
     //--------------------------------------------------------------------------
@@ -27,7 +27,7 @@ interface IModule_v1 {
     // Events
 
     /// @notice Module has been initialized.
-    /// @param  parentOrchestrator The address of the {Orchestrator_v1} the module is linked to.
+    /// @param  parentOrchestrator The address of the {Orchestrator_v2} the module is linked to.
     /// @param  metadata The metadata of the module.
     event ModuleInitialized(
         address indexed parentOrchestrator, Metadata metadata
@@ -49,19 +49,19 @@ interface IModule_v1 {
     /// @param  caller The address that is required to have the role.
     error Module__CallerNotAuthorized(bytes32 role, address caller);
 
-    /// @notice Function is only callable by the {Orchestrator_v1}.
+    /// @notice Function is only callable by the {Orchestrator_v2}.
     error Module__OnlyCallableByOrchestrator();
 
     /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
     error Module__OnlyCallableByPaymentClient();
 
-    /// @notice Given {Orchestrator_v1} address invalid.
+    /// @notice Given {Orchestrator_v2} address invalid.
     error Module__InvalidOrchestratorAddress();
 
     /// @notice Given metadata invalid.
     error Module__InvalidMetadata();
 
-    /// @notice {Orchestrator_v1} callback triggered failed.
+    /// @notice {Orchestrator_v2} callback triggered failed.
     /// @param  funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
@@ -74,12 +74,12 @@ interface IModule_v1 {
     /// @notice The module's initializer function.
     /// @dev	CAN be overridden by downstream contract.
     /// @dev	MUST call `__Module_init()`.
-    /// @param  orchestrator The module's {Orchestrator_v1} instance.
+    /// @param  orchestrator The module's {Orchestrator_v2} instance.
     /// @param  metadata The module's metadata.
     /// @param  configData Variable config data for specific module
     ///                   implementations.
     function init(
-        IOrchestrator_v1 orchestrator,
+        IOrchestrator_v2 orchestrator,
         Metadata memory metadata,
         bytes memory configData
     ) external;
@@ -104,9 +104,9 @@ interface IModule_v1 {
     /// @return The module's title.
     function title() external view returns (string memory);
 
-    /// @notice Returns the module's {Orchestrator_v1} interface, {IOrchestrator_v1}.
+    /// @notice Returns the module's {Orchestrator_v2} interface, {IOrchestrator_v2}.
     /// @return The module's {Orchestrator_1}.
-    function orchestrator() external view returns (IOrchestrator_v1);
+    function orchestrator() external view returns (IOrchestrator_v2); //@todo what to do with this? Should this be version 1?
 
     /// @notice Grants a module role to a target address.
     /// @param  role The role to grant.

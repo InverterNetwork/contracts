@@ -19,9 +19,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable by authorized address.
-    error ModuleManagerBase__CallerNotAuthorized();
-
     /// @notice Function is only callable by modules.
     error ModuleManagerBase__OnlyCallableByModule();
 
