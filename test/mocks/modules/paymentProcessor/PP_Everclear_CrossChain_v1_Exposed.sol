@@ -2,8 +2,8 @@ pragma solidity 0.8.23;
 
 // Internal
 import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -11,19 +11,19 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     // Expose internal _executeBridgeTransfer function
     function exposed_executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external {
         _executeBridgeTransfer(order);
     }
 
     function exposed_validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentOrder(order);
     }
 
     function exposed_transferTokenAndApproveToBridge(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order,
         address client
     ) external {
         _transferTokenAndApproveToBridge(order, client);
@@ -31,7 +31,7 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
 
     // Expose internal xcall function
     function exposed_createCrossChainIntent(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external returns (bytes32 intentId_, IEverclear.Intent memory intent_) {
         return _createCrossChainIntent(order);
     }
@@ -67,7 +67,7 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     }
 
     function exposed_processSuccessfulBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_,
         bytes32 intentId_,
         IEverclear.Intent memory intent_
@@ -76,7 +76,7 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     }
 
     function exposed_processFailedBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_
     ) external {
         _processFailedBridgeTransfer(order_, client_);

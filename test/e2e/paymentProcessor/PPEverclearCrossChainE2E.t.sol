@@ -5,12 +5,12 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import {console} from "forge-std/console.sol";
 
 // Inverter Core
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol"; // Added for casting
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol"; // Added for casting
 
 // Modules to be tested and their dependencies
 import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
@@ -47,7 +47,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
     //--------------------------------------------------------------------------
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    IOrchestrator_v1 orchestrator;
+    IOrchestrator_v2 orchestrator;
     PP_Everclear_CrossChain_v1 paymentProcessor;
     Mock_LM_PC_PaymentRouter_Everclear_v1 paymentClient;
     IFM_DepositVault_v1 fmDepositVault;
@@ -186,7 +186,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
             if (address(paymentClient) == address(0)) {
                 // Only find if not already found
                 string memory currentModuleTitle =
-                    IModule_v1(moduleAddress).title();
+                    IModule_v2(moduleAddress).title();
                 if (
                     keccak256(abi.encodePacked(currentModuleTitle))
                         == keccak256(
@@ -213,8 +213,8 @@ contract PPEverclearCrossChainE2E is E2ETest {
             if (address(fmDepositVault) == address(0)) {
                 // Only find if not already found
                 // Using supportsInterface for more robust check
-                // Cast to Module_v1 to access supportsInterface from ERC165Upgradeable
-                Module_v1 baseModule = Module_v1(payable(moduleAddress));
+                // Cast to Module_v2 to access supportsInterface from ERC165Upgradeable
+                Module_v2 baseModule = Module_v2(payable(moduleAddress));
                 if (
                     baseModule.supportsInterface(
                         type(IFundingManager_v1).interfaceId
@@ -226,7 +226,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
                     // Further check if it's the one configured with our paymentToken
                     // This assumes depositVaultMetadata was used for its deployment.
                     string memory currentModuleTitle =
-                        IModule_v1(moduleAddress).title();
+                        IModule_v2(moduleAddress).title();
                     if (
                         keccak256(abi.encodePacked(currentModuleTitle))
                             == keccak256(
@@ -274,18 +274,18 @@ contract PPEverclearCrossChainE2E is E2ETest {
         usdc.approve(address(paymentClient), type(uint).max); // If client handles fees
         // vm.stopPrank(); // Keep prank active for role granting
 
-        // Grant PAYMENT_PUSHER_ROLE to owner for the paymentClient mock
-        // The role value is defined in LM_PC_PaymentRouter_v2
+        /*         // Grant PAYMENT_PUSHER_ROLE to owner for the paymentClient mock //@todo
+        // The role value is defined in LM_PC_PaymentRouter_v3
         // This needs to be called by an admin of the paymentClient's authorizer (which is 'owner')
         bytes32 pusherRole = paymentClient.PAYMENT_PUSHER_ROLE(); // Directly use the constant
-        paymentClient.grantModuleRole(pusherRole, owner);
+        paymentClient.grantModuleRole(pusherRole, owner); */
 
         // Grant MODULE_ROLE to paymentClient on the paymentProcessor
-        // The role value is defined in Module_v1 or specific PP
+        // The role value is defined in Module_v2 or specific PP
         // This needs to be called by an admin of the orchestrator's authorizer (which is 'owner')
         bytes32 MODULE_ROLE = keccak256("MODULE_ROLE");
         // The paymentProcessor's authorizer is the orchestrator's authorizer
-        IOrchestrator_v1(address(orchestrator)).authorizer().grantRole(
+        IOrchestrator_v2(address(orchestrator)).authorizer().grantRole(
             MODULE_ROLE, address(paymentClient)
         );
         vm.stopPrank(); // Stop prank after all owner actions

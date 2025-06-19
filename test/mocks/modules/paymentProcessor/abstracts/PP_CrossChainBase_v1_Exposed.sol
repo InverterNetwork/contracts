@@ -3,24 +3,24 @@ pragma solidity 0.8.23;
 
 // Internal
 import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 
 contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
     // =========================================================================
     // Implement interface and abstract functions
 
-    function processPayments(IERC20PaymentClientBase_v2 client) external {}
+    function processPayments(IERC20PaymentClientBase_v3 client) external {}
 
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory /* order */
+        IERC20PaymentClientBase_v3.PaymentOrder memory /* order */
     ) external pure returns (bool valid_) {
         return true;
     }
 
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) internal override {}
 
     // =========================================================================
@@ -51,7 +51,7 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
     }
 
     function exposed_executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v3.PaymentOrder memory order
     ) external {
         return _executeBridgeTransfer(order);
     }

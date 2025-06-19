@@ -18,8 +18,8 @@ import {
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 // External imports
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -28,8 +28,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Tests and Mocks
 import {ModuleTest} from "@unitTest/modules/ModuleTest.sol";
-import {ERC20PaymentClientBaseV2Mock} from
-    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20PaymentClientBase_v3_Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {OraclePrice_Mock} from "@mocks/modules/logicModule/OraclePrice_Mock.sol";
 import {InvalidOraclePrice_Mock} from
@@ -83,7 +83,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     FM_PC_Oracle_Redeeming_v2_Exposed fundingManager;
     ERC20Issuance_v1 issuanceToken;
     OraclePrice_Mock oracle;
-    ERC20PaymentClientBaseV2Mock paymentClient;
+    ERC20PaymentClientBase_v3_Mock paymentClient;
     address impl;
 
     // Test addresses
@@ -558,7 +558,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
 
         // Setup - Create and register payment client
-        paymentClient = new ERC20PaymentClientBaseV2Mock();
+        paymentClient = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(paymentClient));
 
         // Setup - Mock payment client call
@@ -1498,8 +1498,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             protocolSellFeeAmount_
         );
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory localPaymentOrders =
-            IERC20PaymentClientBase_v2(address(fundingManager)).paymentOrders();
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory localPaymentOrders =
+            IERC20PaymentClientBase_v3(address(fundingManager)).paymentOrders();
 
         assertEq(
             localPaymentOrders.length, 1, "Payment orders length should be 1"

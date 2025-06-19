@@ -17,7 +17,7 @@ import {IPaymentProcessor_v3} from
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v3 {
+contract ERC20PaymentClientBase_v3_Mock is ERC20PaymentClientBase_v3 {
     ERC20Mock token;
 
     mapping(address => uint) public amountPaidCounter;

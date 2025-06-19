@@ -22,9 +22,9 @@ import {PP_Queue_v2_Exposed} from
     "@mocks/modules/paymentProcessor/PP_Queue_v2_Exposed.sol";
 import {
     IERC20PaymentClientBase_v3,
-    ERC20PaymentClientBaseV2Mock,
+    ERC20PaymentClientBase_v3_Mock,
     ERC20Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {NonStandardTokenMock} from
     "@mocks/external/token/NonStandardTokenMock.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -56,8 +56,8 @@ contract PP_Queue_ManualExecution_v2_Test is PP_Queue_v2_Test {
         );
 
         // Setup payment client
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBase_v3_Mock());
+        paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
 
         // Register payment client as module in the same orchestrator
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
@@ -157,8 +157,8 @@ contract PP_Queue_ManualExecution_v2_Test is PP_Queue_v2_Test {
     function testPublicProcessPayments_failsGivenUnregisteredClient() public {
         init();
         // Create another payment client that is not registered
-        ERC20PaymentClientBaseV2Mock otherPaymentClient =
-            new ERC20PaymentClientBaseV2Mock();
+        ERC20PaymentClientBase_v3_Mock otherPaymentClient =
+            new ERC20PaymentClientBase_v3_Mock();
 
         // Try to call processPayments with unregistered client
         vm.prank(address(paymentClient));

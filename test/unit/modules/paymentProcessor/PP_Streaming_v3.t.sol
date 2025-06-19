@@ -28,9 +28,9 @@ import {PP_Streaming_v3_Exposed} from
 
 import {
     IERC20PaymentClientBase_v3,
-    ERC20PaymentClientBaseV2Mock,
+    ERC20PaymentClientBase_v3_Mock,
     ERC20Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -46,7 +46,7 @@ contract PP_Streaming_v3_Test is ModuleTest {
     PP_Streaming_v3_Exposed paymentProcessor;
 
     // Mocks
-    ERC20PaymentClientBaseV2Mock paymentClient;
+    ERC20PaymentClientBase_v3_Mock paymentClient;
 
     //--------------------------------------------------------------------------
     // Events
@@ -104,8 +104,8 @@ contract PP_Streaming_v3_Test is ModuleTest {
         _authorizer.setAllAuthorized(true);
 
         // Set up PaymentClient Correctöy
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBase_v3_Mock());
+        paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
 
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -1139,8 +1139,8 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        ERC20PaymentClientBaseV2Mock otherERC20PaymentClient =
-            new ERC20PaymentClientBaseV2Mock();
+        ERC20PaymentClientBase_v3_Mock otherERC20PaymentClient =
+            new ERC20PaymentClientBase_v3_Mock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -1464,8 +1464,8 @@ contract PP_Streaming_v3_Test is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        ERC20PaymentClientBaseV2Mock otherERC20PaymentClient =
-            new ERC20PaymentClientBaseV2Mock();
+        ERC20PaymentClientBase_v3_Mock otherERC20PaymentClient =
+            new ERC20PaymentClientBase_v3_Mock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(

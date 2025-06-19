@@ -2,10 +2,10 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 
 // External
@@ -24,8 +24,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @dev     Inherits functionality from:
  *          - IPP_CrossChainBase_v1: Implementation interface.
- *          - IPaymentProcessor_v2: Payment processor interface.
- *          - Module_v1: Base module functionality.
+ *          - IPaymentProcessor_v3: Payment processor interface.
+ *          - Module_v2: Base module functionality.
  *
  *          Key features:
  *              - Bridge Data Management
@@ -58,7 +58,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  33Audits
  */
-abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
+abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v2 {
     //--------------------------------------------------------------------------
     // Libraries
 
@@ -72,11 +72,11 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         return interfaceId_ == type(IPP_CrossChainBase_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -138,7 +138,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         return _paymentId;
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function unclaimable(
         address client_,
         address token_,
@@ -151,7 +151,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function claimPreviouslyUnclaimable(
         address client_,
         address token_,
@@ -166,8 +166,8 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         _claimPreviouslyUnclaimable(client_, token_, receiver_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
-    function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
+    /// @inheritdoc IPaymentProcessor_v3
+    function cancelRunningPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
         onlyModule
@@ -184,7 +184,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     /// @dev    Override this function to implement specific bridge logic.
     /// @param  order_ The payment order containing all necessary transfer details.
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) internal virtual;
 
     //--------------------------------------------------------------------------

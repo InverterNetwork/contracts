@@ -16,8 +16,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 // Tests and Mocks
 import {
     IERC20PaymentClientBase_v3,
-    ERC20PaymentClientBaseV2Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    ERC20PaymentClientBase_v3_Mock
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 
 // System under Test (SuT)
 import {LM_PC_Template_v1_Exposed} from

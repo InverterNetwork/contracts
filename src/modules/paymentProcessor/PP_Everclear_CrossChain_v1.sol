@@ -8,16 +8,16 @@ import {IEverclear} from
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 import {IPP_Everclear_CrossChain_v1} from
     "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v3.sol";
 import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -110,10 +110,10 @@ contract PP_Everclear_CrossChain_v1 is
     ///     - address: everClearSpoke_: The Everclear spoke contract address for
     ///       cross-chain message passing
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external virtual override(Module_v1) initializer {
+    ) external virtual override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
         (address everClearSpoke_) = abi.decode(configData_, (address));
 
@@ -146,22 +146,22 @@ contract PP_Everclear_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IPaymentProcessor_v2
-    function processPayments(IERC20PaymentClientBase_v2 client_)
+    /// @inheritdoc IPaymentProcessor_v3
+    function processPayments(IERC20PaymentClientBase_v3 client_)
         external
         virtual
         onlyModule
         validClient(address(client_))
     {
         // Get the payment orders from the payment client.
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
         (orders,,) = client_.collectPaymentOrders();
 
         // Process each payment order.
         for (uint i = 0; i < orders.length; i++) {
             if (!_validPaymentOrder(orders[i])) {
                 revert
-                    IERC20PaymentClientBase_v2
+                    IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__InvalidPaymentOrder();
             }
             // Transfer the token for the order from the payment client into
@@ -172,9 +172,9 @@ contract PP_Everclear_CrossChain_v1 is
         }
     }
 
-    /// @inheritdoc IPaymentProcessor_v2
+    /// @inheritdoc IPaymentProcessor_v3
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) external virtual returns (bool valid_) {
         return _validPaymentOrder(order_);
     }
@@ -186,7 +186,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  order_ The payment order to validate.
     /// @return valid_ True if the payment order is valid, false otherwise.
     function _validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) internal virtual returns (bool valid_) {
         valid_ = _validPaymentReceiver(order_.recipient)
             && _validPaymentToken(order_.paymentToken) && _validTotal(order_.amount)
@@ -204,7 +204,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @notice Execute the cross-chain bridge transfer.
     /// @param  order_ The payment order containing transfer details.
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     ) internal virtual override(PP_CrossChainBase_v1) {
         // Create a new intent.
         (bytes32 intentId, IEverclear.Intent memory intent_) =
@@ -229,7 +229,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  order_ The payment order containing transfer details.
     /// @param  client_ The payment client address.
     function _processFailedBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_
     ) internal virtual {
         // Store failed transfer amount for the recipient.
@@ -256,7 +256,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  intentId_ The intent ID.
     /// @param  intent_ The intent data.
     function _processSuccessfulBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_,
         bytes32 intentId_,
         IEverclear.Intent memory intent_
@@ -318,14 +318,14 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  order_ The payment order details.
     /// @param  client_ The payment client address.
     function _transferTokenAndApproveToBridge(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_,
         address client_
     ) internal virtual {
         IERC20(order_.paymentToken).safeTransferFrom(
             client_, address(this), order_.amount
         );
         // Update the amount paid on the payment client side.
-        IERC20PaymentClientBase_v2(client_).amountPaid(
+        IERC20PaymentClientBase_v3(client_).amountPaid(
             order_.paymentToken, order_.amount
         );
 
@@ -338,7 +338,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  order_ The payment order details.
     /// @return intentId_ ID of the created intent.
     function _createCrossChainIntent(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+        IERC20PaymentClientBase_v3.PaymentOrder memory order_
     )
         internal
         virtual

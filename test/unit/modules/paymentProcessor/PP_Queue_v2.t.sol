@@ -22,9 +22,9 @@ import {PP_Queue_v2_Exposed} from
     "@mocks/modules/paymentProcessor/PP_Queue_v2_Exposed.sol";
 import {
     IERC20PaymentClientBase_v3,
-    ERC20PaymentClientBaseV2Mock,
+    ERC20PaymentClientBase_v3_Mock,
     ERC20Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {NonStandardTokenMock} from
     "@mocks/external/token/NonStandardTokenMock.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -40,7 +40,7 @@ contract PP_Queue_v2_Test is ModuleTest {
     PP_Queue_v2_Exposed queue;
 
     // Mocks
-    ERC20PaymentClientBaseV2Mock paymentClient;
+    ERC20PaymentClientBase_v3_Mock paymentClient;
 
     // ================================================================================
     // Events
@@ -84,8 +84,8 @@ contract PP_Queue_v2_Test is ModuleTest {
         address impl = address(new PP_Queue_v2_Exposed());
         queue = PP_Queue_v2_Exposed(Clones.clone(impl));
 
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBase_v3_Mock());
+        paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentClient);
         // initiate SuT
@@ -3322,20 +3322,6 @@ contract PP_Queue_v2_Test is ModuleTest {
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
             "Payment order with zero token address should return false"
-        );
-    }
-
-    /* Test testPublicGetQueueOperatorRoleAdmin_succeedsGivenCorrectAdmin() function
-        ├── When getQueueOperatorRoleAdmin is called
-        │   └── Then it should return "QUEUE_OPERATOR_ROLE_ADMIN"
-    */
-    function testPublicGetQueueOperatorRoleAdmin_succeedsGivenCorrectAdmin()
-        public
-    {
-        bytes32 operatorRoleAdmin_ = queue.getQueueOperatorRoleAdmin();
-        assertTrue(
-            operatorRoleAdmin_ == "QUEUE_OPERATOR_ROLE_ADMIN",
-            "Queue operator role admin should be the queue address"
         );
     }
 

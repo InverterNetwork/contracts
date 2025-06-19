@@ -42,8 +42,8 @@ import {Authorizer_v2_Mock} from
     "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
 import {PaymentProcessor_v3_Mock} from
     "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
-import {ERC20PaymentClientBaseV2Mock} from
-    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20PaymentClientBase_v3_Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {TokenInterfaceMock} from
     "@mocks/modules/authorizer/TokenInterfaceMock.sol";
 

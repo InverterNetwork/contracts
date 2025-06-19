@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 
 /**
  * @title   Cross-chain Payment Processor Base Contract.
@@ -12,7 +12,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
  *
  * @dev     Inherits functionality from:
  *          - IPP_CrossChainBase_v1: Implementation interface.
- *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - IPaymentProcessor_v3: Payment processor interface.
  *          - Module_v1: Base module functionality.
  *
  *          Key features:
@@ -44,7 +44,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
  *
  * @author  33Audits
  */
-interface IPP_CrossChainBase_v1 is IPaymentProcessor_v2 {
+interface IPP_CrossChainBase_v1 is IPaymentProcessor_v3 {
     // Events
     //--------------------------------------------------------------------------
 

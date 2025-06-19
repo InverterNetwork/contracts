@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
 import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 // External imports
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -14,13 +14,14 @@ import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Tests and Mocks
 import {ModuleTest} from "@unitTest/modules/ModuleTest.sol";
-import {ERC20PaymentClientBaseV2Mock} from
-    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20PaymentClientBase_v3_Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 import {FundingManagerV1Mock} from
     "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
-import {PaymentProcessorV1Mock} from
-    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
+import {PaymentProcessor_v3_Mock} from
+    "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // SuT
@@ -32,7 +33,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     // State
 
     PP_CrossChainBase_v1_Exposed public crossChainPaymentProcessorBase;
-    ERC20PaymentClientBaseV2Mock public paymentClient;
+    ERC20PaymentClientBase_v3_Mock public paymentClient;
 
     // ========================================================================
     // Setup
@@ -43,8 +44,8 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
             PP_CrossChainBase_v1_Exposed(Clones.clone(impl));
 
         // Deploy and setup the payment client for testing SUT
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBase_v3_Mock());
+        paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
 
         // Setup the mock workflow contracts and token
         _setUpOrchestrator(paymentClient);
@@ -77,7 +78,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override {
         assertTrue(
             crossChainPaymentProcessorBase.supportsInterface(
                 type(IPP_CrossChainBase_v1).interfaceId
@@ -319,11 +320,11 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
                 .selector
         );
         crossChainPaymentProcessorBase.cancelRunningPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
+            IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // Test 3: Deploy module which is not registered and call cancelRunningPayments()
-        address paymentProcessor = address(new PaymentProcessorV1Mock());
+        address paymentProcessor = address(new PaymentProcessor_v3_Mock());
 
         // Test function call
         vm.prank(paymentProcessor);
@@ -333,11 +334,11 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
                 .selector
         );
         crossChainPaymentProcessorBase.cancelRunningPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
+            IERC20PaymentClientBase_v3(address(paymentClient))
         );
 
         // Test 3: Deploy module which is not registered and call cancelRunningPayments()
-        address authorizer = address(new AuthorizerV1Mock());
+        address authorizer = address(new Authorizer_v2_Mock());
 
         // Test function call
         vm.prank(authorizer);
@@ -347,7 +348,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
                 .selector
         );
         crossChainPaymentProcessorBase.cancelRunningPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
+            IERC20PaymentClientBase_v3(address(paymentClient))
         );
     }
 
@@ -397,8 +398,8 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         public
     {
         // Create mock payment order
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
+        IERC20PaymentClientBase_v3.PaymentOrder memory order =
+        IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: address(0),
             paymentToken: address(0),
             amount: 0 ether,

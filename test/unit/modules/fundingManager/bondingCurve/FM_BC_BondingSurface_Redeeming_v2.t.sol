@@ -38,8 +38,8 @@ import {IFM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
-import {ERC20PaymentClientBaseV2Mock} from
-    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20PaymentClientBase_v3_Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
@@ -66,7 +66,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
     FM_BC_BondingSurface_RedeemingV1_Exposed bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
-    ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock;
+    ERC20PaymentClientBase_v3_Mock _erc20PaymentClientMock;
 
     // Addresses
     address owner_address = address(0xA1BA);
@@ -546,7 +546,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         address to_,
         uint amount_
     ) public {
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBase_v3_Mock();
 
         vm.prank(caller_);
         vm.expectRevert(IModule_v2.Module__OnlyCallableByPaymentClient.selector);
@@ -581,7 +581,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
         vm.startPrank(address(_erc20PaymentClientMock));
         {
@@ -614,7 +614,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
 
         vm.expectRevert(
@@ -644,7 +644,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
         vm.startPrank(address(_erc20PaymentClientMock));
         {
