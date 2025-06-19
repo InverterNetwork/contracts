@@ -2,6 +2,10 @@
 cache/
 out/
 
+# AI Context
+memory-bank/
+context/
+
 # Test files
 coverage/
 lcov.info

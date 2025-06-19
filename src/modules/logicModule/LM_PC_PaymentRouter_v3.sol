@@ -68,8 +68,8 @@ contract LM_PC_PaymentRouter_v3 is
     function init(
         IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
-        bytes memory configData
-    ) external override(Module_v2) initializer {
+        bytes memory /* configData */
+    ) external virtual override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
 
         // Set the flags for the PaymentOrders (this module uses 3 flags).

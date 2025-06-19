@@ -171,6 +171,9 @@ contract FM_PC_Oracle_Redeeming_v2 is
     /// @notice Flag used for the payment order.
     uint internal constant FLAG_ORDER_ID = 0;
 
+    /// @notice Flag used for the payment order.
+    uint internal constant FLAG_PROJECT_FEE = 4;
+
     // -------------------------------------------------------------------------
     // State Variables
 
@@ -302,6 +305,7 @@ contract FM_PC_Oracle_Redeeming_v2 is
 
         bytes32 flags;
         flags |= bytes32(1 << FLAG_ORDER_ID);
+        flags |= bytes32(1 << FLAG_PROJECT_FEE);
 
         __ERC20PaymentClientBase_v3_init(flags);
     }
@@ -587,8 +591,10 @@ contract FM_PC_Oracle_Redeeming_v2 is
         bytes32[] memory data;
 
         {
-            bytes32[] memory paymentParameters = new bytes32[](1);
+            bytes32[] memory paymentParameters = new bytes32[](2);
             paymentParameters[0] = bytes32(_orderId);
+            // Add project collateral sell fee for calculations in payment processor
+            paymentParameters[1] = bytes32(sellFee);
 
             (flags, data) = _assemblePaymentConfig(paymentParameters);
         }

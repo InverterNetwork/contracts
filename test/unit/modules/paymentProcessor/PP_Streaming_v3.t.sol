@@ -2194,48 +2194,48 @@ contract PP_Streaming_v3_Test is ModuleTest {
     }
 
     function test_setStreamingDefaults(
-        uint defaultStart,
-        uint defaultCliff,
-        uint defaultEnd
+        uint defaultStart_,
+        uint defaultCliff_,
+        uint defaultEnd_
     ) public {
-        defaultStart = bound(defaultStart, 0, defaultEnd);
-        defaultCliff = bound(defaultCliff, 0, defaultEnd - defaultStart);
+        defaultStart_ = bound(defaultStart_, 0, defaultEnd_);
+        defaultCliff_ = bound(defaultCliff_, 0, defaultEnd_ - defaultStart_);
 
         // Set default times
         paymentProcessor.setStreamingDefaults(
-            defaultStart, defaultCliff, defaultEnd
+            defaultStart_, defaultCliff_, defaultEnd_
         );
         // Check default times
         (uint start, uint cliff, uint end) =
             paymentProcessor.getStreamingDefaults();
-        assertEq(start, defaultStart);
-        assertEq(cliff, defaultCliff);
-        assertEq(end, defaultEnd);
+        assertEq(start, defaultStart_);
+        assertEq(cliff, defaultCliff_);
+        assertEq(end, defaultEnd_);
     }
 
     function test_setStreamingDefaults_FailsIfInvalidTimes(
-        uint defaultStart,
-        uint defaultCliff,
-        uint defaultEnd
+        uint defaultStart_,
+        uint defaultCliff_,
+        uint defaultEnd_
     ) public {
-        vm.assume(defaultStart < 1e24); //upper bounds to avoid overflow
-        vm.assume(defaultCliff < 1e24);
-        vm.assume(defaultStart + defaultCliff != 0);
+        vm.assume(defaultStart_ < 1e24); //upper bounds to avoid overflow
+        vm.assume(defaultCliff_ < 1e24);
+        vm.assume(defaultStart_ + defaultCliff_ != 0);
 
-        defaultEnd = bound(defaultEnd, 0, (defaultStart + defaultCliff - 1));
+        defaultEnd_ = bound(defaultEnd_, 0, (defaultStart_ + defaultCliff_ - 1));
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPP_Streaming_v3
                     .Module__PP_Streaming__InvalidDefaultTimes
                     .selector,
-                defaultStart,
-                defaultCliff,
-                defaultEnd
+                defaultStart_,
+                defaultCliff_,
+                defaultEnd_
             )
         );
         paymentProcessor.setStreamingDefaults(
-            defaultStart, defaultCliff, defaultEnd
+            defaultStart_, defaultCliff_, defaultEnd_
         );
     }
 

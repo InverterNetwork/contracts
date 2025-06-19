@@ -437,7 +437,7 @@ contract LM_PC_Staking_v3 is
 
     /// @dev	Ensures that the duration in seconds is larger than 0.
     /// @param  duration The duration of the reward period.
-    function _ensureValidDuration(uint duration) internal view {
+    function _ensureValidDuration(uint duration) internal pure {
         if (duration == 0) {
             revert Module__LM_PC_Staking_v3__InvalidDuration();
         }

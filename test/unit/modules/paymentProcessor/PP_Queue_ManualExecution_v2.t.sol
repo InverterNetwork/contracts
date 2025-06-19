@@ -92,7 +92,7 @@ contract PP_Queue_ManualExecution_v2_Test is PP_Queue_v2_Test {
         uint targetChainId = block.chainid;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v3.PaymentOrder memory orders =
         IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: recipient,
@@ -188,7 +188,7 @@ contract PP_Queue_ManualExecution_v2_Test is PP_Queue_v2_Test {
         uint targetChainId = block.chainid;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
 
         IERC20PaymentClientBase_v3.PaymentOrder memory order =
         IERC20PaymentClientBase_v3.PaymentOrder({
