@@ -180,6 +180,10 @@ contract AUT_Roles_v2_Test is ModuleTest {
         uint _lastAssignedRoleIdValue,
         bytes32 _givenRoleId
     ) public {
+        // Bound the value to avoid overflow
+        _lastAssignedRoleIdValue =
+            bound(_lastAssignedRoleIdValue, 0, type(uint).max - 1);
+
         _authSuT.changeLastAssignedRoleId(_lastAssignedRoleIdValue);
         if (
             _givenRoleId != _authSuT.PUBLIC_ROLE()
