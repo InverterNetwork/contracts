@@ -261,22 +261,28 @@ contract FundingPotE2E is E2ETest {
 
         vm.startPrank(contributor1);
         contributionToken.approve(address(fundingPot), contributor1Amount);
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            unspentPersonalRoundCaps =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](0);
         fundingPot.contributeToRoundFor(
-            contributor1, round1Id, contributor1Amount, 1, new bytes32[](0)
+            contributor1, round1Id, contributor1Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 
         vm.startPrank(contributor2);
         contributionToken.approve(address(fundingPot), contributor2Amount);
+        unspentPersonalRoundCaps =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](0);
         fundingPot.contributeToRoundFor(
-            contributor2, round1Id, contributor2Amount, 1, new bytes32[](0)
+            contributor2, round1Id, contributor2Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 
         vm.startPrank(contributor3);
         contributionToken.approve(address(fundingPot), contributor3Amount);
+
         fundingPot.contributeToRoundFor(
-            contributor3, round2Id, contributor3Amount, 1, new bytes32[](0)
+            contributor3, round2Id, contributor3Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 

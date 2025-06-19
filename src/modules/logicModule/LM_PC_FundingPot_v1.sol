@@ -288,57 +288,7 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getUserEligibility(
-        uint32 roundId_,
-        uint8 accessCriteriaId_,
-        bytes32[] memory merkleProof_,
-        address user_
-    )
-        external
-        view
-        returns (bool isEligible, uint remainingAmountAllowedToContribute)
-    {
-        Round storage round = rounds[roundId_];
 
-        if (round.roundEnd == 0 && round.roundCap == 0) {
-            revert Module__LM_PC_FundingPot__RoundNotCreated();
-        }
-
-        AccessCriteria storage accessCriteria =
-            round.accessCriterias[accessCriteriaId_];
-
-        if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
-            return (false, 0);
-        }
-
-        isEligible = _checkAccessCriteriaEligibility(
-            roundId_, accessCriteriaId_, merkleProof_, user_
-        );
-
-        if (isEligible) {
-            AccessCriteriaPrivileges storage privileges =
-            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
-            uint userPersonalCap = privileges.personalCap;
-            uint userContribution = roundIdToUserToContribution[roundId_][user_];
-
-            uint personalCapRemaining = userPersonalCap > userContribution
-                ? userPersonalCap - userContribution
-                : 0;
-
-            uint totalContributions = roundIdToTotalContributions[roundId_];
-            uint roundCapRemaining = round.roundCap > totalContributions
-                ? round.roundCap - totalContributions
-                : 0;
-
-            remainingAmountAllowedToContribute = personalCapRemaining
-                < roundCapRemaining ? personalCapRemaining : roundCapRemaining;
-
-            return (true, remainingAmountAllowedToContribute);
-        } else {
-            return (false, 0);
-        }
-    }
 
     // -------------------------------------------------------------------------
     // Public - Mutating
@@ -539,7 +489,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         emit AllowlistedAddressesRemoved(
-            roundId_, accessCriteriaId_, addressesToRemove_
+
         );
     }
 
@@ -582,19 +532,6 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function contributeToRoundFor(
-        address user_,
-        uint32 roundId_,
-        uint amount_,
-        uint8 accessCriteriaId_,
-        bytes32[] memory merkleProof_
-    ) external {
-        // Call the internal function with no additional unspent personal cap
-        _contributeToRoundFor(
-            user_, roundId_, amount_, accessCriteriaId_, merkleProof_, 0
-        );
-    }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function contributeToRoundFor(
@@ -609,15 +546,7 @@ contract LM_PC_FundingPot_v1 is
             user_, roundId_, unspentPersonalRoundCaps_
         );
 
-        if (unspentPersonalCap > 0) {
-            // Mark the specific caps that were used in this contribution
-            for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
-                UnspentPersonalRoundCap memory roundCapInfo =
-                    unspentPersonalRoundCaps_[i];
-                usedUnspentCaps[user_][roundCapInfo.roundId][roundCapInfo
-                    .accessCriteriaId] = true;
-            }
-        }
+    
 
         _contributeToRoundFor(
             user_,
@@ -677,14 +606,7 @@ contract LM_PC_FundingPot_v1 is
             EnumerableSet.values(contributorsByRound[roundId_]);
         uint contributorCount = contributors.length;
 
-        // Check batch size is not zero
-        if (batchSize_ == 0) {
-            revert Module__LM_PC_FundingPot__InvalidBatchParameters();
-        }
-        // If batch size is greater than contributor count, set batch size to contributor count
-        if (batchSize_ > contributorCount) {
-            batchSize_ = contributorCount;
-        }
+
 
         // If autoClosure is false, only admin can process contributors
         if (!round.autoClosure) {
@@ -717,9 +639,7 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__StartRoundCannotBeZero();
         }
         if (startRoundId_ > roundCount) {
-            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
-                startRoundId_, roundCount
-            );
+            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount();
         }
 
         globalAccumulationStartRoundId = startRoundId_;
@@ -739,87 +659,56 @@ contract LM_PC_FundingPot_v1 is
         address user_,
         uint32 roundId_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
-    ) internal view returns (uint unspentPersonalCap) {
-        if (unspentPersonalRoundCaps_.length == 0) {
-            return 0;
-        }
+    ) internal returns (uint unspentPersonalCap) {
+
 
         uint totalAggregatedPersonalCap = 0;
         uint totalSpentInPastRounds = 0;
-        uint32 firstRoundId = unspentPersonalRoundCaps_[0].roundId;
-        uint32 lastSeenRoundId = 0;
-        // Enforcement: All rounds from the start of the array to the end must be contiguous.
+
         for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
-            UnspentPersonalRoundCap memory roundCapInfo =
-                unspentPersonalRoundCaps_[i];
+            UnspentPersonalRoundCap memory roundCapInfo = unspentPersonalRoundCaps_[i];
             uint32 currentProcessingRoundId = roundCapInfo.roundId;
-
-            // Check for strictly increasing first (order matters)
-            if (currentProcessingRoundId <= lastSeenRoundId) {
-                revert
-                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing(
-                );
-            }
-            lastSeenRoundId = currentProcessingRoundId;
-
-            // Check for contiguity (consecutive sequence)
-            if (currentProcessingRoundId != firstRoundId + i) {
-                revert
-                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotContiguous();
-            }
-
-            // Enforcement: Round IDs must be strictly before the current roundId_
-            if (currentProcessingRoundId >= roundId_) {
-                revert
-                    Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
-            }
-
-            // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All).
-            if (
-                rounds[currentProcessingRoundId].accumulationMode
-                    != AccumulationMode.Personal
-                    && rounds[currentProcessingRoundId].accumulationMode
-                        != AccumulationMode.All
-            ) {
-                continue;
-            }
-
-            if (
-                usedUnspentCaps[user_][currentProcessingRoundId][roundCapInfo
-                    .accessCriteriaId]
-            ) {
-                continue;
-            }
 
             // Skip if this round is before the global accumulation start round
             if (currentProcessingRoundId < globalAccumulationStartRoundId) {
                 continue;
             }
 
+            // Skip if round is current or future round
+            if (currentProcessingRoundId >= roundId_) {
+                revert Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+            }
+
+            // Skip if cap was already used
+            if (usedUnspentCaps[user_][currentProcessingRoundId][roundCapInfo.accessCriteriaId]) {
+                continue;
+            }
+
+            // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All)
+            if (rounds[currentProcessingRoundId].accumulationMode != AccumulationMode.Personal 
+                && rounds[currentProcessingRoundId].accumulationMode != AccumulationMode.All) {
+                continue;
+            }
+
             // Only count spent amounts from rounds that meet the accumulation criteria
-            totalSpentInPastRounds +=
-                roundIdToUserToContribution[currentProcessingRoundId][user_];
+            totalSpentInPastRounds += roundIdToUserToContribution[currentProcessingRoundId][user_];
 
             // Check eligibility for the past round
-            if (
-                _checkAccessCriteriaEligibility(
-                    currentProcessingRoundId,
-                    roundCapInfo.accessCriteriaId,
-                    roundCapInfo.merkleProof,
-                    user_
-                )
-            ) {
-                AccessCriteriaPrivileges storage privileges =
-                roundIdToAccessCriteriaIdToPrivileges[currentProcessingRoundId][roundCapInfo
-                    .accessCriteriaId];
-
+            if (_checkAccessCriteriaEligibility(
+                currentProcessingRoundId,
+                roundCapInfo.accessCriteriaId,
+                roundCapInfo.merkleProof,
+                user_
+            )) {
+                AccessCriteriaPrivileges storage privileges = roundIdToAccessCriteriaIdToPrivileges[currentProcessingRoundId][roundCapInfo.accessCriteriaId];
                 totalAggregatedPersonalCap += privileges.personalCap;
             }
+            // Mark the specific caps that were used in this contribution
+            usedUnspentCaps[user_][currentProcessingRoundId][roundCapInfo.accessCriteriaId] = true;
         }
 
         if (totalAggregatedPersonalCap > totalSpentInPastRounds) {
-            unspentPersonalCap =
-                totalAggregatedPersonalCap - totalSpentInPastRounds;
+            unspentPersonalCap = totalAggregatedPersonalCap - totalSpentInPastRounds;
         }
 
         return unspentPersonalCap;
@@ -832,17 +721,17 @@ contract LM_PC_FundingPot_v1 is
         // Validate round start time is in the future
         // @note: The below condition wont allow _roundStart == block.timestamp
         if (round_.roundStart <= block.timestamp) {
-            revert Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
+            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
         }
 
         // Validate that either end time or cap is set
         if (round_.roundEnd == 0 && round_.roundCap == 0) {
-            revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
+            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
         }
 
         // If end time is set, validate it's after start time
         if (round_.roundEnd > 0 && round_.roundEnd < round_.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
+            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
         }
 
         // Validate hook contract and function consistency
@@ -867,7 +756,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (block.timestamp > round_.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
+            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
         }
     }
 
@@ -904,13 +793,13 @@ contract LM_PC_FundingPot_v1 is
         }
 
         Round storage round = rounds[roundId_];
-        uint currentTime = block.timestamp;
+       
 
         if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        if (currentTime < round.roundStart) {
+        if (block.timestamp < round.roundStart) {
             revert Module__LM_PC_FundingPot__RoundHasNotStarted();
         }
 
@@ -927,7 +816,7 @@ contract LM_PC_FundingPot_v1 is
         bool canOverrideContributionSpan = privileges.overrideContributionSpan;
 
         if (
-            round.roundEnd > 0 && currentTime > round.roundEnd
+            round.roundEnd > 0 && block.timestamp > round.roundEnd
                 && !canOverrideContributionSpan
         ) {
             revert Module__LM_PC_FundingPot__RoundHasEnded();
@@ -1161,9 +1050,6 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (bool)
     {
-        if (nftContract_ == address(0) || user_ == address(0)) {
-            return false;
-        }
 
         try IERC721(nftContract_).balanceOf(user_) returns (uint balance) {
             return balance > 0;

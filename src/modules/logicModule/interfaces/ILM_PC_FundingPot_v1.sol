@@ -188,12 +188,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     event RoundClosed(uint32 roundId_, uint totalContributions_);
 
     /// @notice Emitted when addresses are removed from an access criteria's allowed list.
-    /// @param  roundId_ The ID of the round.
-    /// @param  accessCriteriaId_ The ID of the access criteria.
-    /// @param  addressesRemoved_ The addresses that were removed from the allowlist.
-    event AllowlistedAddressesRemoved(
-        uint32 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
-    );
+    event AllowlistedAddressesRemoved();
 
     /// @notice Emitted when a contributor batch is processed.
     /// @param  roundId_ The ID of the round.
@@ -216,14 +211,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round start time must be in the future.
     error Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
 
-    /// @notice Round must have either an end time or a funding cap.
-    error Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
-
-    /// @notice Round end time must be after round start time.
-    error Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
-
-    /// @notice Round has already started and cannot be modified.
-    error Module__LM_PC_FundingPot__RoundAlreadyStarted();
+    /// @notice Round parameters are invalid.
+    error Module__LM_PC_FundingPot__RoundParamsInvalid();
 
     /// @notice Error for invalid hook settings
     error Module__LM_PC_FundingPot__InvalidHookConfiguration();
@@ -269,27 +258,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Invalid start index.
     error Module__LM_PC_FundingPot__InvalidStartIndex();
 
-    /// @notice Invalid batch parameters.
-    error Module__LM_PC_FundingPot__InvalidBatchParameters();
 
     /// @notice Start round ID must be greater than zero.
     error Module__LM_PC_FundingPot__StartRoundCannotBeZero();
 
     /// @notice Start round ID cannot be greater than the current round count.
-    /// @param startRoundId_ The provided start round ID.
-    /// @param currentRoundCount_ The current total number of rounds.
-    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
-        uint32 startRoundId_, uint32 currentRoundCount_
-    );
-
-    /// @notice Thrown when round IDs in UnspentPersonalRoundCap array are not strictly increasing.
-    error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing();
+    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount();
 
     /// @notice Unspent caps must be from previous rounds.
     error Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
 
-    /// @notice The round IDs for unspent caps must be contiguous.
-    error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotContiguous();
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -354,23 +332,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             uint cliff_,
             uint end_
         );
-
-    /// @notice Gets eligibility information for a user in a specific round.
-    /// @param  roundId_ The ID of the round to check eligibility for.
-    /// @param  accessCriteriaId_ The ID of the access criteria to check eligibility for.
-    /// @param  merkleProof_ The Merkle proof for validation if needed.
-    /// @param  user_ The address of the user to check.
-    /// @return isEligible Whether the user is eligible for the round through any criteria.
-    /// @return remainingAmountAllowedToContribute The remaining contribution the user can make.
-    function getUserEligibility(
-        uint32 roundId_,
-        uint8 accessCriteriaId_,
-        bytes32[] memory merkleProof_,
-        address user_
-    )
-        external
-        view
-        returns (bool isEligible, uint remainingAmountAllowedToContribute);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
@@ -465,22 +426,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint end_
     ) external;
 
-    /// @notice Allows a user to contribute to a specific funding round.
-    /// @dev    Verifies the contribution eligibility based on the provided Merkle proof.
-    /// @param  user_ The address of the user to contribute for.
-    /// @param  roundId_ The unique identifier of the funding round.
-    /// @param  amount_ The amount of tokens being contributed.
-    /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
-    /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
-    function contributeToRoundFor(
-        address user_,
-        uint32 roundId_,
-        uint amount_,
-        uint8 accessCriteriaId_,
-        bytes32[] calldata merkleProof_
-    ) external;
-
-    /// @notice Allows a user to contribute to a round with unused capacity from previous rounds.
+    /// @notice Contributes to a round on behalf of a user.
     /// @param  user_ The address of the user to contribute for.
     /// @param  roundId_ The ID of the round to contribute to.
     /// @param  amount_ The amount to contribute.
@@ -492,7 +438,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
-        bytes32[] calldata merkleProof_,
+        bytes32[] memory merkleProof_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external;
 
