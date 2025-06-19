@@ -12,11 +12,11 @@ import {IOrchestrator_v2} from
     "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IPaymentProcessor_v3} from
     "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
-import {IPP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v1.sol";
+import {IPP_Everclear_CrossChain_v2} from
+    "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v3.sol";
-import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
+import {PP_CrossChainBase_v2} from "@pp/abstracts/PP_CrossChainBase_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 // Libraries
@@ -30,8 +30,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          and bridges the payments to the target chain through Everclear's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Everclear_CrossChain_v1: Implementation interface.
- *          - PP_CrossChainBase_v1: Cross-chain Payment Processor Base.
+ *          - IPP_Everclear_CrossChain_v2: Implementation interface.
+ *          - PP_CrossChainBase_v2: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
@@ -54,9 +54,9 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  33Audits
  */
-contract PP_Everclear_CrossChain_v1 is
-    IPP_Everclear_CrossChain_v1,
-    PP_CrossChainBase_v1
+contract PP_Everclear_CrossChain_v2 is
+    IPP_Everclear_CrossChain_v2,
+    PP_CrossChainBase_v2
 {
     //--------------------------------------------------------------------------
     // Libraries
@@ -70,10 +70,10 @@ contract PP_Everclear_CrossChain_v1 is
         public
         view
         virtual
-        override(PP_CrossChainBase_v1)
+        override(PP_CrossChainBase_v2)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_Everclear_CrossChain_v1).interfaceId
+        return interfaceId_ == type(IPP_Everclear_CrossChain_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
     // -------------------------------------------------------------------------
@@ -123,7 +123,7 @@ contract PP_Everclear_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IPP_Everclear_CrossChain_v1
+    /// @inheritdoc IPP_Everclear_CrossChain_v2
     function getEverClearSpoke()
         external
         view
@@ -133,7 +133,7 @@ contract PP_Everclear_CrossChain_v1 is
         return _everClearSpoke;
     }
 
-    /// @inheritdoc IPP_Everclear_CrossChain_v1
+    /// @inheritdoc IPP_Everclear_CrossChain_v2
     function getIntentByIntentId(bytes32 intentId_)
         external
         view
@@ -205,7 +205,7 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  order_ The payment order containing transfer details.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v3.PaymentOrder memory order_
-    ) internal virtual override(PP_CrossChainBase_v1) {
+    ) internal virtual override(PP_CrossChainBase_v2) {
         // Create a new intent.
         (bytes32 intentId, IEverclear.Intent memory intent_) =
             _createCrossChainIntent(order_);

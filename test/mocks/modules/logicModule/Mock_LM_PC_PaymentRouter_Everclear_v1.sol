@@ -3,8 +3,8 @@ pragma solidity 0.8.23;
 
 import {LM_PC_PaymentRouter_v3} from
     "src/modules/logicModule/LM_PC_PaymentRouter_v3.sol";
-import {PP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v2} from
+    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v2.sol";
 import {IOrchestrator_v2} from
     "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
@@ -12,7 +12,7 @@ import {IERC20PaymentClientBase_v3} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v3.sol";
 
 contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v3 {
-    // Local constants mirroring PP_Everclear_CrossChain_v1
+    // Local constants mirroring PP_Everclear_CrossChain_v2
     uint8 public constant LOCAL_FLAG_MAX_FEE = 5;
     uint8 public constant LOCAL_FLAG_TTL = 6;
 

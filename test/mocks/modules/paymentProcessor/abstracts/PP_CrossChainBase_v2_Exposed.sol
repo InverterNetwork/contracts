@@ -2,12 +2,12 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
+import {PP_CrossChainBase_v2} from "@pp/abstracts/PP_CrossChainBase_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 
-contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
+contract PP_CrossChainBase_v2_Exposed is PP_CrossChainBase_v2 {
     // =========================================================================
     // Implement interface and abstract functions
 

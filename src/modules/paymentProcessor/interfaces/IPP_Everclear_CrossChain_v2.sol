@@ -19,8 +19,8 @@ import {IEverclear} from
  *          and bridges the payments to the target chain through Everclear's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Everclear_CrossChain_v1: Implementation interface.
- *          - PP_CrossChainBase_v1: Cross-chain Payment Processor Base.
+ *          - IPP_Everclear_CrossChain_v2: Implementation interface.
+ *          - PP_CrossChainBase_v2: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
@@ -37,13 +37,13 @@ import {IEverclear} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v2.0.0
  *
  * @custom:standard-version v1.0.0
  *
  * @author  33Audits
  */
-interface IPP_Everclear_CrossChain_v1 {
+interface IPP_Everclear_CrossChain_v2 {
     //--------------------------------------------------------------------------
     // View Functions
 

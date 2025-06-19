@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 // Internal Imports
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
+import {IPP_CrossChainBase_v2} from "@pp/interfaces/IPP_CrossChainBase_v2.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IPP_Everclear_CrossChain_v1} from
-    "@pp/interfaces/IPP_Everclear_CrossChain_v1.sol";
+import {IPP_Everclear_CrossChain_v2} from
+    "@pp/interfaces/IPP_Everclear_CrossChain_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
@@ -23,10 +23,10 @@ import {ERC20PaymentClientBase_v3_Mock} from
     "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 
 // SuT
-import {PP_Everclear_CrossChain_v1_Exposed} from
-    "@mocks/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
+import {PP_Everclear_CrossChain_v2_Exposed} from
+    "@mocks/modules/paymentProcessor/PP_Everclear_CrossChain_v2_Exposed.sol";
 
-contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
+contract PP_Everclear_CrossChain_v2_Test is ModuleTest {
     // ========================================================================
     // Constants
 
@@ -37,10 +37,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     // ========================================================================
     // State
 
-    PP_Everclear_CrossChain_v1_Exposed public paymentProcessor;
+    PP_Everclear_CrossChain_v2_Exposed public paymentProcessor;
     EverclearPaymentMock public everclearPaymentMock;
     ERC20PaymentClientBase_v3_Mock paymentClient;
-    IPP_CrossChainBase_v1 public CrossChainBase;
+    IPP_CrossChainBase_v2 public CrossChainBase;
 
     // Bridge-related storage
     address public mockConnextBridge;
@@ -67,9 +67,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         paymentClient = ERC20PaymentClientBase_v3_Mock(Clones.clone(impl));
 
         // Deploy and init the SUT
-        impl = address(new PP_Everclear_CrossChain_v1_Exposed());
+        impl = address(new PP_Everclear_CrossChain_v2_Exposed());
         paymentProcessor =
-            PP_Everclear_CrossChain_v1_Exposed(Clones.clone(impl));
+            PP_Everclear_CrossChain_v2_Exposed(Clones.clone(impl));
 
         // Setup the mock workflow contracts and token
         _setUpOrchestrator(paymentClient);
@@ -101,16 +101,16 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     function testSupportsInterface() public override {
-        // Test for IPP_CrossChainBase_v1 interface
+        // Test for IPP_CrossChainBase_v2 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPP_CrossChainBase_v1).interfaceId
+                type(IPP_CrossChainBase_v2).interfaceId
             )
         );
-        // Test for IPP_Everclear_CrossChain_v1 interface
+        // Test for IPP_Everclear_CrossChain_v2 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPP_Everclear_CrossChain_v1).interfaceId
+                type(IPP_Everclear_CrossChain_v2).interfaceId
             )
         );
         // Test for IPaymentProcessor_v2 interface
@@ -959,7 +959,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             order.flags,
             order.data
         );
-        emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
+        emit IPP_CrossChainBase_v2.BridgeTransferCompleted(
             paymentProcessor.getPaymentId(),
             intentId,
             order.recipient,
@@ -1024,7 +1024,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Test function call and emit event
         vm.expectEmit(true, true, true, true);
-        emit IPP_CrossChainBase_v1.BridgeTransferFailed(
+        emit IPP_CrossChainBase_v2.BridgeTransferFailed(
             address(paymentClient),
             order.recipient,
             order.paymentToken,

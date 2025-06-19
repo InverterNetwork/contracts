@@ -6,7 +6,7 @@ import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
+import {IPP_CrossChainBase_v2} from "@pp/interfaces/IPP_CrossChainBase_v2.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -23,7 +23,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          processing functionality.
  *
  * @dev     Inherits functionality from:
- *          - IPP_CrossChainBase_v1: Implementation interface.
+ *          - IPP_CrossChainBase_v2: Implementation interface.
  *          - IPaymentProcessor_v3: Payment processor interface.
  *          - Module_v2: Base module functionality.
  *
@@ -52,13 +52,13 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version 1.0.0
+ * @custom:version 2.0.0
  *
  * @custom:standard-version 1.0.0
  *
  * @author  33Audits
  */
-abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v2 {
+abstract contract PP_CrossChainBase_v2 is IPP_CrossChainBase_v2, Module_v2 {
     //--------------------------------------------------------------------------
     // Libraries
 
@@ -75,7 +75,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v2 {
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_CrossChainBase_v1).interfaceId
+        return interfaceId_ == type(IPP_CrossChainBase_v2).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v3).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -123,7 +123,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v2 {
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IPP_CrossChainBase_v1
+    /// @inheritdoc IPP_CrossChainBase_v2
     function getBridgeDataByPaymentId(uint paymentId_)
         public
         view
@@ -133,7 +133,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v2 {
         return _paymentIdToBridgeData[paymentId_];
     }
 
-    /// @inheritdoc IPP_CrossChainBase_v1
+    /// @inheritdoc IPP_CrossChainBase_v2
     function getPaymentId() external view virtual returns (uint paymentId_) {
         return _paymentId;
     }

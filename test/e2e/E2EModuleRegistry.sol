@@ -38,8 +38,8 @@ import {FM_PC_Oracle_Redeeming_v2} from
     "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v2.sol";
 import {LM_Oracle_Permissioned_v2} from
     "src/modules/logicModule/LM_Oracle_Permissioned_v2.sol";
-import {PP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v2} from
+    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v2.sol";
 import {Mock_LM_PC_PaymentRouter_Everclear_v1} from
     "@mocks/modules/logicModule/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
 
@@ -605,19 +605,19 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // PP_Everclear_CrossChain_v1
-    PP_Everclear_CrossChain_v1 ppEverclearCrossChainImpl;
+    // PP_Everclear_CrossChain_v2
+    PP_Everclear_CrossChain_v2 ppEverclearCrossChainImpl;
     InverterBeacon_v1 ppEverclearCrossChainBeacon;
     IModule_v2.Metadata public ppEverclearCrossChainMetadata = IModule_v2
         .Metadata(
         1, // major version
         0, // minor version
         0, // patch version
-        "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol", // Using file path as URL for local ref
-        "PP_Everclear_CrossChain_v1"
+        "src/modules/paymentProcessor/PP_Everclear_CrossChain_v2.sol", // Using file path as URL for local ref
+        "PP_Everclear_CrossChain_v2"
     );
     /*
-    // Example Config for PP_Everclear_CrossChain_v1:
+    // Example Config for PP_Everclear_CrossChain_v2:
     // Assumes 'address everclearSpokeAddress' is defined in the test's setUp.
     IOrchestratorFactory_v1.ModuleConfig ppEverclearConfig = IOrchestratorFactory_v1.ModuleConfig(
         ppEverclearCrossChainMetadata,
@@ -640,7 +640,7 @@ contract E2EModuleRegistry is Test {
         );
 
         // Deploy module implementation.
-        ppEverclearCrossChainImpl = new PP_Everclear_CrossChain_v1();
+        ppEverclearCrossChainImpl = new PP_Everclear_CrossChain_v2();
 
         // Deploy module beacon.
         ppEverclearCrossChainBeacon = new InverterBeacon_v1(
@@ -660,17 +660,17 @@ contract E2EModuleRegistry is Test {
             IInverterBeacon_v1(ppEverclearCrossChainBeacon)
         ) {
             console.log(
-                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 SUCCESS"
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v2 SUCCESS"
             );
         } catch Error(string memory reason) {
             console.log(
-                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 FAILED - Error:",
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v2 FAILED - Error:",
                 reason
             );
             revert(reason);
         } catch (bytes memory lowLevelData) {
             console.log(
-                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v1 FAILED - LowLevelData:",
+                "setUpPPEverclearCrossChain: registerMetadataInModuleFactory for PP_Everclear_CrossChain_v2 FAILED - LowLevelData:",
                 string(lowLevelData)
             );
             revert("LowLevelData failure");

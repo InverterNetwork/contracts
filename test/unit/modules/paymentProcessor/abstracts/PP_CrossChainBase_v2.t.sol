@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal imports
-import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
-import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
+import {PP_CrossChainBase_v2} from "@pp/abstracts/PP_CrossChainBase_v2.sol";
+import {IPP_CrossChainBase_v2} from "@pp/interfaces/IPP_CrossChainBase_v2.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
@@ -25,23 +25,23 @@ import {PaymentProcessor_v3_Mock} from
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // SuT
-import {PP_CrossChainBase_v1_Exposed} from
-    "@mocks/modules/paymentProcessor/abstracts/PP_CrossChainBase_v1_Exposed.sol";
+import {PP_CrossChainBase_v2_Exposed} from
+    "@mocks/modules/paymentProcessor/abstracts/PP_CrossChainBase_v2_Exposed.sol";
 
-contract PP_CrossChainBase_v1_Test is ModuleTest {
+contract PP_CrossChainBase_v2_Test is ModuleTest {
     // ========================================================================
     // State
 
-    PP_CrossChainBase_v1_Exposed public crossChainPaymentProcessorBase;
+    PP_CrossChainBase_v2_Exposed public crossChainPaymentProcessorBase;
     ERC20PaymentClientBase_v3_Mock public paymentClient;
 
     // ========================================================================
     // Setup
     function setUp() public {
         // Deploy and init the SUT
-        address impl = address(new PP_CrossChainBase_v1_Exposed());
+        address impl = address(new PP_CrossChainBase_v2_Exposed());
         crossChainPaymentProcessorBase =
-            PP_CrossChainBase_v1_Exposed(Clones.clone(impl));
+            PP_CrossChainBase_v2_Exposed(Clones.clone(impl));
 
         // Deploy and setup the payment client for testing SUT
         impl = address(new ERC20PaymentClientBase_v3_Mock());
@@ -81,7 +81,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     function testSupportsInterface() public override {
         assertTrue(
             crossChainPaymentProcessorBase.supportsInterface(
-                type(IPP_CrossChainBase_v1).interfaceId
+                type(IPP_CrossChainBase_v2).interfaceId
             )
         );
         assertTrue(

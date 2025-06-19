@@ -11,7 +11,7 @@ import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
  *          processing functionality.
  *
  * @dev     Inherits functionality from:
- *          - IPP_CrossChainBase_v1: Implementation interface.
+ *          - IPP_CrossChainBase_v2: Implementation interface.
  *          - IPaymentProcessor_v3: Payment processor interface.
  *          - Module_v1: Base module functionality.
  *
@@ -38,13 +38,13 @@ import {IPaymentProcessor_v3} from "@pp/IPaymentProcessor_v3.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version 1.0.0
+ * @custom:version 2.0.0
  *
  * @custom:standard-version 1.0.0
  *
  * @author  33Audits
  */
-interface IPP_CrossChainBase_v1 is IPaymentProcessor_v3 {
+interface IPP_CrossChainBase_v2 is IPaymentProcessor_v3 {
     // Events
     //--------------------------------------------------------------------------
 

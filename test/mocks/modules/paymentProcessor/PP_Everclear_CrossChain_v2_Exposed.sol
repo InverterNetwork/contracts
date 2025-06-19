@@ -1,14 +1,14 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v2} from "@pp/PP_Everclear_CrossChain_v2.sol";
 import {IERC20PaymentClientBase_v3} from
     "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
+contract PP_Everclear_CrossChain_v2_Exposed is PP_Everclear_CrossChain_v2 {
     // Expose internal _executeBridgeTransfer function
     function exposed_executeBridgeTransfer(
         IERC20PaymentClientBase_v3.PaymentOrder memory order
