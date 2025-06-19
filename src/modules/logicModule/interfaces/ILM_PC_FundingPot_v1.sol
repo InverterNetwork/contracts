@@ -150,16 +150,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         AccumulationMode accumulationMode_
     );
 
-    /// @notice Emitted when access criteria is set for a round.
-    /// @param  roundId_ The unique identifier of the round.
-    /// @param  accessCriteriaId_ The identifier of the access criteria.
-    event AccessCriteriaSet(uint32 indexed roundId_, uint8 accessCriteriaId_);
-
     /// @notice Emitted when access criteria is edited for a round.
+    /// @param  isEdit_ represents new or edited setting
     /// @param  roundId_ The unique identifier of the round.
     /// @param  accessCriteriaId_ The identifier of the access criteria.
-    event AccessCriteriaEdited(
-        uint32 indexed roundId_, uint8 accessCriteriaId_
+    event AccessUpdated(
+        bool isEdit_, uint32 indexed roundId_, uint8 accessCriteriaId_
     );
 
     /// @notice Emitted when access criteria privileges are set for a round.
@@ -199,24 +195,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint32 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
     );
 
-    /// @notice Emitted when a payment order is created.
-    /// @param  roundId_ The ID of the round.
-    /// @param  contributor_ The address of the contributor.
-    /// @param  accessCriteriaId_ The ID of the access criteria.
-    /// @param  tokensForThisAccessCriteria_ The amount of tokens contributed for this access criteria.
-    /// @param  start_ The start timestamp for for when the linear vesting starts.
-    /// @param  cliff_ The time in seconds from start time at which the unlock starts.
-    /// @param  end_ The end timestamp for when the linear vesting ends.
-    event PaymentOrderCreated(
-        uint32 roundId_,
-        address contributor_,
-        uint8 accessCriteriaId_,
-        uint tokensForThisAccessCriteria_,
-        uint start_,
-        uint cliff_,
-        uint end_
-    );
-
     /// @notice Emitted when a contributor batch is processed.
     /// @param  roundId_ The ID of the round.
     /// @param  startIndex_ The starting index in the contributors array.
@@ -247,11 +225,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified.
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
-    /// @notice Thrown when a hook contract is specified without a hook function.
-    error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
-
-    /// @notice Thrown when a hook function is specified without a hook contract.
-    error Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction();
+    /// @notice Error for invalid hook settings
+    error Module__LM_PC_FundingPot__InvalidHookConfiguration();
 
     /// @notice Round does not exist.
     error Module__LM_PC_FundingPot__RoundNotCreated();

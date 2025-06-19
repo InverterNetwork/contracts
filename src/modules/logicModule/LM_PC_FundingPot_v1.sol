@@ -556,12 +556,7 @@ contract LM_PC_FundingPot_v1 is
             }
         }
 
-        // Emit the appropriate event based on whether this is a new setting or an edit
-        if (isEdit) {
-            emit AccessCriteriaEdited(roundId_, criteriaId);
-        } else {
-            emit AccessCriteriaSet(roundId_, criteriaId);
-        }
+        emit AccessUpdated(isEdit, roundId_, criteriaId);
     }
 
     // Update removeAllowlistedAddresses to match the new approach
@@ -899,14 +894,12 @@ contract LM_PC_FundingPot_v1 is
         if (
             round_.hookContract != address(0) && round_.hookFunction.length == 0
         ) {
-            revert
-                Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
+            revert Module__LM_PC_FundingPot__InvalidHookConfiguration();
         }
 
         if (round_.hookContract == address(0) && round_.hookFunction.length > 0)
         {
-            revert
-                Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction();
+            revert Module__LM_PC_FundingPot__InvalidHookConfiguration();
         }
     }
 
@@ -1421,16 +1414,6 @@ contract LM_PC_FundingPot_v1 is
         });
 
         _addPaymentOrder(paymentOrder);
-
-        emit PaymentOrderCreated(
-            roundId_,
-            recipient_,
-            accessCriteriaId_,
-            tokensAmount_,
-            start,
-            cliff,
-            end
-        );
     }
 
     function _buyBondingCurveToken(uint32 roundId_) internal {

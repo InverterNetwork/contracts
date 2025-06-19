@@ -301,7 +301,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract
+                    .Module__LM_PC_FundingPot__InvalidHookConfiguration
                     .selector
             )
         );
@@ -325,7 +325,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction
+                    .Module__LM_PC_FundingPot__InvalidHookConfiguration
                     .selector
             )
         );
@@ -676,7 +676,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract
+                    .Module__LM_PC_FundingPot__InvalidHookConfiguration
                     .selector
             )
         );
@@ -712,7 +712,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction
+                    .Module__LM_PC_FundingPot__InvalidHookConfiguration
                     .selector
             )
         );
@@ -1116,8 +1116,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ) = _helper_createAccessCriteria(newAccessCriteriaEnum, roundId);
 
         vm.expectEmit(true, true, true, false);
-        emit ILM_PC_FundingPot_v1.AccessCriteriaEdited(
-            roundId, uint8(newAccessCriteriaEnum)
+        emit ILM_PC_FundingPot_v1.AccessUpdated(
+            true, roundId, uint8(newAccessCriteriaEnum)
         );
         fundingPot.setAccessCriteria(
             roundId,
