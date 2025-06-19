@@ -255,9 +255,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice User is not on the allowlist.
     error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
 
-    /// @notice Access not permitted.
-    error Module__LM_PC_FundingPot__AccessNotPermitted();
-
     /// @notice User has reached their personal contribution cap.
     error Module__LM_PC_FundingPot__PersonalCapReached();
 
@@ -365,15 +362,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             uint end_
         );
 
-    /// @notice Retrieves the total number of funding rounds.
-    /// @return roundCount_ The total number of funding rounds.
-    function getRoundCount() external view returns (uint32 roundCount_);
-
-    /// @notice Retrieves the closed status of a round.
-    /// @param  roundId_ The ID of the round.
-    /// @return The closed status of the round.
-    function isRoundClosed(uint32 roundId_) external view returns (bool);
-
     /// @notice Gets eligibility information for a user in a specific round.
     /// @param  roundId_ The ID of the round to check eligibility for.
     /// @param  accessCriteriaId_ The ID of the access criteria to check eligibility for.
@@ -390,47 +378,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         external
         view
         returns (bool isEligible, uint remainingAmountAllowedToContribute);
-
-    /// @notice Retrieves the total contribution for a specific round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @return The total contributions for the specified round.
-    function getTotalRoundContribution(uint32 roundId_)
-        external
-        view
-        returns (uint);
-
-    /// @notice Retrieves the contribution amount for a specific user in a round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @param  user_ The address of the user.
-    /// @return The user's contribution amount for the specified round.
-    function getUserContributionToRound(uint32 roundId_, address user_)
-        external
-        view
-        returns (uint);
-
-    /// @notice Retrieves the globally configured start round ID for accumulation calculations.
-    /// @dev    Accumulation (both personal and total) will only consider previous rounds
-    ///         with IDs greater than or equal to this value, provided the target round's
-    ///         AccumulationMode allows it. Defaults to 1.
-    /// @return The first round ID (inclusive) to consider for accumulation.
-    function getGlobalAccumulationStartRoundId()
-        external
-        view
-        returns (uint32);
-
-    /// @notice Checks whether a user has already used their unspent caps from previous rounds for a specific round and access criteria combination.
-    /// @dev    This function is used to prevent double-counting of unspent caps when users contribute to rounds
-    ///         with accumulation enabled. It tracks whether the user has already utilized their carry-over capacity
-    ///         from previous rounds for the specified round and access criteria.
-    /// @param  user_ The address of the user to check.
-    /// @param  roundId_ The ID of the round to check for unspent cap usage.
-    /// @param  accessCriteriaId_ The ID of the access criteria to check for unspent cap usage.
-    /// @return True if the user has already used their unspent caps for this round and access criteria combination, false otherwise.
-    function getUserUsedUnspendCaps(
-        address user_,
-        uint32 roundId_,
-        uint8 accessCriteriaId_
-    ) external view returns (bool);
 
     // -------------------------------------------------------------------------
     // Public - Mutating

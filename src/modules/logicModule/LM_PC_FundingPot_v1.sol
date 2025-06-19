@@ -115,7 +115,7 @@ contract LM_PC_FundingPot_v1 is
     // State
 
     /// @notice The current round count.
-    uint32 private roundCount;
+    uint32 public roundCount;
 
     /// @notice Stores all funding rounds by their unique ID.
     mapping(uint32 => Round) private rounds;
@@ -127,14 +127,14 @@ contract LM_PC_FundingPot_v1 is
     ) private roundIdToAccessCriteriaIdToPrivileges;
 
     /// @notice Maps round IDs to user addresses to contribution amounts.
-    mapping(uint32 => mapping(address => uint)) private
+    mapping(uint32 => mapping(address => uint)) public
         roundIdToUserToContribution;
 
     /// @notice Maps round IDs to total contributions.
-    mapping(uint32 => uint) private roundIdToTotalContributions;
+    mapping(uint32 => uint) public roundIdToTotalContributions;
 
     /// @notice Maps round IDs to closed status.
-    mapping(uint32 => bool) private roundIdToClosedStatus;
+    mapping(uint32 => bool) public roundIdToClosedStatus;
 
     /// @notice Maps round IDs to bonding curve tokens bought.
     mapping(uint32 => uint) private roundTokensBought;
@@ -155,10 +155,10 @@ contract LM_PC_FundingPot_v1 is
     /// @notice The minimum round ID (inclusive, >= 1) to consider for accumulation calculations.
     /// @dev    Defaults to 1. If a target round's mode allows accumulation,
     ///         only previous rounds with roundId >= globalAccumulationStartRoundId will be included.
-    uint32 internal globalAccumulationStartRoundId;
+    uint32 public globalAccumulationStartRoundId;
 
     /// @notice Maps user addresses to a mapping of round IDs to a mapping of access criteria IDs to whether their unspent cap has been used
-    mapping(address => mapping(uint32 => mapping(uint8 => bool))) private
+    mapping(address => mapping(uint32 => mapping(uint8 => bool))) public
         usedUnspentCaps;
 
     /// @notice Storage gap for future upgrades.
@@ -289,16 +289,6 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundCount() external view returns (uint32) {
-        return roundCount;
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function isRoundClosed(uint32 roundId_) external view returns (bool) {
-        return roundIdToClosedStatus[roundId_];
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
     function getUserEligibility(
         uint32 roundId_,
         uint8 accessCriteriaId_,
@@ -350,41 +340,6 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getTotalRoundContribution(uint32 roundId_)
-        external
-        view
-        returns (uint)
-    {
-        return roundIdToTotalContributions[roundId_];
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getUserContributionToRound(uint32 roundId_, address user_)
-        external
-        view
-        returns (uint)
-    {
-        return roundIdToUserToContribution[roundId_][user_];
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getGlobalAccumulationStartRoundId()
-        external
-        view
-        returns (uint32)
-    {
-        return globalAccumulationStartRoundId;
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getUserUsedUnspendCaps(
-        address user_,
-        uint32 roundId_,
-        uint8 accessCriteriaId_
-    ) external view returns (bool) {
-        return usedUnspentCaps[user_][roundId_][accessCriteriaId_];
-    }
     // -------------------------------------------------------------------------
     // Public - Mutating
 

@@ -285,8 +285,8 @@ contract FundingPotE2E is E2ETest {
 
         // 8. Close rounds
         fundingPot.closeRound(round1Id);
-        assertEq(fundingPot.isRoundClosed(round1Id), true);
-        assertEq(fundingPot.isRoundClosed(round2Id), true); // round2 is auto closed
+        assertEq(fundingPot.roundIdToClosedStatus(round1Id), true);
+        assertEq(fundingPot.roundIdToClosedStatus(round2Id), true); // round2 is auto closed
         assertEq(contributionToken.balanceOf(address(fundingPot)), 0);
         assertGt(issuanceToken.balanceOf(address(fundingPot)), 0);
 

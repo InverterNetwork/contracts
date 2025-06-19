@@ -359,7 +359,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.accumulationMode
         );
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         // Retrieve the stored parameters
         (
@@ -433,7 +433,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         vm.assume(user_ != address(0) && user_ != address(this));
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -469,7 +469,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundIsNotCreated() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -502,7 +502,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundIsActive() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params;
         (
@@ -549,7 +549,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         _editedRoundParams;
         vm.assume(roundStart_ < block.timestamp);
         _editedRoundParams.roundStart = roundStart_;
@@ -576,7 +576,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundEndTimeAndCapAreBothZero() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -617,7 +617,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 && roundEnd_ < roundStart_
         );
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         // Get the current round start time
         (uint currentRoundStart,,,,,,) =
@@ -661,7 +661,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params = _helper_createEditRoundParams(
             block.timestamp + 3 days,
@@ -697,7 +697,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         RoundParams memory params = _helper_createEditRoundParams(
             block.timestamp + 3 days,
@@ -745,7 +745,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound() public {
         testCreateRound();
-        uint32 lastRoundId = fundingPot.getRoundCount();
+        uint32 lastRoundId = fundingPot.roundCount();
 
         RoundParams memory params = _editedRoundParams;
 
@@ -827,7 +827,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(user_ != address(0) && user_ != address(this));
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -861,7 +861,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -893,7 +893,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -928,7 +928,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum > 4);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -963,7 +963,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -996,7 +996,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -1029,7 +1029,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (
             address nftContract,
@@ -1060,7 +1060,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
 
         (
@@ -1108,7 +1108,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         testFuzzSetAccessCriteria(oldAccessCriteriaEnum);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         (
             address nftContract,
             bytes32 merkleRoot,
@@ -1149,7 +1149,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     */
     function testRemoveAllowlistedAddresses() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
@@ -1205,7 +1205,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     */
     function testRemoveAllowAddressesSetAccessCriteria() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
@@ -1472,7 +1472,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
         uint amount = 250;
@@ -1519,7 +1519,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
 
@@ -1572,7 +1572,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         _helper_setupRoundWithAccessCriteria(accessType);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         uint amount = 250;
 
@@ -1603,7 +1603,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
         uint amount = 250;
@@ -1656,7 +1656,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
         uint amount = 250;
@@ -1715,7 +1715,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params1.autoClosure,
             params1.accumulationMode
         );
-        uint32 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
@@ -1755,7 +1755,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params2.autoClosure,
             params2.accumulationMode
         );
-        uint32 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.roundCount();
 
         fundingPot.setAccessCriteria(
             round2Id,
@@ -1948,7 +1948,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         uint amount = 500;
@@ -2153,7 +2153,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint amount = 250;
 
         (
@@ -2200,12 +2200,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             contributor1_, roundId, amount, accessCriteriaId, new bytes32[](0)
         );
 
-        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
+        uint totalContributions =
+            fundingPot.roundIdToTotalContributions(roundId);
 
         assertEq(totalContributions, amount);
 
         uint personalContributions =
-            fundingPot.getUserContributionToRound(roundId, contributor1_);
+            fundingPot.roundIdToUserToContribution(roundId, contributor1_);
         assertEq(personalContributions, amount);
     }
 
@@ -2221,7 +2222,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessCriteriaId = 1;
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaId);
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         mockNFTContract.mint(contributor1_);
 
@@ -2243,10 +2244,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         uint userContribution =
-            fundingPot.getUserContributionToRound(roundId, contributor1_);
+            fundingPot.roundIdToUserToContribution(roundId, contributor1_);
         assertEq(userContribution, 250);
 
-        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
+        uint totalContributions =
+            fundingPot.roundIdToTotalContributions(roundId);
         assertEq(totalContributions, 250);
     }
 
@@ -2258,7 +2260,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         _helper_setupRoundWithAccessCriteria(accessType);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         (,,,, bytes32[] memory proofB) = _helper_generateMerkleTreeForTwoLeaves(
             contributor1_, contributor2_, roundId
@@ -2285,10 +2287,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         uint userContribution =
-            fundingPot.getUserContributionToRound(roundId, contributor2_);
+            fundingPot.roundIdToUserToContribution(roundId, contributor2_);
         assertEq(userContribution, contributionAmount);
 
-        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
+        uint totalContributions =
+            fundingPot.roundIdToTotalContributions(roundId);
         assertEq(totalContributions, contributionAmount);
     }
 
@@ -2351,19 +2354,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         uint contribution =
-            fundingPot.getUserContributionToRound(roundId, contributor2_);
+            fundingPot.roundIdToUserToContribution(roundId, contributor2_);
         assertEq(contribution, 50);
 
-        uint totalContribution = fundingPot.getTotalRoundContribution(roundId);
+        uint totalContribution = fundingPot.roundIdToTotalContributions(roundId);
         assertEq(totalContribution, _defaultRoundParams.roundCap);
-        assertTrue(fundingPot.isRoundClosed(roundId));
+        assertTrue(fundingPot.roundIdToClosedStatus(roundId));
     }
 
     function testContributeToRoundFor_worksGivenContributionPartiallyExceedingPersonalCap(
     ) public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
@@ -2431,7 +2434,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         uint totalContribution =
-            fundingPot.getUserContributionToRound(roundId, contributor1_);
+            fundingPot.roundIdToUserToContribution(roundId, contributor1_);
 
         assertEq(totalContribution, personalCap);
     }
@@ -2441,7 +2444,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         uint amount = 250;
@@ -2490,7 +2493,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Verify the contribution was recorded
-        uint totalContribution = fundingPot.getTotalRoundContribution(roundId);
+        uint totalContribution = fundingPot.roundIdToTotalContributions(roundId);
         assertEq(totalContribution, amount);
     }
 
@@ -2509,7 +2512,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.accumulationMode
         );
 
-        uint32 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessCriteriaType =
@@ -2544,7 +2547,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.accumulationMode
         );
-        uint32 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.roundCount();
 
         fundingPot.setAccessCriteria(
             round2Id,
@@ -2595,11 +2598,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor1_), 200
+            fundingPot.roundIdToUserToContribution(round1Id, contributor1_), 200
         );
 
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_), 700
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_), 700
         );
     }
 
@@ -2619,7 +2622,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.accumulationMode
         );
-        uint32 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
@@ -2653,7 +2656,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.accumulationMode
         );
-        uint32 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.roundCount();
         fundingPot.setAccessCriteria(
             round2Id,
             accessType,
@@ -2701,23 +2704,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
 
-        assertEq(fundingPot.getTotalRoundContribution(round1Id), 500);
+        assertEq(fundingPot.roundIdToTotalContributions(round1Id), 500);
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor1_), 300
+            fundingPot.roundIdToUserToContribution(round1Id, contributor1_), 300
         );
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor2_), 200
-        );
-
-        assertEq(fundingPot.getTotalRoundContribution(round2Id), 700);
-        assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor2_), 400
-        );
-        assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor3_), 300
+            fundingPot.roundIdToUserToContribution(round1Id, contributor2_), 200
         );
 
-        assertEq(fundingPot.getTotalRoundContribution(round2Id), 700);
+        assertEq(fundingPot.roundIdToTotalContributions(round2Id), 700);
+        assertEq(
+            fundingPot.roundIdToUserToContribution(round2Id, contributor2_), 400
+        );
+        assertEq(
+            fundingPot.roundIdToUserToContribution(round2Id, contributor3_), 300
+        );
+
+        assertEq(fundingPot.roundIdToTotalContributions(round2Id), 700);
     }
 
     function testContributeToRoundFor_globalStartRestrictsPersonalAccumulation()
@@ -2826,7 +2829,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Set Global Start ---
         fundingPot.setGlobalAccumulationStart(2);
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 2);
+        assertEq(fundingPot.globalAccumulationStartRoundId(), 2);
 
         // --- Attempt Contribution in Round 3 ---
         vm.warp(initialTimestamp + 5 days + 1 hours); // Enter Round 3
@@ -2858,7 +2861,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertion ---
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round3Id, contributor1_),
             expectedR3PersonalCap,
             "R3 personal contribution incorrect"
         );
@@ -2971,7 +2974,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Set Global Start ---
         fundingPot.setGlobalAccumulationStart(2);
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 2);
+        assertEq(fundingPot.globalAccumulationStartRoundId(), 2);
 
         // --- Attempt Contribution in Round 3 ---
         vm.warp(initialTimestamp + 5 days + 1 hours); // Enter Round 3
@@ -2987,12 +2990,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertion ---
         assertEq(
-            fundingPot.getTotalRoundContribution(round3Id),
+            fundingPot.roundIdToTotalContributions(round3Id),
             expectedR3EffectiveCap,
             "R3 total contribution incorrect, effective cap not as expected"
         );
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round3Id, contributor1_),
             expectedR3EffectiveCap,
             "R3 user contribution incorrect"
         );
@@ -3003,7 +3006,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // SCENARIO: Default globalAccumulationStartRoundId = 1 allows accumulation from R1 for R2 (Personal mode)
         // 1. Setup: Round 1 (Personal), Round 2 (Personal).
         //    Partial contribution by C1 in R1.
-        // 2. Action: Verify getGlobalAccumulationStartRoundId() == 1 (default).
+        // 2. Action: Verify globalAccumulationStartRoundId() == 1 (default).
         // 3. Verification: For C1's contribution to R2, unused personal capacity from R1 rolls over.
 
         uint initialTimestamp = block.timestamp;
@@ -3080,7 +3083,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Verify Default Global Start Round ID ---
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Default global start round ID should be 1"
         );
@@ -3124,7 +3127,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertion ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             expectedC1ContributionR2,
             "R2 C1 personal contribution incorrect (should use R1 unused)"
         );
@@ -3214,7 +3217,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Verify Default Global Start Round ID ---
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Default global start round ID should be 1"
         );
@@ -3239,12 +3242,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             c1AttemptR2,
             "R2 C1 contribution incorrect"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             c1AttemptR2,
             "R2 Total contributions after C1 incorrect"
         );
@@ -3264,7 +3267,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         }
 
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2ExpectedEffectiveTotalCap,
             "R2 final total contributions should match effective total cap"
         );
@@ -3354,7 +3357,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Set Global Start Round ID to allow R1 (to show it's ignored by R2's Disabled mode) ---
         fundingPot.setGlobalAccumulationStart(1);
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Global start round ID should be 1"
         );
@@ -3383,17 +3386,17 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             r2BasePersonalCapC1,
             "R2 C1 personal contribution should be clamped by R2's base personal cap (Disabled mode)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2BasePersonalCapC1,
             "R2 Total contributions should not be expanded by R1 (Disabled mode)"
         );
         assertTrue(
-            fundingPot.getTotalRoundContribution(round2Id) <= r2BaseCap,
+            fundingPot.roundIdToTotalContributions(round2Id) <= r2BaseCap,
             "R2 Total contributions exceeded R2's original base cap (Disabled mode)"
         );
     }
@@ -3520,7 +3523,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify the contribution was recorded
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round3Id, contributor1_),
             500,
             "User contribution should be 500"
         );
@@ -3616,7 +3619,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Set Global Start Round ID to be Round 2's ID ---
         fundingPot.setGlobalAccumulationStart(round2Id);
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             round2Id,
             "Global start round ID not set to R2 ID"
         );
@@ -3645,17 +3648,17 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             r2BasePersonalCapC1,
             "R2 C1 personal contribution should be clamped by R2's base personal cap (global start = R2)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2BasePersonalCapC1,
             "R2 Total contributions should not be expanded by R1 (global start = R2)"
         );
         assertTrue(
-            fundingPot.getTotalRoundContribution(round2Id) <= r2BaseCap,
+            fundingPot.roundIdToTotalContributions(round2Id) <= r2BaseCap,
             "R2 Total contributions exceeded R2's original base cap (global start = R2)"
         );
     }
@@ -3717,7 +3720,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round1Id, contributor1_),
             r1ContributionC1
         );
 
@@ -3752,7 +3755,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             r2ContributionC1
         );
 
@@ -3781,7 +3784,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Verify Global Start Round ID ---
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Default global start round ID should be 1"
         );
@@ -3817,12 +3820,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round3Id, contributor1_),
             expectedR3PersonalCapC1,
             "R3 C1 personal contribution incorrect (should use R1 & R2 unused)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round3Id),
+            fundingPot.roundIdToTotalContributions(round3Id),
             expectedR3PersonalCapC1,
             "R3 total contributions incorrect after C1"
         );
@@ -3904,7 +3907,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
         assertEq(
-            fundingPot.getTotalRoundContribution(round1Id), r1ContributionC1
+            fundingPot.roundIdToTotalContributions(round1Id), r1ContributionC1
         );
 
         // --- Create Round 2 (Total Mode) ---
@@ -3938,7 +3941,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id), r2ContributionC2
+            fundingPot.roundIdToTotalContributions(round2Id), r2ContributionC2
         );
 
         // --- Create Round 3 (Total Mode) ---
@@ -3964,7 +3967,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Default global start round ID should be 1"
         );
@@ -3980,12 +3983,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getTotalRoundContribution(round3Id),
+            fundingPot.roundIdToTotalContributions(round3Id),
             r3ExpectedEffectiveCap,
             "R3 total contributions should match effective cap with rollover from R1 and R2"
         );
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor3_),
+            fundingPot.roundIdToUserToContribution(round3Id, contributor3_),
             r3ExpectedEffectiveCap,
             "R3 C3 contribution incorrect"
         );
@@ -4078,7 +4081,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Global Start ID Check ---
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Default global start ID is 1"
         );
@@ -4108,12 +4111,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             expectedEffectivePersonalCapC1R2,
             "R2 C1 personal contribution incorrect"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             expectedEffectivePersonalCapC1R2,
             "R2 Total contributions incorrect"
         );
@@ -4201,7 +4204,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Ensure Global Start Round ID is 1 ---
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             1,
             "Global start round ID should be 1 by default"
         );
@@ -4219,12 +4222,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             c1AttemptR2,
             "R2 C1 contribution should match attempt (filling effective total cap)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2ExpectedEffectiveTotalCap,
             "R2 Total contributions should match effective total cap (All mode, global_start=1)"
         );
@@ -4313,7 +4316,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Set Global Start Round ID to Round 2's ID ---
         fundingPot.setGlobalAccumulationStart(round2Id);
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             round2Id,
             "Global start ID not set to R2 ID"
         );
@@ -4342,12 +4345,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             r2BasePersonalCapC1,
             "R2 C1 personal contribution should be clamped by R2 base personal cap (All mode, global_start=R2)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2BasePersonalCapC1,
             "R2 Total contributions should be C1's clamped amount (All mode, global_start=R2)"
         );
@@ -4435,7 +4438,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Set Global Start Round ID to Round 2's ID ---
         fundingPot.setGlobalAccumulationStart(round2Id);
         assertEq(
-            fundingPot.getGlobalAccumulationStartRoundId(),
+            fundingPot.globalAccumulationStartRoundId(),
             round2Id,
             "Global start ID not set to R2 ID"
         );
@@ -4453,12 +4456,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             r2BaseTotalCap,
             "R2 C1 contribution should be clamped by R2 base total cap (All mode, global_start=R2)"
         );
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             r2BaseTotalCap,
             "R2 Total contributions should be R2 base total cap (All mode, global_start=R2)"
         );
@@ -4621,7 +4624,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
         assertEq(
-            fundingPot.getUserContributionToRound(round3Id, contributor1_), 100
+            fundingPot.roundIdToUserToContribution(round3Id, contributor1_), 100
         );
     }
 
@@ -4641,7 +4644,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.accumulationMode
         );
-        uint32 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.roundCount();
 
         // Set up access criteria for round 1
         uint8 accessCriteriaId = 1; // Open access
@@ -4689,7 +4692,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.autoClosure,
             params.accumulationMode
         );
-        uint32 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.roundCount();
 
         // Set up access criteria for round 2
         fundingPot.setAccessCriteria(
@@ -4719,7 +4722,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify contribution to round 1
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor1_), 200
+            fundingPot.roundIdToUserToContribution(round1Id, contributor1_), 200
         );
 
         // Move to round 2
@@ -4752,7 +4755,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Verify contributions to round 2 - should be more than the personal cap of round 2 (400)
         // This verifies personal caps DO accumulate
         uint contributionAmount =
-            fundingPot.getUserContributionToRound(round2Id, contributor1_);
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_);
         assertEq(contributionAmount, 450);
         assertTrue(contributionAmount > 400, "Personal cap should accumulate");
 
@@ -4769,12 +4772,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         // Verify contributor 2's contribution was clamped to the remaining 50.
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor2_), 50
+            fundingPot.roundIdToUserToContribution(round2Id, contributor2_), 50
         );
         vm.stopPrank();
 
         // Verify total contributions to round 2 is exactly the round cap (450 + 50 = 500).
-        assertEq(fundingPot.getTotalRoundContribution(round2Id), 500);
+        assertEq(fundingPot.roundIdToTotalContributions(round2Id), 500);
 
         // Additional contributor3 should not be able to contribute anything as the cap is full.
         // Attempting to contribute when the cap is already full should revert.
@@ -4795,7 +4798,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Final check that total contributions remain at the round cap.
-        assertEq(fundingPot.getTotalRoundContribution(round2Id), 500);
+        assertEq(fundingPot.roundIdToTotalContributions(round2Id), 500);
     }
 
     function testContributeToRoundFor_totalModeOnlyAccumulatesTotalCaps()
@@ -4814,7 +4817,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.accumulationMode
         );
-        uint32 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.roundCount();
 
         // Set up access criteria for round 1 (Open)
         uint8 accessCriteriaId = 1;
@@ -4861,7 +4864,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.autoClosure,
             params.accumulationMode
         );
-        uint32 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.roundCount();
 
         // Set up access criteria for round 2 (Open)
         fundingPot.setAccessCriteria(
@@ -4891,9 +4894,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify contribution to round 1
         assertEq(
-            fundingPot.getUserContributionToRound(round1Id, contributor1_), 600
+            fundingPot.roundIdToUserToContribution(round1Id, contributor1_), 600
         );
-        assertEq(fundingPot.getTotalRoundContribution(round1Id), 600);
+        assertEq(fundingPot.roundIdToTotalContributions(round1Id), 600);
 
         // Move to round 2
         vm.warp(_defaultRoundParams.roundStart + 3 days + 1);
@@ -4910,7 +4913,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         // Verify contributor 2's contribution was clamped by personal cap.
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor2_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor2_),
             300,
             "C2 contribution should be clamped by personal cap"
         );
@@ -4918,7 +4921,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify total contributions after C2 is 300
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             300,
             "Total after C2 should be 300"
         );
@@ -4955,7 +4958,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         // Verify contributor 1's contribution was clamped to their R2 personal cap.
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor1_),
             300,
             "C1 contribution should be clamped by personal cap"
         );
@@ -4963,7 +4966,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify total round contributions: 300 (C2) + 300 (C1) = 600
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             600,
             "Total after C1 and C2 should be 600"
         );
@@ -4977,7 +4980,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         // Verify C3 contributed 300
         assertEq(
-            fundingPot.getUserContributionToRound(round2Id, contributor3_),
+            fundingPot.roundIdToUserToContribution(round2Id, contributor3_),
             300,
             "C3 contributes remaining 300"
         );
@@ -4985,7 +4988,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Total contributions should now be 900 (300 + 300 + 300), matching the effective cap.
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             900,
             "Total should match effective cap after C3"
         );
@@ -5009,7 +5012,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Final total check should remain 900
         assertEq(
-            fundingPot.getTotalRoundContribution(round2Id),
+            fundingPot.roundIdToTotalContributions(round2Id),
             900,
             "Final total should be effective cap"
         );
@@ -5102,8 +5105,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Step 4: Validate that usedUnspentCaps is set to true
-        bool isUsed =
-            fundingPot.getUserUsedUnspendCaps(contributor1_, round1, 1); // expose via helper function if needed
+        bool isUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1); // expose via helper function if needed
         assertTrue(isUsed, "usedUnspentCaps should be true after contribution");
     }
 
@@ -5232,7 +5234,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Step 5: Check that contribution in round3 is only based on round3 cap (not reused from round1)
         uint contributed =
-            fundingPot.getUserContributionToRound(round3, contributor1_);
+            fundingPot.roundIdToUserToContribution(round3, contributor1_);
         assertLe(
             contributed,
             300,
@@ -5240,8 +5242,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Confirm usedUnspentCaps[round1] is still true, not overwritten or reused
-        bool isStillUsed =
-            fundingPot.getUserUsedUnspendCaps(contributor1_, round1, 1);
+        bool isStillUsed = fundingPot.usedUnspentCaps(contributor1_, round1, 1);
         assertTrue(
             isStillUsed, "usedUnspentCaps should still be true from earlier use"
         );
@@ -5306,7 +5307,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(user_ != address(0) && user_ != address(this));
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         vm.startPrank(user_);
         bytes32 roleId = _authorizer.generateRoleId(
@@ -5326,7 +5327,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         _helper_createAccessCriteria(accessCriteriaEnum, roundId);
 
@@ -5387,7 +5388,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaId);
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         fundingPot.setAccessCriteriaPrivileges(roundId, 0, 1000, false, 0, 0, 0);
 
@@ -5404,7 +5405,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaId);
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessCriteriaId, 1000, false, 0, 0, 0
         );
@@ -5431,7 +5432,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCloseRound_worksGivenRoundHasStartedButNotEnded() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
@@ -5470,12 +5471,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.closeRound(roundId);
 
         // Verify round is closed
-        assertEq(fundingPot.isRoundClosed(roundId), true);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), true);
     }
 
     function testCloseRound_worksGivenRoundHasEnded() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
@@ -5518,13 +5519,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.closeRound(roundId);
 
         // Verify round is closed
-        assertEq(fundingPot.isRoundClosed(roundId), true);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), true);
     }
 
     function testCloseRound_worksGivenRoundCapHasBeenReached() public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
@@ -5563,15 +5564,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             contributor1_, roundId, amount, accessCriteriaId, new bytes32[](0)
         );
 
-        assertEq(fundingPot.isRoundClosed(roundId), false);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), false);
         fundingPot.closeRound(roundId);
-        assertEq(fundingPot.isRoundClosed(roundId), true);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), true);
     }
 
     function testCloseRound_worksGivenRoundisAutoClosure() public {
         testEditRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
 
@@ -5610,12 +5611,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             contributor1_, roundId, amount, accessCriteriaId, new bytes32[](0)
         );
 
-        assertEq(fundingPot.isRoundClosed(roundId), true);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), true);
     }
 
     function testCloseRound_worksWithMultipleContributors() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         // Set up access criteria
         uint8 accessCriteriaId = 1;
@@ -5670,7 +5671,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.closeRound(roundId);
 
         // Verify round is closed
-        assertEq(fundingPot.isRoundClosed(roundId), true);
+        assertEq(fundingPot.roundIdToClosedStatus(roundId), true);
     }
 
     //-------------------------------------------------------------------------
@@ -5727,7 +5728,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundIsNotClosed(
     ) public {
         testContributeToRoundFor_worksGivenGenericConfigAndAccessCriteria();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -5742,7 +5743,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsZero(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -5757,7 +5758,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenUserDoesNotHaveFundingPotAdminRole(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         vm.startPrank(contributor1_);
         bytes32 roleId = _authorizer.generateRoleId(
@@ -5777,7 +5778,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_worksGivenBatchSizeIsGreaterThanContributorCount(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 999);
         assertEq(fundingPot.paymentOrders().length, 3);
@@ -5786,7 +5787,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsAutoClosure(
     ) public {
         testCloseRound_worksGivenRoundisAutoClosure();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
         assertEq(fundingPot.paymentOrders().length, 1);
@@ -5795,7 +5796,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsManualClosure(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
 
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 3);
         assertEq(fundingPot.paymentOrders().length, 3);
@@ -5810,7 +5811,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         bool canOverrideContributionSpan_,
         uint unspentPersonalCap_
     ) external {
-        vm.assume(roundId_ > 0 && roundId_ >= fundingPot.getRoundCount());
+        vm.assume(roundId_ > 0 && roundId_ >= fundingPot.roundCount());
         vm.assume(amount_ <= 1000);
         vm.assume(accessCriteriaId_ <= 4);
         vm.assume(unspentPersonalCap_ >= 0);
@@ -5920,7 +5921,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum > 4);
 
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
@@ -6136,7 +6137,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function test_closeRound_worksGivenCapReached() public {
         testCreateRound();
 
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         uint8 accessCriteriaId = 1;
         uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
 
@@ -6187,14 +6188,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint32(roundId), startIndex, batchSize
         );
 
-        assertTrue(fundingPot.isRoundClosed(roundId));
+        assertTrue(fundingPot.roundIdToClosedStatus(roundId));
     }
 
     // -------------------------------------------------------------------------
     // Test: _buyBondingCurveToken
     function test_buyBondingCurveToken_revertsGivenNoContributions() public {
         testCreateRound();
-        uint32 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.roundCount();
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
