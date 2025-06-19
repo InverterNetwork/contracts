@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 // Interfaces
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
-// @todo update majorversion metadata
-
 /**
  * @title Inverter Metadata Collection
  *
@@ -63,7 +61,7 @@ contract MetadataCollection_v1 {
 
     // Orchestrator
     IModule_v2.Metadata public orchestratorMetadata = IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -81,7 +79,7 @@ contract MetadataCollection_v1 {
     // TokenGatedRoleAuthorizer
     IModule_v2.Metadata public tokenGatedRoleAuthorizerMetadata = IModule_v2
         .Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -90,7 +88,7 @@ contract MetadataCollection_v1 {
 
     // VotingRoles
     IModule_v2.Metadata public votingRolesMetadata = IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -103,7 +101,7 @@ contract MetadataCollection_v1 {
     // BancorRedeemingVirtualSupplyFundingManager
     IModule_v2.Metadata public
         bancorRedeemingVirtualSupplyFundingManagerMetadata = IModule_v2.Metadata(
-            1,
+            2,
             0,
             0,
             "https://github.com/InverterNetwork/contracts",
@@ -113,7 +111,7 @@ contract MetadataCollection_v1 {
     // BondingSurfaceRedeemingFundingManager
     IModule_v2.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
     IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -124,7 +122,7 @@ contract MetadataCollection_v1 {
     IModule_v2.Metadata public
         bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata =
         IModule_v2.Metadata(
-            1,
+            2,
             0,
             0,
             "https://github.com/InverterNetwork/contracts",
@@ -144,7 +142,7 @@ contract MetadataCollection_v1 {
     // OracleRedeemingFundingManager
     IModule_v2.Metadata public oracleRedeemingFundingManagerMetadata =
     IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -155,7 +153,7 @@ contract MetadataCollection_v1 {
 
     // FM_EXT_TokenVault_v2
     IModule_v2.Metadata public tokenVaultMetadata = IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -167,7 +165,7 @@ contract MetadataCollection_v1 {
 
     // Oracle_Permissioned
     IModule_v2.Metadata public oraclePermissionedMetadata = IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -176,7 +174,7 @@ contract MetadataCollection_v1 {
 
     // Bounties
     IModule_v2.Metadata public bountiesMetadata = IModule_v2.Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -185,7 +183,7 @@ contract MetadataCollection_v1 {
 
     // KPIRewarder
     IModule_v2.Metadata public kpiRewarderMetadata = IModule_v2.Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -194,7 +192,7 @@ contract MetadataCollection_v1 {
 
     // PaymentRouter
     IModule_v2.Metadata public paymentRouterMetadata = IModule_v2.Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -203,7 +201,7 @@ contract MetadataCollection_v1 {
 
     // RecurringPayments
     IModule_v2.Metadata public recurringPaymentsMetadata = IModule_v2.Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -212,7 +210,7 @@ contract MetadataCollection_v1 {
 
     // Staking
     IModule_v2.Metadata public stakingMetadata = IModule_v2.Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -225,7 +223,7 @@ contract MetadataCollection_v1 {
     // QueueManualExecutionPaymentProcessor
     IModule_v2.Metadata public queueManualExecutionPaymentProcessorMetadata =
     IModule_v2.Metadata(
-        1,
+        2,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
@@ -235,19 +233,19 @@ contract MetadataCollection_v1 {
     // QueuePaymentProcessor
     IModule_v2.Metadata public queuePaymentProcessorMetadata = IModule_v2
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v2"
+        2, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v2"
     );
 
     // SimplePaymentProcessor
     IModule_v2.Metadata public simplePaymentProcessorMetadata = IModule_v2
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v3"
+        3, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v3"
     );
 
     // StreamingPaymentProcessor
     IModule_v2.Metadata public streamingPaymentProcessorMetadata = IModule_v2
         .Metadata(
-        1,
+        3,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
