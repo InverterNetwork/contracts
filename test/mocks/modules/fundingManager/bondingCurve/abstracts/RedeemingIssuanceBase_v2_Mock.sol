@@ -9,13 +9,13 @@ import {IOrchestrator_v2} from
 
 // SuT
 import {
-    RedeemingBondingCurveBase_v2,
-    IRedeemingBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+    RedeemingIssuanceBase_v2,
+    IRedeemingIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 import {
-    BondingCurveBase_v2,
-    IBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
+    IssuanceBase_v2,
+    IIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/IssuanceBase_v2.sol";
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
@@ -23,7 +23,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v2 {
+contract RedeemingIssuanceBase_v2_Mock is RedeemingIssuanceBase_v2 {
     IBancorFormula public formula;
 
     // -------------------------------------------------------------------------
@@ -69,7 +69,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v2 {
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         pure
-        override(RedeemingBondingCurveBase_v2)
+        override(RedeemingIssuanceBase_v2)
         returns (uint)
     {
         // Since this is a mock, we will always redeem the same amount of tokens as have been deposited
@@ -110,14 +110,14 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v2 {
     function getStaticPriceForSelling()
         external
         view
-        override(RedeemingBondingCurveBase_v2)
+        override(RedeemingIssuanceBase_v2)
         returns (uint)
     {}
 
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v2, IBondingCurveBase_v2)
+        override(IssuanceBase_v2, IIssuanceBase_v2)
         returns (uint)
     {}
 

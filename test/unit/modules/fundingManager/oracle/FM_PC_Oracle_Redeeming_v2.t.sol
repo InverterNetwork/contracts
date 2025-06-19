@@ -8,14 +8,14 @@ import {IFM_PC_Oracle_Redeeming_v2} from
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
-    BondingCurveBase_v2,
-    IBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
+    IssuanceBase_v2,
+    IIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/IssuanceBase_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {
-    RedeemingBondingCurveBase_v2,
-    IRedeemingBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+    RedeemingIssuanceBase_v2,
+    IRedeemingIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {IERC20PaymentClientBase_v3} from
@@ -1121,7 +1121,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test
         vm.expectEmit(true, true, true, true);
-        emit IBondingCurveBase_v2.IssuanceTokenSet(
+        emit IIssuanceBase_v2.IssuanceTokenSet(
             address(newIssuanceToken), decimals_
         );
 
@@ -1438,7 +1438,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Test - Expect event emission
         vm.expectEmit(true, true, true, true);
-        emit IBondingCurveBase_v2.ProjectCollateralFeeAdded(projectFeeAmount_);
+        emit IIssuanceBase_v2.ProjectCollateralFeeAdded(projectFeeAmount_);
 
         // Execute
         fundingManager.exposed_projectFeeCollected(projectFeeAmount_);
@@ -1570,7 +1570,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         address receiver_ = makeAddr("receiver");
         // Test
         vm.expectRevert(
-            IBondingCurveBase_v2
+            IIssuanceBase_v2
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
@@ -1592,7 +1592,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         address receiver_ = makeAddr("receiver");
         // Test
         vm.expectRevert(
-            IBondingCurveBase_v2
+            IIssuanceBase_v2
                 .Module__BondingCurveBase__InvalidMinAmountOut
                 .selector
         );
@@ -1628,7 +1628,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Test
         vm.prank(receiver_);
         vm.expectRevert(
-            IBondingCurveBase_v2
+            IIssuanceBase_v2
                 .Module__BondingCurveBase__InsufficientOutputAmount
                 .selector
         );
@@ -1688,11 +1688,11 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         vm.prank(receiver_);
         // Expect events
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IBondingCurveBase_v2.ProjectCollateralFeeAdded(
+        emit IIssuanceBase_v2.ProjectCollateralFeeAdded(
             expectedProjectCollateralFeeAmount_
         );
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IRedeemingBondingCurveBase_v2.TokensSold(
+        emit IRedeemingIssuanceBase_v2.TokensSold(
             receiver_,
             sellAmount_,
             expectedNetCollateralRedeemAmount_,
@@ -1764,7 +1764,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         vm.prank(receiver_);
         // Expect events
         vm.expectEmit(true, true, true, true, address(fundingManager));
-        emit IRedeemingBondingCurveBase_v2.TokensSold(
+        emit IRedeemingIssuanceBase_v2.TokensSold(
             receiver_,
             sellAmount_,
             expectedNetCollateralRedeemAmount_,

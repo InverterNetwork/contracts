@@ -6,17 +6,16 @@ import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {FM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
-import {RedeemingBondingCurveBase_v2} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
-import {BondingCurveBase_v2} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
+import {RedeemingIssuanceBase_v2} from
+    "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
+import {IssuanceBase_v2} from "@fm/bondingCurve/abstracts/IssuanceBase_v2.sol";
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {IRedeemingBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
+import {IRedeemingIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IRedeemingIssuanceBase_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
@@ -43,8 +42,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          bonding curve.
  *
  * @dev     This contract inherits functionalties from the contracts:
- *              - BondingCurveBase_v2
- *              - RedeemingBondingCurveBase_v2
+ *              - IssuanceBase_v2
+ *              - RedeemingIssuanceBase_v2
  *              - Repayer
  *          The contract should be used by the orchestrator admin to manage all
  *          the configuration for the bonding curve as well as the opening and
@@ -338,11 +337,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     // ------------------------------------------------------------------------
     // Mutating - Out of Order
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function withdrawProjectCollateralFee(
         address, /* receiver_ */
         uint /* amount_ */
-    ) public view override(BondingCurveBase_v2, IBondingCurveBase_v2) {
+    ) public view override(IssuanceBase_v2, IIssuanceBase_v2) {
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
         );
@@ -429,7 +428,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     }
 
     // ------------------------------------------------------------------------
-    // Internal - BondingCurveBase_v2 Overrides
+    // Internal - IssuanceBase_v2 Overrides
 
     /// @notice Validates the project fee.
     /// @dev    Reverts if the project fee is greater than the maximum fee.
@@ -437,7 +436,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     function _validateProjectFee(uint projectFee_)
         internal
         pure
-        override(BondingCurveBase_v2)
+        override(IssuanceBase_v2)
     {
         if (projectFee_ > MAX_FEE) {
             revert Module__BondingCurveBase__InvalidFeePercentage();

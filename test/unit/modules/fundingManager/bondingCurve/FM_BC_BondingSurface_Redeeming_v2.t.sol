@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {
     IFM_BC_BondingSurface_Redeeming_v2,
     FM_BC_BondingSurface_Redeeming_v2,
-    IBondingCurveBase_v2
+    IIssuanceBase_v2
 } from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
 
 import {
@@ -28,10 +28,10 @@ import {
     IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
-import {IRedeemingBondingCurveBase_v2} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
+import {IRedeemingIssuanceBase_v2} from
+    "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from

@@ -19,9 +19,11 @@ pragma solidity ^0.8.0;
  *
  * @custom:version 2.0.0
  *
+ *  @custom:formerName IBondingCurveBase_v2
+ *
  * @author  Inverter Network
  */
-interface IBondingCurveBase_v2 {
+interface IIssuanceBase_v2 {
     //--------------------------------------------------------------------------
     // Errors
 

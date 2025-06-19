@@ -27,8 +27,8 @@ import {
     IFM_BC_BondingSurface_Redeeming_v2
 } from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {IFM_EXT_TokenVault_v2} from
     "@fm/extensions/interfaces/IFM_EXT_TokenVault_v2.sol";
 

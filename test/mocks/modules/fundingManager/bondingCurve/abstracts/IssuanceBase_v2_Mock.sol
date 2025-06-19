@@ -9,16 +9,16 @@ import {IOrchestrator_v2} from
 
 // SuT
 import {
-    BondingCurveBase_v2,
-    IBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
+    IssuanceBase_v2,
+    IIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/IssuanceBase_v2.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract BondingCurveBaseV1Mock is BondingCurveBase_v2 {
+contract IssuanceBase_v2_Mock is IssuanceBase_v2 {
     IBancorFormula public formula;
 
     function init(
@@ -47,7 +47,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v2 {
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
         pure
-        override(BondingCurveBase_v2)
+        override(IssuanceBase_v2)
         returns (uint)
     {
         // Since this is a mock, we will always mint the same amount of tokens as have been deposited
@@ -58,7 +58,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v2 {
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v2)
+        override(IssuanceBase_v2)
         returns (uint)
     {}
 

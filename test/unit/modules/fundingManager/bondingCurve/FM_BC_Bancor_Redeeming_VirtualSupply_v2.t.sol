@@ -30,12 +30,12 @@ import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 import {IVirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {
-    IRedeemingBondingCurveBase_v2,
-    IRedeemingBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+    IRedeemingIssuanceBase_v2,
+    IRedeemingIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
@@ -254,7 +254,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v2
+            IIssuanceBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -266,7 +266,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v2
+                IIssuanceBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )
@@ -307,7 +307,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
-            IBondingCurveBase_v2
+            IIssuanceBase_v2
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
@@ -341,7 +341,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
-        // Test covered in BondingCurveBase_v2
+        // Test covered in IssuanceBase_v2
     }
 
     function testBuyOrder_FailsIfDepositAmountOverflowsVirtualCollateralSupply(
@@ -458,9 +458,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v2.TokensBought(
-            buyer, amount, formulaReturn, buyer
-        );
+        emit IIssuanceBase_v2.TokensBought(buyer, amount, formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -538,9 +536,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IBondingCurveBase_v2.TokensBought(
-            buyer, amount, formulaReturn, buyer
-        );
+        emit IIssuanceBase_v2.TokensBought(buyer, amount, formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -665,7 +661,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v2
+            IRedeemingIssuanceBase_v2
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
@@ -677,7 +673,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         // validReceiver
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBondingCurveBase_v2
+                IIssuanceBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             )
@@ -719,7 +715,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
         bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v2
+            IRedeemingIssuanceBase_v2
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
@@ -764,7 +760,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
-        // Test covered in RedeemingBondingCurveBase_v2
+        // Test covered in RedeemingIssuanceBase_v2
     }
 
     function testSellOrder_FailsIfBurnAmountExceedsVirtualIssuanceSupply(
@@ -904,7 +900,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit IRedeemingBondingCurveBase_v2.TokensSold(
+            emit IRedeemingIssuanceBase_v2.TokensSold(
                 seller, userSellAmount, normalized_formulaReturn, seller
             );
             vm.expectEmit(
@@ -1014,7 +1010,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV2Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit IRedeemingBondingCurveBase_v2.TokensSold(
+            emit IRedeemingIssuanceBase_v2.TokensSold(
                 seller, userSellAmount, sellAmountMinusFee, seller
             );
             vm.expectEmit(

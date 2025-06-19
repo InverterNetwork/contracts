@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 
 /**
  * @title   Inverter Redeeming Bonding Curve Funding Manager Base Interface
@@ -18,9 +18,11 @@ import {IBondingCurveBase_v2} from
  *
  * @custom:version 2.0.0
  *
+ * @custom:formerName RedeemingBondingCurveBase_v2
+ *
  * @author  Inverter Network
  */
-interface IRedeemingBondingCurveBase_v2 is IBondingCurveBase_v2 {
+interface IRedeemingIssuanceBase_v2 is IIssuanceBase_v2 {
     //--------------------------------------------------------------------------
     // Errors
 

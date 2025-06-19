@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal Dependencies
 import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 
 // External Interfaces
 import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
@@ -37,9 +37,11 @@ import {ERC165Upgradeable} from
  *
  * @custom:version 2.0.0
  *
+ * @custom:formerName BondingCurveBase_v2
+ *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
+abstract contract IssuanceBase_v2 is IIssuanceBase_v2, Module_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -48,7 +50,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
         override(Module_v2)
         returns (bool)
     {
-        return interfaceId == type(IBondingCurveBase_v2).interfaceId
+        return interfaceId == type(IIssuanceBase_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -95,7 +97,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -106,7 +108,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
         _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -119,24 +121,24 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // Permissioned Functions
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function openBuy() external virtual permissioned {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function closeBuy() external virtual permissioned {
         buyIsOpen = false;
         emit BuyingDisabled();
     }
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function setBuyFee(uint _fee) external virtual permissioned {
         _setBuyFee(_fee);
     }
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function calculatePurchaseReturn(uint _depositAmount)
         public
         view
@@ -172,7 +174,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
         );
     }
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
         virtual
@@ -195,7 +197,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function getIssuanceToken() external view virtual returns (address) {
         return address(issuanceToken);
     }
@@ -203,7 +205,7 @@ abstract contract BondingCurveBase_v2 is IBondingCurveBase_v2, Module_v2 {
     // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
-    /// @inheritdoc IBondingCurveBase_v2
+    /// @inheritdoc IIssuanceBase_v2
     function getStaticPriceForBuying() external view virtual returns (uint);
 
     // -------------------------------------------------------------------------

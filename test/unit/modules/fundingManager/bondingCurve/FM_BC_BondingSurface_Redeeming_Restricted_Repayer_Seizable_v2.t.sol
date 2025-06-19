@@ -8,7 +8,7 @@ import {
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
     FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
     IFundingManager_v1,
-    IBondingCurveBase_v2
+    IIssuanceBase_v2
 } from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 
@@ -28,12 +28,12 @@ import {
     IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
-import {IBondingCurveBase_v2} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v2.sol";
+import {IIssuanceBase_v2} from
+    "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {
-    IRedeemingBondingCurveBase_v2,
-    IRedeemingBondingCurveBase_v2
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
+    IRedeemingIssuanceBase_v2,
+    IRedeemingIssuanceBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeeming_v2} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
@@ -1014,7 +1014,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         ├── Given the caller_ is not the liquidityVaultController
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert
-        ├── Given modifier validReceiver(to_) is in place: Please Note: Modifier test can be found in BondingCurveBase_v2.t
+        ├── Given modifier validReceiver(to_) is in place: Please Note: Modifier test can be found in IssuanceBase_v2.t
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert if receiver is invalid
         └── Given: the caller_ is the liquidityVaultController
@@ -1063,7 +1063,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         vm.startPrank(liquidityVaultController);
         {
             vm.expectRevert(
-                IBondingCurveBase_v2
+                IIssuanceBase_v2
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             );
@@ -1472,9 +1472,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Test is
         _token.mint(address(bondingCurveFundingManager), amount_);
 
         vm.expectEmit(true, true, true, true);
-        emit IBondingCurveBase_v2.ProjectCollateralFeeWithdrawn(
-            tokenVault, amount_
-        );
+        emit IIssuanceBase_v2.ProjectCollateralFeeWithdrawn(tokenVault, amount_);
 
         //call exposed function
         bondingCurveFundingManager.exposed_projectFeeCollected(amount_);
