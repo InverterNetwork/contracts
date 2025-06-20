@@ -22,17 +22,17 @@ import {ERC165Upgradeable} from
 
 // SuT
 import {
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    IFM_BC_BondingSurface_Redeeming_v2
+    FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2,
+    IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2,
+    IFM_BC_QuadraticPrice_Redeeming_v2
 } from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
+    "@fm/bondingCurve/FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {IFM_EXT_TokenVault_v2} from
     "@fm/extensions/interfaces/IFM_EXT_TokenVault_v2.sol";
 
-contract BondingSurfaceFundingManagerE2E is E2ETest {
+contract QuadraticPriceFormulaFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
@@ -63,19 +63,19 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpBondingSurfaceRedeemingRestrictedRepayerSeizable();
+        setUpQuadraticPriceFormulaRedeemingRestrictedRepayerSeizable();
 
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
         issuanceToken = new ERC20Issuance_v1(
-            "Bonding Surface Token", "BST", 18, type(uint).max - 1
+            "Quadratic Price Formula Token", "BST", 18, type(uint).max - 1
         );
         issuanceToken.setMinter(address(this), true);
 
-        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
-            bc_properties = IFM_BC_BondingSurface_Redeeming_v2
+        IFM_BC_QuadraticPrice_Redeeming_v2.BondingCurveProperties memory
+            bc_properties = IFM_BC_QuadraticPrice_Redeeming_v2
                 .BondingCurveProperties({
-                formula: address(bondingSurface),
+                formula: address(quadraticPriceFormula),
                 capitalRequired: 1_000_000 * 1e18, // Taken from Topos repo test case
                 basePriceMultiplier: 0.000001 ether,
                 // Set pAMM properties
@@ -87,7 +87,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
 
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata,
+                QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata,
                 abi.encode(
                     address(issuanceToken),
                     token,
@@ -152,9 +152,9 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         AUT_Roles_v2 authorizer =
             AUT_Roles_v2(address(orchestrator.authorizer()));
 
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+        FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
             fundingManager =
-            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2(
+            FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2(
                 address(orchestrator.fundingManager())
             );
 
@@ -387,8 +387,8 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         // Check that seize cant be triggered again unditl Seize Delay is not reached
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
-                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout
+                IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
+                    .FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout
                     .selector,
                 block.timestamp + fundingManager.SEIZE_DELAY()
             )

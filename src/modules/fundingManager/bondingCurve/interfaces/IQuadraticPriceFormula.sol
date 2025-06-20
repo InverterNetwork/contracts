@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title   Bonding Surface Formula Interface
+ * @title   Quadratic Price Formula Interface
  *
- * @notice  Interface for the Bonding Surface Formula. Enables calculation of
- *          the bonding surface of a given set of tokens.
+ * @notice  Interface for the Quadratic Price Formula. Enables calculation of
+ *          the quadratic price formula of a given set of tokens.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -14,16 +14,18 @@ pragma solidity ^0.8.0;
  *
  * @custom:version  v1.0.0
  *
+ * @custom:former-name IBondingSurface
+ *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IBondingSurface {
+interface IQuadraticPriceFormula {
     // ========================================================================
     // Errors
 
     /// @notice    Input amount is invalid.
-    error BondingSurface__InvalidInputAmount();
+    error QuadraticPriceFormula__InvalidInputAmount();
 
     // ========================================================================
     // Public Getter Functions

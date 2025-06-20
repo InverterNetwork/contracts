@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
-import {FM_BC_BondingSurface_Redeeming_v2} from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
+import {FM_BC_QuadraticPrice_Redeeming_v2} from
+    "@fm/bondingCurve/FM_BC_QuadraticPrice_Redeeming_v2.sol";
 import {RedeemingIssuanceBase_v2} from
     "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 import {IssuanceBase_v2} from "@fm/bondingCurve/abstracts/IssuanceBase_v2.sol";
@@ -16,15 +16,16 @@ import {IIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {IRedeemingIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IRedeemingIssuanceBase_v2.sol";
-import {IFM_BC_BondingSurface_Redeeming_v2} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
-import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
+import {IFM_BC_QuadraticPrice_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_v2.sol";
+import {IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {IOrchestrator_v2} from
     "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
+import {IQuadraticPriceFormula} from
+    "@fm/bondingCurve/interfaces/IQuadraticPriceFormula.sol";
 import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 
 // External
@@ -49,7 +50,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          the configuration for the bonding curve as well as the opening and
  *          closing of the issuance and redemption functionalities.
  *          The contract implements the formulaWrapper functions enforced by
- *          using the Bonding Surface formula to calculate the issuance/
+ *          using the Quadratic Price Formula to calculate the issuance/
  *          redemption rate.
  *
  * @custom:security-contact security@inverter.network
@@ -59,13 +60,15 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @custom:version  v2.0.0
  *
+ * @custom:former-name FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+ *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
-    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    FM_BC_BondingSurface_Redeeming_v2
+contract FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2 is
+    IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2,
+    FM_BC_QuadraticPrice_Redeeming_v2
 {
     using SafeERC20 for IERC20;
 
@@ -74,11 +77,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         public
         view
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v2)
+        override(FM_BC_QuadraticPrice_Redeeming_v2)
         returns (bool supportsInterface_)
     {
         return interfaceId_
-            == type(IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2)
+            == type(IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2)
                 .interfaceId || interfaceId_ == type(IRepayer_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -132,7 +135,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(FM_BC_BondingSurface_Redeeming_v2) initializer {
+    ) external override(FM_BC_QuadraticPrice_Redeeming_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         address issuanceToken;
@@ -152,10 +155,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
             (address, address, BondingCurveProperties, address, uint64)
         );
         __Module_init(orchestrator_, metadata_);
-        __FM_BC_BondingSurface_Redeeming_v2_Init(
+        __FM_BC_QuadraticPrice_Redeeming_v2_Init(
             issuanceToken, acceptedToken, bondingCurveProperties
         );
-        __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Init(
+        __FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2_Init(
             liquidityVaultController, newSeize
         );
     }
@@ -166,7 +169,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     /// @param  liquidityVaultController_ The address of the
     ///         LiquidityVaultController.
     /// @param  newSeize_ The new seize value.
-    function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2_Init(
+    function __FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2_Init(
         address liquidityVaultController_,
         uint64 newSeize_
     ) internal onlyInitializing {
@@ -178,19 +181,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function getSeizableAmount() public view returns (uint amount_) {
         uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * _currentSeize) / BPS;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function getCurrentSeize() public view returns (uint64 currentSeize_) {
         return _currentSeize;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function getLiquidityVaultController()
         public
         view
@@ -199,7 +202,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         return address(_liquidityVaultController);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function getLastSeizeTimestamp()
         public
         view
@@ -208,7 +211,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         return _lastSeizeTimestamp;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function getTokenVault() public view returns (address tokenVault_) {
         return address(_tokenVault);
     }
@@ -228,12 +231,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     // ------------------------------------------------------------------------
     // Mutating - Permissioned Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function burnIssuanceToken(uint amount_) external permissioned {
         _burn(_msgSender(), amount_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function burnIssuanceTokenFor(address owner_, uint amount_)
         external
         permissioned
@@ -246,19 +249,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         _burn(owner_, amount_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function seize(uint amount_) public permissioned {
         uint seizableAmount = getSeizableAmount();
         if (amount_ > seizableAmount) {
             revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeizeAmount(
+                FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeizeAmount(
                 seizableAmount
             );
         }
         // solhint-disable-next-line not-rely-on-time
         else if (_lastSeizeTimestamp + SEIZE_DELAY > block.timestamp) {
             revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout(
+                FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout(
                 _lastSeizeTimestamp + SEIZE_DELAY
             );
         }
@@ -275,19 +278,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         emit CollateralSeized(amount_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function adjustSeize(uint64 seize_) public permissioned {
         _setSeize(seize_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function setLiquidityVaultControllerContract(address lvc_)
         external
         permissioned
     {
         if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
             revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidInputAddress(
+                FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidInputAddress(
             );
         }
         emit LiquidityVaultControllerChanged(
@@ -300,14 +303,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     function setRepayableAmount(uint amount_) external permissioned {
         if (amount_ > _getSmallerCaCr()) {
             revert
-                IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
+                IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount();
         }
         emit RepayableAmountChanged(amount_, _repayableAmount);
         _repayableAmount = amount_;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
     function setTokenVault(address tokenVault_) external permissioned {
         _setTokenVault(tokenVault_);
     }
@@ -328,7 +331,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
             to_, amount_
         );
         if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached();
         }
 
         emit RepaymentTransfer(to_, amount_);
@@ -343,7 +346,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
         uint /* amount_ */
     ) public view override(IssuanceBase_v2, IIssuanceBase_v2) {
         revert
-            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
+            FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
         );
     }
 
@@ -367,7 +370,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     function _setSeize(uint64 seize_) internal {
         if (seize_ > MAX_SEIZE) {
             revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeize(
+                FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeize(
                 seize_
             );
         }
@@ -421,7 +424,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
     function _ensureOnlyLiquidityVaultController() internal view {
         if (_msgSender() != address(_liquidityVaultController)) {
             revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidLiquidityVaultController(
+                FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidLiquidityVaultController(
                 _msgSender()
             );
         }

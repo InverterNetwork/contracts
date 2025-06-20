@@ -133,41 +133,44 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        // BondingSurfaceRedeemingFundingManager
+        // QuadraticPriceFormulaRedeemingFundingManager
         initialMetadataRegistration.push(
-            bondingSurfaceRedeemingFundingManagerMetadata
+            QuadraticPriceFormulaRedeemingFundingManagerMetadata
         );
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    bondingSurfaceRedeemingFundingManagerMetadata.title,
+                    QuadraticPriceFormulaRedeemingFundingManagerMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_FM_BC_BondingSurface_Redeeming_v2,
-                    bondingSurfaceRedeemingFundingManagerMetadata.majorVersion,
-                    bondingSurfaceRedeemingFundingManagerMetadata.minorVersion,
-                    bondingSurfaceRedeemingFundingManagerMetadata.patchVersion
+                    impl_mod_FM_BC_QuadraticPrice_Redeeming_v2,
+                    QuadraticPriceFormulaRedeemingFundingManagerMetadata
+                        .majorVersion,
+                    QuadraticPriceFormulaRedeemingFundingManagerMetadata
+                        .minorVersion,
+                    QuadraticPriceFormulaRedeemingFundingManagerMetadata
+                        .patchVersion
                 )
             )
         );
 
-        // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
+        // QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManager
         initialMetadataRegistration.push(
-            bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+            QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata
         );
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                    QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata
                         .title,
                     reverter,
                     governor,
-                    impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                    impl_mod_FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2,
+                    QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata
                         .majorVersion,
-                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                    QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata
                         .minorVersion,
-                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                    QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata
                         .patchVersion
                 )
             )

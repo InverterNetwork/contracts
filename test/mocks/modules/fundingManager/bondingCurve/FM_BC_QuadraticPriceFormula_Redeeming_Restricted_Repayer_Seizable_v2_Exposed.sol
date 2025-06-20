@@ -9,15 +9,15 @@ import {IOrchestrator_v2} from
 
 // SuT
 import {
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2,
-    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2,
+    IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
 } from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
+    "@fm/bondingCurve/FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2.sol";
 import {Module_v2} from "src/modules/base/Module_v2.sol";
 
-contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
-{
+contract
+    FM_BC_QuadraticPriceFormula_Redeeming_Restricted_Repayer_Seizable_v2_Exposed
+    is FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2 {
     // -------------------------------------------------------------------------
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 

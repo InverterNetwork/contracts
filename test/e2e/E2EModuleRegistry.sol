@@ -15,9 +15,10 @@ import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v2} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v2.sol";
-import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2} from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol";
-import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
+import {FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2} from
+    "@fm/bondingCurve/FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2.sol";
+import {QuadraticPriceFormula} from
+    "@fm/bondingCurve/formulas/QuadraticPriceFormula.sol";
 import {FM_EXT_TokenVault_v2} from "@fm/extensions/FM_EXT_TokenVault_v2.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
@@ -197,39 +198,40 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+    // FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
 
-    BondingSurface bondingSurface = new BondingSurface();
+    QuadraticPriceFormula quadraticPriceFormula = new QuadraticPriceFormula();
 
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
-        bondingSurfaceRedeemingRestrictedRepayerSeizableImpl;
+    FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
+        QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableImpl;
 
-    InverterBeacon_v1 bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon;
+    InverterBeacon_v1
+        QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableBeacon;
 
     IModule_v2.Metadata
-        bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata = IModule_v2
-            .Metadata(
+        QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata =
+        IModule_v2.Metadata(
             1,
             0,
             0,
             "https://github.com/inverter/contracts",
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
+            "FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2"
         );
 
     /*
-        IFM_BC_BondingSurface_Redeeming_v2.IssuanceToken memory
-            issuanceToken = IFM_BC_BondingSurface_Redeeming_v2
+        IFM_BC_QuadraticPrice_Redeeming_v2.IssuanceToken memory
+            issuanceToken = IFM_BC_QuadraticPrice_Redeeming_v2
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties
+        IFM_BC_QuadraticPrice_Redeeming_v2.BondingCurveProperties
             memory bc_properties =
-            IFM_BC_BondingSurface_Redeeming_v2
+            IFM_BC_QuadraticPrice_Redeeming_v2
                 .BondingCurveProperties({
-                 formula: address(bondingSurface),
+                 formula: address(QuadraticPriceFormula),
                 capitalRequired: 1_000_000 * 1e18, // Taken from Topos repo test case
                 basePriceMultiplier: 0.000001 ether,
                 // Set pAMM properties
@@ -241,7 +243,7 @@ contract E2EModuleRegistry is Test {
 
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata,
+                QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata,
                 abi.encode(
                     address(issuanceToken),
                     token,
@@ -254,31 +256,33 @@ contract E2EModuleRegistry is Test {
         );
     */
 
-    function setUpBondingSurfaceRedeemingRestrictedRepayerSeizable() internal {
+    function setUpQuadraticPriceFormulaRedeemingRestrictedRepayerSeizable()
+        internal
+    {
         // Deploy module implementations.
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
-            bondigSurfaceRedeemingRestrictedRepayerSeizableImpl = new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2(
+        FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2
+            bondigSurfaceRedeemingRestrictedRepayerSeizableImpl = new FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2(
             );
 
         // Deploy module beacons.
-        bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon = new InverterBeacon_v1(
+        QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableBeacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
-            bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata
+            QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata
                 .majorVersion,
             address(bondigSurfaceRedeemingRestrictedRepayerSeizableImpl),
-            bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata
+            QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata
                 .minorVersion,
-            bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata
+            QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata
                 .patchVersion
         );
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata,
+            QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableMetadata,
             IInverterBeacon_v1(
-                bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon
+                QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableBeacon
             )
         );
     }

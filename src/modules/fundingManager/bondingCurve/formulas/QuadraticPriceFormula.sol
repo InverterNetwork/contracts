@@ -5,12 +5,13 @@ pragma solidity 0.8.23;
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
-import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
+import {IQuadraticPriceFormula} from
+    "@fm/bondingCurve/interfaces/IQuadraticPriceFormula.sol";
 
 /**
- * @title   Bonding Surface Formula
+ * @title   Quadratic Price Formula
  *
- * @notice  Bonding Surface Formular to calculate the price of a token in the
+ * @notice  Quadratic Price Formular to calculate the price of a token in the
  *          bonding curve.
  *
  * @dev
@@ -41,11 +42,13 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
  *
  * @custom:version v1.0.0
  *
+ * @custom:former-name BondingSurface
+ *
  * @custom:inverter-standard-version 0.1.0
  *
  * @author  Inverter Network
  */
-contract BondingSurface is IBondingSurface, ERC165 {
+contract QuadraticPriceFormula is IQuadraticPriceFormula, ERC165 {
     /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -54,14 +57,14 @@ contract BondingSurface is IBondingSurface, ERC165 {
         override(ERC165)
         returns (bool supportsInterface_)
     {
-        return interfaceId_ == type(IBondingSurface).interfaceId
+        return interfaceId_ == type(IQuadraticPriceFormula).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
     // ========================================================================
     // Public Getter Functions
 
-    /// @inheritdoc IBondingSurface
+    /// @inheritdoc IQuadraticPriceFormula
     function spotPrice(
         uint capitalAvailable_,
         uint capitalRequirements_,
@@ -78,7 +81,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         ); // C_a^2 * B / C_r
     }
 
-    /// @inheritdoc IBondingSurface
+    /// @inheritdoc IQuadraticPriceFormula
     function tokenOut(
         uint in_,
         uint capitalAvailable_,
@@ -88,7 +91,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         if (
             capitalAvailable_ > 1e36 || capitalAvailable_ + in_ > 1e36
                 || capitalAvailable_ == 0
-        ) revert BondingSurface__InvalidInputAmount();
+        ) revert QuadraticPriceFormula__InvalidInputAmount();
 
         uint inv1 = _inverse(capitalAvailable_);
         uint inv2 = _inverse(capitalAvailable_ + in_);
@@ -99,7 +102,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         );
     }
 
-    /// @inheritdoc IBondingSurface
+    /// @inheritdoc IQuadraticPriceFormula
     function tokenIn(
         uint out_,
         uint capitalAvailable_,

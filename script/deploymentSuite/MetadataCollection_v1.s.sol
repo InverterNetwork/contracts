@@ -108,25 +108,26 @@ contract MetadataCollection_v1 {
             "FM_BC_Bancor_Redeeming_VirtualSupply_v2"
         );
 
-    // BondingSurfaceRedeemingFundingManager
-    IModule_v2.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
-    IModule_v2.Metadata(
-        2,
-        0,
-        0,
-        "https://github.com/InverterNetwork/contracts",
-        "FM_BC_BondingSurface_Redeeming_v2"
-    );
-
-    // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
+    // QuadraticPriceFormulaRedeemingFundingManager
     IModule_v2.Metadata public
-        bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata =
+        QuadraticPriceFormulaRedeemingFundingManagerMetadata = IModule_v2
+            .Metadata(
+            2,
+            0,
+            0,
+            "https://github.com/InverterNetwork/contracts",
+            "FM_BC_QuadraticPrice_Redeeming_v2"
+        );
+
+    // QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManager
+    IModule_v2.Metadata public
+        QuadraticPriceFormulaRedeemingRestrictedRepayerSeizableFundingManagerMetadata =
         IModule_v2.Metadata(
             2,
             0,
             0,
             "https://github.com/InverterNetwork/contracts",
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
+            "FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2"
         );
 
     // DepositVaultFundingManager

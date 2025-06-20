@@ -37,7 +37,7 @@ import {ERC165Upgradeable} from
  *
  * @custom:version 2.0.0
  *
- * @custom:formerName BondingCurveBase_v2
+ * @custom:former-name BondingCurveBase_v2
  *
  * @author  Inverter Network
  */

@@ -7,9 +7,9 @@ import {IRedeemingIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IRedeemingIssuanceBase_v2.sol";
 
 /**
- * @title   Inverter Redeeming Bonding Surface Funding Manager Interface
+ * @title   Inverter Redeeming Quadratic Price Formula Funding Manager Interface
  *
- * @notice  This interface enables the fetching and setting of Bonding Surface
+ * @notice  This interface enables the fetching and setting of Quadratic Price Formula
  *          relevant data.
  *
  * @custom:security-contact security@inverter.network
@@ -19,28 +19,31 @@ import {IRedeemingIssuanceBase_v2} from
  *
  * @custom:version  v2.0.0
  *
+ * @custom:former-name IFM_BC_BondingSurface_Redeeming_v2
+ *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IFM_BC_BondingSurface_Redeeming_v2 is
+interface IFM_BC_QuadraticPrice_Redeeming_v2 is
     IFundingManager_v1,
     IRedeemingIssuanceBase_v2
 {
     // ========================================================================
     // Errors
 
-    /// @notice Invalid Bonding Surface Formula contract.
-    error FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula();
+    /// @notice Invalid Quadratic Price Formula contract.
+    error FM_BC_QuadraticPrice_Redeeming_v2__InvalidQuadraticPriceFormulaFormula(
+    );
 
     /// @notice Amount does not match the requirements.
-    error FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
+    error FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount();
 
     /// @notice No capital is available.
-    error FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
+    error FM_BC_QuadraticPrice_Redeeming_v2__NoCapitalAvailable();
 
     /// @notice The minimum reserve has been reached.
-    error FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
+    error FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached();
 
     // ========================================================================
     // Events
@@ -92,7 +95,7 @@ interface IFM_BC_BondingSurface_Redeeming_v2 is
     /// @notice Returns the formula contract used to calculate the issuance and
     ///         redemption rate.
     /// @return formula_ The formula contract address.
-    function getBondingSurfaceFormula()
+    function getQuadraticPriceFormulaFormula()
         external
         view
         returns (address formula_);

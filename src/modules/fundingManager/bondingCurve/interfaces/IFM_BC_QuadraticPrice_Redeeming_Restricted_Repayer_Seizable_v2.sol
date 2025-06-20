@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 //Internal Dependencies
-import {IFM_BC_BondingSurface_Redeeming_v2} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
+import {IFM_BC_QuadraticPrice_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 
 /**
- * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface
+ * @title   Inverter Redeeming Restriced Repayer Seizable Quadratic Price Formula
  *     Bonding Curve Funding Manager Interface
  *
- * @notice  This interface enables the fetching and setting of Bonding Surface
+ * @notice  This interface enables the fetching and setting of Quadratic Price Formula
  *          relevant data with the added functionalities Restricted and
  *          Seizable.
  *
@@ -21,43 +21,45 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
  *
  * @custom:version  v2.0.0
  *
+ * @custom:former-name IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2
+ *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 is
-    IFM_BC_BondingSurface_Redeeming_v2,
+interface IFM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2 is
+    IFM_BC_QuadraticPrice_Redeeming_v2,
     IRepayer_v1
 {
     // ========================================================================
     // Errors
 
     /// @notice Invalid address passed as argument.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidInputAddress(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidInputAddress(
     );
 
     /// @notice Buy fee can not be set.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidFunctionality(
     );
 
     /// @notice Invalid Liquidity Vault Controller.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidLiquidityVaultController(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidLiquidityVaultController(
         address invalidLiquidityVaultController
     );
 
     /// @notice Seize cannot be bigger than MAX_SEIZE = 1%.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeize(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeize(
         uint64 seize
     );
 
     /// @notice Amount exeeds the seizable amount, defined by a percentage of
     ///         total collateral.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeizeAmount(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__InvalidSeizeAmount(
         uint amount
     );
 
     /// @notice Timestamp is still in the future, so a seize is not allowed.
-    error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout(
+    error FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2__SeizeTimeout(
         uint allowedTimestamp
     );
 

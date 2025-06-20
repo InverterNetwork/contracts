@@ -18,7 +18,7 @@ import {IIssuanceBase_v2} from
  *
  * @custom:version 2.0.0
  *
- * @custom:formerName RedeemingBondingCurveBase_v2
+ * @custom:former-name RedeemingBondingCurveBase_v2
  *
  * @author  Inverter Network
  */

@@ -1,26 +1,26 @@
-# Basic Functionality of BondingSurface Contract
+# Basic Functionality of QuadraticPriceFormula Contract
 
-This is a basic description of the bonding surface contract functionalities and the parameters that are needed to set up the contract.
+This is a basic description of the quadratic price formula contract functionalities and the parameters that are needed to set up the contract.
 
 ## Basic Definitions
 
-To understand the functionalities of the bonding surface contract, it is important to understand the following definitions.
+To understand the functionalities of the quadratic price formula contract, it is important to understand the following definitions.
 
 ### Issuance Token
 
-Issuance tokens are tokens that are distributed from the bonding surface contract.
+Issuance tokens are tokens that are distributed from the quadratic price formula contract.
 
 ### Collateral Token
 
-Collateral tokens are tokens that are accepted by the bonding surface contract as a payment for issuance tokens.
+Collateral tokens are tokens that are accepted by the quadratic price formula contract as a payment for issuance tokens.
 
 ### Bonding Curve
 
 A bonding curve is a mathematical function that determines the price of issuance tokens relative to the collateral tokens.
 
-### Bonding Surface
+### Quadratic Price Formula
 
-The bonding surface is a special type of bonding curve. As both describe the relations between issuance tokens and collateral tokens these terms might be used interchangeably throughout this document.
+The quadratic price formula is a special type of bonding curve. As both describe the relations between issuance tokens and collateral tokens these terms might be used interchangeably throughout this document.
 
 ### Role Management
 
@@ -29,15 +29,15 @@ Each workflow has to determine a Workflow Admin during its deployment. This Work
 
 ## Based on the BondingCurveBase and BondingCurveBaseRedeeming contracts
 
-Because the bonding surface contract is based on the bonding curve base and bonding curve base redeeming contracts, it inherits the functionalities of both contracts. These functionalities are described in the following sections.
+Because the quadratic price formula contract is based on the bonding curve base and bonding curve base redeeming contracts, it inherits the functionalities of both contracts. These functionalities are described in the following sections.
 
 ### Buy
 
-The buy function allows users to buy issuance tokens from the bonding surface contract by providing collateral tokens. The collateral tokens are specified in the token() field of the bonding surface contract.
+The buy function allows users to buy issuance tokens from the quadratic price formula contract by providing collateral tokens. The collateral tokens are specified in the token() field of the quadratic price formula contract.
 
 ### Sell
 
-The sell function allows users to sell issuance tokens back to the bonding surface contract in exchange for issuance tokens. The collateral tokens are specified in the token() field of the bonding surface contract.
+The sell function allows users to sell issuance tokens back to the quadratic price formula contract in exchange for issuance tokens. The collateral tokens are specified in the token() field of the quadratic price formula contract.
 
 ### CalculatePurchaseReturn
 
@@ -59,9 +59,9 @@ The sell functionality can be restricted by the Workflow Admin to be enabled (op
 
 The bonding curve contract is able to collect project fees in collateral tokens from users that use the buy and sell functions. The fees are taken as a percentage of the incoming/outgoing collateral tokens and are stored in the contract itself for later withdrawal. The workflow admin can set the fees via the setBuyFee and setSellFee functions respectively. To withdraw the fees the withdrawProjectCollateralFee() function can be used.
 
-## The Bonding Surface Contract and its Parameters
+## The Quadratic Price Formula Contract and its Parameters
 
-The key point that distinguishes this contract from the base contracts is the use of the BondingSurface to determine the price of the distributed tokens. In the following, the parameters that are needed to set up the contract are described.
+The key point that distinguishes this contract from the base contracts is the use of the QuadraticPriceFormula to determine the price of the distributed tokens. In the following, the parameters that are needed to set up the contract are described.
 
 ### IssuanceToken
 
@@ -73,7 +73,7 @@ The address of the token that is accepted as collateral by the BondingCurve cont
 
 ### Formula address
 
-The address of the formula contract that is used to calculate the price of the issuance token. This contract will have to implement the IBondingSurface interface and the ERC165 interface to be compatible with the BondingCurve contract.
+The address of the formula contract that is used to calculate the price of the issuance token. This contract will have to implement the IQuadraticPriceFormula interface and the ERC165 interface to be compatible with the BondingCurve contract.
 
 ### Capital Required
 
@@ -117,18 +117,18 @@ For the BondingCurve contract setup the following contracts and parameters are n
 
 ### Before Workflow Deployment
 
-Some steps have to be taken before the bonding surface workflow is deployed.
+Some steps have to be taken before the quadratic price formula workflow is deployed.
 
 #### Issuance Token
 
 The ERC20 contract of the token that the BondingCurve contract will distribute/issue.
-This contract needs to be deployed before the bonding surface workflow is deployed, as the reference to the contract address is needed in the workflow deployment.
+This contract needs to be deployed before the quadratic price formula workflow is deployed, as the reference to the contract address is needed in the workflow deployment.
 
-#### Bonding Surface Formula
+#### Quadratic Price Formula
 
 The formula contract that is used to calculate the price of the issuance token.
-This contract will have to implement the IBondingSurface interface and the ERC165 interface to be compatible with the BondingCurve contract.
-This contract needs to be deployed before the bonding surface workflow is deployed, as the reference to the contract address is needed in the workflow deployment.
+This contract will have to implement the IQuadraticPriceFormula interface and the ERC165 interface to be compatible with the BondingCurve contract.
+This contract needs to be deployed before the quadratic price formula workflow is deployed, as the reference to the contract address is needed in the workflow deployment.
 
 ### During Workflow Deployment
 
@@ -141,7 +141,7 @@ The following parameters need to be put in during the workflow deployment:
 
 - **issuanceToken address**: What is the address of the issuance token?
 - **acceptedToken (collateral Token) address**: What is the address of the token that is accepted as collateral by the BondingCurve contract?
-- **bonding surface formula address**: What is the address of the formula contract that is used to calculate the issuance and redeeming amount?
+- **quadratic price Formula address**: What is the address of the formula contract that is used to calculate the issuance and redeeming amount?
 - **capitalRequired amount**: What is the capital that is needed to operate the protocol according to market size and conditions?
 - **basePriceMultiplier value**: What is the base price multiplier in the bonding curve formula?
 - **buyFee percentage**: What is the fee that is charged for the buying of the issuance token?
@@ -151,7 +151,7 @@ The following parameters need to be put in during the workflow deployment:
 
 ### After Workflow Deployment
 
-Some steps have to be taken after the bonding surface workflow is deployed.
+Some steps have to be taken after the quadratic price formula workflow is deployed.
 
 #### Issuance Token
 

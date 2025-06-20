@@ -53,9 +53,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
     // Funding Managers
     address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v2;
-    address public impl_mod_FM_BC_BondingSurface_Redeeming_v2;
+    address public impl_mod_FM_BC_QuadraticPrice_Redeeming_v2;
     address public
-        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2;
+        impl_mod_FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2;
     address public impl_mod_FM_DepositVault_v1;
     address public impl_mod_FM_PC_Oracle_Redeeming_v2;
 
@@ -186,17 +186,17 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
-        impl_mod_FM_BC_BondingSurface_Redeeming_v2 = deployAndLogWithCreate2(
-            "FM_BC_BondingSurface_Redeeming_v2",
+        impl_mod_FM_BC_QuadraticPrice_Redeeming_v2 = deployAndLogWithCreate2(
+            "FM_BC_QuadraticPrice_Redeeming_v2",
             vm.getCode(
-                "FM_BC_BondingSurface_Redeeming_v2.sol:FM_BC_BondingSurface_Redeeming_v2"
+                "FM_BC_QuadraticPrice_Redeeming_v2.sol:FM_BC_QuadraticPrice_Redeeming_v2"
             )
         );
-        impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2 =
+        impl_mod_FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2 =
         deployAndLogWithCreate2(
-            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2",
+            "FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2",
             vm.getCode(
-                "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2.sol:FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v2"
+                "FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2.sol:FM_BC_QuadraticPrice_Redeeming_Restricted_Repayer_Seizable_v2"
             )
         );
 

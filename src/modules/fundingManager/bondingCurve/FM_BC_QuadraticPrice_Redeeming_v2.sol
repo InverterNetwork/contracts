@@ -12,13 +12,14 @@ import {IIssuanceBase_v2} from
 import {IRedeemingIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IRedeemingIssuanceBase_v2.sol";
 import {
-    IFM_BC_BondingSurface_Redeeming_v2,
+    IFM_BC_QuadraticPrice_Redeeming_v2,
     IFundingManager_v1
-} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
+} from "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {IOrchestrator_v2} from
     "src/orchestrator/interfaces/IOrchestrator_v2.sol";
-import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
+import {IQuadraticPriceFormula} from
+    "@fm/bondingCurve/interfaces/IQuadraticPriceFormula.sol";
 import {IAuthorizer_v2} from "src/modules/authorizer/IAuthorizer_v2.sol";
 
 // External
@@ -29,7 +30,7 @@ import {ERC165Upgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Inverter Redeeming Bonding Surface Bonding Curve Funding Manager
+ * @title   Inverter Redeeming Quadratic Price Formula Bonding Curve Funding Manager
  *
  * @notice  This contract enables the issuance and redemption of tokens on a
  *          bonding curve.
@@ -42,7 +43,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          to manage all the configuration for the bonding curve as well as the
  *          opening and closing of the issuance and redeeming functionalities.
  *          The contract implements the formulaWrapper functions enforced by
- *          using the Bonding Surface formula to calculate the issuance/
+ *          using the Quadratic Price Formula to calculate the issuance/
  *          redemption rate.
  *
  * @custom:security-contact security@inverter.network
@@ -52,13 +53,15 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @custom:version  v2.0.0
  *
+ * @custom:former-name FM_BC_BondingSurface_Redeeming_v2
+ *
  * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
-contract FM_BC_BondingSurface_Redeeming_v2 is
+contract FM_BC_QuadraticPrice_Redeeming_v2 is
     RedeemingIssuanceBase_v2,
-    IFM_BC_BondingSurface_Redeeming_v2
+    IFM_BC_QuadraticPrice_Redeeming_v2
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
@@ -69,7 +72,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         returns (bool supportsInterface_)
     {
         return interfaceId_
-            == type(IFM_BC_BondingSurface_Redeeming_v2).interfaceId
+            == type(IFM_BC_QuadraticPrice_Redeeming_v2).interfaceId
             || interfaceId_ == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -85,7 +88,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
 
     /// @notice The interface of the Formula used to calculate the issuance and
     ///         redeeming amount.
-    IBondingSurface internal _formula;
+    IQuadraticPriceFormula internal _formula;
     /// @notice Token that is accepted by this funding manager for deposits.
     IERC20 internal _token;
     /// @notice The amount of capital that is needed to operate the protocol
@@ -117,17 +120,17 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
             abi.decode(configData_, (address, address, BondingCurveProperties));
 
         __Module_init(orchestrator_, metadata_);
-        __FM_BC_BondingSurface_Redeeming_v2_Init(
+        __FM_BC_QuadraticPrice_Redeeming_v2_Init(
             issuanceToken, acceptedToken, bondingCurveProperties
         );
     }
 
-    /// @notice Initializes the Redeeming Bonding Surface Contract.
+    /// @notice Initializes the Redeeming Quadratic Price Formula Contract.
     /// @dev    Only callable during the initialization.
     /// @param  issuanceToken_ The token that is used to issue bonds.
     /// @param  acceptedToken_ The token that is accepted as collateral.
     /// @param  bondingCurveProperties_ The properties of the bonding curve.
-    function __FM_BC_BondingSurface_Redeeming_v2_Init(
+    function __FM_BC_QuadraticPrice_Redeeming_v2_Init(
         address issuanceToken_,
         address acceptedToken_,
         BondingCurveProperties memory bondingCurveProperties_
@@ -142,18 +145,19 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         // Set issuance token. This also caches the decimals.
         _setIssuanceToken(address(issuanceToken_));
 
-        // Check for valid Bonding Surface formula contract.
+        // Check for valid Quadratic Price Formula contract.
         if (
             !ERC165Upgradeable(bondingCurveProperties_.formula).supportsInterface(
-                type(IBondingSurface).interfaceId
+                type(IQuadraticPriceFormula).interfaceId
             )
         ) {
             revert
-                IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula();
+                IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__InvalidQuadraticPriceFormulaFormula(
+            );
         }
         // Set formula contract.
-        _formula = IBondingSurface(bondingCurveProperties_.formula);
+        _formula = IQuadraticPriceFormula(bondingCurveProperties_.formula);
 
         // Set Bonding Curve Properties.
         _setCapitalRequired(bondingCurveProperties_.capitalRequired);
@@ -201,8 +205,8 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         );
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
-    function getBondingSurfaceFormula()
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
+    function getQuadraticPriceFormulaFormula()
         external
         view
         returns (address formula_)
@@ -210,7 +214,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         return address(_formula);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function getCapitalRequired()
         external
         view
@@ -219,7 +223,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         return _capitalRequired;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function getBasePriceMultiplier()
         external
         view
@@ -228,7 +232,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         return _basePriceMultiplier;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function getBasePriceToCapitalRatio()
         external
         view
@@ -237,7 +241,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         return _basePriceToCapitalRatio;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
         uint basePriceMultiplier_
@@ -266,7 +270,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     // ------------------------------------------------------------------------
     // Mutating - Permissioned Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function setCapitalRequired(uint newCapitalRequired_)
         public
         virtual
@@ -275,7 +279,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         _setCapitalRequired(newCapitalRequired_);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v2
+    /// @inheritdoc IFM_BC_QuadraticPrice_Redeeming_v2
     function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         virtual
@@ -304,7 +308,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         token().safeTransfer(to_, amount_);
 
         if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached();
         }
 
         emit TransferOrchestratorToken(to_, amount_);
@@ -330,7 +334,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     /// @param  newCapitalRequired_ the new capital that is required.
     function _setCapitalRequired(uint newCapitalRequired_) internal {
         if (newCapitalRequired_ == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount();
         }
         emit CapitalRequiredChanged(_capitalRequired, newCapitalRequired_);
         _capitalRequired = newCapitalRequired_;
@@ -342,7 +346,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     /// @param  newBasePriceMultiplier_ The new base price multiplier.
     function _setBasePriceMultiplier(uint newBasePriceMultiplier_) internal {
         if (newBasePriceMultiplier_ == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount();
         }
         emit BasePriceMultiplierChanged(
             _basePriceMultiplier, newBasePriceMultiplier_
@@ -376,7 +380,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
             basePriceMultiplier_, capitalRequired_, FixedPointMathLib.WAD
         );
         if (basePriceToCapitalRatio_ > 1e36) {
-            revert FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount();
         }
     }
 
@@ -398,7 +402,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
     {
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__NoCapitalAvailable();
         }
 
         mintAmount_ = _formula.tokenOut(
@@ -422,7 +426,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
         // Subtract fee collected from capital held by contract.
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__NoCapitalAvailable();
         }
         redeemAmount_ = _formula.tokenIn(
             depositAmount_, capitalAvailable, _basePriceToCapitalRatio
@@ -430,7 +434,7 @@ contract FM_BC_BondingSurface_Redeeming_v2 is
 
         // The asset pool must never be empty.
         if (capitalAvailable - redeemAmount_ < MIN_RESERVE) {
-            revert FM_BC_BondingSurface_Redeeming_v2__MinReserveReached();
+            revert FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached();
         }
     }
 

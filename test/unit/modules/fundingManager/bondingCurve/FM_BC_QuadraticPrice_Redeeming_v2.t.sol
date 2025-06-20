@@ -5,15 +5,15 @@ import "forge-std/console.sol";
 
 // SuT
 import {
-    IFM_BC_BondingSurface_Redeeming_v2,
-    FM_BC_BondingSurface_Redeeming_v2,
+    IFM_BC_QuadraticPrice_Redeeming_v2,
+    FM_BC_QuadraticPrice_Redeeming_v2,
     IIssuanceBase_v2
-} from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
+} from "@fm/bondingCurve/FM_BC_QuadraticPrice_Redeeming_v2.sol";
 
 import {
-    IFM_BC_BondingSurface_Redeeming_v2,
+    IFM_BC_QuadraticPrice_Redeeming_v2,
     IFundingManager_v1
-} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
+} from "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_v2.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -27,15 +27,17 @@ import {
     IModule_v2,
     IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
-import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
+import {QuadraticPriceFormula} from
+    "@fm/bondingCurve/formulas/QuadraticPriceFormula.sol";
 import {IIssuanceBase_v2} from
     "@fm/bondingCurve/interfaces/IIssuanceBase_v2.sol";
 import {IRedeemingIssuanceBase_v2} from
     "@fm/bondingCurve/abstracts/RedeemingIssuanceBase_v2.sol";
 
-import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
-import {IFM_BC_BondingSurface_Redeeming_v2} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v2.sol";
+import {IQuadraticPriceFormula} from
+    "@fm/bondingCurve/interfaces/IQuadraticPriceFormula.sol";
+import {IFM_BC_QuadraticPrice_Redeeming_v2} from
+    "@fm/bondingCurve/interfaces/IFM_BC_QuadraticPrice_Redeeming_v2.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {ERC20PaymentClientBase_v3_Mock} from
@@ -44,11 +46,11 @@ import {ERC20PaymentClientBase_v3_Mock} from
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
-import {FM_BC_BondingSurface_RedeemingV1_Exposed} from
-    "@mocks/modules/fundingManager/bondingCurve/FM_BC_BondingSurface_RedeemingV1_Exposed.sol";
+import {FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed} from
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed.sol";
 
-contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
-    string private constant NAME = "Bonding Surface Token";
+contract FM_BC_QuadraticPrice_Redeeming_v2_Test is ModuleTest {
+    string private constant NAME = "Quadratic Price Formula Token";
     string private constant SYMBOL = "BST";
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
@@ -63,7 +65,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
     uint private MIN_RESERVE = 10 ** _token.decimals();
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
 
-    FM_BC_BondingSurface_RedeemingV1_Exposed bondingCurveFundingManager;
+    FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
     ERC20PaymentClientBase_v3_Mock _erc20PaymentClientMock;
@@ -80,12 +82,13 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
         issuanceToken.setMinter(address(this), true);
 
-        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
+        IFM_BC_QuadraticPrice_Redeeming_v2.BondingCurveProperties memory
             bc_properties;
 
         // Deploy formula and cast to address for encoding
-        BondingSurface bondingSurface = new BondingSurface();
-        formula = address(bondingSurface);
+        QuadraticPriceFormula QuadraticPriceFormula =
+            new QuadraticPriceFormula();
+        formula = address(QuadraticPriceFormula);
 
         // Set Formula contract properties
         bc_properties.formula = formula;
@@ -98,10 +101,11 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
+        address impl =
+            address(new FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
+            FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -186,7 +190,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
         // Bonding Curve Properties
         assertEq(
-            bondingCurveFundingManager.getBondingSurfaceFormula(),
+            bondingCurveFundingManager.getQuadraticPriceFormulaFormula(),
             formula,
             "Formula has not been set correctly"
         );
@@ -204,24 +208,25 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
 
     /*
     Test: Init fails for invalid formula
-    └── When: the formula in BondingCurveProperties is not a valid BondingSurface formula
+    └── When: the formula in BondingCurveProperties is not a valid QuadraticPriceFormula
         └── Then: it should revert
     */
 
     function testInitFailsForInvalidFormula() public {
-        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
+        IFM_BC_QuadraticPrice_Redeeming_v2.BondingCurveProperties memory
             bc_properties;
-        bc_properties.formula = address(new FM_BC_BondingSurface_Redeeming_v2());
+        bc_properties.formula = address(new FM_BC_QuadraticPrice_Redeeming_v2());
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
+        address impl =
+            address(new FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
+            FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed(Clones.clone(impl));
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v2
-                    .FM_BC_BondingSurface_Redeeming_v2__InvalidBondingSurfaceFormula
+                IFM_BC_QuadraticPrice_Redeeming_v2
+                    .FM_BC_QuadraticPrice_Redeeming_v2__InvalidQuadraticPriceFormulaFormula
                     .selector
             )
         );
@@ -252,12 +257,13 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         _token.setDecimals(decimals_);
 
         // Setup bondingCurve properties
-        IFM_BC_BondingSurface_Redeeming_v2.BondingCurveProperties memory
+        IFM_BC_QuadraticPrice_Redeeming_v2.BondingCurveProperties memory
             bc_properties;
 
         // Deploy formula and cast to address for encoding
-        BondingSurface bondingSurface = new BondingSurface();
-        formula = address(bondingSurface);
+        QuadraticPriceFormula QuadraticPriceFormula =
+            new QuadraticPriceFormula();
+        formula = address(QuadraticPriceFormula);
 
         // Set Formula contract properties
         bc_properties.formula = formula;
@@ -270,10 +276,11 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
+        address impl =
+            address(new FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
+            FM_BC_QuadraticPriceFormula_Redeeming_v2_Exposed(Clones.clone(impl));
 
         bondingCurveFundingManager.init(
             _orchestrator,
@@ -299,7 +306,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
     function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
-                type(IFM_BC_BondingSurface_Redeeming_v2).interfaceId
+                type(IFM_BC_QuadraticPrice_Redeeming_v2).interfaceId
             )
         );
         assertTrue(
@@ -367,7 +374,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         }
 
         // Use expected value from internal function
-        uint expectedReturnValue = BondingSurface(formula).spotPrice(
+        uint expectedReturnValue = QuadraticPriceFormula(formula).spotPrice(
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
             bondingCurveFundingManager.getCapitalRequired(),
             bondingCurveFundingManager.getBasePriceMultiplier()
@@ -395,7 +402,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         }
 
         // Use expected value from internal function
-        uint expectedReturnValue = BondingSurface(formula).spotPrice(
+        uint expectedReturnValue = QuadraticPriceFormula(formula).spotPrice(
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
             bondingCurveFundingManager.getCapitalRequired(),
             bondingCurveFundingManager.getBasePriceMultiplier()
@@ -442,16 +449,16 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
     function testSetCapitalRequired_revertGivenAmountIsInvalid() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v2
-                    .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
+                IFM_BC_QuadraticPrice_Redeeming_v2
+                    .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount
                     .selector
             )
         );
         bondingCurveFundingManager.setCapitalRequired(0);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_v2
-                    .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
+                IFM_BC_QuadraticPrice_Redeeming_v2
+                    .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount
                     .selector
             )
         );
@@ -534,7 +541,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
                     │       └── then it should revert
                     ├── and FM collateral token balance < MIN_RESERVE
                     │   └── when the function transferOrchestratorToken() gets called
-                    │       └── then it should revert with FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
+                    │       └── then it should revert with FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached
                     └── and the FM has enough collateral token for amount to be transferred
                             when the function transferOrchestratorToken() gets called
                             └── then is should send the funds to the specified address
@@ -618,8 +625,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
 
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached
                 .selector
         );
         vm.prank(address(_erc20PaymentClientMock));
@@ -684,8 +691,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
 
         // Execute Tx
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__NoCapitalAvailable
                 .selector
         );
         bondingCurveFundingManager.exposed_issueTokensFormulaWrapper(
@@ -705,7 +712,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
 
         // Get expected return value
-        uint expectedReturnValue = IBondingSurface(formula).tokenOut(
+        uint expectedReturnValue = IQuadraticPriceFormula(formula).tokenOut(
             depositAmount_,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
             bondingCurveFundingManager.getBasePriceToCapitalRatio()
@@ -724,8 +731,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         │       └── Then: it should revert
         ├── Given: (capitalAvailable - redeemAmount) < MIN_RESERVE
         │   └── When: the function _redeemTokensFormulaWrapper() gets called
-        │       └── Then: it should revert with FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
-        │       └── Then: it should revert with FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
+        │       └── Then: it should revert with FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached
+        │       └── Then: it should revert with FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached
         └── Given: (capitalAvailable - redeemAmount) >= MIN_RESERVE
             └── When: the function _redeemTokensFormulaWrapper() gets called
                 └── Then: it should return redeemAmount
@@ -741,8 +748,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
 
         // Execute Tx
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__NoCapitalAvailable
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__NoCapitalAvailable
                 .selector
         );
         bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(
@@ -772,8 +779,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
 
         // Execute Tx
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__MinReserveReached
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__MinReserveReached
                 .selector
         );
 
@@ -808,7 +815,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         );
 
         // Get expected return value
-        uint redeemAmount = IBondingSurface(formula).tokenIn(
+        uint redeemAmount = IQuadraticPriceFormula(formula).tokenIn(
             depositAmount_,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
             bondingCurveFundingManager.getBasePriceToCapitalRatio()
@@ -929,8 +936,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         uint capitalRequirements = 0;
         // Expect Revert
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -951,7 +958,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_v2.CapitalRequiredChanged(
+        emit IFM_BC_QuadraticPrice_Redeeming_v2.CapitalRequiredChanged(
             currentCapitalRequirements, capitalRequirements_
         );
         bondingCurveFundingManager.exposed_setCapitalRequired(
@@ -993,8 +1000,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         uint basePriceMultiplier = 0;
         // Expect Revert
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -1020,7 +1027,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_v2.BasePriceMultiplierChanged(
+        emit IFM_BC_QuadraticPrice_Redeeming_v2.BasePriceMultiplierChanged(
             currentBasePriceMultiplier, basePriceMultiplier_
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -1060,8 +1067,8 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         basePriceMultiplier_ = bound(basePriceMultiplier_, 1e37, 1e38); // Higher minimum bound
 
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v2
-                .FM_BC_BondingSurface_Redeeming_v2__InvalidInputAmount
+            IFM_BC_QuadraticPrice_Redeeming_v2
+                .FM_BC_QuadraticPrice_Redeeming_v2__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_calculateBasePriceToCapitalRatio(
@@ -1121,7 +1128,7 @@ contract FM_BC_BondingSurface_Redeeming_v2_Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_v2.BasePriceToCapitalRatioChanged(
+        emit IFM_BC_QuadraticPrice_Redeeming_v2.BasePriceToCapitalRatioChanged(
             currentBasePriceToCapitalRatio, expectedReturnValue
         );
         bondingCurveFundingManager.exposed_updateVariables();
