@@ -74,13 +74,14 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         distributeIssuanceTokenFunctionCalled++;
     }
 
-    uint public distributeCollateralTokenBeforeBuyFunctionCalled;
+    uint public processCollateralTokensForBuyOperationFunctionCalled;
 
-    function _handleCollateralTokensBeforeBuy(
-        address, /*_provider*/
-        uint /*_amount*/
-    ) internal virtual override {
-        distributeCollateralTokenBeforeBuyFunctionCalled++;
+    function _processCollateralTokensForBuyOperation(uint /*_amount*/ )
+        internal
+        virtual
+        override
+    {
+        processCollateralTokensForBuyOperationFunctionCalled++;
     }
 
     // -------------------------------------------------------------------------
