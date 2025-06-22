@@ -540,17 +540,29 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint streamId;
         for (index; index < streamIdsArrayLength;) {
             streamId = streamIdsArray[index];
-            _claimForSpecificStream(client, paymentReceiver, streamId);
+            
+            // -------------------------------------------------------
+            // Note: Temporary Fix to prevent claims of faulty streams
+            // _claimForSpecificStream(client, paymentReceiver, streamId);
+            // -------------------------------------------------------
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed
             // in the earlier _claimForSpecificStream call.
             // Otherwise, we would remove that paymentOrder in the following lines.
-            if (
-                block.timestamp
-                    < endForSpecificStream(client, paymentReceiver, streamId)
-            ) {
-                _afterClaimCleanup(client, paymentReceiver, streamId);
-            }
+            // -------------------------------------------------------
+            // Note: Temporary Fix to prevent claims of faulty streams
+            // if (
+            //     block.timestamp
+            //         < endForSpecificStream(client, paymentReceiver, streamId)
+            // ) {
+            //     _afterClaimCleanup(client, paymentReceiver, streamId);
+            // }
+            // -------------------------------------------------------
+
+            // Note: Temporary Fix to cancel all of the faulty streams
+            // -------------------------------------------------------
+            _afterClaimCleanup(client, paymentReceiver, streamId);
+            // -------------------------------------------------------
 
             unchecked {
                 ++index;
