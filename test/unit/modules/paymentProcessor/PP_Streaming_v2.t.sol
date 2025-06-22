@@ -1347,12 +1347,17 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.warp(block.timestamp + 2 weeks);
 
         // we expect cancellation events for each payment
+        // Order: PaymentReceiverRemoved then StreamingPaymentRemoved for each recipient
         for (uint i = 0; i < length; ++i) {
-            vm.expectEmit(true, true, true, true);
-            // we can expect all recipient to be unique due to the call to assumeValidRecipients.
-            // Therefore, the walletId of all these paymentReceivers would be 1.
+            address recipient = recipients[i];
+            uint streamId = 1; // Assumed for this test setup
+
+            vm.expectEmit(true, true, false, true); // For PaymentReceiverRemoved (client, recipient)
+            emit PaymentReceiverRemoved(address(paymentClient), recipient);
+
+            vm.expectEmit(true, true, true, true); // For StreamingPaymentRemoved (client, recipient, streamId)
             emit StreamingPaymentRemoved(
-                address(paymentClient), recipients[i], 1
+                address(paymentClient), recipient, streamId
             );
         }
 
@@ -1362,7 +1367,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // make sure the payments have been reset
 
-        for (uint i; i < length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             address recipient = recipients[i];
 
             assertEq(
@@ -2161,48 +2166,50 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     function test_setStreamingDefaults(
-        uint defaultStart,
-        uint defaultCliff,
-        uint defaultEnd
+        uint newDefaultStart,
+        uint newDefaultCliff,
+        uint newDefaultEnd
     ) public {
-        defaultStart = bound(defaultStart, 0, defaultEnd);
-        defaultCliff = bound(defaultCliff, 0, defaultEnd - defaultStart);
+        newDefaultStart = bound(newDefaultStart, 0, newDefaultEnd);
+        newDefaultCliff =
+            bound(newDefaultCliff, 0, newDefaultEnd - newDefaultStart);
 
         // Set default times
         paymentProcessor.setStreamingDefaults(
-            defaultStart, defaultCliff, defaultEnd
+            newDefaultStart, newDefaultCliff, newDefaultEnd
         );
         // Check default times
         (uint start, uint cliff, uint end) =
             paymentProcessor.getStreamingDefaults();
-        assertEq(start, defaultStart);
-        assertEq(cliff, defaultCliff);
-        assertEq(end, defaultEnd);
+        assertEq(start, newDefaultStart);
+        assertEq(cliff, newDefaultCliff);
+        assertEq(end, newDefaultEnd);
     }
 
     function test_setStreamingDefaults_FailsIfInvalidTimes(
-        uint defaultStart,
-        uint defaultCliff,
-        uint defaultEnd
+        uint newDefaultStart,
+        uint newDefaultCliff,
+        uint newDefaultEnd
     ) public {
-        vm.assume(defaultStart < 1e24); //upper bounds to avoid overflow
-        vm.assume(defaultCliff < 1e24);
-        vm.assume(defaultStart + defaultCliff != 0);
+        vm.assume(newDefaultStart < 1e24); //upper bounds to avoid overflow
+        vm.assume(newDefaultCliff < 1e24);
+        vm.assume(newDefaultStart + newDefaultCliff != 0);
 
-        defaultEnd = bound(defaultEnd, 0, (defaultStart + defaultCliff - 1));
+        newDefaultEnd =
+            bound(newDefaultEnd, 0, (newDefaultStart + newDefaultCliff - 1));
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPP_Streaming_v2
                     .Module__PP_Streaming__InvalidDefaultTimes
                     .selector,
-                defaultStart,
-                defaultCliff,
-                defaultEnd
+                newDefaultStart,
+                newDefaultCliff,
+                newDefaultEnd
             )
         );
         paymentProcessor.setStreamingDefaults(
-            defaultStart, defaultCliff, defaultEnd
+            newDefaultStart, newDefaultCliff, newDefaultEnd
         );
     }
 
@@ -2213,6 +2220,128 @@ contract PP_StreamingV1Test is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Helper functions
+
+    function test_cancel_partiallyVestedUnclaimedStream_noPayoutAndClientNotified(
+    ) public {
+        // 1. Setup: Create a single stream (e.g., 100 tokens, 100s duration) for a recipient.
+        address recipient = makeAddr("recipientForCancelTest");
+        uint totalAmount = 100 ether;
+        uint duration = 100; // seconds
+        uint streamId = 1; // Assuming first stream for this recipient
+
+        paymentClient.exposed_addPaymentOrder(
+            createPaymentOrder(
+                recipient,
+                address(_token),
+                totalAmount,
+                block.timestamp,
+                0,
+                block.timestamp + duration
+            )
+        );
+
+        // 2. Process payments.
+        vm.prank(address(paymentClient));
+        bytes32[] memory data = new bytes32[](3);
+        data[0] = bytes32(block.timestamp);
+        data[1] = bytes32(0);
+        data[2] = bytes32(block.timestamp + duration);
+
+        vm.expectEmit(true, true, true, true);
+        emit StreamingPaymentAdded(
+            address(paymentClient),
+            recipient,
+            address(_token),
+            streamId,
+            totalAmount,
+            block.timestamp,
+            0,
+            block.timestamp + duration
+        );
+        vm.expectEmit(true, true, true, true);
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
+            address(paymentClient),
+            recipient,
+            address(_token),
+            totalAmount,
+            block.chainid,
+            block.chainid,
+            _START_END_CLIFF_FLAG,
+            data
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        // 3. Warp time to 50s (50% vested, 50 tokens releasable).
+        vm.warp(block.timestamp + 50);
+        assertEq(
+            paymentProcessor.releasableForSpecificStream(
+                address(paymentClient), recipient, streamId
+            ),
+            totalAmount / 2,
+            "Pre-cancel releasable mismatch"
+        );
+
+        // 4. Get initial balances and counters.
+        uint recipientBalance_beforeCancel = _token.balanceOf(recipient);
+        uint clientPaidCounter_beforeCancel =
+            paymentClient.amountPaidCounter(address(_token));
+
+        // 5. Expect events for cancellation. Order is PaymentReceiverRemoved, then StreamingPaymentRemoved.
+        vm.expectEmit(true, true, false, true); // For PaymentReceiverRemoved (client, recipient)
+        emit PaymentReceiverRemoved(address(paymentClient), recipient);
+
+        vm.expectEmit(true, true, true, true); // For StreamingPaymentRemoved (client, recipient, streamId)
+        emit StreamingPaymentRemoved(
+            address(paymentClient), recipient, streamId
+        );
+
+        // 6. Call cancelRunningPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.cancelRunningPayments(paymentClient);
+
+        // 7. Verify recipient balance: Should NOT have increased.
+        assertEq(
+            _token.balanceOf(recipient),
+            recipientBalance_beforeCancel,
+            "Recipient balance changed on cancel"
+        );
+
+        // 8. Verify paymentClient.amountPaidCounter: Should increase by the stream's totalAmount
+        //    (since _released was 0, remainingReleasable is totalAmount).
+        assertEq(
+            paymentClient.amountPaidCounter(address(_token)),
+            clientPaidCounter_beforeCancel + totalAmount,
+            "Client paid counter incorrect"
+        );
+
+        // 9. Verify stream is inactive.
+        assertEq(
+            paymentProcessor.releasableForSpecificStream(
+                address(paymentClient), recipient, streamId
+            ),
+            0,
+            "Post-cancel releasable not zero"
+        );
+        assertFalse(
+            paymentProcessor.isActivePaymentReceiver(
+                address(paymentClient), recipient
+            ),
+            "Recipient still active after cancel"
+        );
+
+        // 10. Attempt claim by recipient: Should revert.
+        vm.prank(recipient);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor_v2
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
+                address(paymentClient),
+                recipient
+            )
+        );
+        paymentProcessor.claimAll(address(paymentClient));
+    }
 
     // Speedruns a round of streaming + claiming
     // note Neither checks the inputs nor verifies results

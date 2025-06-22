@@ -583,17 +583,20 @@ contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
         uint streamId;
         for (index; index < streamIdsArrayLength;) {
             streamId = streamIdsArray[index];
-            _claimForSpecificStream(client, paymentReceiver, streamId);
+            //_claimForSpecificStream(client, paymentReceiver, streamId);
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed
             // in the earlier _claimForSpecificStream call.
             // Otherwise, we would remove that paymentOrder in the following lines.
-            if (
-                block.timestamp
-                    < endForSpecificStream(client, paymentReceiver, streamId)
-            ) {
-                _afterClaimCleanup(client, paymentReceiver, streamId);
-            }
+            //if (
+            //    block.timestamp
+            //        < endForSpecificStream(client, paymentReceiver, streamId)
+            //) {
+            //_afterClaimCleanup(client, paymentReceiver, streamId);
+            //}
+
+            // MODIFICATION HERE: We just do the cleanup and cancel all unclaimed orders, irrespective of them being done, or in the middle of vesting
+            _afterClaimCleanup(client, paymentReceiver, streamId);
 
             unchecked {
                 ++index;
