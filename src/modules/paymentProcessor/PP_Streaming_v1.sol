@@ -245,8 +245,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @inheritdoc IPaymentProcessor_v1
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external
-        onlyModule
-        validClient(address(client))
+        // onlyModule
+        // validClient(address(client))
+        onlyOrchestratorAdmin 
     {
         _cancelRunningOrders(address(client));
     }
