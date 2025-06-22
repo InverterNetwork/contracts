@@ -247,7 +247,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         external
         // onlyModule
         // validClient(address(client))
-        onlyOrchestratorAdmin 
+        onlyOrchestratorAdmin
     {
         _cancelRunningOrders(address(client));
     }
@@ -541,7 +541,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint streamId;
         for (index; index < streamIdsArrayLength;) {
             streamId = streamIdsArray[index];
-            
+
             // -------------------------------------------------------
             // Note: Temporary Fix to prevent claims of faulty streams
             // _claimForSpecificStream(client, paymentReceiver, streamId);
