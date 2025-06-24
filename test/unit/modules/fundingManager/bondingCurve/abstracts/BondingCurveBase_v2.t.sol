@@ -28,6 +28,8 @@ import {
     IBondingCurveBase_v2
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
+import {IssuanceTokenWrapperV1Mock} from
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/IssuanceTokenWrapperV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 contract BondingCurveBaseV2Test is ModuleTest {
@@ -998,8 +1000,45 @@ contract BondingCurveBaseV2Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
 
+    /* Test getIssuanceToken function
+        ├── When the token is a regular token
+        │       └── it should return the token address
+        └── When the token is wrapped
+                └── it should return the underlying token address
+    */
+    function testGetIssuanceToken() public {
+        address actualIssuanceToken =
+            bondingCurveFundingManager.getIssuanceToken();
+
+        // Verify that the returned token is the actual token (i.e. works as
+        // expected)
+        ERC20Issuance_v1(actualIssuanceToken).mint(address(this), 100);
+        assertEq(
+            ERC20Issuance_v1(actualIssuanceToken).balanceOf(address(this)), 100
+        );
+
+        // Create the wrapper
+        IssuanceTokenWrapperV1Mock wrapper =
+            new IssuanceTokenWrapperV1Mock(actualIssuanceToken);
+        assertEq(wrapper.issuanceToken(), actualIssuanceToken);
+
+        // Set the wrapper as the new issuance token
+        // and verify that it's set
+        bondingCurveFundingManager.call_setIssuanceToken(address(wrapper));
+        assertEq(
+            bondingCurveFundingManager.exposed_issuanceToken(), address(wrapper)
+        );
+
+        // Obtain the issuance token again
+        address issuanceTokenAfterWrapper =
+            bondingCurveFundingManager.getIssuanceToken();
+
+        // Verify that the returned token is not the wrapper,
+        // but the actual underlying token
+        assertEq(issuanceTokenAfterWrapper, actualIssuanceToken);
+    }
+
     /* Test _setIssuanceToken function
-       
         └── when setting the Token
             ├── it should set the new token
             ├── it should emit an event
