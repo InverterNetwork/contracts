@@ -90,8 +90,9 @@ contract BondingCurveForwarderV1Tests is ModuleTest {
         // we grant minting rights to the bonding curve
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
-        forwarder =
-            new BondingCurveForwarder_v1(address(bondingCurveFundingManager));
+        address forwarderImpl = address(new BondingCurveForwarder_v1());
+        forwarder = BondingCurveForwarder_v1(Clones.clone(forwarderImpl));
+        forwarder.initialize(address(bondingCurveFundingManager), admin_address);
 
         bytes32 CURVE_INTERACTION_ROLE =
             bondingCurveFundingManager.CURVE_INTERACTION_ROLE();
@@ -197,6 +198,120 @@ contract BondingCurveForwarderV1Tests is ModuleTest {
         vm.expectRevert();
         bondingCurveFundingManager.buy(depositAmount, 0);
     }
+
+    function testUpdateBondingCurve() public {
+        // Deploy a new bonding curve
+        address newImpl =
+            address(new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1());
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 newBondingCurve =
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            Clones.clone(newImpl)
+        );
+
+        // Set up new bonding curve (reusing same config)
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
+        bc_properties.formula = formula;
+        bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
+        bc_properties.reserveRatioForSelling = RESERVE_RATIO_FOR_SELLING;
+        bc_properties.buyFee = BUY_FEE;
+        bc_properties.sellFee = SELL_FEE;
+        bc_properties.buyIsOpen = BUY_IS_OPEN;
+        bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
+        bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
+
+        newBondingCurve.init(
+            _orchestrator,
+            _METADATA,
+            abi.encode(address(issuanceToken), bc_properties, _token)
+        );
+
+        // Grant minting rights and role
+        issuanceToken.setMinter(address(newBondingCurve), true);
+        bytes32 CURVE_INTERACTION_ROLE =
+            newBondingCurve.CURVE_INTERACTION_ROLE();
+        newBondingCurve.grantModuleRole(
+            CURVE_INTERACTION_ROLE, address(forwarder)
+        );
+
+        // Update bonding curve as admin
+        vm.startPrank(admin_address);
+        address oldBondingCurve = address(forwarder.restrictedBondingCurve());
+
+        vm.expectEmit(true, true, false, true);
+        emit BondingCurveUpdated(oldBondingCurve, address(newBondingCurve));
+
+        forwarder.updateBondingCurve(address(newBondingCurve));
+        vm.stopPrank();
+
+        // Verify the bonding curve was updated
+        assertEq(
+            address(forwarder.restrictedBondingCurve()),
+            address(newBondingCurve)
+        );
+    }
+
+    function testUpdateBondingCurveOnlyOwner() public {
+        address newBondingCurve = address(0x123);
+
+        vm.startPrank(non_admin_address);
+        vm.expectRevert();
+        forwarder.updateBondingCurve(newBondingCurve);
+        vm.stopPrank();
+    }
+
+    function testUpdateBondingCurveInvalidAddress() public {
+        vm.startPrank(admin_address);
+        vm.expectRevert();
+        forwarder.updateBondingCurve(address(0));
+        vm.stopPrank();
+    }
+
+    function testUpdateApprovals() public {
+        vm.startPrank(admin_address);
+
+        vm.expectEmit(true, true, true, true);
+        emit ApprovalsUpdated(
+            address(forwarder.restrictedBondingCurve()),
+            address(forwarder.collateralToken()),
+            address(forwarder.issuanceToken())
+        );
+
+        forwarder.updateApprovals();
+        vm.stopPrank();
+    }
+
+    function testUpdateApprovalsOnlyOwner() public {
+        vm.startPrank(non_admin_address);
+        vm.expectRevert();
+        forwarder.updateApprovals();
+        vm.stopPrank();
+    }
+
+    function testInitializeInvalidBondingCurve() public {
+        address testForwarderImpl = address(new BondingCurveForwarder_v1());
+        BondingCurveForwarder_v1 testForwarder =
+            BondingCurveForwarder_v1(Clones.clone(testForwarderImpl));
+
+        vm.expectRevert();
+        testForwarder.initialize(address(0), admin_address);
+    }
+
+    function testCannotReinitialize() public {
+        vm.expectRevert();
+        forwarder.initialize(address(bondingCurveFundingManager), admin_address);
+    }
+
+    // Events to test
+    event BondingCurveUpdated(
+        address indexed oldBondingCurve, address indexed newBondingCurve
+    );
+    event ApprovalsUpdated(
+        address indexed bondingCurve,
+        address indexed collateralToken,
+        address indexed issuanceToken
+    );
 
     function testInit() public override {}
     function testReinitFails() public override {}

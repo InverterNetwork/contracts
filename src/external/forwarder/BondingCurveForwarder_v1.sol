@@ -10,7 +10,11 @@ import {
 } from "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
+
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -37,11 +41,33 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-contract BondingCurveForwarder_v1 is Context {
+contract BondingCurveForwarder_v1 is
+    Initializable,
+    ContextUpgradeable,
+    OwnableUpgradeable
+{
     using SafeERC20 for IERC20;
 
     // -------------------------------------------------------------------------
+    // Events
+
+    /// @notice Emitted when the bonding curve address is updated.
+    event BondingCurveUpdated(
+        address indexed oldBondingCurve, address indexed newBondingCurve
+    );
+
+    /// @notice Emitted when token approvals are updated.
+    event ApprovalsUpdated(
+        address indexed bondingCurve,
+        address indexed collateralToken,
+        address indexed issuanceToken
+    );
+
+    // -------------------------------------------------------------------------
     // Errors
+
+    /// @notice The bonding curve address cannot be zero.
+    error BondingCurveForwarder__InvalidBondingCurveAddress();
 
     /// @notice The feature is deactivated in this implementation.
     error Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
@@ -60,15 +86,54 @@ contract BondingCurveForwarder_v1 is Context {
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    constructor(address _bondingCurve) {
-        restrictedBondingCurve =
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(_bondingCurve);
+    // -------------------------------------------------------------------------
+    // Constructor & Initializer
 
-        collateralToken = restrictedBondingCurve.token();
-        collateralToken.approve(address(restrictedBondingCurve), type(uint).max);
-        issuanceToken =
-            IERC20(IBondingCurveBase_v1(_bondingCurve).getIssuanceToken());
-        issuanceToken.approve(address(restrictedBondingCurve), type(uint).max);
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initializes the BondingCurveForwarder_v1 contract.
+    /// @param _bondingCurve The address of the bonding curve contract.
+    /// @param _owner The address of the contract owner.
+    function initialize(address _bondingCurve, address _owner)
+        external
+        initializer
+    {
+        if (_bondingCurve == address(0)) {
+            revert BondingCurveForwarder__InvalidBondingCurveAddress();
+        }
+
+        __Ownable_init(_owner);
+
+        _setBondingCurve(_bondingCurve);
+    }
+
+    // -------------------------------------------------------------------------
+    // Owner Functions
+
+    /// @notice Updates the bonding curve address.
+    /// @param _newBondingCurve The new bonding curve address.
+    function updateBondingCurve(address _newBondingCurve) external onlyOwner {
+        if (_newBondingCurve == address(0)) {
+            revert BondingCurveForwarder__InvalidBondingCurveAddress();
+        }
+
+        address oldBondingCurve = address(restrictedBondingCurve);
+        _setBondingCurve(_newBondingCurve);
+
+        emit BondingCurveUpdated(oldBondingCurve, _newBondingCurve);
+    }
+
+    /// @notice Updates token approvals for the current bonding curve.
+    function updateApprovals() external onlyOwner {
+        _updateTokenApprovals();
+
+        emit ApprovalsUpdated(
+            address(restrictedBondingCurve),
+            address(collateralToken),
+            address(issuanceToken)
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -98,5 +163,27 @@ contract BondingCurveForwarder_v1 is Context {
             _msgSender(), address(this), _depositAmount
         );
         restrictedBondingCurve.sellTo(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @notice Sets the bonding curve and updates token references and approvals.
+    /// @param _bondingCurve The bonding curve address.
+    function _setBondingCurve(address _bondingCurve) internal {
+        restrictedBondingCurve =
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(_bondingCurve);
+
+        collateralToken = restrictedBondingCurve.token();
+        issuanceToken =
+            IERC20(IBondingCurveBase_v1(_bondingCurve).getIssuanceToken());
+
+        _updateTokenApprovals();
+    }
+
+    /// @notice Updates token approvals for the current bonding curve.
+    function _updateTokenApprovals() internal {
+        collateralToken.approve(address(restrictedBondingCurve), type(uint).max);
+        issuanceToken.approve(address(restrictedBondingCurve), type(uint).max);
     }
 }
