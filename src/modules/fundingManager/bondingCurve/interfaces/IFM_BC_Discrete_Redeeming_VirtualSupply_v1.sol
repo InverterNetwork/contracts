@@ -68,6 +68,10 @@ interface IFM_BC_Discrete_Redeeming_VirtualSupply_v1 {
     // =========================================================================
     // Public - Mutating
 
+    /// @notice Updates the protocol fee cache for buy and sell operations.
+    /// @dev    This function can be called by any address.
+    function updateProtocolFeeCache() external;
+
     /// @notice Reconfigures the segments of the discrete bonding curve.
     /// @param  newSegments_ The new array of PackedSegment structs.
     function reconfigureSegments(PackedSegment[] memory newSegments_)

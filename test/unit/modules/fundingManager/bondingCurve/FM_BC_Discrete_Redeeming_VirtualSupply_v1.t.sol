@@ -207,6 +207,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             )
         );
 
+        // Update protocol fee cache for buy and sell operations
+        fmBcDiscrete.updateProtocolFeeCache();
+
         // Grant minting rights for issuance token to the bonding curve
         issuanceToken.setMinter(address(fmBcDiscrete), true);
 

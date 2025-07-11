@@ -123,52 +123,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         // Initialize project fees
         _setBuyFee(PROJECT_BUY_FEE_BPS);
         _setSellFee(PROJECT_SELL_FEE_BPS);
-
-        // Fetch and cache protocol fees for buy operations
-        bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
-
-        // Populate the cache directly for buy operations
-        (
-            _protocolFeeCache.collateralTreasury,
-            _protocolFeeCache.issuanceTreasury,
-            _protocolFeeCache.collateralFeeBuyBps,
-            _protocolFeeCache.issuanceFeeBuyBps
-        ) = super._getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
-
-        // Fetch and cache protocol fees for sell operations
-        bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
-
-        address sellCollateralTreasury; // Temporary variable for sell collateral treasury
-        address sellIssuanceTreasury; // Temporary variable for sell issuance treasury
-        (
-            sellCollateralTreasury,
-            sellIssuanceTreasury,
-            _protocolFeeCache.collateralFeeSellBps,
-            _protocolFeeCache.issuanceFeeSellBps
-        ) = super._getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
-
-        // Logic to ensure consistent treasury addresses are stored in the cache,
-        // prioritizing non-zero addresses from buy operations if FeeManager could return different ones.
-        // Typically, a FeeManager provides consistent treasuries for a given (orchestrator, module) pair.
-        if (
-            _protocolFeeCache.collateralTreasury == address(0)
-                && sellCollateralTreasury != address(0)
-        ) {
-            _protocolFeeCache.collateralTreasury = sellCollateralTreasury;
-        }
-        // Add assertion or handling if buyCollateralTreasury and sellCollateralTreasury are different and non-zero
-        // require(buyCollateralTreasury == sellCollateralTreasury || sellCollateralTreasury == address(0) || buyCollateralTreasury == address(0) , "Inconsistent collateral treasuries");
-
-        if (
-            _protocolFeeCache.issuanceTreasury == address(0)
-                && sellIssuanceTreasury != address(0)
-        ) {
-            _protocolFeeCache.issuanceTreasury = sellIssuanceTreasury;
-        }
-        // Add assertion or handling if buyIssuanceTreasury and sellIssuanceTreasury are different and non-zero
-        // require(buyIssuanceTreasury == sellIssuanceTreasury || sellIssuanceTreasury == address(0) || buyIssuanceTreasury == address(0), "Inconsistent issuance treasuries");
     }
 
     // =========================================================================
@@ -269,21 +223,56 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         _subVirtualCollateralAmount(totalCollateralTokenMovedOut);
     }
 
-    /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(address to_, uint amount_)
-        external
-        virtual
-        onlyPaymentClient
-    {
-        if (
-            amount_
-                > _token.balanceOf(address(this)) - projectCollateralFeeCollected
-        ) {
-            revert InvalidOrchestratorTokenWithdrawAmount();
-        }
-        _token.safeTransfer(to_, amount_);
+    // ------------------------------------------------------------------------
+    // Public - Authorization
 
-        emit TransferOrchestratorToken(to_, amount_);
+    /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+    function updateProtocolFeeCache() external {
+        // Fetch and cache protocol fees for buy operations
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
+
+        // Populate the cache directly for buy operations
+        (
+            _protocolFeeCache.collateralTreasury,
+            _protocolFeeCache.issuanceTreasury,
+            _protocolFeeCache.collateralFeeBuyBps,
+            _protocolFeeCache.issuanceFeeBuyBps
+        ) = super._getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+
+        // Fetch and cache protocol fees for sell operations
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
+
+        address sellCollateralTreasury; // Temporary variable for sell collateral treasury
+        address sellIssuanceTreasury; // Temporary variable for sell issuance treasury
+        (
+            sellCollateralTreasury,
+            sellIssuanceTreasury,
+            _protocolFeeCache.collateralFeeSellBps,
+            _protocolFeeCache.issuanceFeeSellBps
+        ) = super._getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
+
+        // Logic to ensure consistent treasury addresses are stored in the cache,
+        // prioritizing non-zero addresses from buy operations if FeeManager could return different ones.
+        // Typically, a FeeManager provides consistent treasuries for a given (orchestrator, module) pair.
+        if (
+            _protocolFeeCache.collateralTreasury == address(0)
+                && sellCollateralTreasury != address(0)
+        ) {
+            _protocolFeeCache.collateralTreasury = sellCollateralTreasury;
+        }
+        // Add assertion or handling if buyCollateralTreasury and sellCollateralTreasury are different and non-zero
+        // require(buyCollateralTreasury == sellCollateralTreasury || sellCollateralTreasury == address(0) || buyCollateralTreasury == address(0) , "Inconsistent collateral treasuries");
+
+        if (
+            _protocolFeeCache.issuanceTreasury == address(0)
+                && sellIssuanceTreasury != address(0)
+        ) {
+            _protocolFeeCache.issuanceTreasury = sellIssuanceTreasury;
+        }
+        // Add assertion or handling if buyIssuanceTreasury and sellIssuanceTreasury are different and non-zero
+        // require(buyIssuanceTreasury == sellIssuanceTreasury || sellIssuanceTreasury == address(0) || buyIssuanceTreasury == address(0), "Inconsistent issuance treasuries");
     }
 
     /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
@@ -317,6 +306,26 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         }
 
         _setSegments(newSegments_);
+    }
+
+    // ------------------------------------------------------------------------
+    // Public - OnlyPaymentClient
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to_, uint amount_)
+        external
+        virtual
+        onlyPaymentClient
+    {
+        if (
+            amount_
+                > _token.balanceOf(address(this)) - projectCollateralFeeCollected
+        ) {
+            revert InvalidOrchestratorTokenWithdrawAmount();
+        }
+        _token.safeTransfer(to_, amount_);
+
+        emit TransferOrchestratorToken(to_, amount_);
     }
 
     // =========================================================================
@@ -380,6 +389,113 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         );
     }
 
+    // =========================================================================
+    // Internal
+
+    // ------------------------------------------------------------------------
+    // Internal - Setters
+
+    /// @notice Sets the issuance token for the bonding curve.
+    /// @param  newIssuanceToken_ The new issuance token.
+    function _setIssuanceToken(ERC20Issuance_v1 newIssuanceToken_) internal {
+        // collateralDecimals_ argument removed
+        issuanceToken = newIssuanceToken_;
+
+        emit IBondingCurveBase_v1.IssuanceTokenSet(
+            address(newIssuanceToken_),
+            IERC20Metadata(address(newIssuanceToken_)).decimals()
+        );
+    }
+
+    /// @notice Sets the segments for the discrete bonding curve.
+    /// @param  newSegments_ The array of packed segments.
+    function _setSegments(PackedSegment[] memory newSegments_) internal {
+        DiscreteCurveMathLib_v1._validateSegmentArray(newSegments_);
+        _segments = newSegments_;
+        emit SegmentsSet(newSegments_);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Overrides - BondingCurveBase_v1
+
+    /// @inheritdoc BondingCurveBase_v1
+    function _getBuyFee() internal view virtual override returns (uint) {
+        return PROJECT_BUY_FEE_BPS;
+    }
+
+    // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)
+    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+        internal
+        virtual
+        override
+    {
+        _token.safeTransferFrom(_provider, address(this), _amount);
+    }
+
+    function _handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
+        internal
+        virtual
+        override
+    {
+        issuanceToken.mint(_receiver, _amount);
+    }
+
+    function _issueTokensFormulaWrapper(uint _depositAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint)
+    {
+        (uint tokensToMint,) = _segments._calculatePurchaseReturn(
+            _depositAmount, issuanceToken.totalSupply()
+        );
+        return tokensToMint;
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Overrides - RedeemingBondingCurveBase_v1
+
+    /// @inheritdoc RedeemingBondingCurveBase_v1
+    function _getSellFee() internal view virtual override returns (uint) {
+        return PROJECT_SELL_FEE_BPS;
+    }
+
+    function _redeemTokensFormulaWrapper(uint _depositAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint)
+    {
+        (uint collateralToReturn,) = _segments._calculateSaleReturn(
+            _depositAmount, issuanceToken.totalSupply()
+        );
+        return collateralToReturn;
+    }
+
+    function _handleCollateralTokensAfterSell(
+        address _receiver,
+        uint _collateralTokenAmount
+    ) internal virtual override {
+        _token.safeTransfer(_receiver, _collateralTokenAmount);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Overrides - VirtualCollateralSupplyBase_v1
+
+    /// @dev    Internal function to directly set the virtual collateral supply to a new value.
+    /// @param  virtualSupply_ The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint virtualSupply_)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        super._setVirtualCollateralSupply(virtualSupply_);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Overrides - Module_v1
+
     /**
      * @notice  Overrides the base function to return cached protocol fees and treasury addresses
      *          for buy and sell operations specific to this funding manager.
@@ -435,97 +551,5 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             // which would typically query the FeeManager directly.
             return super._getFunctionFeesAndTreasuryAddresses(functionSelector_);
         }
-    }
-
-    // =========================================================================
-    // Internal
-
-    /// @inheritdoc BondingCurveBase_v1
-    function _getBuyFee() internal view virtual override returns (uint) {
-        return PROJECT_BUY_FEE_BPS;
-    }
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function _getSellFee() internal view virtual override returns (uint) {
-        return PROJECT_SELL_FEE_BPS;
-    }
-
-    /// @notice Sets the issuance token for the bonding curve.
-    /// @param  newIssuanceToken_ The new issuance token.
-    function _setIssuanceToken(ERC20Issuance_v1 newIssuanceToken_) internal {
-        // collateralDecimals_ argument removed
-        issuanceToken = newIssuanceToken_;
-
-        emit IBondingCurveBase_v1.IssuanceTokenSet(
-            address(newIssuanceToken_),
-            IERC20Metadata(address(newIssuanceToken_)).decimals()
-        );
-    }
-
-    /// @notice Sets the segments for the discrete bonding curve.
-    /// @param  newSegments_ The array of packed segments.
-    function _setSegments(PackedSegment[] memory newSegments_) internal {
-        DiscreteCurveMathLib_v1._validateSegmentArray(newSegments_);
-        _segments = newSegments_;
-        emit SegmentsSet(newSegments_);
-    }
-
-    /// @dev    Internal function to directly set the virtual collateral supply to a new value.
-    /// @param  virtualSupply_ The new value to set for the virtual collateral supply.
-    function _setVirtualCollateralSupply(uint virtualSupply_)
-        internal
-        override(VirtualCollateralSupplyBase_v1)
-    {
-        super._setVirtualCollateralSupply(virtualSupply_);
-    }
-
-    function _redeemTokensFormulaWrapper(uint _depositAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint)
-    {
-        (uint collateralToReturn,) = _segments._calculateSaleReturn(
-            _depositAmount, issuanceToken.totalSupply()
-        );
-        return collateralToReturn;
-    }
-
-    function _handleCollateralTokensAfterSell(
-        address _receiver,
-        uint _collateralTokenAmount
-    ) internal virtual override {
-        _token.safeTransfer(_receiver, _collateralTokenAmount);
-    }
-
-    // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)
-    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
-        internal
-        virtual
-        override
-    {
-        _token.safeTransferFrom(_provider, address(this), _amount);
-    }
-
-    function _handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
-        internal
-        virtual
-        override
-    {
-        issuanceToken.mint(_receiver, _amount);
-    }
-
-    function _issueTokensFormulaWrapper(uint _depositAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint)
-    {
-        (uint tokensToMint,) = _segments._calculatePurchaseReturn(
-            _depositAmount, issuanceToken.totalSupply()
-        );
-        return tokensToMint;
     }
 }
