@@ -418,11 +418,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // ------------------------------------------------------------------------
     // Internal - Overrides - BondingCurveBase_v1
 
-    /// @inheritdoc BondingCurveBase_v1
-    function _getBuyFee() internal view virtual override returns (uint) {
-        return PROJECT_BUY_FEE_BPS;
-    }
-
     // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)
     function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
         internal
