@@ -320,15 +320,29 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_E2E is E2ETest {
         // Relocation with outside Liquidity
         // Add to rebalance treasury until it has 200_000 tokens
         token.mint(
-            rebalanceTreasury,
-            200_000e6 - issuanceToken.balanceOf(rebalanceTreasury)
+            rebalanceTreasury, 200_000e6 - token.balanceOf(rebalanceTreasury)
+        );
+
+        uint injectionAmount = token.balanceOf(rebalanceTreasury);
+        uint virtualCollateralSupply =
+            fundingManager.getVirtualCollateralSupply();
+
+        // Move funds to fundingManager
+        vm.startPrank(rebalanceTreasury);
+        token.approve(address(fundingManager), injectionAmount);
+        token.transfer(address(fundingManager), injectionAmount);
+        vm.stopPrank();
+
+        // Update the virtual collateral balance
+        fundingManager.setVirtualCollateralSupply(
+            injectionAmount + virtualCollateralSupply
         );
 
         // Define new curve
 
         // Floor Values
-        uint floorPrice = 1.1e6; //1 Dollar
-        uint floorSupply = 1_050_000 ether; // 1 Million Floor Tokens
+        uint floorPrice = 1.2e6; //1,1 Dollar
+        uint floorSupply = 1_000_000 ether; // 1 Million Floor Tokens
         // uint floorValue = floorPrice * floorSupply / 1 ether; // Should be around 1_155_000 Dollar
 
         // Curve Values
@@ -337,6 +351,25 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_E2E is E2ETest {
         uint supplyPerStep = 40_000 ether; //40.000 Floor Tokens
         uint numberOfSteps = type(uint16).max; //65535 Steps (max value)
 
+        // Configute new Curve
         PackedSegment[] memory newCurve = new PackedSegment[](2);
+
+        // Floor Segment
+        newCurve[0] = exposedLib.exposed_createSegment(
+            floorPrice, //initialPriceOfSegment
+            0, //priceIncreasePerStep (We have only one step)
+            floorSupply, //supplyPerStep
+            1 //numberOfSteps (1 equals one vertical element)
+        );
+
+        // Discrete Curve Segment
+        newCurve[1] = exposedLib.exposed_createSegment(
+            initialPrice, //initialPriceOfSegment
+            priceIncrease, //priceIncreasePerStep
+            supplyPerStep, //supplyPerStep
+            numberOfSteps //numberOfSteps
+        );
+
+        fundingManager.reconfigureSegments(newCurve);
     }
 }
