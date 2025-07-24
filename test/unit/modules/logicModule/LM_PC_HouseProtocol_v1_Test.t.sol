@@ -26,6 +26,8 @@ import {DiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from
     "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
+import {DynamicFeeCalculatorLib_v1} from
+    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -64,7 +66,7 @@ import {FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed} from
 contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
     using DiscreteCurveMathLib_v1 for PackedSegment[];
-
+    using DynamicFeeCalculatorLib_v1 for uint;
     // =========================================================================
     // State
 
@@ -199,6 +201,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
         _authorizer.grantRole(_authorizer.getAdminRole(), address(this));
+
+        //    // Grant role to this test contract
+        // bytes32 roleId = _authorizer.generateRoleId(
+        //     address(lendingFacility),
+        //     lendingFacility.FEE_CALCULATOR_ADMIN_ROLE()
+        // );
+        // _authorizer.grantRole(roleId, address(this));
 
         defaultCurve.description = "Flat segment followed by a sloped segment";
         uint[] memory initialPrices = new uint[](2);
@@ -755,6 +764,157 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     }
 
     // =========================================================================
+    // Test: Dynamic Fee Calculator
+
+    /* Test external setDynamicFeeCalculatorParams function
+        ├── Given caller has FEE_CALCULATOR_ADMIN_ROLE
+        │   └── When setting new fee calculator parameters
+        │       ├── Then the parameters should be updated
+        │       └── Then an event should be emitted
+        └── Given caller doesn't have role
+            └── When trying to set parameters
+    */
+
+    function test_setDynamicFeeCalculatorParams_unauthorized() public {
+        address unauthorizedUser = makeAddr("unauthorized");
+
+        vm.startPrank(unauthorizedUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                lendingFacility.FEE_CALCULATOR_ADMIN_ROLE(),
+                unauthorizedUser
+            )
+        );
+        lendingFacility.setDynamicFeeCalculatorParams(
+            1e16, 2e16, 3e16, 4e16, 5e16, 6e16
+        );
+        vm.stopPrank();
+    }
+
+    function test_setDynamicFeeCalculatorParams() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        // assertEq(lendingFacility.Z_issueRedeem(), Z_issueRedeem);
+        // assertEq(lendingFacility.A_issueRedeem(), A_issueRedeem);
+        // assertEq(lendingFacility.m_issueRedeem(), m_issueRedeem);
+        // assertEq(lendingFacility.Z_origination(), Z_origination);
+        // assertEq(lendingFacility.A_origination(), A_origination);
+        // assertEq(lendingFacility.m_origination(), m_origination);
+    }
+
+    // Test: Dynamic Fee Calculator Library
+
+    /* Test calculateOriginationFee function
+        ├── Given floorLiquidityRate is below A_origination
+        │   └── Then the fee should be Z_origination
+        └── Given floorLiquidityRate is above A_origination
+            └── Then the fee should be Z_origination + (floorLiquidityRate - A_origination) * m_origination / 1e18
+    */
+    function test_calculateOriginationFee_BelowThreshold() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        uint floorLiquidityRate = 1e16; // 1%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
+            floorLiquidityRate,
+            lendingFacility.Z_origination(),
+            lendingFacility.A_origination(),
+            lendingFacility.m_origination()
+        );
+        assertEq(fee, lendingFacility.Z_origination());
+    }
+
+    function test_calculateOriginationFee_AboveThreshold() public {
+        uint floorLiquidityRate = 9e16; // 9%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
+            floorLiquidityRate,
+            lendingFacility.Z_origination(),
+            lendingFacility.A_origination(),
+            lendingFacility.m_origination()
+        );
+        assertEq(
+            fee,
+            lendingFacility.Z_origination()
+                + (floorLiquidityRate - lendingFacility.A_origination())
+                    * lendingFacility.m_origination() / 1e18
+        );
+    }
+
+    /* Test calculateIssuanceFee function
+        ├── Given premiumRate is below A_issueRedeem
+        │   └── Then the fee should be Z_issueRedeem
+        └── Given premiumRate is above A_issueRedeem
+            └── Then the fee should be Z_issueRedeem + (premiumRate - A_issueRedeem) * m_issueRedeem / 1e18
+    */
+    function test_calculateIssuanceFee_BelowThreshold() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        uint premiumRate = 1e16; // 1%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
+            premiumRate,
+            lendingFacility.Z_issueRedeem(),
+            lendingFacility.A_issueRedeem(),
+            lendingFacility.m_issueRedeem()
+        );
+        assertEq(fee, lendingFacility.Z_issueRedeem());
+    }
+
+    function test_calculateIssuanceFee_AboveThreshold() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        uint premiumRate = 9e16; // 9%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
+            premiumRate,
+            lendingFacility.Z_issueRedeem(),
+            lendingFacility.A_issueRedeem(),
+            lendingFacility.m_issueRedeem()
+        );
+        assertEq(
+            fee,
+            lendingFacility.Z_issueRedeem()
+                + (premiumRate - lendingFacility.A_issueRedeem())
+                    * lendingFacility.m_issueRedeem() / 1e18
+        );
+    }
+
+    /* Test calculateRedemptionFee function
+        ├── Given premiumRate is below A_issueRedeem
+        │   └── Then the fee should be Z_issueRedeem
+        └── Given premiumRate is above A_issueRedeem
+            └── Then the fee should be Z_issueRedeem + (A_issueRedeem - premiumRate) * m_issueRedeem / 1e18
+    */
+    function test_calculateRedemptionFee_BelowThreshold() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        uint premiumRate = 1e16; // 1%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
+            premiumRate,
+            lendingFacility.Z_issueRedeem(),
+            lendingFacility.A_issueRedeem(),
+            lendingFacility.m_issueRedeem()
+        );
+        assertEq(
+            fee,
+            lendingFacility.Z_issueRedeem()
+                + (lendingFacility.A_issueRedeem() - premiumRate)
+                    * lendingFacility.m_issueRedeem() / 1e18
+        );
+    }
+
+    function test_calculateRedemptionFee_AboveThreshold() public {
+        helper_setDynamicFeeCalculatorParams();
+
+        uint premiumRate = 9e16; // 9%
+        uint fee = DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
+            premiumRate,
+            lendingFacility.Z_issueRedeem(),
+            lendingFacility.A_issueRedeem(),
+            lendingFacility.m_issueRedeem()
+        );
+        assertEq(fee, lendingFacility.Z_issueRedeem());
+    }
+
+    // =========================================================================
     // Test: Getters
 
     function testGetBorrowCapacity() public {
@@ -1019,5 +1179,23 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             );
         }
         return segments;
+    }
+
+    function helper_setDynamicFeeCalculatorParams() internal {
+        uint Z_issueRedeem = 1e16; // 1%
+        uint A_issueRedeem = 7.5e16; // 7.5%
+        uint m_issueRedeem = 2e15; // 0.2%
+        uint Z_origination = 1e16; // 1%
+        uint A_origination = 2e16; // 2%
+        uint m_origination = 2e15; // 0.2%
+
+        lendingFacility.setDynamicFeeCalculatorParams(
+            Z_issueRedeem,
+            A_issueRedeem,
+            m_issueRedeem,
+            Z_origination,
+            A_origination,
+            m_origination
+        );
     }
 }

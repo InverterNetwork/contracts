@@ -70,6 +70,22 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @param newCalculator The new fee calculator address
     event DynamicFeeCalculatorUpdated(address newCalculator);
 
+    /// @notice Emitted when the dynamic fee calculator parameters are updated
+    /// @param Z_issueRedeem_ The new base fee component for issuance/redemption fees.
+    /// @param A_issueRedeem_ The new premiumRate threshold for dynamic issuance/redemption fee adjustment.
+    /// @param m_issueRedeem_ The new multiplier for dynamic issuance/redemption fee component.
+    /// @param Z_origination_ The new base fee component for origination fees.
+    /// @param A_origination_ The new floorLiquidityRate threshold for dynamic origination fee adjustment.
+    /// @param m_origination_ The new multiplier for dynamic origination fee component.
+    event DynamicFeeCalculatorParamsUpdated(
+        uint Z_issueRedeem_,
+        uint A_issueRedeem_,
+        uint m_issueRedeem_,
+        uint Z_origination_,
+        uint A_origination_,
+        uint m_origination_
+    );
+
     // =========================================================================
     // Errors
 
@@ -175,4 +191,20 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set the Dynamic Fee Calculator address
     /// @param newFeeCalculator_ The new fee calculator address
     function setDynamicFeeCalculator(address newFeeCalculator_) external;
+
+    /// @notice Set the Dynamic Fee Calculator parameters
+    /// @param Z_issueRedeem_ The new base fee component for issuance/redemption fees.
+    /// @param A_issueRedeem_ The new premiumRate threshold for dynamic issuance/redemption fee adjustment.
+    /// @param m_issueRedeem_ The new multiplier for dynamic issuance/redemption fee component.
+    /// @param Z_origination_ The new base fee component for origination fees.
+    /// @param A_origination_ The new floorLiquidityRate threshold for dynamic origination fee adjustment.
+    /// @param m_origination_ The new multiplier for dynamic origination fee component.
+    function setDynamicFeeCalculatorParams(
+        uint Z_issueRedeem_,
+        uint A_issueRedeem_,
+        uint m_issueRedeem_,
+        uint Z_origination_,
+        uint A_origination_,
+        uint m_origination_
+    ) external;
 }

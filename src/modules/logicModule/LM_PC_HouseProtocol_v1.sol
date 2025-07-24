@@ -28,6 +28,8 @@ import {
 import {
     IVirtualCollateralSupplyBase_v1
 } from "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {DynamicFeeCalculatorLib_v1} from
+    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -59,6 +61,7 @@ contract LM_PC_HouseProtocol_v1 is
     // Libraries
 
     using SafeERC20 for IERC20;
+    using DynamicFeeCalculatorLib_v1 for uint;
 
     // =========================================================================
     // ERC165
@@ -88,6 +91,9 @@ contract LM_PC_HouseProtocol_v1 is
     bytes32 public constant LENDING_FACILITY_MANAGER_ROLE =
         "LENDING_FACILITY_MANAGER";
 
+    /// @dev The role for managing the dynamic fee calculator
+    bytes32 public constant FEE_CALCULATOR_ADMIN_ROLE = "FEE_CALCULATOR_ADMIN";
+
     /// @notice Address of the Dynamic Fee Calculator contract
     address public dynamicFeeCalculator;
 
@@ -115,6 +121,24 @@ contract LM_PC_HouseProtocol_v1 is
     /// @notice DBC FM address for floor price calculations
     address internal _dbcFmAddress;
 
+    /// @notice Base fee component for issuance/redemption fees (as per formulas in 6.4.2).
+    uint public Z_issueRedeem;
+
+    /// @notice premiumRate threshold for dynamic issuance/redemption fee adjustment (as per formulas in 6.4.2).
+    uint public A_issueRedeem;
+
+    /// @notice Multiplier for dynamic issuance/redemption fee component (as per formulas in 6.4.2).
+    uint public m_issueRedeem;
+
+    /// @notice Base fee component for origination fees (as per formula in 6.4.1).
+    uint public Z_origination;
+
+    /// @notice floorLiquidityRate threshold for dynamic origination fee adjustment (as per formula in 6.4.1).
+    uint public A_origination;
+
+    /// @notice Multiplier for dynamic origination fee component (as per formula in 6.4.1).
+    uint public m_origination;
+
     /// @notice Storage gap for future upgrades
     uint[50] private __gap;
 
@@ -128,6 +152,11 @@ contract LM_PC_HouseProtocol_v1 is
 
     modifier onlyValidBorrowAmount(uint amount_) {
         _ensureValidBorrowAmount(amount_);
+        _;
+    }
+
+    modifier onlyFeeCalculatorAdmin() {
+        _checkRoleModifier(FEE_CALCULATOR_ADMIN_ROLE, _msgSender());
         _;
     }
 
@@ -316,6 +345,31 @@ contract LM_PC_HouseProtocol_v1 is
         }
         dynamicFeeCalculator = newFeeCalculator_;
         emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
+    }
+
+    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    function setDynamicFeeCalculatorParams(
+        uint Z_issueRedeem_,
+        uint A_issueRedeem_,
+        uint m_issueRedeem_,
+        uint Z_origination_,
+        uint A_origination_,
+        uint m_origination_
+    ) external onlyFeeCalculatorAdmin {
+        Z_issueRedeem = Z_issueRedeem_;
+        A_issueRedeem = A_issueRedeem_;
+        m_issueRedeem = m_issueRedeem_;
+        Z_origination = Z_origination_;
+        A_origination = A_origination_;
+        m_origination = m_origination_;
+        emit DynamicFeeCalculatorParamsUpdated(
+            Z_issueRedeem_,
+            A_issueRedeem_,
+            m_issueRedeem_,
+            Z_origination_,
+            A_origination_,
+            m_origination_
+        );
     }
 
     // =========================================================================
