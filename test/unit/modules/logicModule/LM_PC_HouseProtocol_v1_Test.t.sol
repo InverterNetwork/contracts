@@ -78,7 +78,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
     // Test constants
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
-    uint constant INDIVIDUAL_BORROW_LIMIT = 1000 ether;
+    uint constant INDIVIDUAL_BORROW_LIMIT = 500 ether;
     uint constant LOCKED_ISSUANCE_TOKENS = 1000 ether;
 
     // Structs for organizing test data
@@ -105,12 +105,12 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     // Default Curve Parameters
     uint public constant DEFAULT_SEG0_INITIAL_PRICE = 0.5 ether;
     uint public constant DEFAULT_SEG0_PRICE_INCREASE = 0;
-    uint public constant DEFAULT_SEG0_SUPPLY_PER_STEP = 50 ether;
+    uint public constant DEFAULT_SEG0_SUPPLY_PER_STEP = 500 ether;
     uint public constant DEFAULT_SEG0_NUMBER_OF_STEPS = 1;
 
     uint public constant DEFAULT_SEG1_INITIAL_PRICE = 0.8 ether;
     uint public constant DEFAULT_SEG1_PRICE_INCREASE = 0.02 ether;
-    uint public constant DEFAULT_SEG1_SUPPLY_PER_STEP = 25 ether;
+    uint public constant DEFAULT_SEG1_SUPPLY_PER_STEP = 500 ether;
     uint public constant DEFAULT_SEG1_NUMBER_OF_STEPS = 2;
 
     // Issuance Token Parameters
@@ -250,6 +250,11 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Grant minting rights for issuance token to the bonding curve
         issuanceToken.setMinter(address(fmBcDiscrete), true);
+
+        // Set virtual collateral supply to simulate pre-sale funds
+        // This represents the backing for the first step of the bonding curve
+        uint initialVirtualSupply = 1000 ether; // Simulate 1000 ETH worth of pre-sale
+        fmBcDiscrete.setVirtualCollateralSupply(initialVirtualSupply);
 
         // Initiate the Logic Module with the metadata and config data
         lendingFacility.init(
@@ -392,8 +397,12 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint lockAmount = 100 ether;
 
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
 
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
@@ -405,7 +414,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         address user = makeAddr("user");
 
         vm.prank(user);
-        vm.expectRevert("Amount must be greater than zero");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount.selector);
         lendingFacility.lockIssuanceTokens(0);
     }
 
@@ -425,8 +434,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Setup: lock tokens
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -446,8 +460,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Setup: lock tokens and borrow
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -458,7 +477,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Try to unlock tokens
         vm.prank(user);
-        vm.expectRevert("Cannot unlock tokens with outstanding loan");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan.selector);
         lendingFacility.unlockIssuanceTokens(50 ether);
     }
 
@@ -482,8 +501,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Setup: lock issuance tokens
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -497,19 +521,24 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
     function testBorrow_exceedsIndividualLimit() public {
         address user = makeAddr("user");
-        uint lockAmount = 1000 ether;
-        uint borrowAmount = INDIVIDUAL_BORROW_LIMIT + 1 ether;
+        uint lockAmount = 3000 ether; // Lock more tokens to have sufficient borrowing power
+        uint borrowAmount = 600 ether; // More than individual limit (500 ether) but within borrowable quota (800 ether)
 
         // Setup: lock issuance tokens
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
         // Test: try to borrow more than individual limit
         vm.prank(user);
-        vm.expectRevert("Individual borrow limit exceeded");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded.selector);
         lendingFacility.borrow(borrowAmount);
     }
 
@@ -517,7 +546,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         address user = makeAddr("user");
 
         vm.prank(user);
-        vm.expectRevert("Borrow amount must be greater than zero");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount.selector);
         lendingFacility.borrow(0);
     }
 
@@ -542,8 +571,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Setup: lock tokens and borrow
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -575,8 +609,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Setup: lock tokens and borrow
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -589,7 +628,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         orchestratorToken.approve(address(lendingFacility), repayAmount);
 
         vm.prank(user);
-        vm.expectRevert("Repayment amount exceeds outstanding loan");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan.selector);
         lendingFacility.repay(repayAmount);
     }
 
@@ -666,7 +705,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         _authorizer.grantRole(roleId, address(this));
 
         uint invalidQuota = 10_001; // Exceeds 100%
-        vm.expectRevert("Borrowable quota cannot exceed 100%");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh.selector);
         lendingFacility.setBorrowableQuota(invalidQuota);
     }
 
@@ -701,7 +740,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        vm.expectRevert("Invalid fee calculator address");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress.selector);
         lendingFacility.setDynamicFeeCalculator(address(0));
     }
 
@@ -731,8 +770,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // Lock some tokens and check power
         uint lockAmount = 1000 ether;
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 
@@ -748,7 +792,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         lendingFacility.exposed_ensureValidBorrowAmount(100 ether);
 
         // Should revert for zero amount
-        vm.expectRevert("Borrow amount must be greater than zero");
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount.selector);
         lendingFacility.exposed_ensureValidBorrowAmount(0);
     }
 
@@ -765,8 +809,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // Lock tokens and check power
         uint lockAmount = 1000 ether;
         issuanceToken.mint(user, lockAmount);
+        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        
         vm.prank(user);
         issuanceToken.approve(address(lendingFacility), lockAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        
         vm.prank(user);
         lendingFacility.lockIssuanceTokens(lockAmount);
 

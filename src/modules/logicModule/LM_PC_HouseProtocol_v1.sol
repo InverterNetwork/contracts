@@ -22,6 +22,12 @@ import {ERC165Upgradeable} from
 // System under Test (SuT)
 import {ILM_PC_HouseProtocol_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {
+    IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {
+    IVirtualCollateralSupplyBase_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -168,23 +174,20 @@ contract LM_PC_HouseProtocol_v1 is
         uint userBorrowingPower = _calculateUserBorrowingPower(user);
 
         // Ensure user has sufficient borrowing power
-        require(
-            requestedLoanAmount_ <= userBorrowingPower,
-            "Insufficient borrowing power"
-        );
+        if (requestedLoanAmount_ > userBorrowingPower) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
+        }
 
         // Check if borrowing would exceed borrowable quota
-        require(
-            currentlyBorrowedAmount + requestedLoanAmount_
-                <= _calculateBorrowCapacity() * borrowableQuota / 10_000,
-            "Borrowable quota exceeded"
-        );
+        if (currentlyBorrowedAmount + requestedLoanAmount_
+                > _calculateBorrowCapacity() * borrowableQuota / 10_000) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
+        }
 
         // Check individual borrow limit
-        require(
-            requestedLoanAmount_ <= individualBorrowLimit,
-            "Individual borrow limit exceeded"
-        );
+        if (requestedLoanAmount_ > individualBorrowLimit) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
+        }
 
         // Calculate dynamic borrowing fee
         uint dynamicBorrowingFee =
@@ -216,10 +219,9 @@ contract LM_PC_HouseProtocol_v1 is
     function repay(uint repaymentAmount_) external virtual {
         address user = _msgSender();
 
-        require(
-            _outstandingLoans[user] >= repaymentAmount_,
-            "Repayment amount exceeds outstanding loan"
-        );
+        if (_outstandingLoans[user] < repaymentAmount_) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan();
+        }
 
         // Update state
         _outstandingLoans[user] -= repaymentAmount_;
@@ -245,13 +247,21 @@ contract LM_PC_HouseProtocol_v1 is
     function lockIssuanceTokens(uint amount_) external virtual {
         address user = _msgSender();
 
-        require(amount_ > 0, "Amount must be greater than zero");
+        if (amount_ == 0) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
+        }
 
         // Transfer issuance tokens from user to contract
         _issuanceToken.safeTransferFrom(user, address(this), amount_);
 
         // Update locked amount
         _lockedIssuanceTokens[user] += amount_;
+
+        // Calculate and transfer required collateral tokens
+        uint collateralAmount = _calculateCollateralAmount(amount_);
+        if (collateralAmount > 0) {
+            _collateralToken.safeTransferFrom(user, address(this), collateralAmount);
+        }
 
         // Emit event
         emit IssuanceTokensLocked(user, amount_);
@@ -261,15 +271,13 @@ contract LM_PC_HouseProtocol_v1 is
     function unlockIssuanceTokens(uint amount_) external virtual {
         address user = _msgSender();
 
-        require(
-            _lockedIssuanceTokens[user] >= amount_,
-            "Insufficient locked issuance tokens"
-        );
+        if (_lockedIssuanceTokens[user] < amount_) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
+        }
 
-        require(
-            _outstandingLoans[user] == 0,
-            "Cannot unlock tokens with outstanding loan"
-        );
+        if (_outstandingLoans[user] > 0) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
+        }
 
         // Update locked amount
         _lockedIssuanceTokens[user] -= amount_;
@@ -300,10 +308,9 @@ contract LM_PC_HouseProtocol_v1 is
         external
         onlyLendingFacilityManager
     {
-        require(
-            newBorrowableQuota_ <= _MAX_BORROWABLE_QUOTA,
-            "Borrowable quota cannot exceed 100%"
-        );
+        if (newBorrowableQuota_ > _MAX_BORROWABLE_QUOTA) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
+        }
         borrowableQuota = newBorrowableQuota_;
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
     }
@@ -314,9 +321,9 @@ contract LM_PC_HouseProtocol_v1 is
         external
         onlyLendingFacilityManager
     {
-        require(
-            newFeeCalculator_ != address(0), "Invalid fee calculator address"
-        );
+        if (newFeeCalculator_ == address(0)) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
+        }
         dynamicFeeCalculator = newFeeCalculator_;
         emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
     }
@@ -376,16 +383,19 @@ contract LM_PC_HouseProtocol_v1 is
     /// @dev Ensures the borrow amount is valid
     /// @param amount_ The amount to validate
     function _ensureValidBorrowAmount(uint amount_) internal pure {
-        require(amount_ > 0, "Borrow amount must be greater than zero");
+        if (amount_ == 0) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
+        }
     }
 
     /// @dev Calculate the system-wide Borrow Capacity
     /// @return The borrow capacity
     function _calculateBorrowCapacity() internal view returns (uint) {
-        // This would need to be implemented based on the actual DBC FM interface
-        // For now, returning a placeholder value
-        // In reality, this would be: virtualIssuanceSupply * P_floor
-        return 1_000_000 ether; // Placeholder
+        // Use the DBC FM to get the actual virtual collateral supply
+        // Borrow capacity = virtual collateral supply (this represents the total backing)
+        IVirtualCollateralSupplyBase_v1 dbcFm = 
+            IVirtualCollateralSupplyBase_v1(_dbcFmAddress);
+        return dbcFm.getVirtualCollateralSupply();
     }
 
     /// @dev Calculate user's borrowing power based on locked issuance tokens
@@ -396,10 +406,12 @@ contract LM_PC_HouseProtocol_v1 is
         view
         returns (uint)
     {
-        // This would need to be implemented based on the actual DBC FM interface
-        // For now, returning a placeholder calculation
-        // In reality, this would be: UserLockedIssuanceTokens * P_floor
-        return _lockedIssuanceTokens[user_] * 2; // Placeholder: 2x leverage
+        // Use the DBC FM to get the actual floor price
+        // User borrowing power = locked issuance tokens * floor price
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+        uint floorPrice = dbcFm.getStaticPriceForBuying();
+        return _lockedIssuanceTokens[user_] * floorPrice / 1e18; // Adjust for decimals
     }
 
     /// @dev Calculate dynamic borrowing fee using the fee calculator
@@ -414,10 +426,9 @@ contract LM_PC_HouseProtocol_v1 is
             return 0; // No fee if no calculator is set
         }
 
-        // This would need to be implemented based on the actual fee calculator interface
-        // For now, returning a placeholder calculation
+        // Calculate fee based on floor liquidity rate
         uint floorLiquidityRate = this.getFloorLiquidityRate();
-        return (requestedAmount_ * floorLiquidityRate) / 10_000; // Placeholder: 1% fee
+        return (requestedAmount_ * floorLiquidityRate) / 10_000; // Fee based on liquidity rate
     }
 
     /// @dev Calculate issuance tokens to unlock based on repayment amount
@@ -436,5 +447,21 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Calculate the proportion of locked issuance tokens to unlock
         return (_lockedIssuanceTokens[user_] * repaymentProportion) / 10_000;
+    }
+
+    /// @dev Calculate the required collateral amount for a given issuance token amount
+    /// @param issuanceTokenAmount_ The amount of issuance tokens
+    /// @return The required collateral amount
+    function _calculateCollateralAmount(uint issuanceTokenAmount_)
+        internal
+        view
+        returns (uint)
+    {
+        // Use the DBC FM to get the actual floor price
+        // Required collateral = issuance tokens * floor price
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+        uint floorPrice = dbcFm.getStaticPriceForBuying();
+        return issuanceTokenAmount_ * floorPrice / 1e18; // Adjust for decimals
     }
 }

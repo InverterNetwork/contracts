@@ -97,6 +97,12 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Caller not authorized
     error Module__LM_PC_HouseProtocol_CallerNotAuthorized();
 
+    /// @notice Borrowable quota cannot exceed 100%
+    error Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
+
+    /// @notice Invalid fee calculator address (zero address)
+    error Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
+
     // =========================================================================
     // Public - Getters
 
