@@ -381,255 +381,265 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     }
 
     // =========================================================================
-    // Test: Issuance Token Management
+    // Test: Repaying
 
-    /* Test external lockIssuanceTokens function
-        ├── Given valid amount
-        │   └── When user locks issuance tokens
-        │       ├── Then their locked amount should increase
-        │       └── Then tokens should be transferred to contract
-        └── Given invalid amount
-            └── When user tries to lock zero tokens
-                └── Then it should revert with InvalidBorrowAmount
+    /* Test: Function repay()
+        ├── Given a user has an outstanding loan
+        └── And the user has sufficient collateral tokens to repay
+            └── When the user repays part of their loan
+                ├── Then their outstanding loan should decrease
+                ├── And the system's currently borrowed amount should decrease
+                ├── And collateral tokens should be transferred back to facility
+                └── And issuance tokens should be unlocked proportionally
     */
-    function testLockIssuanceTokens() public {
+    function testRepay() public {
+        // Given: a user has an outstanding loan
         address user = makeAddr("user");
-        uint lockAmount = 100 ether;
+        uint borrowAmount = 500 ether;
+        uint repayAmount = 200 ether;
 
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
-        
+        // Setup: user borrows tokens (which automatically locks issuance tokens)
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
         vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
-
-        assertEq(lendingFacility.getLockedIssuanceTokens(user), lockAmount);
-    }
-
-    function testLockIssuanceTokens_zeroAmount() public {
-        address user = makeAddr("user");
-
-        vm.prank(user);
-        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount.selector);
-        lendingFacility.lockIssuanceTokens(0);
-    }
-
-    /* Test external unlockIssuanceTokens function
-        ├── Given user has locked tokens and no outstanding loan
-        │   └── When user unlocks tokens
-        │       ├── Then their locked amount should decrease
-        │       └── Then tokens should be transferred back to user
-        └── Given user has outstanding loan
-            └── When user tries to unlock tokens
-                └── Then it should revert with CannotUnlockWithOutstandingLoan
-    */
-    function testUnlockIssuanceTokens() public {
-        address user = makeAddr("user");
-        uint lockAmount = 100 ether;
-        uint unlockAmount = 50 ether;
-
-        // Setup: lock tokens
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
-        
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
-
-        // Test: unlock tokens
-        vm.prank(user);
-        lendingFacility.unlockIssuanceTokens(unlockAmount);
-
-        assertEq(
-            lendingFacility.getLockedIssuanceTokens(user),
-            lockAmount - unlockAmount
-        );
-    }
-
-    function testUnlockIssuanceTokens_withOutstandingLoan() public {
-        address user = makeAddr("user");
-        uint lockAmount = 100 ether;
-
-        // Setup: lock tokens and borrow
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
-        
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
-
-        // Borrow some tokens (this creates an outstanding loan)
-        uint borrowAmount = 50 ether;
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
-        // Try to unlock tokens
+        // Given: the user has sufficient collateral tokens to repay
+        orchestratorToken.mint(user, repayAmount);
         vm.prank(user);
-        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan.selector);
-        lendingFacility.unlockIssuanceTokens(50 ether);
+        orchestratorToken.approve(address(lendingFacility), repayAmount);
+
+        // When: the user repays part of their loan
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        uint currentlyBorrowedBefore = lendingFacility.currentlyBorrowedAmount();
+        uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
+        uint facilityCollateralBefore = orchestratorToken.balanceOf(address(lendingFacility));
+
+        vm.prank(user);
+        lendingFacility.repay(repayAmount);
+
+        // Then: their outstanding loan should decrease
+        assertEq(
+            lendingFacility.getOutstandingLoan(user), 
+            outstandingLoanBefore - repayAmount,
+            "Outstanding loan should decrease by repayment amount"
+        );
+
+        // And: the system's currently borrowed amount should decrease
+        assertEq(
+            lendingFacility.currentlyBorrowedAmount(),
+            currentlyBorrowedBefore - repayAmount,
+            "System borrowed amount should decrease by repayment amount"
+        );
+
+        // And: collateral tokens should be transferred back to facility
+        uint facilityCollateralAfter = orchestratorToken.balanceOf(address(lendingFacility));
+        assertEq(
+            facilityCollateralAfter,
+            facilityCollateralBefore + repayAmount,
+            "Facility should receive repayment amount"
+        );
+
+        // And: issuance tokens should be unlocked proportionally
+        uint lockedTokensAfter = lendingFacility.getLockedIssuanceTokens(user);
+        assertLt(lockedTokensAfter, lockedTokensBefore, "Some issuance tokens should be unlocked");
+    }
+
+    /* Test: Function repay()
+        ├── Given a user has an outstanding loan
+        └── And the user tries to repay more than the outstanding amount
+            └── When the user attempts to repay
+                └── Then the transaction should revert with RepaymentAmountExceedsLoan error
+    */
+    function testRepay_exceedsOutstandingLoan() public {
+        // Given: a user has an outstanding loan
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+        uint repayAmount = 600 ether; // More than outstanding loan
+
+        // Setup: user borrows tokens (which automatically locks issuance tokens)
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount);
+
+        // Given: the user tries to repay more than the outstanding amount
+        assertGt(repayAmount, lendingFacility.getOutstandingLoan(user), "Repay amount should exceed outstanding loan");
+
+        orchestratorToken.mint(user, repayAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), repayAmount);
+
+        // When: the user attempts to repay
+        vm.prank(user);
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan.selector);
+        lendingFacility.repay(repayAmount);
+
+        // Then: the transaction should revert with RepaymentAmountExceedsLoan error
     }
 
     // =========================================================================
     // Test: Borrowing
 
-    /* Test external borrow function
-        ├── Given valid borrow request
-        │   └── When user borrows collateral tokens
-        │       ├── Then their outstanding loan should increase
-        │       ├── Then dynamic fee should be calculated and deducted
-        │       └── Then net amount should be transferred to user
-        └── Given invalid borrow request
-            └── When user tries to borrow more than limit
-                └── Then it should revert with appropriate error
+    /* Test: Function borrow()
+        ├── Given a user has issuance tokens
+        ├── And the user has sufficient borrowing power
+        └── And the borrow amount is within individual and system limits
+            └── When the user borrows collateral tokens
+                ├── Then their outstanding loan should increase
+                ├── And issuance tokens should be locked automatically
+                ├── And dynamic fee should be calculated and deducted
+                ├── And net amount should be transferred to user
+                └── And the system's currently borrowed amount should increase
     */
     function testBorrow() public {
+        // Given: a user has issuance tokens
         address user = makeAddr("user");
-        uint lockAmount = 1000 ether;
         uint borrowAmount = 500 ether;
 
-        // Setup: lock issuance tokens
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
         
         vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
 
-        // Test: borrow collateral tokens
+        // Given: the user has sufficient borrowing power
+        uint userBorrowingPower = issuanceTokensWithBuffer * lendingFacility.exposed_getFloorPrice() / 1e18;
+        assertGe(userBorrowingPower, borrowAmount, "User should have sufficient borrowing power");
+
+        // Given: the borrow amount is within individual and system limits
+        assertLe(borrowAmount, lendingFacility.individualBorrowLimit(), "Borrow amount should be within individual limit");
+        
+        uint borrowCapacity = lendingFacility.getBorrowCapacity();
+        uint borrowableQuota = borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
+        assertLe(borrowAmount, borrowableQuota, "Borrow amount should be within system quota");
+
+        // When: the user borrows collateral tokens
+        uint userBalanceBefore = orchestratorToken.balanceOf(user);
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        uint currentlyBorrowedBefore = lendingFacility.currentlyBorrowedAmount();
+        uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
+        
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
-        assertEq(lendingFacility.getOutstandingLoan(user), borrowAmount);
-        assertEq(lendingFacility.currentlyBorrowedAmount(), borrowAmount);
+        // Then: their outstanding loan should increase
+        assertEq(
+            lendingFacility.getOutstandingLoan(user), 
+            outstandingLoanBefore + borrowAmount,
+            "Outstanding loan should increase by borrow amount"
+        );
+
+        // And: issuance tokens should be locked automatically
+        assertEq(
+            lendingFacility.getLockedIssuanceTokens(user),
+            lockedTokensBefore + requiredIssuanceTokens,
+            "Issuance tokens should be locked automatically"
+        );
+
+        // And: the system's currently borrowed amount should increase
+        assertEq(
+            lendingFacility.currentlyBorrowedAmount(), 
+            currentlyBorrowedBefore + borrowAmount,
+            "System borrowed amount should increase by borrow amount"
+        );
+
+        // And: net amount should be transferred to user (after fees)
+        uint userBalanceAfter = orchestratorToken.balanceOf(user);
+        uint actualReceived = userBalanceAfter - userBalanceBefore;
+        assertGt(actualReceived, 0, "User should receive collateral tokens");
+        assertLe(actualReceived, borrowAmount, "User should receive amount less than or equal to requested");
     }
 
-    function testBorrow_exceedsIndividualLimit() public {
+    /* Test: Function borrow()
+        ├── Given a user has insufficient issuance tokens
+        └── When the user tries to borrow collateral tokens
+            └── Then the transaction should revert with InsufficientBorrowingPower error
+    */
+    function testBorrow_insufficientIssuanceTokens() public {
+        // Given: a user has insufficient issuance tokens
         address user = makeAddr("user");
-        uint lockAmount = 3000 ether; // Lock more tokens to have sufficient borrowing power
-        uint borrowAmount = 600 ether; // More than individual limit (500 ether) but within borrowable quota (800 ether)
+        uint borrowAmount = 500 ether;
+        uint insufficientTokens = 100 ether; // Less than required
 
-        // Setup: lock issuance tokens
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        issuanceToken.mint(user, insufficientTokens);
+        vm.prank(user);
+        issuanceToken.approve(address(lendingFacility), insufficientTokens);
+
+        // When: the user tries to borrow collateral tokens
+        vm.prank(user);
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientBorrowingPower.selector);
+        lendingFacility.borrow(borrowAmount);
+
+        // Then: the transaction should revert with InsufficientBorrowingPower error
+    }
+
+    /* Test: Function borrow()
+        ├── Given a user has issuance tokens
+        ├── And the user has sufficient borrowing power
+        └── And the borrow amount exceeds individual limit
+            └── When the user tries to borrow collateral tokens
+                └── Then the transaction should revert with IndividualBorrowLimitExceeded error
+    */
+    function testBorrow_exceedsIndividualLimit() public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 600 ether; // More than individual limit (500 ether)
+
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
         
         vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
 
-        // Test: try to borrow more than individual limit
+        // Given: the user has sufficient borrowing power
+        uint userBorrowingPower = issuanceTokensWithBuffer * lendingFacility.exposed_getFloorPrice() / 1e18;
+        assertGe(userBorrowingPower, borrowAmount, "User should have sufficient borrowing power");
+
+        // Given: the borrow amount exceeds individual limit
+        assertGt(borrowAmount, lendingFacility.individualBorrowLimit(), "Borrow amount should exceed individual limit");
+
+        // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded.selector);
         lendingFacility.borrow(borrowAmount);
+
+        // Then: the transaction should revert with IndividualBorrowLimitExceeded error
     }
 
+    /* Test: Function borrow()
+        ├── Given a user wants to borrow tokens
+        └── And the borrow amount is zero
+            └── When the user tries to borrow collateral tokens
+                └── Then the transaction should revert with InvalidBorrowAmount error
+    */
     function testBorrow_zeroAmount() public {
+        // Given: a user wants to borrow tokens
         address user = makeAddr("user");
 
+        // Given: the borrow amount is zero
+        uint borrowAmount = 0;
+
+        // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount.selector);
-        lendingFacility.borrow(0);
-    }
-
-    // =========================================================================
-    // Test: Repaying
-
-    /* Test external repay function
-        ├── Given user has outstanding loan
-        │   └── When user repays loan
-        │       ├── Then their outstanding loan should decrease
-        │       ├── Then collateral should be transferred back to facility
-        │       └── Then issuance tokens should be unlocked proportionally
-        └── Given user has no outstanding loan
-            └── When user tries to repay
-                └── Then it should revert with appropriate error
-    */
-    function testRepay() public {
-        address user = makeAddr("user");
-        uint lockAmount = 1000 ether;
-        uint borrowAmount = 500 ether;
-        uint repayAmount = 200 ether;
-
-        // Setup: lock tokens and borrow
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
-        
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
-
-        vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
-        // Test: repay loan
-        orchestratorToken.mint(user, repayAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), repayAmount);
-
-        vm.prank(user);
-        lendingFacility.repay(repayAmount);
-
-        assertEq(
-            lendingFacility.getOutstandingLoan(user), borrowAmount - repayAmount
-        );
-        assertEq(
-            lendingFacility.currentlyBorrowedAmount(),
-            borrowAmount - repayAmount
-        );
-    }
-
-    function testRepay_exceedsOutstandingLoan() public {
-        address user = makeAddr("user");
-        uint lockAmount = 1000 ether;
-        uint borrowAmount = 500 ether;
-        uint repayAmount = 600 ether;
-
-        // Setup: lock tokens and borrow
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
-        
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
-        
-        vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
-
-        vm.prank(user);
-        lendingFacility.borrow(borrowAmount);
-
-        // Test: try to repay more than outstanding loan
-        orchestratorToken.mint(user, repayAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), repayAmount);
-
-        vm.prank(user);
-        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan.selector);
-        lendingFacility.repay(repayAmount);
+        // Then: the transaction should revert with InvalidBorrowAmount error
     }
 
     // =========================================================================
@@ -767,18 +777,18 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint power = lendingFacility.getUserBorrowingPower(user);
         assertEq(power, 0); // Initially no locked tokens
 
-        // Lock some tokens and check power
-        uint lockAmount = 1000 ether;
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        // Borrow some tokens (which automatically locks issuance tokens)
+        uint borrowAmount = 500 ether;
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
         
         vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
         
         vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
+        lendingFacility.borrow(borrowAmount);
 
         power = lendingFacility.getUserBorrowingPower(user);
         assertGt(power, 0);
@@ -806,18 +816,18 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint power = lendingFacility.exposed_calculateUserBorrowingPower(user);
         assertEq(power, 0); // No locked tokens initially
 
-        // Lock tokens and check power
-        uint lockAmount = 1000 ether;
-        issuanceToken.mint(user, lockAmount);
-        orchestratorToken.mint(user, lockAmount); // Mint collateral tokens for the user
+        // Borrow some tokens (which automatically locks issuance tokens)
+        uint borrowAmount = 500 ether;
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
         
         vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), lockAmount);
-        vm.prank(user);
-        orchestratorToken.approve(address(lendingFacility), lockAmount); // Approve collateral tokens
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
         
         vm.prank(user);
-        lendingFacility.lockIssuanceTokens(lockAmount);
+        lendingFacility.borrow(borrowAmount);
 
         power = lendingFacility.exposed_calculateUserBorrowingPower(user);
         assertGt(power, 0);
@@ -836,6 +846,139 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint tokensToUnlock = lendingFacility
             .exposed_calculateIssuanceTokensToUnlock(user, repaymentAmount);
         assertEq(tokensToUnlock, 0); // No outstanding loan initially
+    }
+
+    // =========================================================================
+    // Test: Unlocking Issuance Tokens
+
+    /* Test: Function unlockIssuanceTokens()
+        ├── Given a user has locked issuance tokens
+        ├── And the user has no outstanding loan
+        └── When the user unlocks issuance tokens
+            ├── Then their locked issuance tokens should decrease
+            ├── And issuance tokens should be transferred back to user
+            └── And an event should be emitted
+    */
+    function testUnlockIssuanceTokens() public {
+        // Given: a user has locked issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+        uint unlockAmount = 200 ether;
+
+        // Setup: user borrows tokens (which automatically locks issuance tokens)
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount);
+
+        // Given: the user has no outstanding loan (repay the full amount)
+        orchestratorToken.mint(user, borrowAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), borrowAmount);
+        vm.prank(user);
+        lendingFacility.repay(borrowAmount);
+
+        // Verify user has no outstanding loan
+        assertEq(lendingFacility.getOutstandingLoan(user), 0, "User should have no outstanding loan");
+
+        // When: the user unlocks issuance tokens
+        uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
+        uint userBalanceBefore = issuanceToken.balanceOf(user);
+
+        vm.prank(user);
+        lendingFacility.unlockIssuanceTokens(unlockAmount);
+
+        // Then: their locked issuance tokens should decrease
+        assertEq(
+            lendingFacility.getLockedIssuanceTokens(user),
+            lockedTokensBefore - unlockAmount,
+            "Locked issuance tokens should decrease"
+        );
+
+        // And: issuance tokens should be transferred back to user
+        assertEq(
+            issuanceToken.balanceOf(user),
+            userBalanceBefore + unlockAmount,
+            "User should receive unlocked issuance tokens"
+        );
+    }
+
+    /* Test: Function unlockIssuanceTokens()
+        ├── Given a user has locked issuance tokens
+        ├── And the user has an outstanding loan
+        └── When the user tries to unlock issuance tokens
+            └── Then the transaction should revert with CannotUnlockWithOutstandingLoan error
+    */
+    function testUnlockIssuanceTokens_withOutstandingLoan() public {
+        // Given: a user has locked issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+        uint unlockAmount = 200 ether;
+
+        // Setup: user borrows tokens (which automatically locks issuance tokens)
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount);
+
+        // Given: the user has an outstanding loan (don't repay)
+        assertGt(lendingFacility.getOutstandingLoan(user), 0, "User should have outstanding loan");
+
+        // When: the user tries to unlock issuance tokens
+        vm.prank(user);
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan.selector);
+        lendingFacility.unlockIssuanceTokens(unlockAmount);
+
+        // Then: the transaction should revert with CannotUnlockWithOutstandingLoan error
+    }
+
+    /* Test: Function unlockIssuanceTokens()
+        ├── Given a user has locked issuance tokens
+        └── And the user tries to unlock more than locked amount
+            └── When the user tries to unlock issuance tokens
+                └── Then the transaction should revert with InsufficientLockedTokens error
+    */
+    function testUnlockIssuanceTokens_insufficientLockedTokens() public {
+        // Given: a user has locked issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+        uint unlockAmount = 1000 ether; // More than locked amount
+
+        // Setup: user borrows tokens (which automatically locks issuance tokens)
+        uint requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(address(lendingFacility), issuanceTokensWithBuffer);
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount);
+
+        // Given: the user has no outstanding loan (repay the full amount)
+        orchestratorToken.mint(user, borrowAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), borrowAmount);
+        vm.prank(user);
+        lendingFacility.repay(borrowAmount);
+
+        // Given: the user tries to unlock more than locked amount
+        uint lockedTokens = lendingFacility.getLockedIssuanceTokens(user);
+        assertLt(lockedTokens, unlockAmount, "Unlock amount should exceed locked tokens");
+
+        // When: the user tries to unlock issuance tokens
+        vm.prank(user);
+        vm.expectRevert(ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientLockedTokens.selector);
+        lendingFacility.unlockIssuanceTokens(unlockAmount);
+
+        // Then: the transaction should revert with InsufficientLockedTokens error
     }
 
     // =========================================================================

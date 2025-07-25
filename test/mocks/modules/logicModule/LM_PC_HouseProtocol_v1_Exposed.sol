@@ -40,4 +40,16 @@ contract LM_PC_HouseProtocol_v1_Exposed is LM_PC_HouseProtocol_v1 {
     ) external view returns (uint) {
         return _calculateIssuanceTokensToUnlock(user_, repaymentAmount_);
     }
+
+    function exposed_calculateRequiredIssuanceTokens(uint borrowAmount_)
+        external
+        view
+        returns (uint)
+    {
+        return _calculateRequiredIssuanceTokens(borrowAmount_);
+    }
+
+    function exposed_getFloorPrice() external view returns (uint) {
+        return _getFloorPrice();
+    }
 }

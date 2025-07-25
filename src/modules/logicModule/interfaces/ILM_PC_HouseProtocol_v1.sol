@@ -103,6 +103,9 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Invalid fee calculator address (zero address)
     error Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
 
+    /// @notice Insufficient issuance tokens to lock for borrowing
+    error Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
+
     // =========================================================================
     // Public - Getters
 
@@ -152,10 +155,6 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Repay a loan with collateral tokens
     /// @param repaymentAmount_ The amount of collateral tokens to repay
     function repay(uint repaymentAmount_) external;
-
-    /// @notice Lock issuance tokens to enable borrowing
-    /// @param amount_ The amount of issuance tokens to lock
-    function lockIssuanceTokens(uint amount_) external;
 
     /// @notice Unlock issuance tokens (only if no outstanding loan)
     /// @param amount_ The amount of issuance tokens to unlock

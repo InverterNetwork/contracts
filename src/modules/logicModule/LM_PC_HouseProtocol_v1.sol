@@ -170,12 +170,21 @@ contract LM_PC_HouseProtocol_v1 is
     {
         address user = _msgSender();
 
-        // Calculate user's borrowing power based on locked issuance tokens
-        uint userBorrowingPower = _calculateUserBorrowingPower(user);
+        // Calculate user's borrowing power based on their available issuance tokens
+        uint userIssuanceTokens = _issuanceToken.balanceOf(user);
+        uint userBorrowingPower = userIssuanceTokens * _getFloorPrice() / 1e18;
 
         // Ensure user has sufficient borrowing power
         if (requestedLoanAmount_ > userBorrowingPower) {
             revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
+        }
+
+        // Calculate how much issuance tokens need to be locked for this borrow amount
+        uint requiredIssuanceTokens = _calculateRequiredIssuanceTokens(requestedLoanAmount_);
+        
+        // Ensure user has sufficient issuance tokens to lock
+        if (userIssuanceTokens < requiredIssuanceTokens) {
+            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
         }
 
         // Check if borrowing would exceed borrowable quota
@@ -188,6 +197,10 @@ contract LM_PC_HouseProtocol_v1 is
         if (requestedLoanAmount_ > individualBorrowLimit) {
             revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
         }
+
+        // Lock the required issuance tokens automatically
+        _issuanceToken.safeTransferFrom(user, address(this), requiredIssuanceTokens);
+        _lockedIssuanceTokens[user] += requiredIssuanceTokens;
 
         // Calculate dynamic borrowing fee
         uint dynamicBorrowingFee =
@@ -209,7 +222,8 @@ contract LM_PC_HouseProtocol_v1 is
         // Transfer net amount to user
         _collateralToken.safeTransfer(user, netAmountToUser);
 
-        // Emit event
+        // Emit events
+        emit IssuanceTokensLocked(user, requiredIssuanceTokens);
         emit Borrowed(
             user, requestedLoanAmount_, dynamicBorrowingFee, netAmountToUser
         );
@@ -241,30 +255,6 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Emit event
         emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
-    }
-
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
-    function lockIssuanceTokens(uint amount_) external virtual {
-        address user = _msgSender();
-
-        if (amount_ == 0) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
-        }
-
-        // Transfer issuance tokens from user to contract
-        _issuanceToken.safeTransferFrom(user, address(this), amount_);
-
-        // Update locked amount
-        _lockedIssuanceTokens[user] += amount_;
-
-        // Calculate and transfer required collateral tokens
-        uint collateralAmount = _calculateCollateralAmount(amount_);
-        if (collateralAmount > 0) {
-            _collateralToken.safeTransferFrom(user, address(this), collateralAmount);
-        }
-
-        // Emit event
-        emit IssuanceTokensLocked(user, amount_);
     }
 
     /// @inheritdoc ILM_PC_HouseProtocol_v1
@@ -463,5 +453,30 @@ contract LM_PC_HouseProtocol_v1 is
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
         uint floorPrice = dbcFm.getStaticPriceForBuying();
         return issuanceTokenAmount_ * floorPrice / 1e18; // Adjust for decimals
+    }
+
+    /// @dev Calculate the required issuance tokens for a given borrow amount
+    /// @param borrowAmount_ The amount to borrow
+    /// @return The required issuance tokens to lock
+    function _calculateRequiredIssuanceTokens(uint borrowAmount_)
+        internal
+        view
+        returns (uint)
+    {
+        // Required issuance tokens = borrow amount / floor price
+        uint floorPrice = _getFloorPrice();
+        return borrowAmount_ * 1e18 / floorPrice; // Adjust for decimals
+    }
+
+    /// @dev Get the current floor price from the DBC FM
+    /// @return The current floor price
+    function _getFloorPrice()
+        internal
+        view
+        returns (uint)
+    {
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+        return dbcFm.getStaticPriceForBuying();
     }
 }
