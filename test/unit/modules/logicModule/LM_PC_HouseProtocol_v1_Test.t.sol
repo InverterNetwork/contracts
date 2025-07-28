@@ -73,11 +73,6 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     // SuT
     LM_PC_HouseProtocol_v1_Exposed lendingFacility;
 
-    // Mocks
-    // ERC20Mock collateralToken;
-    // ERC20Mock issuanceToken;
-    // address dbcFmAddress;
-
     // Test constants
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
     uint constant INDIVIDUAL_BORROW_LIMIT = 500 ether;
@@ -201,13 +196,6 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
         _authorizer.grantRole(_authorizer.getAdminRole(), address(this));
-
-        //    // Grant role to this test contract
-        // bytes32 roleId = _authorizer.generateRoleId(
-        //     address(lendingFacility),
-        //     lendingFacility.FEE_CALCULATOR_ADMIN_ROLE()
-        // );
-        // _authorizer.grantRole(roleId, address(this));
 
         defaultCurve.description = "Flat segment followed by a sloped segment";
         uint[] memory initialPrices = new uint[](2);
@@ -786,21 +774,36 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 unauthorizedUser
             )
         );
-        lendingFacility.setDynamicFeeCalculatorParams(
-            1e16, 2e16, 3e16, 4e16, 5e16, 6e16
-        );
+        (
+            uint Z_issueRedeem,
+            uint A_issueRedeem,
+            uint m_issueRedeem,
+            uint Z_origination,
+            uint A_origination,
+            uint m_origination
+        ) = helper_getDynamicFeeCalculatorParams();
+        lendingFacility.setDynamicFeeCalculatorParams(Z_issueRedeem, A_issueRedeem, m_issueRedeem, Z_origination, A_origination, m_origination);
         vm.stopPrank();
     }
 
     function test_setDynamicFeeCalculatorParams() public {
         helper_setDynamicFeeCalculatorParams();
 
-        // assertEq(lendingFacility.Z_issueRedeem(), Z_issueRedeem);
-        // assertEq(lendingFacility.A_issueRedeem(), A_issueRedeem);
-        // assertEq(lendingFacility.m_issueRedeem(), m_issueRedeem);
-        // assertEq(lendingFacility.Z_origination(), Z_origination);
-        // assertEq(lendingFacility.A_origination(), A_origination);
-        // assertEq(lendingFacility.m_origination(), m_origination);
+        (
+            uint Z_issueRedeem,
+            uint A_issueRedeem,
+            uint m_issueRedeem,
+            uint Z_origination,
+            uint A_origination,
+            uint m_origination
+        ) = helper_getDynamicFeeCalculatorParams();
+
+        assertEq(lendingFacility.Z_issueRedeem(), Z_issueRedeem);
+        assertEq(lendingFacility.A_issueRedeem(), A_issueRedeem);
+        assertEq(lendingFacility.m_issueRedeem(), m_issueRedeem);
+        assertEq(lendingFacility.Z_origination(), Z_origination);
+        assertEq(lendingFacility.A_origination(), A_origination);
+        assertEq(lendingFacility.m_origination(), m_origination);
     }
 
     // Test: Dynamic Fee Calculator Library
@@ -809,7 +812,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         ├── Given floorLiquidityRate is below A_origination
         │   └── Then the fee should be Z_origination
         └── Given floorLiquidityRate is above A_origination
-            └── Then the fee should be Z_origination + (floorLiquidityRate - A_origination) * m_origination / 1e18
+            └── Then the fee should be Z_origination + (floorLiquidityRate - A_origination) * m_origination / Sc
     */
     function test_calculateOriginationFee_BelowThreshold() public {
         helper_setDynamicFeeCalculatorParams();
@@ -844,7 +847,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         ├── Given premiumRate is below A_issueRedeem
         │   └── Then the fee should be Z_issueRedeem
         └── Given premiumRate is above A_issueRedeem
-            └── Then the fee should be Z_issueRedeem + (premiumRate - A_issueRedeem) * m_issueRedeem / 1e18
+            └── Then the fee should be Z_issueRedeem + (premiumRate - A_issueRedeem) * m_issueRedeem / SCALING_FACTOR
     */
     function test_calculateIssuanceFee_BelowThreshold() public {
         helper_setDynamicFeeCalculatorParams();
@@ -881,7 +884,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         ├── Given premiumRate is below A_issueRedeem
         │   └── Then the fee should be Z_issueRedeem
         └── Given premiumRate is above A_issueRedeem
-            └── Then the fee should be Z_issueRedeem + (A_issueRedeem - premiumRate) * m_issueRedeem / 1e18
+            └── Then the fee should be Z_issueRedeem + (A_issueRedeem - premiumRate) * m_issueRedeem / SCALING_FACTOR
     */
     function test_calculateRedemptionFee_BelowThreshold() public {
         helper_setDynamicFeeCalculatorParams();
@@ -1181,13 +1184,31 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         return segments;
     }
 
+    function helper_getDynamicFeeCalculatorParams() internal pure returns (
+        uint Z_issueRedeem,
+        uint A_issueRedeem,
+        uint m_issueRedeem,
+        uint Z_origination,
+        uint A_origination,
+        uint m_origination
+    ) {
+        Z_issueRedeem = 1e16; // 1%
+        A_issueRedeem = 7.5e16; // 7.5%
+        m_issueRedeem = 2e15; // 0.2%
+        Z_origination = 1e16; // 1%
+        A_origination = 2e16; // 2%
+        m_origination = 2e15; // 0.2%
+    }
+
     function helper_setDynamicFeeCalculatorParams() internal {
-        uint Z_issueRedeem = 1e16; // 1%
-        uint A_issueRedeem = 7.5e16; // 7.5%
-        uint m_issueRedeem = 2e15; // 0.2%
-        uint Z_origination = 1e16; // 1%
-        uint A_origination = 2e16; // 2%
-        uint m_origination = 2e15; // 0.2%
+        (
+            uint Z_issueRedeem,
+            uint A_issueRedeem,
+            uint m_issueRedeem,
+            uint Z_origination,
+            uint A_origination,
+            uint m_origination
+        ) = helper_getDynamicFeeCalculatorParams();
 
         lendingFacility.setDynamicFeeCalculatorParams(
             Z_issueRedeem,
@@ -1199,3 +1220,4 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         );
     }
 }
+    

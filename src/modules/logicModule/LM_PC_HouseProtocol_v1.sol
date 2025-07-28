@@ -121,22 +121,22 @@ contract LM_PC_HouseProtocol_v1 is
     /// @notice DBC FM address for floor price calculations
     address internal _dbcFmAddress;
 
-    /// @notice Base fee component for issuance/redemption fees (as per formulas in 6.4.2).
+    /// @notice Base fee component for issuance/redemption fees.
     uint public Z_issueRedeem;
 
-    /// @notice premiumRate threshold for dynamic issuance/redemption fee adjustment (as per formulas in 6.4.2).
+    /// @notice premiumRate threshold for dynamic issuance/redemption fee adjustment.
     uint public A_issueRedeem;
 
-    /// @notice Multiplier for dynamic issuance/redemption fee component (as per formulas in 6.4.2).
+    /// @notice Multiplier for dynamic issuance/redemption fee component.
     uint public m_issueRedeem;
 
-    /// @notice Base fee component for origination fees (as per formula in 6.4.1).
+    /// @notice Base fee component for origination fees.
     uint public Z_origination;
 
-    /// @notice floorLiquidityRate threshold for dynamic origination fee adjustment (as per formula in 6.4.1).
+    /// @notice floorLiquidityRate threshold for dynamic origination fee adjustment.
     uint public A_origination;
 
-    /// @notice Multiplier for dynamic origination fee component (as per formula in 6.4.1).
+    /// @notice Multiplier for dynamic origination fee component.
     uint public m_origination;
 
     /// @notice Storage gap for future upgrades
