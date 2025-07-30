@@ -832,12 +832,19 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         │   └── When setting new fee calculator parameters
         │       ├── Then the parameters should be updated
         │       └── Then an event should be emitted
+        └── Given invalid parameters (zero values)
+            └── When trying to set parameters
+                └── Then it should revert with InvalidDynamicFeeParameters error
         └── Given caller doesn't have role
             └── When trying to set parameters
     */
 
-    function test_setDynamicFeeCalculatorParams_unauthorized() public {
-        address unauthorizedUser = makeAddr("unauthorized");
+    function testFuzz_setDynamicFeeCalculatorParams_unauthorized(
+        address unauthorizedUser
+    ) public {
+        vm.assume(
+            unauthorizedUser != address(0) && unauthorizedUser != address(this)
+        );
 
         vm.startPrank(unauthorizedUser);
         vm.expectRevert(
@@ -853,9 +860,39 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function test_setDynamicFeeCalculatorParams() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
-            helper_getDynamicFeeCalculatorParams();
+    function testFuzz_setDynamicFeeCalculatorParams_invalidParams(
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
+    ) public {
+        vm.assume(
+            feeParams.Z_issueRedeem == 0 || feeParams.A_issueRedeem == 0
+                || feeParams.m_issueRedeem == 0 || feeParams.Z_origination == 0
+                || feeParams.A_origination == 0 || feeParams.m_origination == 0
+        );
+        vm.expectRevert(
+            ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters
+                .selector
+        );
+        lendingFacility.setDynamicFeeCalculatorParams(feeParams);
+    }
+
+    function testFuzz_setDynamicFeeCalculatorParams(
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
+    ) public {
+        vm.assume(
+            feeParams.Z_issueRedeem != 0 && feeParams.A_issueRedeem != 0
+                && feeParams.m_issueRedeem != 0 && feeParams.Z_origination != 0
+                && feeParams.A_origination != 0 && feeParams.m_origination != 0
+        );
+        vm.assume(
+            feeParams.Z_issueRedeem < type(uint64).max
+                && feeParams.A_issueRedeem < type(uint64).max
+                && feeParams.m_issueRedeem < type(uint64).max
+                && feeParams.Z_origination < type(uint64).max
+                && feeParams.A_origination < type(uint64).max
+                && feeParams.m_origination < type(uint64).max
+        );
+
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
 
         ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory LF_feeParams =

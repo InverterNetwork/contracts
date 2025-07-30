@@ -112,6 +112,9 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Insufficient issuance tokens to lock for borrowing
     error Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
 
+    /// @notice Invalid dynamic fee parameters
+    error Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters();
+
     // =========================================================================
     // Structs
 

@@ -357,6 +357,18 @@ contract LM_PC_HouseProtocol_v1 is
     function setDynamicFeeCalculatorParams(
         DynamicFeeParameters memory dynamicFeeParameters_
     ) external onlyFeeCalculatorAdmin {
+        if (
+            dynamicFeeParameters_.Z_issueRedeem == 0
+                || dynamicFeeParameters_.A_issueRedeem == 0
+                || dynamicFeeParameters_.m_issueRedeem == 0
+                || dynamicFeeParameters_.Z_origination == 0
+                || dynamicFeeParameters_.A_origination == 0
+                || dynamicFeeParameters_.m_origination == 0
+        ) {
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters();
+        }
         _dynamicFeeParameters = dynamicFeeParameters_;
         emit DynamicFeeCalculatorParamsUpdated(dynamicFeeParameters_);
     }
