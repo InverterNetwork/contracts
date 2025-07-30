@@ -22,12 +22,10 @@ import {ERC165Upgradeable} from
 // System under Test (SuT)
 import {ILM_PC_HouseProtocol_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
-import {
-    IFM_BC_Discrete_Redeeming_VirtualSupply_v1
-} from "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
-import {
-    IVirtualCollateralSupplyBase_v1
-} from "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IVirtualCollateralSupplyBase_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 import {DynamicFeeCalculatorLib_v1} from
     "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
@@ -121,23 +119,8 @@ contract LM_PC_HouseProtocol_v1 is
     /// @notice DBC FM address for floor price calculations
     address internal _dbcFmAddress;
 
-    /// @notice Base fee component for issuance/redemption fees.
-    uint public Z_issueRedeem;
-
-    /// @notice premiumRate threshold for dynamic issuance/redemption fee adjustment.
-    uint public A_issueRedeem;
-
-    /// @notice Multiplier for dynamic issuance/redemption fee component.
-    uint public m_issueRedeem;
-
-    /// @notice Base fee component for origination fees.
-    uint public Z_origination;
-
-    /// @notice floorLiquidityRate threshold for dynamic origination fee adjustment.
-    uint public A_origination;
-
-    /// @notice Multiplier for dynamic origination fee component.
-    uint public m_origination;
+    /// @notice Parameters for the dynamic fee calculator
+    DynamicFeeParameters internal _dynamicFeeParameters;
 
     /// @notice Storage gap for future upgrades
     uint[50] private __gap;
@@ -205,30 +188,43 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Ensure user has sufficient borrowing power
         if (requestedLoanAmount_ > userBorrowingPower) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
         }
 
         // Calculate how much issuance tokens need to be locked for this borrow amount
-        uint requiredIssuanceTokens = _calculateRequiredIssuanceTokens(requestedLoanAmount_);
-        
+        uint requiredIssuanceTokens =
+            _calculateRequiredIssuanceTokens(requestedLoanAmount_);
+
         // Ensure user has sufficient issuance tokens to lock
         if (userIssuanceTokens < requiredIssuanceTokens) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
         }
 
         // Check if borrowing would exceed borrowable quota
-        if (currentlyBorrowedAmount + requestedLoanAmount_
-                > _calculateBorrowCapacity() * borrowableQuota / 10_000) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
+        if (
+            currentlyBorrowedAmount + requestedLoanAmount_
+                > _calculateBorrowCapacity() * borrowableQuota / 10_000
+        ) {
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
         }
 
         // Check individual borrow limit
         if (requestedLoanAmount_ > individualBorrowLimit) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
         }
 
         // Lock the required issuance tokens automatically
-        _issuanceToken.safeTransferFrom(user, address(this), requiredIssuanceTokens);
+        _issuanceToken.safeTransferFrom(
+            user, address(this), requiredIssuanceTokens
+        );
         _lockedIssuanceTokens[user] += requiredIssuanceTokens;
 
         // Calculate dynamic borrowing fee
@@ -263,7 +259,9 @@ contract LM_PC_HouseProtocol_v1 is
         address user = _msgSender();
 
         if (_outstandingLoans[user] < repaymentAmount_) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan();
         }
 
         // Update state
@@ -291,11 +289,15 @@ contract LM_PC_HouseProtocol_v1 is
         address user = _msgSender();
 
         if (_lockedIssuanceTokens[user] < amount_) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
         }
 
         if (_outstandingLoans[user] > 0) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
         }
 
         // Update locked amount
@@ -328,7 +330,9 @@ contract LM_PC_HouseProtocol_v1 is
         onlyLendingFacilityManager
     {
         if (newBorrowableQuota_ > _MAX_BORROWABLE_QUOTA) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
         }
         borrowableQuota = newBorrowableQuota_;
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
@@ -341,7 +345,9 @@ contract LM_PC_HouseProtocol_v1 is
         onlyLendingFacilityManager
     {
         if (newFeeCalculator_ == address(0)) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
         }
         dynamicFeeCalculator = newFeeCalculator_;
         emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
@@ -349,27 +355,10 @@ contract LM_PC_HouseProtocol_v1 is
 
     /// @inheritdoc ILM_PC_HouseProtocol_v1
     function setDynamicFeeCalculatorParams(
-        uint Z_issueRedeem_,
-        uint A_issueRedeem_,
-        uint m_issueRedeem_,
-        uint Z_origination_,
-        uint A_origination_,
-        uint m_origination_
+        DynamicFeeParameters memory dynamicFeeParameters_
     ) external onlyFeeCalculatorAdmin {
-        Z_issueRedeem = Z_issueRedeem_;
-        A_issueRedeem = A_issueRedeem_;
-        m_issueRedeem = m_issueRedeem_;
-        Z_origination = Z_origination_;
-        A_origination = A_origination_;
-        m_origination = m_origination_;
-        emit DynamicFeeCalculatorParamsUpdated(
-            Z_issueRedeem_,
-            A_issueRedeem_,
-            m_issueRedeem_,
-            Z_origination_,
-            A_origination_,
-            m_origination_
-        );
+        _dynamicFeeParameters = dynamicFeeParameters_;
+        emit DynamicFeeCalculatorParamsUpdated(dynamicFeeParameters_);
     }
 
     // =========================================================================
@@ -421,6 +410,15 @@ contract LM_PC_HouseProtocol_v1 is
         return _calculateUserBorrowingPower(user_);
     }
 
+    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    function getDynamicFeeParameters()
+        external
+        view
+        returns (DynamicFeeParameters memory)
+    {
+        return _dynamicFeeParameters;
+    }
+
     //--------------------------------------------------------------------------
     // Internal
 
@@ -428,7 +426,9 @@ contract LM_PC_HouseProtocol_v1 is
     /// @param amount_ The amount to validate
     function _ensureValidBorrowAmount(uint amount_) internal pure {
         if (amount_ == 0) {
-            revert ILM_PC_HouseProtocol_v1.Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
         }
     }
 
@@ -437,7 +437,7 @@ contract LM_PC_HouseProtocol_v1 is
     function _calculateBorrowCapacity() internal view returns (uint) {
         // Use the DBC FM to get the actual virtual collateral supply
         // Borrow capacity = virtual collateral supply (this represents the total backing)
-        IVirtualCollateralSupplyBase_v1 dbcFm = 
+        IVirtualCollateralSupplyBase_v1 dbcFm =
             IVirtualCollateralSupplyBase_v1(_dbcFmAddress);
         return dbcFm.getVirtualCollateralSupply();
     }
@@ -452,7 +452,7 @@ contract LM_PC_HouseProtocol_v1 is
     {
         // Use the DBC FM to get the actual floor price
         // User borrowing power = locked issuance tokens * floor price
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
         uint floorPrice = dbcFm.getStaticPriceForBuying();
         return _lockedIssuanceTokens[user_] * floorPrice / 1e18; // Adjust for decimals
@@ -503,7 +503,7 @@ contract LM_PC_HouseProtocol_v1 is
     {
         // Use the DBC FM to get the actual floor price
         // Required collateral = issuance tokens * floor price
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
         uint floorPrice = dbcFm.getStaticPriceForBuying();
         return issuanceTokenAmount_ * floorPrice / 1e18; // Adjust for decimals
@@ -524,12 +524,8 @@ contract LM_PC_HouseProtocol_v1 is
 
     /// @dev Get the current floor price from the DBC FM
     /// @return The current floor price
-    function _getFloorPrice()
-        internal
-        view
-        returns (uint)
-    {
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm = 
+    function _getFloorPrice() internal view returns (uint) {
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
         return dbcFm.getStaticPriceForBuying();
     }

@@ -71,19 +71,9 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     event DynamicFeeCalculatorUpdated(address newCalculator);
 
     /// @notice Emitted when the dynamic fee calculator parameters are updated
-    /// @param Z_issueRedeem_ The new base fee component for issuance/redemption fees.
-    /// @param A_issueRedeem_ The new premiumRate threshold for dynamic issuance/redemption fee adjustment.
-    /// @param m_issueRedeem_ The new multiplier for dynamic issuance/redemption fee component.
-    /// @param Z_origination_ The new base fee component for origination fees.
-    /// @param A_origination_ The new floorLiquidityRate threshold for dynamic origination fee adjustment.
-    /// @param m_origination_ The new multiplier for dynamic origination fee component.
+    /// @param dynamicFeeParameters_ The dynamic fee parameters
     event DynamicFeeCalculatorParamsUpdated(
-        uint Z_issueRedeem_,
-        uint A_issueRedeem_,
-        uint m_issueRedeem_,
-        uint Z_origination_,
-        uint A_origination_,
-        uint m_origination_
+        DynamicFeeParameters dynamicFeeParameters_
     );
 
     // =========================================================================
@@ -121,6 +111,27 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Insufficient issuance tokens to lock for borrowing
     error Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
+
+    // =========================================================================
+    // Structs
+
+    /// @notice Parameters for the dynamic fee calculator
+    /// @dev These parameters are used to calculate the dynamic fee for issuance/redemption and origination fees
+    ///      based on the floor liquidity rate.
+    ///      Z_issueRedeem: Base fee component for issuance/redemption fees.
+    ///      A_issueRedeem: PremiumRate threshold for dynamic issuance/redemption fee adjustment.
+    ///      m_issueRedeem: Multiplier for dynamic issuance/redemption fee component.
+    ///      Z_origination: Base fee component for origination fees.
+    ///      A_origination: FloorLiquidityRate threshold for dynamic origination fee adjustment.
+    ///      m_origination: Multiplier for dynamic origination fee component.
+    struct DynamicFeeParameters {
+        uint Z_issueRedeem;
+        uint A_issueRedeem;
+        uint m_issueRedeem;
+        uint Z_origination;
+        uint A_origination;
+        uint m_origination;
+    }
 
     // =========================================================================
     // Public - Getters
@@ -161,6 +172,13 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (uint power_);
 
+    /// @notice Returns the dynamic fee parameters
+    /// @return dynamicFeeParameters_ The dynamic fee parameters
+    function getDynamicFeeParameters()
+        external
+        view
+        returns (DynamicFeeParameters memory dynamicFeeParameters_);
+
     // =========================================================================
     // Public - Mutating
 
@@ -193,18 +211,8 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     function setDynamicFeeCalculator(address newFeeCalculator_) external;
 
     /// @notice Set the Dynamic Fee Calculator parameters
-    /// @param Z_issueRedeem_ The new base fee component for issuance/redemption fees.
-    /// @param A_issueRedeem_ The new premiumRate threshold for dynamic issuance/redemption fee adjustment.
-    /// @param m_issueRedeem_ The new multiplier for dynamic issuance/redemption fee component.
-    /// @param Z_origination_ The new base fee component for origination fees.
-    /// @param A_origination_ The new floorLiquidityRate threshold for dynamic origination fee adjustment.
-    /// @param m_origination_ The new multiplier for dynamic origination fee component.
+    /// @param dynamicFeeParameters_ The dynamic fee parameters
     function setDynamicFeeCalculatorParams(
-        uint Z_issueRedeem_,
-        uint A_issueRedeem_,
-        uint m_issueRedeem_,
-        uint Z_origination_,
-        uint A_origination_,
-        uint m_origination_
+        DynamicFeeParameters memory dynamicFeeParameters_
     ) external;
 }
