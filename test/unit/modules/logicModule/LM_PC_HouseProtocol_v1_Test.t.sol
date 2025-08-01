@@ -269,6 +269,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // Mint tokens to the lending facility
         orchestratorToken.mint(address(lendingFacility), 10_000 ether);
         issuanceToken.mint(address(lendingFacility), 10_000 ether);
+
+        // Mint tokens to the DBC FM so it can transfer them
+        orchestratorToken.mint(address(fmBcDiscrete), 10_000 ether);
     }
 
     // =========================================================================
@@ -417,8 +420,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
         uint currentlyBorrowedBefore = lendingFacility.currentlyBorrowedAmount();
         uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
-        uint facilityCollateralBefore =
-            orchestratorToken.balanceOf(address(lendingFacility));
+        uint dbcFmCollateralBefore =
+            orchestratorToken.balanceOf(address(fmBcDiscrete));
 
         vm.prank(user);
         lendingFacility.repay(repayAmount);
@@ -437,13 +440,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             "System borrowed amount should decrease by repayment amount"
         );
 
-        // And: collateral tokens should be transferred back to facility
-        uint facilityCollateralAfter =
-            orchestratorToken.balanceOf(address(lendingFacility));
+        // And: collateral tokens should be transferred back to DBC FM
+        uint dbcFmCollateralAfter =
+            orchestratorToken.balanceOf(address(fmBcDiscrete));
         assertEq(
-            facilityCollateralAfter,
-            facilityCollateralBefore + repayAmount,
-            "Facility should receive repayment amount"
+            dbcFmCollateralAfter,
+            dbcFmCollateralBefore + repayAmount,
+            "DBC FM should receive repayment amount"
         );
 
         // And: issuance tokens should be unlocked proportionally
@@ -677,6 +680,202 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         lendingFacility.borrow(borrowAmount);
 
         // Then: the transaction should revert with IndividualBorrowLimitExceeded error
+    }
+
+    /* Test: Function borrow() - Individual limit with existing outstanding loans
+        ├── Given a user has an existing outstanding loan
+        └── And the user tries to borrow additional tokens that would exceed the individual limit when combined
+            └── When the user tries to borrow additional collateral tokens
+                └── Then the transaction should revert with IndividualBorrowLimitExceeded error
+    */
+    function testBorrow_exceedsIndividualLimitWithExistingLoan() public {
+        // Given: a user has an existing outstanding loan
+        address user = makeAddr("user");
+        uint firstBorrowAmount = 300 ether; // First borrow
+        uint secondBorrowAmount = 250 ether; // Second borrow that would exceed limit when combined
+
+        // Setup: user borrows first amount
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(firstBorrowAmount);
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer
+        );
+        vm.prank(user);
+        lendingFacility.borrow(firstBorrowAmount);
+
+        // Verify user has outstanding loan
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            firstBorrowAmount,
+            "User should have outstanding loan"
+        );
+
+        // Given: the user tries to borrow additional tokens that would exceed the individual limit when combined
+        uint totalBorrowed = firstBorrowAmount + secondBorrowAmount;
+        assertGt(
+            totalBorrowed,
+            lendingFacility.individualBorrowLimit(),
+            "Total borrowed amount should exceed individual limit"
+        );
+
+        // Setup for second borrow attempt
+        uint requiredIssuanceTokens2 = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(secondBorrowAmount);
+        uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer2);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer2
+        );
+
+        // When: the user tries to borrow additional collateral tokens
+        vm.prank(user);
+        vm.expectRevert(
+            ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded
+                .selector
+        );
+        lendingFacility.borrow(secondBorrowAmount);
+
+        // Then: the transaction should revert with IndividualBorrowLimitExceeded error
+    }
+
+    /* Test: Function borrow() - Individual limit allows borrowing within limit with existing loans
+        ├── Given a user has an existing outstanding loan
+        └── And the user tries to borrow additional tokens that would stay within the individual limit when combined
+            └── When the user tries to borrow additional collateral tokens
+                └── Then the transaction should succeed
+    */
+    function testBorrow_withinIndividualLimitWithExistingLoan() public {
+        // Given: a user has an existing outstanding loan
+        address user = makeAddr("user");
+        uint firstBorrowAmount = 300 ether; // First borrow
+        uint secondBorrowAmount = 150 ether; // Second borrow that stays within limit when combined
+
+        // Setup: user borrows first amount
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(firstBorrowAmount);
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer
+        );
+        vm.prank(user);
+        lendingFacility.borrow(firstBorrowAmount);
+
+        // Verify user has outstanding loan
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            firstBorrowAmount,
+            "User should have outstanding loan"
+        );
+
+        // Given: the user tries to borrow additional tokens that would stay within the individual limit when combined
+        uint totalBorrowed = firstBorrowAmount + secondBorrowAmount;
+        assertLe(
+            totalBorrowed,
+            lendingFacility.individualBorrowLimit(),
+            "Total borrowed amount should be within individual limit"
+        );
+
+        // Setup for second borrow attempt
+        uint requiredIssuanceTokens2 = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(secondBorrowAmount);
+        uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer2);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer2
+        );
+
+        // When: the user tries to borrow additional collateral tokens
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        vm.prank(user);
+        lendingFacility.borrow(secondBorrowAmount);
+
+        // Then: the transaction should succeed and outstanding loan should increase
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            outstandingLoanBefore + secondBorrowAmount,
+            "Outstanding loan should increase by second borrow amount"
+        );
+    }
+
+    /* Test: Function borrow() - Outstanding loan should match net amount received
+        ├── Given a user borrows tokens with a dynamic fee
+        └── When the borrow transaction completes
+            └── Then the outstanding loan should equal the net amount received by the user
+    */
+    function testBorrow_outstandingLoanMatchesNetAmount() public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer);
+
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer
+        );
+
+        // Given: the user has sufficient borrowing power
+        uint userBorrowingPower = issuanceTokensWithBuffer
+            * lendingFacility.exposed_getFloorPrice() / 1e18;
+        assertGe(
+            userBorrowingPower,
+            borrowAmount,
+            "User should have sufficient borrowing power"
+        );
+
+        // Given: the borrow amount is within limits
+        assertLe(
+            borrowAmount,
+            lendingFacility.individualBorrowLimit(),
+            "Borrow amount should be within individual limit"
+        );
+
+        uint borrowCapacity = lendingFacility.getBorrowCapacity();
+        uint borrowableQuota =
+            borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
+        assertLe(
+            borrowAmount,
+            borrowableQuota,
+            "Borrow amount should be within system quota"
+        );
+
+        // Given: dynamic fee calculator is set up
+        helper_setDynamicFeeCalculatorParams();
+
+        // When: the user borrows collateral tokens
+        uint userBalanceBefore = orchestratorToken.balanceOf(user);
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount);
+
+        // Then: the outstanding loan should equal the net amount received by the user
+        uint userBalanceAfter = orchestratorToken.balanceOf(user);
+        uint netAmountReceived = userBalanceAfter - userBalanceBefore;
+        uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
+
+        assertEq(
+            outstandingLoan,
+            netAmountReceived,
+            "Outstanding loan should equal net amount received by user"
+        );
+
+        // And: the outstanding loan should be less than the requested amount (due to fees)
+        assertLt(
+            outstandingLoan,
+            borrowAmount,
+            "Outstanding loan should be less than requested amount due to fees"
+        );
     }
 
     /* Test: Function borrow()

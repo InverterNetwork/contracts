@@ -19,6 +19,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+// Internal
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol";
+
 // System under Test (SuT)
 import {ILM_PC_HouseProtocol_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
@@ -214,8 +218,8 @@ contract LM_PC_HouseProtocol_v1 is
                 .Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
         }
 
-        // Check individual borrow limit
-        if (requestedLoanAmount_ > individualBorrowLimit) {
+        // Check individual borrow limit (including existing outstanding loans)
+        if (requestedLoanAmount_ + _outstandingLoans[user] > individualBorrowLimit) {
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
@@ -232,20 +236,23 @@ contract LM_PC_HouseProtocol_v1 is
             _calculateDynamicBorrowingFee(requestedLoanAmount_);
         uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
 
-        // Update state
-        currentlyBorrowedAmount += requestedLoanAmount_;
-        _outstandingLoans[user] += requestedLoanAmount_;
+        // Update state (use netAmountToUser, not requestedLoanAmount_)
+        currentlyBorrowedAmount += netAmountToUser;
+        _outstandingLoans[user] += netAmountToUser;
 
-        // Transfer fee to fee manager
+        // Instruct DBC FM to transfer fee to fee manager
         if (dynamicBorrowingFee > 0) {
-            _collateralToken.safeTransfer(
+            IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
                 __Module_orchestrator.governor().getFeeManager(),
                 dynamicBorrowingFee
             );
         }
 
-        // Transfer net amount to user
-        _collateralToken.safeTransfer(user, netAmountToUser);
+        // Instruct DBC FM to transfer net amount to user
+        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
+            user, 
+            netAmountToUser
+        );
 
         // Emit events
         emit IssuanceTokensLocked(user, requiredIssuanceTokens);
@@ -259,17 +266,18 @@ contract LM_PC_HouseProtocol_v1 is
         address user = _msgSender();
 
         if (_outstandingLoans[user] < repaymentAmount_) {
-            revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan();
+            repaymentAmount_ = _outstandingLoans[user];
         }
 
         // Update state
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
-        // Transfer collateral back to lending facility
+        // Transfer collateral from user to lending facility
         _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
+
+        // Transfer collateral back to DBC FM
+        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
