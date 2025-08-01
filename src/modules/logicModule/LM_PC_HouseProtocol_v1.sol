@@ -33,6 +33,23 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+<<<<<<< HEAD
+=======
+// Internal
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol";
+
+// System under Test (SuT)
+import {ILM_PC_HouseProtocol_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IVirtualCollateralSupplyBase_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {DynamicFeeCalculatorLib_v1} from
+    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+
+>>>>>>> bd648bc3 (feat:add dfc to fm and LF)
 /**
  * @title   House Protocol Lending Facility Logic Module
  *
@@ -274,10 +291,14 @@ contract LM_PC_HouseProtocol_v1 is
         }
 
         // Check individual borrow limit (including existing outstanding loans)
+<<<<<<< HEAD
         if (
             requestedLoanAmount_ + _outstandingLoans[user]
                 > individualBorrowLimit
         ) {
+=======
+        if (requestedLoanAmount_ + _outstandingLoans[user] > individualBorrowLimit) {
+>>>>>>> bd648bc3 (feat:add dfc to fm and LF)
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
@@ -308,7 +329,12 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Instruct DBC FM to transfer net amount to user
         IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
+<<<<<<< HEAD
             user, netAmountToUser
+=======
+            user, 
+            netAmountToUser
+>>>>>>> bd648bc3 (feat:add dfc to fm and LF)
         );
 
         // Emit events
@@ -330,8 +356,16 @@ contract LM_PC_HouseProtocol_v1 is
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
+<<<<<<< HEAD
         //Transfer collateral to DBC FM
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
+=======
+        // Transfer collateral from user to lending facility
+        _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
+>>>>>>> bd648bc3 (feat:add dfc to fm and LF)
+
+        // Transfer collateral back to DBC FM
+        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
