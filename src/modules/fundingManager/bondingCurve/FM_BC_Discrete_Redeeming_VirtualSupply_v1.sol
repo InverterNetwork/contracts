@@ -506,7 +506,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc BondingCurveBase_v1
     function _getBuyFee() internal view virtual override returns (uint) {
         if (!_useDynamicFees) {
-            return PROJECT_BUY_FEE_BPS;
+            return super._getBuyFee(); // Use the base class implementation (respects setBuyFee)
         }
         
         // Calculate premium rate (quote price / floor price)
@@ -527,7 +527,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc RedeemingBondingCurveBase_v1
     function _getSellFee() internal view virtual override returns (uint) {
         if (!_useDynamicFees) {
-            return PROJECT_SELL_FEE_BPS;
+            return super._getSellFee(); // Use the base class implementation (respects setSellFee)
         }
         
         // Calculate premium rate (quote price / floor price)
