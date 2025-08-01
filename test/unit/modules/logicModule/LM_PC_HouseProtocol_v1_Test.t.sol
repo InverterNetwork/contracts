@@ -462,7 +462,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         ├── Given a user has an outstanding loan
         └── And the user tries to repay more than the outstanding amount
             └── When the user attempts to repay
-                └── Then the transaction should revert with RepaymentAmountExceedsLoan error
+                └── Then the repayment amount should be automatically adjusted to the outstanding loan amount
     */
     function testRepay_exceedsOutstandingLoan() public {
         // Given: a user has an outstanding loan
@@ -484,9 +484,10 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         lendingFacility.borrow(borrowAmount);
 
         // Given: the user tries to repay more than the outstanding amount
+        uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
         assertGt(
             repayAmount,
-            lendingFacility.getOutstandingLoan(user),
+            outstandingLoan,
             "Repay amount should exceed outstanding loan"
         );
 
@@ -495,15 +496,22 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         orchestratorToken.approve(address(lendingFacility), repayAmount);
 
         // When: the user attempts to repay
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
         vm.prank(user);
-        vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan
-                .selector
-        );
         lendingFacility.repay(repayAmount);
 
-        // Then: the transaction should revert with RepaymentAmountExceedsLoan error
+        // Then: the repayment amount should be automatically adjusted to the outstanding loan amount
+        uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
+        assertEq(
+            outstandingLoanAfter,
+            0,
+            "Outstanding loan should be fully repaid"
+        );
+        assertEq(
+            outstandingLoanAfter,
+            outstandingLoanBefore - outstandingLoanBefore,
+            "Outstanding loan should be reduced by the actual outstanding amount"
+        );
     }
 
     // =========================================================================
@@ -875,6 +883,164 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             outstandingLoan,
             borrowAmount,
             "Outstanding loan should be less than requested amount due to fees"
+        );
+    }
+
+    /* Test: Dynamic Fee Parameters - Set and Read
+        ├── Given dynamic fee parameters are set
+        └── When reading the dynamic fee parameters
+            └── Then the returned parameters should match the set parameters
+    */
+    function testDynamicFeeParameters_SetAndRead() public {
+        // Given: dynamic fee parameters are set
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory expectedParams = 
+            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+                Z_issueRedeem: 2e16, // 2%
+                A_issueRedeem: 8e16, // 8%
+                m_issueRedeem: 3e15, // 0.3%
+                Z_origination: 1.5e16, // 1.5%
+                A_origination: 2.5e16, // 2.5%
+                m_origination: 2.5e15 // 0.25%
+            });
+
+        // Set the parameters
+        lendingFacility.setDynamicFeeCalculatorParams(expectedParams);
+
+        // When: reading the dynamic fee parameters
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams = 
+            lendingFacility.getDynamicFeeParameters();
+
+        // Then: the returned parameters should match the set parameters
+        assertEq(
+            actualParams.Z_issueRedeem,
+            expectedParams.Z_issueRedeem,
+            "Z_issueRedeem should match"
+        );
+        assertEq(
+            actualParams.A_issueRedeem,
+            expectedParams.A_issueRedeem,
+            "A_issueRedeem should match"
+        );
+        assertEq(
+            actualParams.m_issueRedeem,
+            expectedParams.m_issueRedeem,
+            "m_issueRedeem should match"
+        );
+        assertEq(
+            actualParams.Z_origination,
+            expectedParams.Z_origination,
+            "Z_origination should match"
+        );
+        assertEq(
+            actualParams.A_origination,
+            expectedParams.A_origination,
+            "A_origination should match"
+        );
+        assertEq(
+            actualParams.m_origination,
+            expectedParams.m_origination,
+            "m_origination should match"
+        );
+    }
+
+    /* Test: Dynamic Fee Parameters - Default Values
+        ├── Given the lending facility is initialized
+        └── When reading the dynamic fee parameters before setting them
+            └── Then the parameters should have default values (all zeros)
+    */
+    function testDynamicFeeParameters_DefaultValues() public {
+        // Given: the lending facility is initialized (already done in setUp)
+
+        // When: reading the dynamic fee parameters before setting them
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory params = 
+            lendingFacility.getDynamicFeeParameters();
+
+        // Then: the parameters should have default values (all zeros)
+        assertEq(params.Z_issueRedeem, 0, "Z_issueRedeem should be 0 by default");
+        assertEq(params.A_issueRedeem, 0, "A_issueRedeem should be 0 by default");
+        assertEq(params.m_issueRedeem, 0, "m_issueRedeem should be 0 by default");
+        assertEq(params.Z_origination, 0, "Z_origination should be 0 by default");
+        assertEq(params.A_origination, 0, "A_origination should be 0 by default");
+        assertEq(params.m_origination, 0, "m_origination should be 0 by default");
+    }
+
+    /* Test: Dynamic Fee Parameters - Update Values
+        ├── Given dynamic fee parameters are initially set
+        └── And the parameters are updated with new values
+            └── When reading the dynamic fee parameters
+                └── Then the returned parameters should match the updated values
+    */
+    function testDynamicFeeParameters_UpdateValues() public {
+        // Given: dynamic fee parameters are initially set
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory initialParams = 
+            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+                Z_issueRedeem: 1e16, // 1%
+                A_issueRedeem: 7.5e16, // 7.5%
+                m_issueRedeem: 2e15, // 0.2%
+                Z_origination: 1e16, // 1%
+                A_origination: 2e16, // 2%
+                m_origination: 2e15 // 0.2%
+            });
+
+        lendingFacility.setDynamicFeeCalculatorParams(initialParams);
+
+        // And: the parameters are updated with new values
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory updatedParams = 
+            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+                Z_issueRedeem: 3e16, // 3%
+                A_issueRedeem: 9e16, // 9%
+                m_issueRedeem: 4e15, // 0.4%
+                Z_origination: 2.5e16, // 2.5%
+                A_origination: 3e16, // 3%
+                m_origination: 3e15 // 0.3%
+            });
+
+        lendingFacility.setDynamicFeeCalculatorParams(updatedParams);
+
+        // When: reading the dynamic fee parameters
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams = 
+            lendingFacility.getDynamicFeeParameters();
+
+        // Then: the returned parameters should match the updated values
+        assertEq(
+            actualParams.Z_issueRedeem,
+            updatedParams.Z_issueRedeem,
+            "Z_issueRedeem should match updated value"
+        );
+        assertEq(
+            actualParams.A_issueRedeem,
+            updatedParams.A_issueRedeem,
+            "A_issueRedeem should match updated value"
+        );
+        assertEq(
+            actualParams.m_issueRedeem,
+            updatedParams.m_issueRedeem,
+            "m_issueRedeem should match updated value"
+        );
+        assertEq(
+            actualParams.Z_origination,
+            updatedParams.Z_origination,
+            "Z_origination should match updated value"
+        );
+        assertEq(
+            actualParams.A_origination,
+            updatedParams.A_origination,
+            "A_origination should match updated value"
+        );
+        assertEq(
+            actualParams.m_origination,
+            updatedParams.m_origination,
+            "m_origination should match updated value"
+        );
+
+        // And: the parameters should NOT match the initial values
+        assertTrue(
+            actualParams.Z_issueRedeem != initialParams.Z_issueRedeem,
+            "Z_issueRedeem should not match initial value"
+        );
+        assertTrue(
+            actualParams.A_issueRedeem != initialParams.A_issueRedeem,
+            "A_issueRedeem should not match initial value"
         );
     }
 
