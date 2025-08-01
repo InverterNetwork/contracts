@@ -342,8 +342,16 @@ contract LM_PC_HouseProtocol_v1 is
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
+<<<<<<< HEAD
         // Transfer collateral back to DBC FM
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
+=======
+        // Transfer collateral from user to lending facility
+        _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
+>>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
+
+        // Transfer collateral back to DBC FM
+        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
@@ -558,6 +566,7 @@ contract LM_PC_HouseProtocol_v1 is
         returns (uint)
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
         // Calculate fee using the dynamic fee calculator library
         uint utilizationRatio =
             (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
@@ -568,6 +577,8 @@ contract LM_PC_HouseProtocol_v1 is
             return 0; // No fee if no calculator is set
         }
 
+=======
+>>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
         // Calculate fee using the dynamic fee calculator library
         uint floorLiquidityRate = this.getFloorLiquidityRate();
         uint feeRate = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
