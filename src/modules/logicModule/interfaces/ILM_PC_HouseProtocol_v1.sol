@@ -209,10 +209,6 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @param newBorrowableQuota_ The new borrowable quota (in basis points)
     function setBorrowableQuota(uint newBorrowableQuota_) external;
 
-    /// @notice Set the Dynamic Fee Calculator address
-    /// @param newFeeCalculator_ The new fee calculator address
-    function setDynamicFeeCalculator(address newFeeCalculator_) external;
-
     /// @notice Set the Dynamic Fee Calculator parameters
     /// @param dynamicFeeParameters_ The dynamic fee parameters
     function setDynamicFeeCalculatorParams(

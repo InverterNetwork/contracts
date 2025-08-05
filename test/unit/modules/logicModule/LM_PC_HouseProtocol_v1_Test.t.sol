@@ -503,9 +503,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // Then: the repayment amount should be automatically adjusted to the outstanding loan amount
         uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
         assertEq(
-            outstandingLoanAfter,
-            0,
-            "Outstanding loan should be fully repaid"
+            outstandingLoanAfter, 0, "Outstanding loan should be fully repaid"
         );
         assertEq(
             outstandingLoanAfter,
@@ -893,21 +891,21 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     */
     function testDynamicFeeParameters_SetAndRead() public {
         // Given: dynamic fee parameters are set
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory expectedParams = 
-            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-                Z_issueRedeem: 2e16, // 2%
-                A_issueRedeem: 8e16, // 8%
-                m_issueRedeem: 3e15, // 0.3%
-                Z_origination: 1.5e16, // 1.5%
-                A_origination: 2.5e16, // 2.5%
-                m_origination: 2.5e15 // 0.25%
-            });
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory expectedParams =
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+            Z_issueRedeem: 2e16, // 2%
+            A_issueRedeem: 8e16, // 8%
+            m_issueRedeem: 3e15, // 0.3%
+            Z_origination: 1.5e16, // 1.5%
+            A_origination: 2.5e16, // 2.5%
+            m_origination: 2.5e15 // 0.25%
+        });
 
         // Set the parameters
         lendingFacility.setDynamicFeeCalculatorParams(expectedParams);
 
         // When: reading the dynamic fee parameters
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams = 
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams =
             lendingFacility.getDynamicFeeParameters();
 
         // Then: the returned parameters should match the set parameters
@@ -952,16 +950,28 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // Given: the lending facility is initialized (already done in setUp)
 
         // When: reading the dynamic fee parameters before setting them
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory params = 
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory params =
             lendingFacility.getDynamicFeeParameters();
 
         // Then: the parameters should have default values (all zeros)
-        assertEq(params.Z_issueRedeem, 0, "Z_issueRedeem should be 0 by default");
-        assertEq(params.A_issueRedeem, 0, "A_issueRedeem should be 0 by default");
-        assertEq(params.m_issueRedeem, 0, "m_issueRedeem should be 0 by default");
-        assertEq(params.Z_origination, 0, "Z_origination should be 0 by default");
-        assertEq(params.A_origination, 0, "A_origination should be 0 by default");
-        assertEq(params.m_origination, 0, "m_origination should be 0 by default");
+        assertEq(
+            params.Z_issueRedeem, 0, "Z_issueRedeem should be 0 by default"
+        );
+        assertEq(
+            params.A_issueRedeem, 0, "A_issueRedeem should be 0 by default"
+        );
+        assertEq(
+            params.m_issueRedeem, 0, "m_issueRedeem should be 0 by default"
+        );
+        assertEq(
+            params.Z_origination, 0, "Z_origination should be 0 by default"
+        );
+        assertEq(
+            params.A_origination, 0, "A_origination should be 0 by default"
+        );
+        assertEq(
+            params.m_origination, 0, "m_origination should be 0 by default"
+        );
     }
 
     /* Test: Dynamic Fee Parameters - Update Values
@@ -972,33 +982,33 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     */
     function testDynamicFeeParameters_UpdateValues() public {
         // Given: dynamic fee parameters are initially set
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory initialParams = 
-            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-                Z_issueRedeem: 1e16, // 1%
-                A_issueRedeem: 7.5e16, // 7.5%
-                m_issueRedeem: 2e15, // 0.2%
-                Z_origination: 1e16, // 1%
-                A_origination: 2e16, // 2%
-                m_origination: 2e15 // 0.2%
-            });
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory initialParams =
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+            Z_issueRedeem: 1e16, // 1%
+            A_issueRedeem: 7.5e16, // 7.5%
+            m_issueRedeem: 2e15, // 0.2%
+            Z_origination: 1e16, // 1%
+            A_origination: 2e16, // 2%
+            m_origination: 2e15 // 0.2%
+        });
 
         lendingFacility.setDynamicFeeCalculatorParams(initialParams);
 
         // And: the parameters are updated with new values
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory updatedParams = 
-            ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-                Z_issueRedeem: 3e16, // 3%
-                A_issueRedeem: 9e16, // 9%
-                m_issueRedeem: 4e15, // 0.4%
-                Z_origination: 2.5e16, // 2.5%
-                A_origination: 3e16, // 3%
-                m_origination: 3e15 // 0.3%
-            });
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory updatedParams =
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+            Z_issueRedeem: 3e16, // 3%
+            A_issueRedeem: 9e16, // 9%
+            m_issueRedeem: 4e15, // 0.4%
+            Z_origination: 2.5e16, // 2.5%
+            A_origination: 3e16, // 3%
+            m_origination: 3e15 // 0.3%
+        });
 
         lendingFacility.setDynamicFeeCalculatorParams(updatedParams);
 
         // When: reading the dynamic fee parameters
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams = 
+        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams =
             lendingFacility.getDynamicFeeParameters();
 
         // Then: the returned parameters should match the updated values
@@ -1148,45 +1158,6 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 .selector
         );
         lendingFacility.setBorrowableQuota(invalidQuota);
-    }
-
-    /* Test external setDynamicFeeCalculator function
-        ├── Given caller has LENDING_FACILITY_MANAGER_ROLE
-        │   └── When setting new fee calculator address
-        │       ├── Then the address should be updated
-        │       └── Then an event should be emitted
-        └── Given invalid address (zero address)
-            └── When trying to set address
-                └── Then it should revert with appropriate error
-    */
-    function testSetDynamicFeeCalculator() public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
-        address newCalculator = makeAddr("newCalculator");
-        lendingFacility.setDynamicFeeCalculator(newCalculator);
-
-        assertEq(lendingFacility.dynamicFeeCalculator(), newCalculator);
-    }
-
-    function testSetDynamicFeeCalculator_zeroAddress() public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
-        vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress
-                .selector
-        );
-        lendingFacility.setDynamicFeeCalculator(address(0));
     }
 
     // =========================================================================

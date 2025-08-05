@@ -34,6 +34,14 @@ contract LM_PC_HouseProtocol_v1_Exposed is LM_PC_HouseProtocol_v1 {
         return _calculateDynamicBorrowingFee(requestedAmount_);
     }
 
+    function exposed_calculateCollateralAmount(uint issuanceTokenAmount_)
+        external
+        view
+        returns (uint)
+    {
+        _calculateCollateralAmount(issuanceTokenAmount_);
+    }
+
     function exposed_calculateIssuanceTokensToUnlock(
         address user_,
         uint repaymentAmount_

@@ -96,9 +96,6 @@ contract LM_PC_HouseProtocol_v1 is
     /// @dev The role for managing the dynamic fee calculator
     bytes32 public constant FEE_CALCULATOR_ADMIN_ROLE = "FEE_CALCULATOR_ADMIN";
 
-    /// @notice Address of the Dynamic Fee Calculator contract
-    address public dynamicFeeCalculator;
-
     /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
     uint public borrowableQuota;
 
@@ -219,7 +216,10 @@ contract LM_PC_HouseProtocol_v1 is
         }
 
         // Check individual borrow limit (including existing outstanding loans)
-        if (requestedLoanAmount_ + _outstandingLoans[user] > individualBorrowLimit) {
+        if (
+            requestedLoanAmount_ + _outstandingLoans[user]
+                > individualBorrowLimit
+        ) {
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
@@ -250,8 +250,7 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Instruct DBC FM to transfer net amount to user
         IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-            user, 
-            netAmountToUser
+            user, netAmountToUser
         );
 
         // Emit events
@@ -344,21 +343,6 @@ contract LM_PC_HouseProtocol_v1 is
         }
         borrowableQuota = newBorrowableQuota_;
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
-    }
-
-    /// @notice Set the Dynamic Fee Calculator address
-    /// @param newFeeCalculator_ The new fee calculator address
-    function setDynamicFeeCalculator(address newFeeCalculator_)
-        external
-        onlyLendingFacilityManager
-    {
-        if (newFeeCalculator_ == address(0)) {
-            revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
-        }
-        dynamicFeeCalculator = newFeeCalculator_;
-        emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
     }
 
     /// @inheritdoc ILM_PC_HouseProtocol_v1

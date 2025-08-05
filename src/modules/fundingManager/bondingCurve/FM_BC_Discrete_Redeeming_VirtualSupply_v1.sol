@@ -80,7 +80,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         uint A_issueRedeem;
         uint m_issueRedeem;
     }
-    
+
     DynamicFeeParameters internal _dynamicFeeParameters;
     bool internal _useDynamicFees;
 
@@ -322,16 +322,27 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
     /// @notice Enable or disable dynamic fee calculation
     /// @param useDynamicFees_ Whether to use dynamic fees
-    function setUseDynamicFees(bool useDynamicFees_) external onlyOrchestratorAdmin {
+    function setUseDynamicFees(bool useDynamicFees_)
+        external
+        onlyOrchestratorAdmin
+    {
         _useDynamicFees = useDynamicFees_;
     }
 
     /// @notice Get current dynamic fee parameters
     /// @return Z_issueRedeem Base fee component
-    /// @return A_issueRedeem Premium rate threshold  
+    /// @return A_issueRedeem Premium rate threshold
     /// @return m_issueRedeem Multiplier for dynamic fee component
-    function getDynamicFeeParameters() external view returns (uint Z_issueRedeem, uint A_issueRedeem, uint m_issueRedeem) {
-        return (_dynamicFeeParameters.Z_issueRedeem, _dynamicFeeParameters.A_issueRedeem, _dynamicFeeParameters.m_issueRedeem);
+    function getDynamicFeeParameters()
+        external
+        view
+        returns (uint Z_issueRedeem, uint A_issueRedeem, uint m_issueRedeem)
+    {
+        return (
+            _dynamicFeeParameters.Z_issueRedeem,
+            _dynamicFeeParameters.A_issueRedeem,
+            _dynamicFeeParameters.m_issueRedeem
+        );
     }
 
     /// @notice Get current premium rate
@@ -508,10 +519,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         if (!_useDynamicFees) {
             return super._getBuyFee(); // Use the base class implementation (respects setBuyFee)
         }
-        
+
         // Calculate premium rate (quote price / floor price)
         uint premiumRate = _calculatePremiumRate();
-        
+
         // Use DFC for issuance fee calculation
         return DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
             premiumRate,
@@ -529,10 +540,10 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         if (!_useDynamicFees) {
             return super._getSellFee(); // Use the base class implementation (respects setSellFee)
         }
-        
+
         // Calculate premium rate (quote price / floor price)
         uint premiumRate = _calculatePremiumRate();
-        
+
         // Use DFC for redemption fee calculation
         return DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
             premiumRate,
@@ -569,13 +580,15 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     /// @return The premium rate as a percentage (in basis points)
     function _calculatePremiumRate() internal view returns (uint) {
         // Get current quote price (price for buying 1 token)
-        (, uint quotePrice) = _segments._calculatePurchaseReturn(1e18, issuanceToken.totalSupply());
-        
+        (, uint quotePrice) = _segments._calculatePurchaseReturn(
+            1e18, issuanceToken.totalSupply()
+        );
+
         // Get floor price (minimum price)
         (, uint floorPrice) = _segments._calculatePurchaseReturn(1e18, 0);
-        
+
         if (floorPrice == 0) return 0;
-        
+
         // Calculate premium rate: (quote_price / floor_price - 1) * 1e18
         return ((quotePrice * 1e18) / floorPrice) - 1e18;
     }
