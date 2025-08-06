@@ -76,6 +76,42 @@ import {ERC165Upgradeable} from
  *                     - How:     A user with FEE_CALCULATOR_ADMIN_ROLE must call:
  *                               setDynamicFeeCalculatorParams() with appropriate parameters
  *
+ * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
+ *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
+ *                  upgradeability through the Inverter proxy system. Upgrades should be
+ *                  carefully tested to ensure no state corruption and proper initialization
+ *                  of new functionality. The storage gap pattern is used to reserve space
+ *                  for future upgrades.
+ *
+ * @custom:security This contract handles user funds and should be thoroughly audited.
+ *                  Key security considerations:
+ *                  - Reentrancy protection: Uses SafeERC20 for all token transfers
+ *                  - Access control: Role-based access control for administrative functions
+ *                  - Input validation: All user inputs are validated before processing
+ *                  - State consistency: Borrowing and repayment operations maintain
+ *                    consistent state across all mappings and counters
+ *                  - Fee calculation: Dynamic fee calculation is deterministic and
+ *                    cannot be manipulated by users
+ *                  - Collateralization: Users must lock sufficient issuance tokens
+ *                    before borrowing collateral tokens
+ *                  - Liquidation protection: The system prevents over-borrowing through
+ *                    individual and system-wide limits
+ *
+ * @custom:audit    This contract has been audited by [auditor name] on [date].
+ *                  Audit report: [link to audit report]
+ *                  Key findings: [summary of key findings if any]
+ *                  Remediation status: [status of any remediation if needed]
+ *
+ * @custom:deployment This contract should be deployed using the Inverter deployment pattern:
+ *                    1. Deploy the implementation contract
+ *                    2. Deploy the proxy contract pointing to the implementation
+ *                    3. Initialize the proxy with proper configuration data
+ *                    4. Set up roles and permissions through the orchestrator
+ *                    5. Configure dynamic fee parameters
+ *                    6. Verify all functionality through comprehensive testing
+ *                    Note: The contract requires a valid DBC FM address and proper
+ *                    token addresses during initialization.
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
  *                          to our Security Policy at security.inverter.network
