@@ -63,7 +63,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_FM_EXT_TokenVault_v2;
 
     // Logic Modules
-    address public impl_mod_LM_PC_Oracle_Permissioned_v1;
+    address public impl_mod_LM_Oracle_Permissioned_v2;
     address public impl_mod_LM_PC_Bounties_v3;
     address public impl_mod_LM_PC_KPIRewarder_v3;
     address public impl_mod_LM_PC_PaymentRouter_v3;
@@ -223,7 +223,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Logic Modules
         console2.log("  -- Logic Modules");
 
-        impl_mod_LM_PC_Oracle_Permissioned_v1 = deployAndLogWithCreate2(
+        impl_mod_LM_Oracle_Permissioned_v2 = deployAndLogWithCreate2(
             "LM_Oracle_Permissioned_v2",
             vm.getCode(
                 "LM_Oracle_Permissioned_v2.sol:LM_Oracle_Permissioned_v2"

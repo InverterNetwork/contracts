@@ -234,7 +234,7 @@ contract ModuleBeaconDeployer_v1 is
                     oraclePermissionedMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Oracle_Permissioned_v1,
+                    impl_mod_LM_Oracle_Permissioned_v2,
                     oraclePermissionedMetadata.majorVersion,
                     oraclePermissionedMetadata.minorVersion,
                     oraclePermissionedMetadata.patchVersion
