@@ -236,11 +236,6 @@ contract AUT_Roles_v2 is
         bytes32[] memory roleIds = _permissions[target_][selector_];
         uint permissionLength = roleIds.length;
 
-        // If there are no roles, the caller cannot call the function.
-        if (permissionLength == 0) {
-            return false;
-        }
-
         // Go through each role and check if the caller has permission.
         for (uint i = 0; i < permissionLength; i++) {
             if (
