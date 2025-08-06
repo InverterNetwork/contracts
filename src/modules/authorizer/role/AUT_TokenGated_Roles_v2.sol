@@ -288,7 +288,6 @@ contract AUT_TokenGated_Roles_v2 is IAUT_TokenGated_Roles_v2, AUT_Roles_v2 {
     /// @param  roleId_ The id number of the role.
     /// @param  who_ The user we want to check on.
     /// @return success_ Returns if revoke has been succesful.
-
     function _revokeRole(bytes32 roleId_, address who_)
         internal
         virtual
@@ -315,7 +314,6 @@ contract AUT_TokenGated_Roles_v2 is IAUT_TokenGated_Roles_v2, AUT_Roles_v2 {
     /// @param  token_ The token for which to the threshold.
     /// @param  threshold_ The user will need to have at least this number to
     ///         qualify for the role.
-
     function _setThreshold(bytes32 roleId_, address token_, uint threshold_)
         internal
         onlyTokenGated(roleId_)
