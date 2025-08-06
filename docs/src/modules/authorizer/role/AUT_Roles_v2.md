@@ -122,7 +122,7 @@ A role can be created by calling the createRole function. The function takes the
 - The role id of the role that will become the admin of the new role.
 - The addresses of the initial members of the new role.
 
-The rolename in this context refers to the label of the role and is therefor not referenceable onchain. The function can only be called by a permissioned address (See [permissioned](#permissioned-modifier)).
+The rolename in this context refers to the label of the role and is therefore not referenceable onchain. The function can only be called by a permissioned address (See [permissioned](#permissioned-modifier)).
 
 #### Role Labeling
 
@@ -215,7 +215,7 @@ This function is a convenience function that combines the creation of a new role
 
 Note: The selectors of the functions are linked to the respective target contracts. As the selectors are passedas a 2 Dimensional array, the first dimension is coupled to target contract and the second one contains the actual selectors for that target contract.
 
-Example: The target contracts are the fundingManager at position 0 in the array and the logic module at position 1. The selectors therefor contain two arrays, one for position 0 and one for position 1. A call would look like this:
+Example: The target contracts are the fundingManager at position 0 in the array and the logic module at position 1. The selectors therefore contain two arrays, one for position 0 and one for position 1. A call would look like this:
 
 ```solidity
 'authorizer.createRoleAndAddAccessPermissions(

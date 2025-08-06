@@ -578,7 +578,7 @@ contract LM_PC_Staking_v3Test is ModuleTest {
 
         // Check that values changed
         assertEq(
-            stakingManager.direct_calculateRewardValue(), // works because time between last update and RewardDistributionTimestamp value is 0 and therefor just returns the older rewardValue
+            stakingManager.direct_calculateRewardValue(), // works because time between last update and RewardDistributionTimestamp value is 0 and therefore just returns the older rewardValue
             stakingManager.getRewardValue()
         );
         assertEq(stakingManager.getLastUpdate(), stakingManager.getLastUpdate());
