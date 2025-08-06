@@ -145,9 +145,14 @@ contract AUT_TokenGated_Roles_v2 is IAUT_TokenGated_Roles_v2, AUT_Roles_v2 {
     // Storage
 
     /// @dev	Stores if a role is token gated.
-    mapping(bytes32 => bool) internal _isTokenGated;
+    /// @dev    roleId The id of the role.
+    /// @dev    tokenGated If the role is token gated.
+    mapping(bytes32 roleId => bool tokenGated) internal _isTokenGated;
+
     /// @dev	Stores the threshold amount for each token in a role.
-    mapping(bytes32 => uint) internal _thresholdMap;
+    /// @dev    roleId The id of the role.
+    /// @dev    threshold The threshold amount.
+    mapping(bytes32 roleId => uint threshold) internal _thresholdMap;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
