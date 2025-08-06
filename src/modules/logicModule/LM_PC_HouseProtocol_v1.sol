@@ -185,14 +185,17 @@ contract LM_PC_HouseProtocol_v1 is
 
         // Calculate user's borrowing power based on their available issuance tokens
         uint userIssuanceTokens = _issuanceToken.balanceOf(user);
-        uint userBorrowingPower = userIssuanceTokens * _getFloorPrice() / 1e18;
 
-        // Ensure user has sufficient borrowing power
-        if (requestedLoanAmount_ > userBorrowingPower) {
-            revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
-        }
+        // uint userBorrowingPower = userIssuanceTokens * _getFloorPrice() / 1e18;
+
+        // // Ensure user has sufficient borrowing power
+        // if (requestedLoanAmount_ > userBorrowingPower) {
+        //     revert
+        //         ILM_PC_HouseProtocol_v1
+        //         .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
+        // }
+        // @Lee -> I have commented the code because userBorrowingPower and requiredIssuanceTokens are the same
+        // and checking for userBorrowingPower is redundant , so I have commented it as of now!
 
         // Calculate how much issuance tokens need to be locked for this borrow amount
         uint requiredIssuanceTokens =

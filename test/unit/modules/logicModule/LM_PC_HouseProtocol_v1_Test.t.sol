@@ -610,10 +610,37 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         );
     }
 
+    // /* Test: Function borrow()
+    //     ├── Given a user has insufficient issuance tokens
+    //     └── When the user tries to borrow collateral tokens
+    //         └── Then the transaction should revert with InsufficientBorrowingPower error
+    // */
+    // function testBorrow_insufficientBorrowingPower() public {
+    //     // Given: a user has insufficient borrowing power
+    //     address user = makeAddr("user");
+    //     uint borrowAmount = 500 ether;
+    //     uint insufficientTokens = 100 ether; // Less than required
+
+    //     issuanceToken.mint(user, insufficientTokens);
+    //     vm.prank(user);
+    //     issuanceToken.approve(address(lendingFacility), insufficientTokens);
+
+    //     // When: the user tries to borrow collateral tokens
+    //     vm.prank(user);
+    //     vm.expectRevert(
+    //         ILM_PC_HouseProtocol_v1
+    //             .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower
+    //             .selector
+    //     );
+    //     lendingFacility.borrow(borrowAmount);
+
+    //     // Then: the transaction should revert with InsufficientBorrowingPower error
+    // }
+
     /* Test: Function borrow()
         ├── Given a user has insufficient issuance tokens
         └── When the user tries to borrow collateral tokens
-            └── Then the transaction should revert with InsufficientBorrowingPower error
+            └── Then the transaction should revert with InsufficientIssuanceTokens error
     */
     function testBorrow_insufficientIssuanceTokens() public {
         // Given: a user has insufficient issuance tokens
@@ -629,12 +656,46 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         vm.prank(user);
         vm.expectRevert(
             ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower
+                .Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens
                 .selector
         );
         lendingFacility.borrow(borrowAmount);
 
-        // Then: the transaction should revert with InsufficientBorrowingPower error
+        // Then: the transaction should revert with InsufficientIssuanceTokens error
+    }
+
+    /* Test: Function borrow()
+        ├── Given a user has sufficient issuance tokens
+        ├── And the borrow amount exceeds borrowable quota
+        └── When the user tries to borrow collateral tokens
+            └── Then the transaction should revert with BorrowableQuotaExceeded error
+    */
+    function testBorrow_insufficientBorrowableQuota() public {
+        // Given: a user has sufficient issuance tokens
+        address user = makeAddr("user");
+        uint borrowAmount = 500 ether;
+        uint sufficientTokens = 2000 ether; // More than required
+
+        issuanceToken.mint(user, sufficientTokens);
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), sufficientTokens);
+
+        // Given: the borrow amount exceeds borrowable quota
+        uint borrowCapacity = lendingFacility.getBorrowCapacity();
+        uint borrowableQuota =
+            borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
+
+        // When: the user tries to borrow some first time successfully
+        lendingFacility.borrow(borrowAmount);
+
+        //user tries to borrow more tokens but borrowable quota is exceeded
+        vm.expectRevert(
+            ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded
+                .selector
+        );
+        lendingFacility.borrow(borrowAmount);
+        vm.stopPrank();
     }
 
     /* Test: Function borrow()
