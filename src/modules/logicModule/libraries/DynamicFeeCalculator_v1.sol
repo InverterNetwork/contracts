@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.23;
+pragma solidity ^0.8.23;
 
 library DynamicFeeCalculatorLib_v1 {
     uint public constant SCALING_FACTOR = 1e18;

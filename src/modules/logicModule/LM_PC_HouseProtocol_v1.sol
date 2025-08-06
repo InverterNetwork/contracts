@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.23;
+pragma solidity ^0.8.23;
 
 // Internal
 import {IOrchestrator_v1} from
@@ -12,26 +12,26 @@ import {
     ERC20PaymentClientBase_v2,
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+import {ILM_PC_HouseProtocol_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol";
+import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IBondingCurveBase_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {DynamicFeeCalculatorLib_v1} from
+    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+import {PackedSegment} from
+    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {PackedSegmentLib} from
+    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-
-// Internal
-import {IFundingManager_v1} from
-    "src/modules/fundingManager/IFundingManager_v1.sol";
-
-// System under Test (SuT)
-import {ILM_PC_HouseProtocol_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
-import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
-import {IVirtualCollateralSupplyBase_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {DynamicFeeCalculatorLib_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -45,6 +45,36 @@ import {DynamicFeeCalculatorLib_v1} from
  *          - Repayment functionality with issuance token unlocking
  *          - Configurable borrowing limits and quotas
  *          - Role-based access control for facility management
+ *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Configure LENDING_FACILITY_MANAGER_ROLE:
+ *                     - Purpose: Implements access control for managing the lending facility
+ *                               parameters (borrowable quota, individual limits, etc.)
+ *                     - How:     The OrchestratorAdmin must:
+ *                               1. Retrieve the lending facility manager role identifier
+ *                               2. Grant the role to designated admins
+ *                     - Example: module.grantModuleRole(
+ *                                 module.LENDING_FACILITY_MANAGER_ROLE(),
+ *                                 adminAddress
+ *                               );
+ *
+ *                  2. Configure FEE_CALCULATOR_ADMIN_ROLE:
+ *                     - Purpose: Implements access control for configuring dynamic fee
+ *                               calculator parameters
+ *                     - How:     The OrchestratorAdmin must:
+ *                               1. Retrieve the fee calculator admin role identifier
+ *                               2. Grant the role to designated admins
+ *                     - Example: module.grantModuleRole(
+ *                                 module.FEE_CALCULATOR_ADMIN_ROLE(),
+ *                                 feeAdminAddress
+ *                               );
+ *
+ *                  3. Initialize Dynamic Fee Parameters:
+ *                     - Purpose: Sets up the dynamic fee calculation parameters for
+ *                               origination, issuance, and redemption fees
+ *                     - How:     A user with FEE_CALCULATOR_ADMIN_ROLE must call:
+ *                               setDynamicFeeCalculatorParams() with appropriate parameters
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -89,11 +119,11 @@ contract LM_PC_HouseProtocol_v1 is
     //--------------------------------------------------------------------------
     // State
 
-    /// @dev The role that allows managing the lending facility
+    /// @dev The role that allows managing the lending facility parameters
     bytes32 public constant LENDING_FACILITY_MANAGER_ROLE =
         "LENDING_FACILITY_MANAGER";
 
-    /// @dev The role for managing the dynamic fee calculator
+    /// @dev The role for managing the dynamic fee calculator parameters
     bytes32 public constant FEE_CALCULATOR_ADMIN_ROLE = "FEE_CALCULATOR_ADMIN";
 
     /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
@@ -348,6 +378,9 @@ contract LM_PC_HouseProtocol_v1 is
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
     }
 
+    // =========================================================================
+    // Public - Configuration (Fee Calculator Admin only)
+
     /// @inheritdoc ILM_PC_HouseProtocol_v1
     function setDynamicFeeCalculatorParams(
         DynamicFeeParameters memory dynamicFeeParameters_
@@ -426,7 +459,7 @@ contract LM_PC_HouseProtocol_v1 is
         return _dynamicFeeParameters;
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Internal
 
     /// @dev Ensures the borrow amount is valid
@@ -442,11 +475,26 @@ contract LM_PC_HouseProtocol_v1 is
     /// @dev Calculate the system-wide Borrow Capacity
     /// @return The borrow capacity
     function _calculateBorrowCapacity() internal view returns (uint) {
-        // Use the DBC FM to get the actual virtual collateral supply
-        // Borrow capacity = virtual collateral supply (this represents the total backing)
-        IVirtualCollateralSupplyBase_v1 dbcFm =
-            IVirtualCollateralSupplyBase_v1(_dbcFmAddress);
-        return dbcFm.getVirtualCollateralSupply();
+        // Get the DBC FM interface
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+        
+        // Get the issuance token's total supply (this represents the virtual issuance supply)
+        uint virtualIssuanceSupply = IERC20(IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()).totalSupply();
+        
+        // Get the first segment's initial price (P_floor)
+        PackedSegment[] memory segments = dbcFm.getSegments();
+        if(segments.length == 0) {
+            revert
+                ILM_PC_HouseProtocol_v1
+                .Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
+        }
+        
+        // Use PackedSegmentLib to get the initial price of the first segment
+        uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
+        
+        // Borrow Capacity = virtualIssuanceSupply * P_floor
+        return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
     }
 
     /// @dev Calculate user's borrowing power based on locked issuance tokens

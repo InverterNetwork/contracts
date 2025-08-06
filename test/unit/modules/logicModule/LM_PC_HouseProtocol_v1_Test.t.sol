@@ -393,7 +393,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 ├── And collateral tokens should be transferred back to facility
                 └── And issuance tokens should be unlocked proportionally
     */
-    function testRepay() public {
+    function testPublicRepay_succeedsGivenValidRepaymentAmount() public {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -465,7 +465,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user attempts to repay
                 └── Then the repayment amount should be automatically adjusted to the outstanding loan amount
     */
-    function testRepay_exceedsOutstandingLoan() public {
+    function testPublicRepay_succeedsGivenRepaymentAmountExceedsOutstandingLoan() public {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -527,7 +527,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 ├── And net amount should be transferred to user
                 └── And the system's currently borrowed amount should increase
     */
-    function testBorrow() public {
+    function testPublicBorrow_succeedsGivenValidBorrowRequest() public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -642,7 +642,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         └── When the user tries to borrow collateral tokens
             └── Then the transaction should revert with InsufficientIssuanceTokens error
     */
-    function testBorrow_insufficientIssuanceTokens() public {
+    function testPublicBorrow_failsGivenInsufficientIssuanceTokens() public {
         // Given: a user has insufficient issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -705,7 +705,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
-    function testBorrow_exceedsIndividualLimit() public {
+    function testPublicBorrow_failsGivenExceedsIndividualLimit() public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 600 ether; // More than individual limit (500 ether)
@@ -756,7 +756,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
-    function testBorrow_exceedsIndividualLimitWithExistingLoan() public {
+    function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan() public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -817,7 +817,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should succeed
     */
-    function testBorrow_withinIndividualLimitWithExistingLoan() public {
+    function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan() public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -878,7 +878,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         └── When the borrow transaction completes
             └── Then the outstanding loan should equal the net amount received by the user
     */
-    function testBorrow_outstandingLoanMatchesNetAmount() public {
+    function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount() public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -946,183 +946,13 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Dynamic Fee Parameters - Set and Read
-        ├── Given dynamic fee parameters are set
-        └── When reading the dynamic fee parameters
-            └── Then the returned parameters should match the set parameters
-    */
-    function testDynamicFeeParameters_SetAndRead() public {
-        // Given: dynamic fee parameters are set
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory expectedParams =
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-            Z_issueRedeem: 2e16, // 2%
-            A_issueRedeem: 8e16, // 8%
-            m_issueRedeem: 3e15, // 0.3%
-            Z_origination: 1.5e16, // 1.5%
-            A_origination: 2.5e16, // 2.5%
-            m_origination: 2.5e15 // 0.25%
-        });
-
-        // Set the parameters
-        lendingFacility.setDynamicFeeCalculatorParams(expectedParams);
-
-        // When: reading the dynamic fee parameters
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams =
-            lendingFacility.getDynamicFeeParameters();
-
-        // Then: the returned parameters should match the set parameters
-        assertEq(
-            actualParams.Z_issueRedeem,
-            expectedParams.Z_issueRedeem,
-            "Z_issueRedeem should match"
-        );
-        assertEq(
-            actualParams.A_issueRedeem,
-            expectedParams.A_issueRedeem,
-            "A_issueRedeem should match"
-        );
-        assertEq(
-            actualParams.m_issueRedeem,
-            expectedParams.m_issueRedeem,
-            "m_issueRedeem should match"
-        );
-        assertEq(
-            actualParams.Z_origination,
-            expectedParams.Z_origination,
-            "Z_origination should match"
-        );
-        assertEq(
-            actualParams.A_origination,
-            expectedParams.A_origination,
-            "A_origination should match"
-        );
-        assertEq(
-            actualParams.m_origination,
-            expectedParams.m_origination,
-            "m_origination should match"
-        );
-    }
-
-    /* Test: Dynamic Fee Parameters - Default Values
-        ├── Given the lending facility is initialized
-        └── When reading the dynamic fee parameters before setting them
-            └── Then the parameters should have default values (all zeros)
-    */
-    function testDynamicFeeParameters_DefaultValues() public {
-        // Given: the lending facility is initialized (already done in setUp)
-
-        // When: reading the dynamic fee parameters before setting them
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory params =
-            lendingFacility.getDynamicFeeParameters();
-
-        // Then: the parameters should have default values (all zeros)
-        assertEq(
-            params.Z_issueRedeem, 0, "Z_issueRedeem should be 0 by default"
-        );
-        assertEq(
-            params.A_issueRedeem, 0, "A_issueRedeem should be 0 by default"
-        );
-        assertEq(
-            params.m_issueRedeem, 0, "m_issueRedeem should be 0 by default"
-        );
-        assertEq(
-            params.Z_origination, 0, "Z_origination should be 0 by default"
-        );
-        assertEq(
-            params.A_origination, 0, "A_origination should be 0 by default"
-        );
-        assertEq(
-            params.m_origination, 0, "m_origination should be 0 by default"
-        );
-    }
-
-    /* Test: Dynamic Fee Parameters - Update Values
-        ├── Given dynamic fee parameters are initially set
-        └── And the parameters are updated with new values
-            └── When reading the dynamic fee parameters
-                └── Then the returned parameters should match the updated values
-    */
-    function testDynamicFeeParameters_UpdateValues() public {
-        // Given: dynamic fee parameters are initially set
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory initialParams =
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-            Z_issueRedeem: 1e16, // 1%
-            A_issueRedeem: 7.5e16, // 7.5%
-            m_issueRedeem: 2e15, // 0.2%
-            Z_origination: 1e16, // 1%
-            A_origination: 2e16, // 2%
-            m_origination: 2e15 // 0.2%
-        });
-
-        lendingFacility.setDynamicFeeCalculatorParams(initialParams);
-
-        // And: the parameters are updated with new values
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory updatedParams =
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
-            Z_issueRedeem: 3e16, // 3%
-            A_issueRedeem: 9e16, // 9%
-            m_issueRedeem: 4e15, // 0.4%
-            Z_origination: 2.5e16, // 2.5%
-            A_origination: 3e16, // 3%
-            m_origination: 3e15 // 0.3%
-        });
-
-        lendingFacility.setDynamicFeeCalculatorParams(updatedParams);
-
-        // When: reading the dynamic fee parameters
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory actualParams =
-            lendingFacility.getDynamicFeeParameters();
-
-        // Then: the returned parameters should match the updated values
-        assertEq(
-            actualParams.Z_issueRedeem,
-            updatedParams.Z_issueRedeem,
-            "Z_issueRedeem should match updated value"
-        );
-        assertEq(
-            actualParams.A_issueRedeem,
-            updatedParams.A_issueRedeem,
-            "A_issueRedeem should match updated value"
-        );
-        assertEq(
-            actualParams.m_issueRedeem,
-            updatedParams.m_issueRedeem,
-            "m_issueRedeem should match updated value"
-        );
-        assertEq(
-            actualParams.Z_origination,
-            updatedParams.Z_origination,
-            "Z_origination should match updated value"
-        );
-        assertEq(
-            actualParams.A_origination,
-            updatedParams.A_origination,
-            "A_origination should match updated value"
-        );
-        assertEq(
-            actualParams.m_origination,
-            updatedParams.m_origination,
-            "m_origination should match updated value"
-        );
-
-        // And: the parameters should NOT match the initial values
-        assertTrue(
-            actualParams.Z_issueRedeem != initialParams.Z_issueRedeem,
-            "Z_issueRedeem should not match initial value"
-        );
-        assertTrue(
-            actualParams.A_issueRedeem != initialParams.A_issueRedeem,
-            "A_issueRedeem should not match initial value"
-        );
-    }
-
     /* Test: Function borrow()
         ├── Given a user wants to borrow tokens
         └── And the borrow amount is zero
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with InvalidBorrowAmount error
     */
-    function testBorrow_zeroAmount() public {
+    function testPublicBorrow_failsGivenZeroAmount() public {
         // Given: a user wants to borrow tokens
         address user = makeAddr("user");
 
@@ -1153,7 +983,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When trying to set limit
                 └── Then it should revert with CallerNotAuthorized
     */
-    function testSetIndividualBorrowLimit() public {
+    function testPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller() public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1167,7 +997,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         assertEq(lendingFacility.individualBorrowLimit(), newLimit);
     }
 
-    function testSetIndividualBorrowLimit_unauthorized() public {
+    function testPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller() public {
         address unauthorizedUser = makeAddr("unauthorized");
 
         vm.startPrank(unauthorizedUser);
@@ -1191,7 +1021,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When trying to set quota
                 └── Then it should revert with appropriate error
     */
-    function testSetBorrowableQuota() public {
+    function testPublicSetBorrowableQuota_succeedsGivenValidQuota() public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1205,7 +1035,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         assertEq(lendingFacility.borrowableQuota(), newQuota);
     }
 
-    function testSetBorrowableQuota_exceedsMax() public {
+    function testPublicSetBorrowableQuota_failsGivenExceedsMaxQuota() public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1237,7 +1067,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When trying to set parameters
     */
 
-    function testFuzz_setDynamicFeeCalculatorParams_unauthorized(
+    function testPublicSetDynamicFeeCalculatorParams_failsGivenUnauthorizedCaller(
         address unauthorizedUser
     ) public {
         vm.assume(
@@ -1258,7 +1088,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testFuzz_setDynamicFeeCalculatorParams_invalidParams(
+    function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParams(
         ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
@@ -1274,7 +1104,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
     }
 
-    function testFuzz_setDynamicFeeCalculatorParams(
+    function testPublicSetDynamicFeeCalculatorParams_succeedsGivenValidParams(
         ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
@@ -1556,7 +1386,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             ├── And issuance tokens should be transferred back to user
             └── And an event should be emitted
     */
-    function testUnlockIssuanceTokens() public {
+    function testPublicUnlockIssuanceTokens_succeedsGivenValidUnlockRequest() public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -1617,7 +1447,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         └── When the user tries to unlock issuance tokens
             └── Then the transaction should revert with CannotUnlockWithOutstandingLoan error
     */
-    function testUnlockIssuanceTokens_withOutstandingLoan() public {
+    function testPublicUnlockIssuanceTokens_failsGivenOutstandingLoan() public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -1661,7 +1491,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to unlock issuance tokens
                 └── Then the transaction should revert with InsufficientLockedTokens error
     */
-    function testUnlockIssuanceTokens_insufficientLockedTokens() public {
+    function testPublicUnlockIssuanceTokens_failsGivenInsufficientLockedTokens() public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;

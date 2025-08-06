@@ -82,38 +82,35 @@ interface ILM_PC_HouseProtocol_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Amount cannot be zero
     error Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
 
-    /// @notice Insufficient borrowing power
+    /// @notice User has insufficient borrowing power for the requested amount
     error Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
 
-    /// @notice Borrowable quota exceeded
-    error Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
-
-    /// @notice Individual borrow limit exceeded
-    error Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
-
-    /// @notice Repayment amount exceeds outstanding loan
-    error Module__LM_PC_HouseProtocol_RepaymentAmountExceedsLoan();
-
-    /// @notice Insufficient locked issuance tokens
-    error Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
-
-    /// @notice Cannot unlock tokens with outstanding loan
-    error Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
-
-    /// @notice Caller not authorized
-    error Module__LM_PC_HouseProtocol_CallerNotAuthorized();
-
-    /// @notice Borrowable quota cannot exceed 100%
-    error Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
-
-    /// @notice Invalid fee calculator address (zero address)
-    error Module__LM_PC_HouseProtocol_InvalidFeeCalculatorAddress();
-
-    /// @notice Insufficient issuance tokens to lock for borrowing
+    /// @notice User has insufficient issuance tokens to lock for the requested borrow amount
     error Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
 
-    /// @notice Invalid dynamic fee parameters
+    /// @notice Borrowing would exceed the system-wide borrowable quota
+    error Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
+
+    /// @notice Borrowing would exceed the individual borrow limit
+    error Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
+
+    /// @notice Borrowable quota cannot exceed 100% (10,000 basis points)
+    error Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
+
+    /// @notice No segments are configured in the DBC FM
+    error Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
+
+    /// @notice User has insufficient locked issuance tokens for the requested unlock amount
+    error Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
+
+    /// @notice Cannot unlock issuance tokens while there is an outstanding loan
+    error Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
+
+    /// @notice Dynamic fee parameters are invalid (zero values not allowed)
     error Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters();
+
+    /// @notice Caller is not authorized to perform this action
+    error Module__LM_PC_HouseProtocol_CallerNotAuthorized();
 
     // =========================================================================
     // Structs
