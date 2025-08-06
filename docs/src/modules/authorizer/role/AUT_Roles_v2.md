@@ -36,14 +36,13 @@ There are three native roles that are created with the authorizer module:
 - The public role
 - The burn admin role
 
-The default admin role holds the highest admin privileges and can access every permissioned function at all times. The public role is a role that can be added to a function's permission list and is used to make functions be publicly accessible. The burn admin role is a placeholder role that indicates that the admin role of a role has been burned and is no longer usable.
+The default admin role holds the highest admin privileges and can access every `permissioned` function at all times. The public role is a role that can be added to a function's permission list and is used to make functions be publicly accessible. The burn admin role is a placeholder role that indicates that the admin role of a role has been burned and is no longer usable.
 
 ### Permissioned Modifier
 
-Most of the state altering functions in a workflow are so called permissioned functions. This means that only roles that have been granted the according function permission can call the function. The permissioned status is enforced by the `permissioned` modifier.
+Most of the state altering functions in a workflow are so called `permissioned` functions. This means that only roles that have been granted the according function permission can call the function. The permissioned status is enforced by the `permissioned` modifier.
 
-Some of the native roles have special rights in this system. The default admin role can access every permissioned function regardless of wether the default admin role was granted the permission or not. If the public role is granted the permission to a function, then every caller can access the function, regardless of
-wether they inhabit a already added role or not.
+Some of the native roles have special rights in this system. The default admin role can access every `permissioned` function regardless of wether the default admin role was granted the permission or not. If the public role is granted the permission to a function, then every caller can access the function, regardless of wether they inhabit a already added role or not.
 
 Note: As a workflow is intialized without any native permissions, some functions that could be perceived as "this should be publicly accessible" are not. Examples for this could be the "buy" and "sell" functions of some funding manager modules or the stake and unstake functions of the staking logic module. For these functions, the public role has to be added to the access of the respective function.
 
@@ -115,7 +114,7 @@ This section describes the functionalities of the authorizer module regarding ro
 
 #### Role Creation
 
-A role can be created by calling the createRole function. The function takes the following parameters:
+A role can be created by calling the `createRole` function. The function takes the following parameters:
 
 - The role name
 - The role id of the role that will become the admin of the new role.
@@ -125,38 +124,38 @@ The rolename in this context refers to the label of the role and is therefore no
 
 #### Role Labeling
 
-The label of a role can be overwritten by calling the labelRole function. With this a new event is emitted, that signals the frontend that the label has been updated. The function can only be called by a permissioned address.(See [permissioned](#permissioned-modifier)).
+The label of a role can be overwritten by calling the `labelRole` function. With this a new event is emitted, that signals the frontend that the label has been updated. The function can only be called by a permissioned address.(See [permissioned](#permissioned-modifier)).
 
 #### Role granting
 
-A role can be granted to a address by calling the grantRole function. The function takes the following parameters:
+A role can be granted to a address by calling the `grantRole` function. The function takes the following parameters:
 
 - The role id of the role to grant
 - The address to grant the role to
 
-The grantRole function can only be called by according admin of the role.
+The `grantRole` function can only be called by according admin of the role.
 
 #### Role revoking
 
-A role can be revoked from an address by calling the revokeRole function. The function takes the following parameters:
+A role can be revoked from an address by calling the `revokeRole` function. The function takes the following parameters:
 
 - The role id of the role to revoke
 - The address to revoke the role from
 
-The revokeRole function can only be called by according admin of the role.
+The `revokeRole` function can only be called by according admin of the role.
 
 #### Transferal of Admin Roles
 
-The admin role of a role can be transferred by calling the transferAdminRole function. The function takes the following parameters:
+The admin role of a role can be transferred by calling the `transferAdminRole` function. The function takes the following parameters:
 
 - The role id of the role to transfer the admin from
 - The role id of the role to transfer the admin to
 
-The transferAdminRole function can only be called by according admin of the role.
+The `transferAdminRole` function can only be called by according admin of the role.
 
 #### Burning of Admin Roles:
 
-The admin role can be burned by calling the burnRoleAdmin function. The function takes the following parameters:
+The admin role can be burned by calling the `burnRoleAdmin` function. The function takes the following parameters:
 
 - The role id of the role to burn the admin from
 
@@ -174,7 +173,7 @@ Adding access permissions is done by calling the `addAccessPermission` function.
 - The function selector of the target function
 - The role ID of the role that will receive the permission
 
-Example: Adding the role "BOUNTY_MANAGER" to the "createBounty" function of the "bountyManager" contract would look like this:
+Example: Adding the role "BOUNTY_MANAGER" to the `createBounty` function of the "bountyManager" contract would look like this:
 
 ```solidity
 authorizer.addAccessPermission(
@@ -190,7 +189,7 @@ The function can only be called by a permissioned address.(See [permissioned](#p
 
 A function can be made public by calling the `addAccessPermission` function with the public role as target role.
 
-Example: Making the "buy" function of the funding manager contract public would look like this:
+Example: Making the `buy` function of the funding manager contract public would look like this:
 
 ```solidity
 authorizer.addAccessPermission(
@@ -202,7 +201,7 @@ authorizer.addAccessPermission(
 
 The public role can be removed in the same way as any other role.
 
-### Mixed Utility - createRoleAndAddAccessPermissions()
+### Mixed Utility - `createRoleAndAddAccessPermissions()`
 
 This function is a convenience function that combines the creation of a new role and the adding of access permissions. It takes the following parameters:
 
