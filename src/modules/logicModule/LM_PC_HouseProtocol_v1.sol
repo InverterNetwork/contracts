@@ -34,6 +34,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // Internal
 import {IFundingManager_v1} from
@@ -50,6 +51,8 @@ import {DynamicFeeCalculatorLib_v1} from
     "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
 >>>>>>> bd648bc3 (feat:add dfc to fm and LF)
+=======
+>>>>>>> b35c81b5 (chore:update inverter standard)
 /**
  * @title   House Protocol Lending Facility Logic Module
  *
@@ -93,6 +96,7 @@ import {DynamicFeeCalculatorLib_v1} from
  *                     - How:     A user with FEE_CALCULATOR_ADMIN_ROLE must call:
  *                               setDynamicFeeCalculatorParams() with appropriate parameters
  *
+<<<<<<< HEAD
  * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
  *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
  *                  upgradeability through the Inverter proxy system. Upgrades should be
@@ -129,6 +133,8 @@ import {DynamicFeeCalculatorLib_v1} from
  *                    Note: The contract requires a valid DBC FM address and proper
  *                    token addresses during initialization.
  *
+=======
+>>>>>>> b35c81b5 (chore:update inverter standard)
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
  *                          to our Security Policy at security.inverter.network
@@ -534,6 +540,7 @@ contract LM_PC_HouseProtocol_v1 is
         // Get the DBC FM interface
         IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+<<<<<<< HEAD
 
         // Get the issuance token's total supply (this represents the virtual issuance supply)
         uint virtualIssuanceSupply = IERC20(
@@ -543,14 +550,30 @@ contract LM_PC_HouseProtocol_v1 is
         // Get the first segment's initial price (P_floor)
         PackedSegment[] memory segments = dbcFm.getSegments();
         if (segments.length == 0) {
+=======
+        
+        // Get the issuance token's total supply (this represents the virtual issuance supply)
+        uint virtualIssuanceSupply = IERC20(IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()).totalSupply();
+        
+        // Get the first segment's initial price (P_floor)
+        PackedSegment[] memory segments = dbcFm.getSegments();
+        if(segments.length == 0) {
+>>>>>>> b35c81b5 (chore:update inverter standard)
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
         }
+<<<<<<< HEAD
 
         // Use PackedSegmentLib to get the initial price of the first segment
         uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
 
+=======
+        
+        // Use PackedSegmentLib to get the initial price of the first segment
+        uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
+        
+>>>>>>> b35c81b5 (chore:update inverter standard)
         // Borrow Capacity = virtualIssuanceSupply * P_floor
         return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
     }
