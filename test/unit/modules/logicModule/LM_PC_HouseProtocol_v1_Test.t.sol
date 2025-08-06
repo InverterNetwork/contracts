@@ -734,10 +734,14 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
 <<<<<<< HEAD
+<<<<<<< HEAD
     function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan() public {
 =======
     function testBorrow_exceedsIndividualLimitWithExistingLoan() public {
 >>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
+=======
+    function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan() public {
+>>>>>>> 964ca6bf (chore:update inverter standard)
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -799,10 +803,14 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 └── Then the transaction should succeed
     */
 <<<<<<< HEAD
+<<<<<<< HEAD
     function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan() public {
 =======
     function testBorrow_withinIndividualLimitWithExistingLoan() public {
 >>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
+=======
+    function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan() public {
+>>>>>>> 964ca6bf (chore:update inverter standard)
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -864,10 +872,14 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── Then the outstanding loan should equal the net amount received by the user
     */
 <<<<<<< HEAD
+<<<<<<< HEAD
     function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount() public {
 =======
     function testBorrow_outstandingLoanMatchesNetAmount() public {
 >>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
+=======
+    function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount() public {
+>>>>>>> 964ca6bf (chore:update inverter standard)
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
