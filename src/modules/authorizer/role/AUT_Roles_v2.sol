@@ -41,7 +41,7 @@ import {AccessControlEnumerableUpgradeable} from
  *                modifier. Functions can also be set to public access by
  *                adding the public role to the function permissions. *
  *
- * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_Roles_v2.sol
+ * @custom:documentation See https://github.com/InverterNetwork/contracts/tree/dev/docs/src/modules/authorizer/role/AUT_Roles_v2.md
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
