@@ -5,22 +5,22 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import {console} from "forge-std/console.sol";
 
 // Inverter Core
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol"; // Added for casting
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol"; // Added for casting
 
 // Modules to be tested and their dependencies
-import {PP_Everclear_CrossChain_v1} from "@pp/PP_Everclear_CrossChain_v1.sol";
+import {PP_Everclear_CrossChain_v2} from "@pp/PP_Everclear_CrossChain_v2.sol";
 import {Mock_LM_PC_PaymentRouter_Everclear_v1} from
     "@mocks/modules/logicModule/Mock_LM_PC_PaymentRouter_Everclear_v1.sol";
 import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
-import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
+import {IPP_CrossChainBase_v2} from "@pp/interfaces/IPP_CrossChainBase_v2.sol";
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol"; // For interfaceId check
@@ -47,8 +47,8 @@ contract PPEverclearCrossChainE2E is E2ETest {
     //--------------------------------------------------------------------------
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    IOrchestrator_v1 orchestrator;
-    PP_Everclear_CrossChain_v1 paymentProcessor;
+    IOrchestrator_v2 orchestrator;
+    PP_Everclear_CrossChain_v2 paymentProcessor;
     Mock_LM_PC_PaymentRouter_Everclear_v1 paymentClient;
     IFM_DepositVault_v1 fmDepositVault;
 
@@ -144,7 +144,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
             )
         );
 
-        // PaymentProcessor (PP_Everclear_CrossChain_v1)
+        // PaymentProcessor (PP_Everclear_CrossChain_v2)
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 ppEverclearCrossChainMetadata, // From E2EModuleRegistry, set up by setUpPPEverclearCrossChain
@@ -172,11 +172,11 @@ contract PPEverclearCrossChainE2E is E2ETest {
         vm.label(address(orchestrator), "E2E_Orchestrator");
 
         // 7. Retrieve Deployed Module Instances
-        paymentProcessor = PP_Everclear_CrossChain_v1(
+        paymentProcessor = PP_Everclear_CrossChain_v2(
             payable(address(orchestrator.paymentProcessor()))
         );
         vm.label(
-            address(paymentProcessor), "PP_Everclear_CrossChain_v1_Instance"
+            address(paymentProcessor), "PP_Everclear_CrossChain_v2_Instance"
         );
 
         address[] memory modulesList = orchestrator.listModules();
@@ -186,7 +186,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
             if (address(paymentClient) == address(0)) {
                 // Only find if not already found
                 string memory currentModuleTitle =
-                    IModule_v1(moduleAddress).title();
+                    IModule_v2(moduleAddress).title();
                 if (
                     keccak256(abi.encodePacked(currentModuleTitle))
                         == keccak256(
@@ -213,8 +213,8 @@ contract PPEverclearCrossChainE2E is E2ETest {
             if (address(fmDepositVault) == address(0)) {
                 // Only find if not already found
                 // Using supportsInterface for more robust check
-                // Cast to Module_v1 to access supportsInterface from ERC165Upgradeable
-                Module_v1 baseModule = Module_v1(payable(moduleAddress));
+                // Cast to Module_v2 to access supportsInterface from ERC165Upgradeable
+                Module_v2 baseModule = Module_v2(payable(moduleAddress));
                 if (
                     baseModule.supportsInterface(
                         type(IFundingManager_v1).interfaceId
@@ -226,7 +226,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
                     // Further check if it's the one configured with our paymentToken
                     // This assumes depositVaultMetadata was used for its deployment.
                     string memory currentModuleTitle =
-                        IModule_v1(moduleAddress).title();
+                        IModule_v2(moduleAddress).title();
                     if (
                         keccak256(abi.encodePacked(currentModuleTitle))
                             == keccak256(
@@ -272,23 +272,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
         vm.startPrank(owner);
         paymentToken.approve(address(paymentClient), type(uint).max);
         usdc.approve(address(paymentClient), type(uint).max); // If client handles fees
-        // vm.stopPrank(); // Keep prank active for role granting
-
-        // Grant PAYMENT_PUSHER_ROLE to owner for the paymentClient mock
-        // The role value is defined in LM_PC_PaymentRouter_v2
-        // This needs to be called by an admin of the paymentClient's authorizer (which is 'owner')
-        bytes32 pusherRole = paymentClient.PAYMENT_PUSHER_ROLE(); // Directly use the constant
-        paymentClient.grantModuleRole(pusherRole, owner);
-
-        // Grant MODULE_ROLE to paymentClient on the paymentProcessor
-        // The role value is defined in Module_v1 or specific PP
-        // This needs to be called by an admin of the orchestrator's authorizer (which is 'owner')
-        bytes32 MODULE_ROLE = keccak256("MODULE_ROLE");
-        // The paymentProcessor's authorizer is the orchestrator's authorizer
-        IOrchestrator_v1(address(orchestrator)).authorizer().grantRole(
-            MODULE_ROLE, address(paymentClient)
-        );
-        vm.stopPrank(); // Stop prank after all owner actions
+            // vm.stopPrank(); // Keep prank active for role granting
     }
 
     //--------------------------------------------------------------------------
@@ -496,7 +480,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
 
         // B. paymentClient initiates the cross-chain payment
         // This sequence of events happens INSIDE paymentClient.pushCrossChainPaymentEverclear(...)
-        //    and the subsequent PP_Everclear_CrossChain_v1.processPayments call.
+        //    and the subsequent PP_Everclear_CrossChain_v2.processPayments call.
 
         // B.1. fmDepositVault transfers to paymentClient (triggered by paymentClient)
         // B.1.a IERC20.Transfer event from the token contract
@@ -554,7 +538,7 @@ contract PPEverclearCrossChainE2E is E2ETest {
         // B.7. paymentProcessor emits BridgeTransferCompleted (inside processPayments)
         // We don't check intentId (topic2) as it's generated dynamically.
         vm.expectEmit(true, false, true, false, address(paymentProcessor)); // paymentId (topic1), recipient (topic3) are indexed. Data not checked.
-        emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
+        emit IPP_CrossChainBase_v2.BridgeTransferCompleted(
             initialState.paymentProcessorPaymentId, // Expected paymentId
             bytes32(0), // Placeholder for intentId - not checked
             recipientAddressOnTargetChain,

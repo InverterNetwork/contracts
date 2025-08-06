@@ -1,41 +1,41 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 import {
-    Module_v1,
-    IModule_v1,
-    IOrchestrator_v1
-} from "src/modules/base/Module_v1.sol";
+    Module_v2,
+    IModule_v2,
+    IOrchestrator_v2
+} from "src/modules/base/Module_v2.sol";
 
 // SuT
 import {
-    ERC20PaymentClientBase_v2,
-    IERC20PaymentClientBase_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    ERC20PaymentClientBase_v3,
+    IERC20PaymentClientBase_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // Internal Interfaces
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 // Mocks
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v2 {
+contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v3 {
     mapping(address => bool) authorized;
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory // configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v2 Wrapper Functions
+    // IERC20PaymentClientBase_v3 Wrapper Functions
 
     function exposed_addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
@@ -71,14 +71,14 @@ contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v2 {
     }
 
     function exposed_ensureTokenAllowance(
-        IPaymentProcessor_v2 spender,
+        IPaymentProcessor_v3 spender,
         address token
     ) external {
         return _ensureTokenAllowance(spender, token);
     }
 
     function exposed_isAuthorizedPaymentProcessor(
-        IPaymentProcessor_v2 processor
+        IPaymentProcessor_v3 processor
     ) external view returns (bool) {
         return _isAuthorizedPaymentProcessor(processor);
     }

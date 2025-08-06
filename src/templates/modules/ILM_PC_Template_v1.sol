@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 
 /**
  * @title   Inverter Template Logic Module Payment Client
@@ -20,7 +20,7 @@ import {IERC20PaymentClientBase_v2} from
  *          - Interface compliance checks via ERC165
  *
  *          Key components:
- *          - Inherits from ERC20PaymentClientBase_v2
+ *          - Inherits from ERC20PaymentClientBase_v3
  *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
@@ -50,7 +50,7 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @author  Inverter Network
  */
-interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
+interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v3 {
     // -------------------------------------------------------------------------
     // Events
 
@@ -80,10 +80,6 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     /// @return token_ The address of the payment token.
     function getPaymentToken() external view returns (address token_);
 
-    /// @notice Returns the deposit admin role.
-    /// @return role_ The address of the deposit admin role.
-    function getDepositAdminRole() external view returns (bytes32 role_);
-
     /// @notice Returns the maximum deposit amount.
     /// @return amount_ The maximum deposit amount.
     function getMaxDepositAmount() external view returns (uint amount_);
@@ -96,6 +92,7 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     function deposit(uint amount_) external;
 
     /// @notice Processes a user's deposit.
+    /// @dev    Function access controlled by authorizer.
     /// @param  user_ The address of the user whose deposit to process.
     /// @param  start_ The start timestamp for the payment schedule.
     /// @param  cliff_ The cliff timestamp for the payment schedule.

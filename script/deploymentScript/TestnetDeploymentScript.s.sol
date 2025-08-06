@@ -13,7 +13,7 @@ import {Testnet_ModuleFactory_v1} from
 
 // Interfaces
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Mocks
@@ -118,7 +118,7 @@ contract TestnetDeploymentScript is DeploymentScript {
             moduleFactory
         ).getBeaconAndId(initialMetadataRegistration[0]);
 
-        IModule_v1.Metadata memory testMetadata = IModule_v1.Metadata(
+        IModule_v2.Metadata memory testMetadata = IModule_v2.Metadata(
             type(uint).max,
             type(uint).max,
             type(uint).max,

@@ -5,17 +5,17 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     ERC20Mock
 } from "test/e2e/E2ETest.sol";
 
 // SuT
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v2} from "@aut/role/AUT_TokenGated_Roles_v2.sol";
 
 // Modules that are used in this E2E test
 import {
-    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
-} from "@lm/LM_PC_Bounties_v2.sol";
+    LM_PC_Bounties_v3, ILM_PC_Bounties_v3
+} from "@lm/LM_PC_Bounties_v3.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {
@@ -76,7 +76,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
     function test_e2e_TokenGatedRoleAuthorizer() public {
         //--------------------------------------------------------------------------
-        // Orchestrator_v1 Initialization
+        // Orchestrator_v2 Initialization
         //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -84,23 +84,23 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        AUT_TokenGated_Roles_v1 authorizer =
-            AUT_TokenGated_Roles_v1(address(orchestrator.authorizer()));
+        AUT_TokenGated_Roles_v2 authorizer =
+            AUT_TokenGated_Roles_v2(address(orchestrator.authorizer()));
 
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
-        // Find LM_PC_Bounties_v2
-        LM_PC_Bounties_v2 bountyManager;
+        // Find LM_PC_Bounties_v3
+        LM_PC_Bounties_v3 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v3(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v3(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -111,44 +111,77 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Set up Bounty Manager Roles with different thresholds
         //--------------------------------------------------------------------------
 
-        // Give the Orchestrator_v1 Admin the power to change module roles
+        // Give the Orchestrator_v2 Admin the power to change module roles
         authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin);
 
         vm.startPrank(orchestratorAdmin);
         {
-            // Make the BOUNTY_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 bountyRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
+            // BOUNTY_ISSUER_ROLE
+            // Create the role
+            bytes32 bountyIssuerRoleId = authorizer.createRole(
+                "BOUNTY_ISSUER_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
-            authorizer.setTokenGated(bountyRoleId, true);
-            authorizer.setThreshold(bountyRoleId, address(gatingToken), 100);
-            authorizer.grantRole(bountyRoleId, address(gatingToken));
 
-            // We mint 101 tokens to the orchestrator admin so they can create bounties
-            gatingToken.mint(orchestratorAdmin, 101);
+            authorizer.setTokenGated(bountyIssuerRoleId, true);
+            authorizer.setThreshold(
+                bountyIssuerRoleId, address(gatingToken), 100
+            );
 
-            // Make the VERIFY_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 verifierRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.VERIFIER_ROLE()
+            // Now add the gating Token as a member of the role
+            // With this any holder of that token with a balance equal or higher than
+            // 100 will have permission to access the BOUNTY_ISSUER_ROLE functions
+            // In this case we actually only want the orchestrator admin to be able to call this
+            // As the default admin is always allowed to call permissioned functions
+            authorizer.grantRole(bountyIssuerRoleId, address(gatingToken));
+
+            // VERIFIER_ROLE
+            // Create the role
+            bytes32 verifierRoleId = authorizer.createRole(
+                "VERIFIER_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
             authorizer.setTokenGated(verifierRoleId, true);
             authorizer.setThreshold(verifierRoleId, address(gatingToken), 50);
             authorizer.grantRole(verifierRoleId, address(gatingToken));
 
-            // We mint 51 tokens to the orchestrator manager so they can verify bounties
-            gatingToken.mint(bountyVerifier, 51);
+            // We mint 50 tokens to the orchestrator manager so they can verify bounties
+            gatingToken.mint(bountyVerifier, 50);
 
-            // Make the CLAIM_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 claimRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.CLAIMANT_ROLE()
+            // CLAIMANT_ROLE
+            // Create the role
+            bytes32 claimRoleId = authorizer.createRole(
+                "CLAIMANT_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
             authorizer.setTokenGated(claimRoleId, true);
             authorizer.setThreshold(claimRoleId, address(gatingToken), 25);
             authorizer.grantRole(claimRoleId, address(gatingToken));
 
-            // We mint 26 tokens to the bounty submitter so they can submit bounties
-            gatingToken.mint(bountySubmitter, 26);
+            // We mint 25 tokens to the bounty submitter so they can submit bounties
+            gatingToken.mint(bountySubmitter, 25);
+
+            // Assign the correct permissions to the roles
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.addBounty.selector,
+                bountyIssuerRoleId
+            );
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.addClaim.selector,
+                claimRoleId
+            );
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.verifyClaim.selector,
+                verifierRoleId
+            );
         }
+
         vm.stopPrank();
 
         //--------------------------------------------------------------------------
@@ -188,7 +221,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
 
         // Validate
-        ILM_PC_Bounties_v2.Bounty memory bounty =
+        ILM_PC_Bounties_v3.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, 100e18);
         assertEq(bounty.maximumPayoutAmount, 500e18);
@@ -198,11 +231,11 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Worker submits bounty
         //--------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
-        ILM_PC_Bounties_v2.Contributor memory BOB =
-            ILM_PC_Bounties_v2.Contributor(bountySubmitter, 200e18);
+        ILM_PC_Bounties_v3.Contributor memory BOB =
+            ILM_PC_Bounties_v3.Contributor(bountySubmitter, 200e18);
 
-        ILM_PC_Bounties_v2.Contributor[] memory contribs =
-            new ILM_PC_Bounties_v2.Contributor[](1);
+        ILM_PC_Bounties_v3.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v3.Contributor[](1);
         contribs[0] = BOB;
 
         uint claimId = bountyManager.addClaim(

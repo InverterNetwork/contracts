@@ -4,8 +4,8 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IModuleFactory_v1,
-    IOrchestrator_v1,
-    IModule_v1
+    IOrchestrator_v2,
+    IModule_v2
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -73,7 +73,7 @@ contract ModuleFactory_v1 is
 
     /// @dev    Modifier to guarantee function is only callable with valid
     ///         metadata.
-    modifier validMetadata(IModule_v1.Metadata memory data) {
+    modifier validMetadata(IModule_v2.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
             revert ModuleFactory__InvalidMetadata();
         }
@@ -109,7 +109,7 @@ contract ModuleFactory_v1 is
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     /// @dev	Mapping of proxy address to orchestrator address.
-    /// @dev	moduleProxy => {IOrchestrator_v1}.
+    /// @dev	moduleProxy => {IOrchestrator_v2}.
     mapping(address => address) private _orchestratorOfProxy;
 
     /// @dev	Maps a users address to a nonce used for the create2-based deployment.
@@ -137,7 +137,7 @@ contract ModuleFactory_v1 is
     /// @param  initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
     function init(
         address _governor,
-        IModule_v1.Metadata[] memory initialMetadataRegistration,
+        IModule_v2.Metadata[] memory initialMetadataRegistration,
         IInverterBeacon_v1[] memory initialBeaconRegistration
     ) external initializer {
         __Ownable_init(_governor);
@@ -166,23 +166,23 @@ contract ModuleFactory_v1 is
 
     /// @inheritdoc IModuleFactory_v1
     function createAndInitModule(
-        IModule_v1.Metadata memory metadata,
-        IOrchestrator_v1 orchestrator,
+        IModule_v2.Metadata memory metadata,
+        IOrchestrator_v2 orchestrator,
         bytes memory configData,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
         address proxy =
             createModuleProxy(metadata, orchestrator, workflowConfig);
 
-        IModule_v1(proxy).init(orchestrator, metadata, configData);
+        IModule_v2(proxy).init(orchestrator, metadata, configData);
 
         return proxy;
     }
 
     /// @inheritdoc IModuleFactory_v1
     function createModuleProxy(
-        IModule_v1.Metadata memory metadata,
-        IOrchestrator_v1 orchestrator,
+        IModule_v2.Metadata memory metadata,
+        IOrchestrator_v2 orchestrator,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) public returns (address) {
         // Note that the metadata's validity is not checked because the
@@ -232,7 +232,7 @@ contract ModuleFactory_v1 is
     // Public View Functions
 
     /// @inheritdoc IModuleFactory_v1
-    function getBeaconAndId(IModule_v1.Metadata memory metadata)
+    function getBeaconAndId(IModule_v2.Metadata memory metadata)
         public
         view
         returns (IInverterBeacon_v1, bytes32)
@@ -256,7 +256,7 @@ contract ModuleFactory_v1 is
 
     /// @inheritdoc IModuleFactory_v1
     function registerMetadata(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external virtual onlyOwner {
         _registerMetadata(metadata, beacon);
@@ -269,7 +269,7 @@ contract ModuleFactory_v1 is
     /// @param  metadata The metadata to register.
     /// @param  beacon The {IInverterBeacon_v1} to register the metadata to.
     function _registerMetadata(
-        IModule_v1.Metadata memory metadata,
+        IModule_v2.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) internal validMetadata(metadata) validBeacon(beacon) {
         IInverterBeacon_v1 oldBeacon;

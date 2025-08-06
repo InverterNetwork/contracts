@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {LM_PC_PaymentRouter_v2} from
-    "src/modules/logicModule/LM_PC_PaymentRouter_v2.sol";
-import {PP_Everclear_CrossChain_v1} from
-    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
+import {LM_PC_PaymentRouter_v3} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v3.sol";
+import {PP_Everclear_CrossChain_v2} from
+    "src/modules/paymentProcessor/PP_Everclear_CrossChain_v2.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
+import {IERC20PaymentClientBase_v3} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v3.sol";
 
-contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
-    // Local constants mirroring PP_Everclear_CrossChain_v1
+contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v3 {
+    // Local constants mirroring PP_Everclear_CrossChain_v2
     uint8 public constant LOCAL_FLAG_MAX_FEE = 5;
     uint8 public constant LOCAL_FLAG_TTL = 6;
 
     function init(
-        IOrchestrator_v1 orchestrator_,
-        IModule_v1.Metadata memory metadata,
+        IOrchestrator_v2 orchestrator_,
+        IModule_v2.Metadata memory metadata,
         bytes memory /* configData */
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
@@ -29,7 +29,7 @@ contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
                 | uint(1 << LOCAL_FLAG_TTL)
         );
 
-        __ERC20PaymentClientBase_v2_init(combinedFlags);
+        __ERC20PaymentClientBase_v3_init(combinedFlags);
     }
 
     function pushCrossChainPaymentEverclear(
@@ -39,7 +39,7 @@ contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
         uint targetChainId,
         uint24 maxFee,
         uint48 ttl
-    ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
+    ) public permissioned {
         // Prepare payment parameters array for Everclear-specific data
         bytes32[] memory paymentParamsForEverclear = new bytes32[](3);
         paymentParamsForEverclear[0] = bytes32(block.timestamp); // For FLAG_START
@@ -81,7 +81,7 @@ contract Mock_LM_PC_PaymentRouter_Everclear_v1 is LM_PC_PaymentRouter_v2 {
 
         // Call the payment processor to process the payments
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 

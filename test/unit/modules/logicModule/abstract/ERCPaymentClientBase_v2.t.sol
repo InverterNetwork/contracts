@@ -10,23 +10,23 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {
     ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
 import {
     ERC20PaymentClientBaseV2_Exposed,
-    IERC20PaymentClientBase_v2
+    IERC20PaymentClientBase_v3
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2_Exposed.sol";
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2, IModule_v2} from "src/modules/base/Module_v2.sol";
 
 import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
 import {
-    PaymentProcessorV1Mock,
-    IPaymentProcessor_v2
-} from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+    PaymentProcessor_v3_Mock,
+    IPaymentProcessor_v3
+} from "@mocks/modules/paymentProcessor/PaymentProcessor_v3_Mock.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
@@ -75,10 +75,10 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
     function testReinitFails() public override {}
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentClient.supportsInterface(
-                type(IERC20PaymentClientBase_v2).interfaceId
+                type(IERC20PaymentClientBase_v3).interfaceId
             )
         );
     }
@@ -100,7 +100,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         _assumeValidAmount(amount);
 
         for (uint i; i < orderAmount; ++i) {
-            IERC20PaymentClientBase_v2.PaymentOrder memory order =
+            IERC20PaymentClientBase_v3.PaymentOrder memory order =
                 _createPaymentOrder(address(_token), recipient, amount, end);
 
             vm.expectEmit();
@@ -117,7 +117,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
             paymentClient.exposed_addPaymentOrder(order);
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         assertEq(orders.length, orderAmount);
@@ -142,12 +142,12 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         _paymentProcessor.flipValidOrder();
 
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
         paymentClient.exposed_addPaymentOrder(
-            IERC20PaymentClientBase_v2.PaymentOrder({
+            IERC20PaymentClientBase_v3.PaymentOrder({
                 recipient: address(0),
                 paymentToken: address(_token),
                 amount: 1,
@@ -163,10 +163,10 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
     // Test: addPaymentOrders()
 
     function testAddPaymentOrders() public {
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory ordersToAdd =
-            new IERC20PaymentClientBase_v2.PaymentOrder[](3);
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory ordersToAdd =
+            new IERC20PaymentClientBase_v3.PaymentOrder[](3);
 
-        ordersToAdd[0] = IERC20PaymentClientBase_v2.PaymentOrder({
+        ordersToAdd[0] = IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: address(0xCAFE1),
             paymentToken: address(_token),
             amount: 100e18,
@@ -184,7 +184,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         data[0] = bytes32(block.timestamp);
         data[1] = bytes32(block.timestamp + 1);
 
-        ordersToAdd[1] = IERC20PaymentClientBase_v2.PaymentOrder({
+        ordersToAdd[1] = IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: address(0xCAFE2),
             paymentToken: address(_token),
             amount: 100e18,
@@ -198,7 +198,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         data[0] = bytes32(block.timestamp);
         data[1] = bytes32(block.timestamp + 2);
 
-        ordersToAdd[2] = IERC20PaymentClientBase_v2.PaymentOrder({
+        ordersToAdd[2] = IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: address(0xCAFE3),
             paymentToken: address(_token),
             amount: 100e18,
@@ -238,7 +238,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         );
         paymentClient.exposed_addPaymentOrders(ordersToAdd);
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
         assertEq(orders.length, 3);
         for (uint i; i < 3; ++i) {
@@ -275,7 +275,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
             );
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
         address[] memory tokens;
         uint[] memory totalOutstandingAmounts;
         vm.prank(address(_paymentProcessor));
@@ -298,8 +298,8 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         assertEq(totalOutstandingAmounts.length, 1);
         assertEq(totalOutstandingAmounts[0], orderAmount * amount);
 
-        // Check that orders in ERC20PaymentClientBase_v2 got reset.
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory updatedOrders;
+        // Check that orders in ERC20PaymentClientBase_v3 got reset.
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory updatedOrders;
         updatedOrders = paymentClient.paymentOrders();
         assertEq(updatedOrders.length, 0);
 
@@ -309,7 +309,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
             totalOutstandingAmounts[0]
         );
 
-        // Check that we received allowance to fetch tokens from ERC20PaymentClientBase_v2.
+        // Check that we received allowance to fetch tokens from ERC20PaymentClientBase_v3.
         assertTrue(
             _token.allowance(address(paymentClient), address(_paymentProcessor))
                 >= totalOutstandingAmounts[0]
@@ -317,7 +317,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
     }
 
     function testCollectPaymentOrders_IfThereAreNoOrders() public {
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory orders;
         address[] memory tokens;
         uint[] memory totalOutstandingAmounts;
         vm.prank(address(_paymentProcessor));
@@ -330,14 +330,14 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         assertEq(totalOutstandingAmounts.length, 0);
 
         // Check that there are no orders in the paymentClient
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory updatedOrders;
+        IERC20PaymentClientBase_v3.PaymentOrder[] memory updatedOrders;
         updatedOrders = paymentClient.paymentOrders();
         assertEq(updatedOrders.length, 0);
     }
 
     function testCollectPaymentOrdersFailsCallerNotAuthorized() public {
         vm.expectRevert(
-            IERC20PaymentClientBase_v2
+            IERC20PaymentClientBase_v3
                 .Module__ERC20PaymentClientBase__CallerNotAuthorized
                 .selector
         );
@@ -368,7 +368,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
         if (caller != address(_paymentProcessor)) {
             vm.expectRevert(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__CallerNotAuthorized
                     .selector
             );
@@ -389,7 +389,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         _token.mint(address(paymentClient), currentFunds);
 
         // create paymentOrder with required amount
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        IERC20PaymentClientBase_v3.PaymentOrder memory order =
         _createPaymentOrder(
             address(_token), address(0xA11CE), amountRequired, block.timestamp
         );
@@ -431,7 +431,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         );
 
         // we add the first paymentOrder to increase the outstanding amount
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        IERC20PaymentClientBase_v3.PaymentOrder memory order =
         _createPaymentOrder(
             address(_token), address(0xA11CE), firstAmount, block.timestamp
         );
@@ -466,7 +466,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
     function testIsAuthorizedPaymentProcessor(address addr) public {
         bool isAuthorized = paymentClient.exposed_isAuthorizedPaymentProcessor(
-            IPaymentProcessor_v2(addr)
+            IPaymentProcessor_v3(addr)
         );
 
         if (addr == address(_paymentProcessor)) {
@@ -501,7 +501,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v2
+                IERC20PaymentClientBase_v3
                     .Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength
                     .selector,
                 paymentClient.getFlagCount(),
@@ -582,7 +582,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
         address recipient,
         uint amount,
         uint end
-    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
+    ) internal view returns (IERC20PaymentClientBase_v3.PaymentOrder memory) {
         bytes32[] memory data = new bytes32[](end != 0 ? 3 : 2);
         data[0] = bytes32(block.timestamp);
         data[1] = bytes32(0);
@@ -590,7 +590,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
             data[2] = bytes32(end);
         }
 
-        return IERC20PaymentClientBase_v2.PaymentOrder({
+        return IERC20PaymentClientBase_v3.PaymentOrder({
             recipient: recipient,
             paymentToken: paymentToken,
             amount: amount,

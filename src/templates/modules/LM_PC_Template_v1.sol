@@ -2,17 +2,17 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 import {
-    IERC20PaymentClientBase_v2,
-    IPaymentProcessor_v2
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    IERC20PaymentClientBase_v3,
+    IPaymentProcessor_v3
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 import {
-    ERC20PaymentClientBase_v2,
-    Module_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+    ERC20PaymentClientBase_v3,
+    Module_v2
+} from "@lm/abstracts/ERC20PaymentClientBase_v3.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -35,25 +35,31 @@ import {ERC165Upgradeable} from
  *          - Interface compliance checks via ERC165
  *
  *          Key components:
- *          - Inherits from ERC20PaymentClientBase_v2
- *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
+ *          - Inherits from ERC20PaymentClientBase_v3
+ *          - Uses permissioned modifier for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
  *          - Processes payments through Orchestrator's payment processor
  *          - Makes use of payment order flags
  *
- * @custom:setup    This module requires the following MANDATORY setup steps:
+ * @custom:setup    This module has the following OPTIONAL setup steps:
  *
- *                  1. Configure DEPOSIT_ADMIN_ROLE:
+ *                  1. Configure a role for authorized deposit processing:
  *                     - Purpose: Implements access control for processing user
- *                               deposits. Only authorized admins can process
+ *                               deposits. Only permissioned role holders can process
  *                               deposits into payment orders.
- *                     - How:     The OrchestratorAdmin must:
- *                               1. Retrieve the deposit admin role identifier
- *                               2. Grant the role to designated admins
- *                     - Example: module.grantModuleRole(
- *                                 module.DEPOSIT_ADMIN_ROLE(),
- *                                 adminAddress
+ *                     - How:     The DefaultAdmin must:
+ *                               1. Create a role for the designated admins
+ *                                  2. Look up the target function selector
+ *                               3. Add access permission to the role
+ *                     - Example: uint roleId = authorizer.createRole(
+ *                                 "DEPOSIT_ADMIN",
+ *                                 authorizer.getAdminRole(),
+ *                                 address[<initialMemberAddress>]);
+ *                               authorizer.addAccessPermission(
+ *                                 address(module),
+ *                                 ILM_PC_Template_v1.processDeposit.selector,
+ *                                 roleId
  *                               );
  *
  * @custom:security-contact security@inverter.network
@@ -65,7 +71,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
+contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v3 {
     // -------------------------------------------------------------------------
     // Libraries
 
@@ -79,7 +85,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v2)
+        override(ERC20PaymentClientBase_v3)
         returns (bool)
     {
         return interfaceId_ == type(ILM_PC_Template_v1).interfaceId
@@ -91,9 +97,6 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
     /// @notice The maximum deposit amount.
     uint internal constant MAX_DEPOSIT_AMOUNT = 100 ether;
-
-    /// @notice The role that allows processing deposits
-    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice The payment processor flag for the start timestamp.
     uint8 internal constant FLAG_START = 1;
@@ -137,10 +140,10 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @param  configData_ The config data of the module, comprised of:
     ///     - address: paymentToken: The payment token address.
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata_);
 
         // Decode module specific init data through use of configData bytes.
@@ -157,7 +160,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         flags |= bytes32(1 << FLAG_CLIFF);
         flags |= bytes32(1 << FLAG_END);
 
-        __ERC20PaymentClientBase_v2_init(flags);
+        __ERC20PaymentClientBase_v3_init(flags);
     }
 
     // -------------------------------------------------------------------------
@@ -171,11 +174,6 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Template_v1
     function getPaymentToken() external view returns (address) {
         return address(_paymentToken);
-    }
-
-    /// @inheritdoc ILM_PC_Template_v1
-    function getDepositAdminRole() external pure returns (bytes32) {
-        return DEPOSIT_ADMIN_ROLE;
     }
 
     /// @inheritdoc ILM_PC_Template_v1
@@ -205,7 +203,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Template_v1
     function processDeposit(address user_, uint start_, uint cliff_, uint end_)
         external
-        onlyModuleRole(DEPOSIT_ADMIN_ROLE)
+        permissioned
     {
         uint amount = _depositedAmounts[user_];
 
@@ -237,7 +235,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
         // Process the payment.
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
+            IERC20PaymentClientBase_v3(address(this))
         );
     }
 

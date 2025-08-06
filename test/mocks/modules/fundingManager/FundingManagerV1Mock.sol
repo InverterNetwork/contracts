@@ -6,21 +6,21 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {
-    Module_v1,
-    IModule_v1,
-    IOrchestrator_v1
-} from "src/modules/base/Module_v1.sol";
+    Module_v2,
+    IModule_v2,
+    IOrchestrator_v2
+} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
+contract FundingManagerV1Mock is IFundingManager_v1, Module_v2 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(Module_v2)
         returns (bool)
     {
         bytes4 interfaceId_IFundingManager =
@@ -34,10 +34,10 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
     IERC20 private _token;
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory
-    ) public override(Module_v1) initializer {
+    ) public override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

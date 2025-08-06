@@ -4,16 +4,16 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 // SuT
-import {FM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {FM_BC_BondingSurface_Redeeming_v2} from
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v2.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 
 contract FM_BC_BondingSurface_RedeemingV1_Exposed is
-    FM_BC_BondingSurface_Redeeming_v1
+    FM_BC_BondingSurface_Redeeming_v2
 {
     // -------------------------------------------------------------------------
     // The goal of this mock is to provide direct access to internal functions for testing purposes.

@@ -3,6 +3,7 @@
 @df/=lib/deterministic-factory/src/
 @uma/=lib/uma-protocol/packages/core/contracts/
 @ex/=src/external/
+@aut/=src/modules/authorizer/
 @fm/=src/modules/fundingManager/
 @pp/=src/modules/paymentProcessor/
 @lm/=src/modules/logicModule/

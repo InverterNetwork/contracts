@@ -11,7 +11,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
  *
  * @dev     This contract is used to showcase a basic setup for a funding
  *          manager. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
+ *          - Inherit from the Module_v2 contract to enable interaction with
  *            the Inverter workflow.
  *          - Use of the IFundingManager_v1 interface to facilitate
  *            interaction as a Funding Manager.

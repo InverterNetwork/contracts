@@ -181,7 +181,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     function shutDownImplementation() external onlyOwner {
         // Go into emergency mode
         _emergencyMode = true;
-        // Set implementation pointer to _reverterAddress and therefor halting the system
+        // Set implementation pointer to _reverterAddress and therefore halting the system
         _implementationPointer = _reverterAddress;
 
         emit ShutdownInitiated();

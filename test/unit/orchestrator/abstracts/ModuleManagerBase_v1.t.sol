@@ -10,8 +10,9 @@ import {
 } from "@mocks/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
 
 // Mocks
-import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
-import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {Authorizer_v2_Mock} from
+    "@mocks/modules/authorizer/Authorizer_v2_Mock.sol";
+import {Module_v2_Mock} from "@mocks/modules/base/Module_v2_Mock.sol";
 
 // Errors
 import {OZErrors} from "@testUtilities/OZErrors.sol";
@@ -117,7 +118,7 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         address[] memory modules = new address[](2);
         modules[0] = module;
@@ -205,7 +206,7 @@ contract ModuleManagerBaseV1Test is Test {
     {
         vm.assume(timePassed < timelock - 1);
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         moduleManager.call_initiateAddModuleWithTimelock(module);
 
         (, uint timelockUntil) = moduleManager.moduleAddressToTimelock(module);
@@ -226,7 +227,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testExecuteAddModule_revertGivenTimelockStillActive() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         moduleManager.call_initiateAddModuleWithTimelock(module);
 
         // Cancel setting module
@@ -242,42 +243,13 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.call_executeAddModule(module);
     }
 
-    function testInitiateAddModuleWithTimelock_FailsIfCallerNotAuthorized()
-        public
-    {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-    }
-
-    function testExecuteAddModule_FailsIfCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_executeAddModule(module);
-    }
-
     function testExecuteAddModule_FailsIfModuleLimitIsExceeded() public {
         uint modulesUntilLimit = MAX_MODULES - moduleManager.modulesSize();
         address[] memory modules = new address[](modulesUntilLimit + 1);
 
         // Create MAX_MODULES amount of modules + 1
         for (uint i = 0; i < modulesUntilLimit + 1; i++) {
-            modules[i] = address(new ModuleV1Mock());
+            modules[i] = address(new Module_v2_Mock());
             moduleManager.call_initiateAddModuleWithTimelock(modules[i]);
         }
 
@@ -325,7 +297,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testInitiateAddModuleWithTimelock_FailsIfAlreadyAdded() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
@@ -360,7 +332,7 @@ contract ModuleManagerBaseV1Test is Test {
     ) public {
         vm.assume(timePassed < timelock - 1);
 
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         // Setup add module
         moduleManager.call_initiateAddModuleWithTimelock(module);
@@ -388,7 +360,7 @@ contract ModuleManagerBaseV1Test is Test {
     }
 
     function testExecuteRemoveModule_revertGivenTimelockStillActive() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         // Setup add module
         moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
@@ -464,44 +436,8 @@ contract ModuleManagerBaseV1Test is Test {
         assertEq(moduleManager.listModules().length, 0);
     }
 
-    function testInitiateRemoveModuleWithTimelock_FailsIfCallerNotAuthorized()
-        public
-    {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateRemoveModuleWithTimelock(module);
-    }
-
-    function testExecuteRemoveModule_FailsIfCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateRemoveModuleWithTimelock(module);
-    }
-
     function testInitiateRemoveModuleWithTimelock_FailsIfNotModule() public {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
 
         vm.expectRevert(
             IModuleManagerBase_v1.ModuleManagerBase__IsNotModule.selector
@@ -513,33 +449,19 @@ contract ModuleManagerBaseV1Test is Test {
     // Tests: cancelModuleUpdate()
     /*
         Test cancelModuleUpdate() function
-        ├── Given the caller of the function is not authorized
-        │   └── When the function cancelModuleUpdate() gets called
-        │       └── Then it should revert
         ├── Given no update has been initated for the module
         │   └── When the function cancelModuleUpdate() gets called
         │       └── Then it should revert
-        └── Given caller is authorized & module update has been initiated
+        └── Given module update has been initiated
             └── When the function cancelModuleUpdate() gets called
                 └── Then it should cancel the update
                     └── And it should emit an event
     */
-    function testCancelModuleUpdate_failsGivenCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_cancelModuleUpdate(module);
-    }
 
     function testCancelModuleUpdate_failsGivenModuleUpdateNotInitated()
         public
     {
-        address module = address(new ModuleV1Mock());
+        address module = address(new Module_v2_Mock());
         vm.expectRevert(
             IModuleManagerBase_v1
                 .ModuleManagerBase__ModuleUpdateAlreadyStarted
@@ -594,7 +516,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         modules = new address[](amount);
         for (uint i = 0; i < amount; i++) {
-            modules[i] = address(new ModuleV1Mock());
+            modules[i] = address(new Module_v2_Mock());
         }
     }
 }

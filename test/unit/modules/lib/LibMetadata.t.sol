@@ -7,14 +7,14 @@ import {Test} from "forge-std/Test.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 contract LibMetadataTest is Test {
     function setUp() public {}
 
     /// @dev The identifier is defined as the hash of the major version, url
     ///      and title.
-    function testIdentifier(IModule_v1.Metadata memory data) public {
+    function testIdentifier(IModule_v2.Metadata memory data) public {
         bytes32 got = LibMetadata.identifier(data);
         bytes32 want =
             keccak256(abi.encode(data.majorVersion, data.url, data.title));
@@ -33,7 +33,7 @@ contract LibMetadataTest is Test {
         vm.assume(bytes(url).length != 0);
         vm.assume(bytes(title).length != 0);
 
-        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+        IModule_v2.Metadata memory data = IModule_v2.Metadata(
             majorVersion, minorVersion, patchVersion, url, title
         );
 
@@ -46,7 +46,7 @@ contract LibMetadataTest is Test {
         uint patchVersion
     ) public {
         vm.assume(majorVersion != 0 || minorVersion != 0 || patchVersion != 0);
-        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+        IModule_v2.Metadata memory data = IModule_v2.Metadata(
             majorVersion, minorVersion, patchVersion, "", "title"
         );
 
@@ -60,7 +60,7 @@ contract LibMetadataTest is Test {
     ) public {
         vm.assume(majorVersion != 0 || minorVersion != 0 || patchVersion != 0);
 
-        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+        IModule_v2.Metadata memory data = IModule_v2.Metadata(
             majorVersion, minorVersion, patchVersion, "url", ""
         );
 
@@ -72,7 +72,7 @@ contract LibMetadataTest is Test {
         uint minorVersion,
         uint patchVersion
     ) public {
-        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+        IModule_v2.Metadata memory data = IModule_v2.Metadata(
             majorVersion, minorVersion, patchVersion, "url", "title"
         );
         if (majorVersion == 0 && minorVersion == 0 && patchVersion == 0) {

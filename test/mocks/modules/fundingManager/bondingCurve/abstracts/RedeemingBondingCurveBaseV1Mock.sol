@@ -4,36 +4,36 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v2} from
+    "src/orchestrator/interfaces/IOrchestrator_v2.sol";
 
 // SuT
 import {
-    RedeemingBondingCurveBase_v1,
-    IRedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+    RedeemingBondingCurveBase_v2,
+    IRedeemingBondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v2.sol";
 import {
-    BondingCurveBase_v1,
-    IBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+    BondingCurveBase_v2,
+    IBondingCurveBase_v2
+} from "@fm/bondingCurve/abstracts/BondingCurveBase_v2.sol";
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v2} from "src/modules/base/Module_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
+contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v2 {
     IBancorFormula public formula;
 
     // -------------------------------------------------------------------------
     // Override Functions
 
     function init(
-        IOrchestrator_v1 orchestrator_,
+        IOrchestrator_v2 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external override(Module_v2) initializer {
         __Module_init(orchestrator_, metadata);
 
         (
@@ -69,7 +69,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         pure
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint)
     {
         // Since this is a mock, we will always redeem the same amount of tokens as have been deposited
@@ -110,14 +110,14 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     function getStaticPriceForSelling()
         external
         view
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v2)
         returns (uint)
     {}
 
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        override(BondingCurveBase_v2, IBondingCurveBase_v2)
         returns (uint)
     {}
 

@@ -5,24 +5,24 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1,
+    IOrchestrator_v2,
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
 // SuT
 import {
-    IOrchestrator_v1,
-    Orchestrator_v1
-} from "src/orchestrator/Orchestrator_v1.sol";
+    IOrchestrator_v2,
+    Orchestrator_v2
+} from "src/orchestrator/Orchestrator_v2.sol";
 
 // Modules that are used in this E2E test
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v2} from "@aut/IAuthorizer_v2.sol";
 import {
-    ILM_PC_Bounties_v2, LM_PC_Bounties_v2
-} from "@lm/LM_PC_Bounties_v2.sol";
+    ILM_PC_Bounties_v3, LM_PC_Bounties_v3
+} from "@lm/LM_PC_Bounties_v3.sol";
 
 // Beacon
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -70,7 +70,7 @@ contract OrchestratorE2E is E2ETest {
             )
         );
 
-        // We also set up the LM_PC_Bounties_v2, even though we'll add it later
+        // We also set up the LM_PC_Bounties_v3, even though we'll add it later
         setUpBountyManager();
     }
 
@@ -83,11 +83,11 @@ contract OrchestratorE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        IOrchestrator_v2 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         uint timelock =
-            Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
+            Orchestrator_v2(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
         //------------------------------------------------------------------------------------------
         // Adding Module
 
@@ -154,27 +154,19 @@ contract OrchestratorE2E is E2ETest {
 
         // Replace the old modules with the new ones
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v2(newPaymentProcessor)
+            newPaymentProcessor
         );
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v2(newPaymentProcessor)
-        );
-        orchestrator.initiateSetFundingManagerWithTimelock(
-            IFundingManager_v1(newFundingManager)
-        );
+        orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
+        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetFundingManager(
-            IFundingManager_v1(newFundingManager)
-        );
-        orchestrator.initiateSetAuthorizerWithTimelock(
-            IAuthorizer_v1(newAuthorizer)
-        );
+        orchestrator.executeSetFundingManager(newFundingManager);
+        orchestrator.initiateSetAuthorizerWithTimelock(newAuthorizer);
         vm.warp(block.timestamp + timelock);
 
-        orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
+        orchestrator.executeSetAuthorizer(newAuthorizer);
 
         // Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules

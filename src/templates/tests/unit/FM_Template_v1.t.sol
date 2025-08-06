@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 // Internal
 import {
     ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
+    IModule_v2,
+    IOrchestrator_v2
 } from "@unitTest/modules/ModuleTest.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -18,9 +18,9 @@ import {FM_Template_v1_Exposed} from
     "src/templates/tests/unit/FM_Template_v1_Exposed.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
-    IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock
-} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    IERC20PaymentClientBase_v3,
+    ERC20PaymentClientBase_v3_Mock
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBase_v3_Mock.sol";
 
 // System under Test (SuT)
 import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
@@ -55,7 +55,7 @@ contract FM_Template_v1_Test is ModuleTest {
 
     // Mocks
     ERC20Mock orchestratorToken;
-    ERC20PaymentClientBaseV2Mock paymentClient;
+    ERC20PaymentClientBase_v3_Mock paymentClient;
 
     // =========================================================================
     // Setup
@@ -80,7 +80,7 @@ contract FM_Template_v1_Test is ModuleTest {
 
         // Setup other modules needed in the unit tests.
         // In this case a payment client is needed to test the FM_Template_v1.
-        paymentClient = new ERC20PaymentClientBaseV2Mock();
+        paymentClient = new ERC20PaymentClientBase_v3_Mock();
         _addLogicModuleToOrchestrator(address(paymentClient));
     }
 
@@ -101,7 +101,7 @@ contract FM_Template_v1_Test is ModuleTest {
     }
 
     // Test the interface support
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             fundingManager.supportsInterface(
                 type(IFundingManager_v1).interfaceId
