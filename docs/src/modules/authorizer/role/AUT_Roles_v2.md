@@ -24,8 +24,7 @@ A role has the following properties:
 
 The id is a value assigned by the authorizer module and is used to reference the role in the different functions of the authorizer module.
 
-The label is a string that is emitted as an event when the role is created. It is used to make the role human readable in the frontend and has no practical use in the
-onchain live setup.
+The label is a string that is emitted as an event when the role is created. It is used to make the role human-readable in the frontend and has no practical use on-chain.
 
 The members are the addresses that inhabit the role. The admin role is the role that can add and remove new members to the role.
 
@@ -139,7 +138,7 @@ The grantRole function can only be called by according admin of the role.
 
 #### Role revoking
 
-A role can be revoked from an address by calling therevokeRole function. The function takes the following parameters:
+A role can be revoked from an address by calling the revokeRole function. The function takes the following parameters:
 
 - The role id of the role to revoke
 - The address to revoke the role from
