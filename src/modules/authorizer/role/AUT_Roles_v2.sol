@@ -174,7 +174,12 @@ contract AUT_Roles_v2 is
     // Getter -  Role Management
 
     /// @inheritdoc IAuthorizer_v2
-    function getAdminRole() external pure returns (bytes32 defaultAdminId_) {
+    function getAdminRole()
+        external
+        pure
+        virtual
+        returns (bytes32 defaultAdminId_)
+    {
         return DEFAULT_ADMIN_ROLE;
     }
 
@@ -195,6 +200,7 @@ contract AUT_Roles_v2 is
     function getLastAssignedRoleId()
         external
         view
+        virtual
         returns (uint lastAssignedRoleId_)
     {
         lastAssignedRoleId_ = _lastAssignedRoleId;
@@ -283,6 +289,7 @@ contract AUT_Roles_v2 is
     /// @inheritdoc IAuthorizer_v2
     function labelRole(bytes32 roleId_, string memory newRoleName_)
         external
+        virtual
         permissioned
         idExists(roleId_)
     {
@@ -292,6 +299,7 @@ contract AUT_Roles_v2 is
     /// @inheritdoc IAuthorizer_v2
     function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
         external
+        virtual
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)
         idExists(newAdminRoleId_)
@@ -302,6 +310,7 @@ contract AUT_Roles_v2 is
     /// @inheritdoc IAuthorizer_v2
     function burnRoleAdmin(bytes32 roleId_)
         external
+        virtual
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)
     {
@@ -318,7 +327,13 @@ contract AUT_Roles_v2 is
         address target_,
         bytes4 selector_,
         bytes32 roleId_
-    ) public permissioned idNotDefaultAdmin(roleId_) idExists(roleId_) {
+    )
+        public
+        virtual
+        permissioned
+        idNotDefaultAdmin(roleId_)
+        idExists(roleId_)
+    {
         // if RoleId already has a permission, do nothing.
         if (isRolePermissioned(target_, selector_, roleId_)) {
             return;
@@ -333,7 +348,7 @@ contract AUT_Roles_v2 is
         address target_,
         bytes4 selector_,
         bytes32 roleId_
-    ) public permissioned {
+    ) public virtual permissioned {
         bytes32[] memory permissions = _permissions[target_][selector_];
         uint permissionsLength = permissions.length;
 
@@ -365,6 +380,7 @@ contract AUT_Roles_v2 is
         bytes4[][] memory selectors_
     )
         external
+        virtual
         permissioned
         idExists(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
