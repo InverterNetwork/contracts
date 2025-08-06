@@ -49,6 +49,7 @@ import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed} from
     "test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
+import {console2} from "forge-std/console2.sol";
 
 /**
  * @title   House Protocol Lending Facility Tests
@@ -1467,6 +1468,20 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         uint tokensToUnlock = lendingFacility
             .exposed_calculateIssuanceTokensToUnlock(user, repaymentAmount);
         assertEq(tokensToUnlock, 0); // No outstanding loan initially
+    }
+
+    function testCalculateRequiredIssuanceTokens() public {
+        uint borrowAmount = 500 ether;
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        assertGt(requiredIssuanceTokens, 0);
+    }
+
+    function testCalculateCollateralAmount() public {
+        uint issuanceTokenAmount = 1000 ether;
+        uint collateralAmount = lendingFacility
+            .exposed_calculateCollateralAmount(issuanceTokenAmount);
+        assertGt(collateralAmount, 0);
     }
 
     // =========================================================================

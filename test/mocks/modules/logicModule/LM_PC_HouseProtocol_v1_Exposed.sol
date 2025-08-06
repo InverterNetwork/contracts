@@ -39,7 +39,7 @@ contract LM_PC_HouseProtocol_v1_Exposed is LM_PC_HouseProtocol_v1 {
         view
         returns (uint)
     {
-        _calculateCollateralAmount(issuanceTokenAmount_);
+        return _calculateCollateralAmount(issuanceTokenAmount_);
     }
 
     function exposed_calculateIssuanceTokensToUnlock(
