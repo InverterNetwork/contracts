@@ -53,11 +53,12 @@ contract ProtocolConstants_v1 is Script {
     // If the current chain id is not part of any array, we assume that we are working locally.
 
     // Mainnets
+    // 1 = Ethereum
     // 10 = Optimism
     // 137 = Polygon PoS
     // 1101 = Polygon zkEVM
     // 43114 = Avalanche C-Chain
-    uint[] public deployedMainnets = [10, 137, 1101, 43_114];
+    uint[] public deployedMainnets = [1, 10, 137, 1101, 43_114];
 
     // Testnets
     // 2442 = Polygon zkEVM Cardona
