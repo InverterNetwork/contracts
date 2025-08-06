@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Internal Interfaces
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-
 /**
  * @title   Inverter ERC20 Payment Client Base Interface
  *

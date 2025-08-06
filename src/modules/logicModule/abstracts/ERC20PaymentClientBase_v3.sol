@@ -2,11 +2,12 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {
-    IERC20PaymentClientBase_v3,
-    IPaymentProcessor_v3
-} from "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
+import {IERC20PaymentClientBase_v3} from
+    "@lm/interfaces/IERC20PaymentClientBase_v3.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+
+import {IPaymentProcessor_v3} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v3.sol";
 
 // Internal Dependencies
 import {Module_v2, ContextUpgradeable} from "src/modules/base/Module_v2.sol";
