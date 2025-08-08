@@ -942,8 +942,10 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         assertEq(
             fee,
             feeParams.Z_origination
-                + (floorLiquidityRate - feeParams.A_origination)
-                    * feeParams.m_origination / 1e18
+                + (
+                    (floorLiquidityRate - feeParams.A_origination)
+                        * feeParams.m_origination
+                ) / 1e18
         );
     }
 
@@ -990,7 +992,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         ├── Given premiumRate is below A_issueRedeem
         │   └── Then the fee should be Z_issueRedeem
         └── Given premiumRate is above A_issueRedeem
-            └── Then the fee should be Z_issueRedeem + (A_issueRedeem - premiumRate) * m_issueRedeem / SCALING_FACTOR
+            └── Then the fee should be feeParams.Z_issueRedeem
+                + (feeParams.A_issueRedeem - premiumRate) * feeParams.m_issueRedeem
+                    / SCALING_FACTOR
     */
     function test_calculateRedemptionFee_BelowThreshold() public {
         ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =

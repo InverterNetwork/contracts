@@ -6,21 +6,36 @@ library DynamicFeeCalculatorLib_v1 {
 
     // --- Fee Calculation Functions ---
 
+    /// @notice Calculate origination fee based on utilization ratio
+    /// @param utilizationRatio_ Current utilization ratio
+    /// @param Z_origination Base fee component
+    /// @param A_origination Utilization threshold for dynamic fee adjustment
+    /// @param m_origination Multiplier for dynamic fee component
+    /// @return The calculated origination fee
     function calculateOriginationFee(
-        uint floorLiquidityRate,
+        uint utilizationRatio_,
         uint Z_origination,
         uint A_origination,
         uint m_origination
     ) internal pure returns (uint) {
-        if (floorLiquidityRate < A_origination) {
+        // If utilization is below threshold, return base fee only
+        if (utilizationRatio_ < A_origination) {
             return Z_origination;
         } else {
-            return Z_origination
-                + (floorLiquidityRate - A_origination) * m_origination
-                    / SCALING_FACTOR;
+            // Calculate the delta: utilization ratio - threshold
+            uint delta = utilizationRatio_ - A_origination;
+
+            // Fee = base fee + (delta * multiplier / scaling factor)
+            return Z_origination + (delta * m_origination) / SCALING_FACTOR;
         }
     }
 
+    /// @notice Calculate issuance fee based on premium rate
+    /// @param premiumRate The premium rate
+    /// @param Z_issueRedeem Base fee component
+    /// @param A_issueRedeem Utilization threshold for dynamic fee adjustment
+    /// @param m_issueRedeem Multiplier for dynamic fee component
+    /// @return The calculated issuance fee
     function calculateIssuanceFee(
         uint premiumRate,
         uint Z_issueRedeem,
@@ -35,6 +50,12 @@ library DynamicFeeCalculatorLib_v1 {
         }
     }
 
+    /// @notice Calculate redemption fee based on premium rate
+    /// @param premiumRate The premium rate
+    /// @param Z_issueRedeem Base fee component
+    /// @param A_issueRedeem Utilization threshold for dynamic fee adjustment
+    /// @param m_issueRedeem Multiplier for dynamic fee component
+    /// @return the calculated redemption fee
     function calculateRedemptionFee(
         uint premiumRate,
         uint Z_issueRedeem,
