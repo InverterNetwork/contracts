@@ -586,10 +586,15 @@ contract LM_PC_HouseProtocol_v1 is
 =======
 >>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
         // Calculate fee using the dynamic fee calculator library
-        uint floorLiquidityRate = this.getFloorLiquidityRate();
+        uint utilizationRatio =
+            (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
         uint feeRate = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
+<<<<<<< HEAD
             floorLiquidityRate,
 >>>>>>> 0dad532f (fix: use proper dynamic fee calculation in House Protocol module)
+=======
+            utilizationRatio,
+>>>>>>> 10f340f9 (chore: update the _calculateDynamicBorrowingFee function)
             _dynamicFeeParameters.Z_origination,
             _dynamicFeeParameters.A_origination,
             _dynamicFeeParameters.m_origination
