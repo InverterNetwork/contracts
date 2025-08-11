@@ -33,6 +33,20 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+// Internal
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol";
+
+// System under Test (SuT)
+import {ILM_PC_HouseProtocol_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IVirtualCollateralSupplyBase_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {DynamicFeeCalculatorLib_v1} from
+    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+
 /**
  * @title   House Protocol Lending Facility Logic Module
  *
@@ -76,7 +90,6 @@ import {ERC165Upgradeable} from
  *                     - How:     A user with FEE_CALCULATOR_ADMIN_ROLE must call:
  *                               setDynamicFeeCalculatorParams() with appropriate parameters
  *
-<<<<<<< HEAD
  * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
  *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
  *                  upgradeability through the Inverter proxy system. Upgrades should be
@@ -113,8 +126,6 @@ import {ERC165Upgradeable} from
  *                    Note: The contract requires a valid DBC FM address and proper
  *                    token addresses during initialization.
  *
-=======
->>>>>>> 964ca6bf (chore:update inverter standard)
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
  *                          to our Security Policy at security.inverter.network
@@ -331,20 +342,8 @@ contract LM_PC_HouseProtocol_v1 is
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
-<<<<<<< HEAD
         // Transfer collateral back to DBC FM
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
-=======
-        // Transfer collateral from user to lending facility
-<<<<<<< HEAD
-        _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
->>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
-
-        // Transfer collateral back to DBC FM
-        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
-=======
-        _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
->>>>>>> 65f79131 (fix:remove redundant transfer)
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
@@ -513,7 +512,6 @@ contract LM_PC_HouseProtocol_v1 is
         // Get the DBC FM interface
         IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-<<<<<<< HEAD
 
         // Get the issuance token's total supply (this represents the virtual issuance supply)
         uint virtualIssuanceSupply = IERC20(
@@ -523,30 +521,14 @@ contract LM_PC_HouseProtocol_v1 is
         // Get the first segment's initial price (P_floor)
         PackedSegment[] memory segments = dbcFm.getSegments();
         if (segments.length == 0) {
-=======
-        
-        // Get the issuance token's total supply (this represents the virtual issuance supply)
-        uint virtualIssuanceSupply = IERC20(IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()).totalSupply();
-        
-        // Get the first segment's initial price (P_floor)
-        PackedSegment[] memory segments = dbcFm.getSegments();
-        if(segments.length == 0) {
->>>>>>> 964ca6bf (chore:update inverter standard)
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
         }
-<<<<<<< HEAD
 
         // Use PackedSegmentLib to get the initial price of the first segment
         uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
 
-=======
-        
-        // Use PackedSegmentLib to get the initial price of the first segment
-        uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
-        
->>>>>>> 964ca6bf (chore:update inverter standard)
         // Borrow Capacity = virtualIssuanceSupply * P_floor
         return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
     }
@@ -575,30 +557,11 @@ contract LM_PC_HouseProtocol_v1 is
         view
         returns (uint)
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
         // Calculate fee using the dynamic fee calculator library
         uint utilizationRatio =
             (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
         uint feeRate = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
             utilizationRatio,
-=======
-        if (dynamicFeeCalculator == address(0)) {
-            return 0; // No fee if no calculator is set
-        }
-
-=======
->>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
-        // Calculate fee using the dynamic fee calculator library
-        uint utilizationRatio =
-            (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
-        uint feeRate = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
-<<<<<<< HEAD
-            floorLiquidityRate,
->>>>>>> 0dad532f (fix: use proper dynamic fee calculation in House Protocol module)
-=======
-            utilizationRatio,
->>>>>>> 10f340f9 (chore: update the _calculateDynamicBorrowingFee function)
             _dynamicFeeParameters.Z_origination,
             _dynamicFeeParameters.A_origination,
             _dynamicFeeParameters.m_origination
