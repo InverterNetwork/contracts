@@ -336,11 +336,15 @@ contract LM_PC_HouseProtocol_v1 is
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
 =======
         // Transfer collateral from user to lending facility
+<<<<<<< HEAD
         _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
 >>>>>>> 8344e0d7 (feat:add dfc to fm and LF)
 
         // Transfer collateral back to DBC FM
         _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
+=======
+        _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
+>>>>>>> 65f79131 (fix:remove redundant transfer)
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
