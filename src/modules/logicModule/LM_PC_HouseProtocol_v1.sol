@@ -252,17 +252,6 @@ contract LM_PC_HouseProtocol_v1 is
         // Calculate user's borrowing power based on their available issuance tokens
         uint userIssuanceTokens = _issuanceToken.balanceOf(user);
 
-        // uint userBorrowingPower = userIssuanceTokens * _getFloorPrice() / 1e18;
-
-        // // Ensure user has sufficient borrowing power
-        // if (requestedLoanAmount_ > userBorrowingPower) {
-        //     revert
-        //         ILM_PC_HouseProtocol_v1
-        //         .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower();
-        // }
-        // @Lee -> I have commented the code because userBorrowingPower and requiredIssuanceTokens are the same
-        // and checking for userBorrowingPower is redundant , so I have commented it as of now!
-
         // Calculate how much issuance tokens need to be locked for this borrow amount
         uint requiredIssuanceTokens =
             _calculateRequiredIssuanceTokens(requestedLoanAmount_);
@@ -341,11 +330,8 @@ contract LM_PC_HouseProtocol_v1 is
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
-        // Transfer collateral from user to lending facility
-        _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
-
-        // Transfer collateral back to DBC FM
-        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
+        //Transfer collateral to DBC FM
+        _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
@@ -514,21 +500,23 @@ contract LM_PC_HouseProtocol_v1 is
         // Get the DBC FM interface
         IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-        
+
         // Get the issuance token's total supply (this represents the virtual issuance supply)
-        uint virtualIssuanceSupply = IERC20(IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()).totalSupply();
-        
+        uint virtualIssuanceSupply = IERC20(
+            IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
+        ).totalSupply();
+
         // Get the first segment's initial price (P_floor)
         PackedSegment[] memory segments = dbcFm.getSegments();
-        if(segments.length == 0) {
+        if (segments.length == 0) {
             revert
                 ILM_PC_HouseProtocol_v1
                 .Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
         }
-        
+
         // Use PackedSegmentLib to get the initial price of the first segment
         uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
-        
+
         // Borrow Capacity = virtualIssuanceSupply * P_floor
         return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
     }
