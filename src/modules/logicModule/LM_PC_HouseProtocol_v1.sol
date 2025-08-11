@@ -342,11 +342,8 @@ contract LM_PC_HouseProtocol_v1 is
         _outstandingLoans[user] -= repaymentAmount_;
         currentlyBorrowedAmount -= repaymentAmount_;
 
-        // Transfer collateral from user to lending facility
-        _collateralToken.safeTransferFrom(user, address(this), repaymentAmount_);
-
         // Transfer collateral back to DBC FM
-        _collateralToken.safeTransfer(_dbcFmAddress, repaymentAmount_);
+        _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
 
         // Calculate and unlock issuance tokens
         uint issuanceTokensToUnlock =
