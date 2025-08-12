@@ -33,19 +33,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-// Internal
-import {IFundingManager_v1} from
-    "src/modules/fundingManager/IFundingManager_v1.sol";
 
-// System under Test (SuT)
-import {ILM_PC_HouseProtocol_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
-import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
-import {IVirtualCollateralSupplyBase_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {DynamicFeeCalculatorLib_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
