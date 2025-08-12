@@ -123,8 +123,8 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract LM_PC_HouseProtocol_v1 is
-    ILM_PC_HouseProtocol_v1,
+contract LM_PC_Lending_Facility_v1 is
+    ILM_PC_Lending_Facility_v1,
     ERC20PaymentClientBase_v2
 {
     // =========================================================================
