@@ -33,14 +33,14 @@ import {DynamicFeeCalculatorLib_v1} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // System under Test (SuT)
-import {ILM_PC_HouseProtocol_v1} from
-    "@lm/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {ILM_PC_Lending_Facility_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
 import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 
 // Tests and Mocks
-import {LM_PC_HouseProtocol_v1_Exposed} from
-    "@mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
+import {LM_PC_Lending_Facility_v1_Exposed} from
+    "test/mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
@@ -64,7 +64,7 @@ import {console2} from "forge-std/console2.sol";
  *
  * @author  Inverter Network
  */
-contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
+contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     using PackedSegmentLib for PackedSegment;
     using DiscreteCurveMathLib_v1 for PackedSegment[];
     using DynamicFeeCalculatorLib_v1 for uint;
@@ -72,7 +72,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     // State
 
     // SuT
-    LM_PC_HouseProtocol_v1_Exposed lendingFacility;
+    LM_PC_Lending_Facility_v1_Exposed lendingFacility;
 
     // Test constants
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
@@ -147,9 +147,10 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Deploy the SuT
         address impl_lendingFacility =
-            address(new LM_PC_HouseProtocol_v1_Exposed());
-        lendingFacility =
-            LM_PC_HouseProtocol_v1_Exposed(Clones.clone(impl_lendingFacility));
+            address(new LM_PC_Lending_Facility_v1_Exposed());
+        lendingFacility = LM_PC_Lending_Facility_v1_Exposed(
+            Clones.clone(impl_lendingFacility)
+        );
 
         // Setup the module to test
         _setUpOrchestrator(fmBcDiscrete); // This also sets up feeManager via _createFeeManager in ModuleTest
@@ -370,7 +371,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         );
         assertTrue(
             lendingFacility.supportsInterface(
-                type(ILM_PC_HouseProtocol_v1).interfaceId
+                type(ILM_PC_Lending_Facility_v1).interfaceId
             )
         );
     }
@@ -465,7 +466,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user attempts to repay
                 └── Then the repayment amount should be automatically adjusted to the outstanding loan amount
     */
-    function testPublicRepay_succeedsGivenRepaymentAmountExceedsOutstandingLoan() public {
+    function testPublicRepay_succeedsGivenRepaymentAmountExceedsOutstandingLoan(
+    ) public {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -628,8 +630,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     //     // When: the user tries to borrow collateral tokens
     //     vm.prank(user);
     //     vm.expectRevert(
-    //         ILM_PC_HouseProtocol_v1
-    //             .Module__LM_PC_HouseProtocol_InsufficientBorrowingPower
+    //         ILM_PC_Lending_Facility_v1
+    //             .Module__LM_PC_Lending_Facility_InsufficientBorrowingPower
     //             .selector
     //     );
     //     lendingFacility.borrow(borrowAmount);
@@ -655,8 +657,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokens
                 .selector
         );
         lendingFacility.borrow(borrowAmount);
@@ -718,8 +720,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded
                 .selector
         );
         lendingFacility.borrow(borrowAmount);
@@ -733,7 +735,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
-    function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan() public {
+    function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan()
+        public
+    {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -779,8 +783,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to borrow additional collateral tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded
                 .selector
         );
         lendingFacility.borrow(secondBorrowAmount);
@@ -794,7 +798,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should succeed
     */
-    function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan() public {
+    function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan(
+    ) public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
         uint firstBorrowAmount = 300 ether; // First borrow
@@ -855,7 +860,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         └── When the borrow transaction completes
             └── Then the outstanding loan should equal the net amount received by the user
     */
-    function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount() public {
+    function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount()
+        public
+    {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -939,8 +946,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidBorrowAmount
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount
                 .selector
         );
         lendingFacility.borrow(borrowAmount);
@@ -960,7 +967,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When trying to set limit
                 └── Then it should revert with CallerNotAuthorized
     */
-    function testPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller() public {
+    function testPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller()
+        public
+    {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -974,7 +983,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         assertEq(lendingFacility.individualBorrowLimit(), newLimit);
     }
 
-    function testPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller() public {
+    function testPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller()
+        public
+    {
         address unauthorizedUser = makeAddr("unauthorized");
 
         vm.startPrank(unauthorizedUser);
@@ -1022,8 +1033,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         uint invalidQuota = 10_001; // Exceeds 100%
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh
                 .selector
         );
         lendingFacility.setBorrowableQuota(invalidQuota);
@@ -1059,14 +1070,14 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 unauthorizedUser
             )
         );
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_getDynamicFeeCalculatorParams();
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
         vm.stopPrank();
     }
 
     function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParams(
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
             feeParams.Z_issueRedeem == 0 || feeParams.A_issueRedeem == 0
@@ -1074,15 +1085,15 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                 || feeParams.A_origination == 0 || feeParams.m_origination == 0
         );
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidDynamicFeeParameters
                 .selector
         );
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
     }
 
     function testPublicSetDynamicFeeCalculatorParams_succeedsGivenValidParams(
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
             feeParams.Z_issueRedeem != 0 && feeParams.A_issueRedeem != 0
@@ -1100,7 +1111,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
 
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory LF_feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory LF_feeParams =
             lendingFacility.getDynamicFeeParameters();
 
         assertEq(LF_feeParams.Z_issueRedeem, feeParams.Z_issueRedeem);
@@ -1120,7 +1131,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── Then the fee should be Z_origination + (floorLiquidityRate - A_origination) * m_origination / Sc
     */
     function test_calculateOriginationFee_BelowThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint floorLiquidityRate = 1e16; // 1%
@@ -1134,7 +1145,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     }
 
     function test_calculateOriginationFee_AboveThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint floorLiquidityRate = 9e16; // 9%
@@ -1161,7 +1172,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── Then the fee should be Z_issueRedeem + (premiumRate - A_issueRedeem) * m_issueRedeem / SCALING_FACTOR
     */
     function test_calculateIssuanceFee_BelowThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint premiumRate = 1e16; // 1%
@@ -1175,7 +1186,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     }
 
     function test_calculateIssuanceFee_AboveThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint premiumRate = 9e16; // 9%
@@ -1202,7 +1213,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
                     / SCALING_FACTOR
     */
     function test_calculateRedemptionFee_BelowThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint premiumRate = 1e16; // 1%
@@ -1221,7 +1232,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     }
 
     function test_calculateRedemptionFee_AboveThreshold() public {
-        ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
             helper_setDynamicFeeCalculatorParams();
 
         uint premiumRate = 9e16; // 9%
@@ -1286,8 +1297,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
 
         // Should revert for zero amount
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidBorrowAmount
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount
                 .selector
         );
         lendingFacility.exposed_ensureValidBorrowAmount(0);
@@ -1363,7 +1374,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             ├── And issuance tokens should be transferred back to user
             └── And an event should be emitted
     */
-    function testPublicUnlockIssuanceTokens_succeedsGivenValidUnlockRequest() public {
+    function testPublicUnlockIssuanceTokens_succeedsGivenValidUnlockRequest()
+        public
+    {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -1424,7 +1437,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         └── When the user tries to unlock issuance tokens
             └── Then the transaction should revert with CannotUnlockWithOutstandingLoan error
     */
-    function testPublicUnlockIssuanceTokens_failsGivenOutstandingLoan() public {
+    function testPublicUnlockIssuanceTokens_failsGivenOutstandingLoan()
+        public
+    {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -1453,8 +1468,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to unlock issuance tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_CannotUnlockWithOutstandingLoan
                 .selector
         );
         lendingFacility.unlockIssuanceTokens(unlockAmount);
@@ -1468,7 +1483,9 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
             └── When the user tries to unlock issuance tokens
                 └── Then the transaction should revert with InsufficientLockedTokens error
     */
-    function testPublicUnlockIssuanceTokens_failsGivenInsufficientLockedTokens() public {
+    function testPublicUnlockIssuanceTokens_failsGivenInsufficientLockedTokens()
+        public
+    {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -1505,8 +1522,8 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         // When: the user tries to unlock issuance tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientLockedTokens
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InsufficientLockedTokens
                 .selector
         );
         lendingFacility.unlockIssuanceTokens(unlockAmount);
@@ -1558,10 +1575,10 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
         internal
         pure
         returns (
-            ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory dynamicFeeParameters
+            ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory dynamicFeeParameters
         )
     {
-        dynamicFeeParameters = ILM_PC_HouseProtocol_v1.DynamicFeeParameters({
+        dynamicFeeParameters = ILM_PC_Lending_Facility_v1.DynamicFeeParameters({
             Z_issueRedeem: 1e16, // 1%
             A_issueRedeem: 7.5e16, // 7.5%
             m_issueRedeem: 2e15, // 0.2%
@@ -1575,7 +1592,7 @@ contract LM_PC_HouseProtocol_v1_Test is ModuleTest {
     function helper_setDynamicFeeCalculatorParams()
         internal
         returns (
-            ILM_PC_HouseProtocol_v1.DynamicFeeParameters memory dynamicFeeParameters
+            ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory dynamicFeeParameters
         )
     {
         dynamicFeeParameters = helper_getDynamicFeeCalculatorParams();

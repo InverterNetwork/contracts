@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {LM_PC_HouseProtocol_v1} from
-    "src/modules/logicModule/LM_PC_HouseProtocol_v1.sol";
+import {LM_PC_Lending_Facility_v1} from
+    "src/modules/logicModule/LM_PC_Lending_Facility_v1.sol";
 
-// Access Mock of the LM_PC_HouseProtocol_v1 contract for Testing.
-contract LM_PC_HouseProtocol_v1_Exposed is LM_PC_HouseProtocol_v1 {
+// Access Mock of the LM_PC_Lending_Facility_v1 contract for Testing.
+contract LM_PC_Lending_Facility_v1_Exposed is LM_PC_Lending_Facility_v1 {
     // Use the `exposed_` prefix for functions to expose internal contract for
     // testing.
 

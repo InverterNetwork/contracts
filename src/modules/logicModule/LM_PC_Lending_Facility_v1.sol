@@ -12,8 +12,8 @@ import {
     ERC20PaymentClientBase_v2,
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
-import {ILM_PC_HouseProtocol_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_HouseProtocol_v1.sol";
+import {ILM_PC_Lending_Facility_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
 import {IFundingManager_v1} from
     "src/modules/fundingManager/IFundingManager_v1.sol";
 import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
@@ -32,8 +32,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-
-
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -144,7 +142,7 @@ contract LM_PC_Lending_Facility_v1 is
         override(ERC20PaymentClientBase_v2)
         returns (bool)
     {
-        return interfaceId_ == type(ILM_PC_HouseProtocol_v1).interfaceId
+        return interfaceId_ == type(ILM_PC_Lending_Facility_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -243,7 +241,7 @@ contract LM_PC_Lending_Facility_v1 is
     // =========================================================================
     // Public - Mutating
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function borrow(uint requestedLoanAmount_)
         external
         virtual
@@ -261,8 +259,8 @@ contract LM_PC_Lending_Facility_v1 is
         // Ensure user has sufficient issuance tokens to lock
         if (userIssuanceTokens < requiredIssuanceTokens) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientIssuanceTokens();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokens();
         }
 
         // Check if borrowing would exceed borrowable quota
@@ -271,15 +269,18 @@ contract LM_PC_Lending_Facility_v1 is
                 > _calculateBorrowCapacity() * borrowableQuota / 10_000
         ) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_BorrowableQuotaExceeded();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
         }
 
         // Check individual borrow limit (including existing outstanding loans)
-        if (requestedLoanAmount_ + _outstandingLoans[user] > individualBorrowLimit) {
+        if (
+            requestedLoanAmount_ + _outstandingLoans[user]
+                > individualBorrowLimit
+        ) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_IndividualBorrowLimitExceeded();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded();
         }
 
         // Lock the required issuance tokens automatically
@@ -307,8 +308,7 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Instruct DBC FM to transfer net amount to user
         IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-            user, 
-            netAmountToUser
+            user, netAmountToUser
         );
 
         // Emit events
@@ -318,7 +318,7 @@ contract LM_PC_Lending_Facility_v1 is
         );
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function repay(uint repaymentAmount_) external virtual {
         address user = _msgSender();
 
@@ -346,20 +346,20 @@ contract LM_PC_Lending_Facility_v1 is
         emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function unlockIssuanceTokens(uint amount_) external virtual {
         address user = _msgSender();
 
         if (_lockedIssuanceTokens[user] < amount_) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InsufficientLockedTokens();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InsufficientLockedTokens();
         }
 
         if (_outstandingLoans[user] > 0) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_CannotUnlockWithOutstandingLoan();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_CannotUnlockWithOutstandingLoan();
         }
 
         // Update locked amount
@@ -393,8 +393,8 @@ contract LM_PC_Lending_Facility_v1 is
     {
         if (newBorrowableQuota_ > _MAX_BORROWABLE_QUOTA) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_BorrowableQuotaTooHigh();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh();
         }
         borrowableQuota = newBorrowableQuota_;
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
@@ -403,7 +403,7 @@ contract LM_PC_Lending_Facility_v1 is
     // =========================================================================
     // Public - Configuration (Fee Calculator Admin only)
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function setDynamicFeeCalculatorParams(
         DynamicFeeParameters memory dynamicFeeParameters_
     ) external onlyFeeCalculatorAdmin {
@@ -416,8 +416,8 @@ contract LM_PC_Lending_Facility_v1 is
                 || dynamicFeeParameters_.m_origination == 0
         ) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidDynamicFeeParameters();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidDynamicFeeParameters();
         }
         _dynamicFeeParameters = dynamicFeeParameters_;
         emit DynamicFeeCalculatorParamsUpdated(dynamicFeeParameters_);
@@ -426,7 +426,7 @@ contract LM_PC_Lending_Facility_v1 is
     // =========================================================================
     // Public - Getters
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getLockedIssuanceTokens(address user_)
         external
         view
@@ -435,24 +435,24 @@ contract LM_PC_Lending_Facility_v1 is
         return _lockedIssuanceTokens[user_];
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getOutstandingLoan(address user_) external view returns (uint) {
         return _outstandingLoans[user_];
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getBorrowCapacity() external view returns (uint) {
         return _calculateBorrowCapacity();
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getCurrentBorrowQuota() external view returns (uint) {
         uint borrowCapacity = _calculateBorrowCapacity();
         if (borrowCapacity == 0) return 0;
         return (currentlyBorrowedAmount * 10_000) / borrowCapacity;
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getFloorLiquidityRate() external view returns (uint) {
         uint borrowCapacity = _calculateBorrowCapacity();
         uint borrowableAmount = borrowCapacity * borrowableQuota / 10_000;
@@ -463,7 +463,7 @@ contract LM_PC_Lending_Facility_v1 is
             / borrowableAmount;
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getUserBorrowingPower(address user_)
         external
         view
@@ -472,7 +472,7 @@ contract LM_PC_Lending_Facility_v1 is
         return _calculateUserBorrowingPower(user_);
     }
 
-    /// @inheritdoc ILM_PC_HouseProtocol_v1
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getDynamicFeeParameters()
         external
         view
@@ -489,8 +489,8 @@ contract LM_PC_Lending_Facility_v1 is
     function _ensureValidBorrowAmount(uint amount_) internal pure {
         if (amount_ == 0) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_InvalidBorrowAmount();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount();
         }
     }
 
@@ -510,8 +510,8 @@ contract LM_PC_Lending_Facility_v1 is
         PackedSegment[] memory segments = dbcFm.getSegments();
         if (segments.length == 0) {
             revert
-                ILM_PC_HouseProtocol_v1
-                .Module__LM_PC_HouseProtocol_NoSegmentsConfigured();
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
         }
 
         // Use PackedSegmentLib to get the initial price of the first segment
