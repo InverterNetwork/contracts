@@ -673,9 +673,43 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── Then the transaction should revert with BorrowableQuotaExceeded error
     */
     // TODO: Fix this test - the borrow capacity keeps increasing due to token minting
-    // function testBorrow_insufficientBorrowableQuota() public {
-    //     // This test needs to be redesigned to properly test quota limits
-    // }
+    function testPublicBorrow_failsGivenInsufficientBorrowableQuota() public {
+        // Given: a user has issuance tokens
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+        uint borrowAmount = 500 ether;
+
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        // Add a larger buffer to account for rounding precision
+        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
+        issuanceToken.mint(user1, issuanceTokensWithBuffer);
+        issuanceToken.mint(user2, issuanceTokensWithBuffer);
+
+        lendingFacility.setBorrowableQuota(1000); // set 10% as borrow capacioty for testing purposes
+
+        //User 1 borrows
+        vm.startPrank(user1);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer
+        );
+        lendingFacility.borrow(borrowAmount);
+        vm.stopPrank();
+
+        //User 2 borrows
+        vm.startPrank(user2);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer
+        );
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded
+                .selector
+        );
+        lendingFacility.borrow(100 ether);
+        vm.stopPrank();
+    }
 
     /* Test: Function borrow()
         ├── Given a user has issuance tokens
@@ -1529,6 +1563,81 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         lendingFacility.unlockIssuanceTokens(unlockAmount);
 
         // Then: the transaction should revert with InsufficientLockedTokens error
+    }
+
+    /* Test: State consistency after multiple borrow and repay operations
+    ├── Given a user performs multiple borrow and repay operations
+    └── When all operations complete
+        └── Then the state should remain consistent
+    */
+    function testPublicBorrowAndRepay_maintainsStateConsistency() public {
+        address user = makeAddr("user");
+
+        // First borrow
+        uint borrowAmount1 = 300 ether;
+        uint requiredIssuanceTokens1 = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount1);
+        uint issuanceTokensWithBuffer1 = requiredIssuanceTokens1 + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer1);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer1
+        );
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount1);
+
+        // Verify state after first borrow
+        assertEq(lendingFacility.getOutstandingLoan(user), borrowAmount1);
+        assertEq(
+            lendingFacility.getLockedIssuanceTokens(user),
+            requiredIssuanceTokens1
+        );
+        assertEq(lendingFacility.currentlyBorrowedAmount(), borrowAmount1);
+
+        // Second borrow
+        uint borrowAmount2 = 200 ether;
+        uint requiredIssuanceTokens2 = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount2);
+        uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
+        issuanceToken.mint(user, issuanceTokensWithBuffer2);
+        vm.prank(user);
+        issuanceToken.approve(
+            address(lendingFacility), issuanceTokensWithBuffer2
+        );
+        vm.prank(user);
+        lendingFacility.borrow(borrowAmount2);
+
+        // Verify state after second borrow
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            borrowAmount1 + borrowAmount2
+        );
+        assertEq(
+            lendingFacility.getLockedIssuanceTokens(user),
+            requiredIssuanceTokens1 + requiredIssuanceTokens2
+        );
+        assertEq(
+            lendingFacility.currentlyBorrowedAmount(),
+            borrowAmount1 + borrowAmount2
+        );
+
+        // Partial repayment
+        uint repayAmount = 250 ether;
+        orchestratorToken.mint(user, repayAmount);
+        vm.prank(user);
+        orchestratorToken.approve(address(lendingFacility), repayAmount);
+        vm.prank(user);
+        lendingFacility.repay(repayAmount);
+
+        // Verify state after partial repayment
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            borrowAmount1 + borrowAmount2 - repayAmount
+        );
+        assertEq(
+            lendingFacility.currentlyBorrowedAmount(),
+            borrowAmount1 + borrowAmount2 - repayAmount
+        );
     }
 
     // =========================================================================
