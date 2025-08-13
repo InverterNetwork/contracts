@@ -152,6 +152,8 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice Maximum borrowable quota percentage (100%)
     uint internal constant _MAX_BORROWABLE_QUOTA = 10_000; // 100% in basis points
 
+    /// @notice Maximum fee percentage (100% in 1e18 format)
+    uint internal constant _MAX_FEE_PERCENTAGE = 1e18;
     //--------------------------------------------------------------------------
     // State
 
@@ -414,6 +416,12 @@ contract LM_PC_Lending_Facility_v1 is
                 || dynamicFeeParameters_.Z_origination == 0
                 || dynamicFeeParameters_.A_origination == 0
                 || dynamicFeeParameters_.m_origination == 0
+                || dynamicFeeParameters_.Z_issueRedeem > _MAX_FEE_PERCENTAGE
+                || dynamicFeeParameters_.A_issueRedeem > _MAX_FEE_PERCENTAGE
+                || dynamicFeeParameters_.m_issueRedeem > _MAX_FEE_PERCENTAGE
+                || dynamicFeeParameters_.Z_origination > _MAX_FEE_PERCENTAGE
+                || dynamicFeeParameters_.A_origination > _MAX_FEE_PERCENTAGE
+                || dynamicFeeParameters_.m_origination > _MAX_FEE_PERCENTAGE
         ) {
             revert
                 ILM_PC_Lending_Facility_v1

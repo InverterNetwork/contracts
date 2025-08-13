@@ -78,6 +78,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
     uint constant INDIVIDUAL_BORROW_LIMIT = 500 ether;
     uint constant LOCKED_ISSUANCE_TOKENS = 1000 ether;
+    uint constant MAX_FEE_PERCENTAGE = 1e18;
 
     // Structs for organizing test data
     struct CurveTestData {
@@ -1082,7 +1083,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         │   └── When setting new fee calculator parameters
         │       ├── Then the parameters should be updated
         │       └── Then an event should be emitted
-        └── Given invalid parameters (zero values)
+        └── Given invalid parameters (zero values/max values)
             └── When trying to set parameters
                 └── Then it should revert with InvalidDynamicFeeParameters error
         └── Given caller doesn't have role
@@ -1110,13 +1111,32 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParams(
+    function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParamsZero(
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
             feeParams.Z_issueRedeem == 0 || feeParams.A_issueRedeem == 0
                 || feeParams.m_issueRedeem == 0 || feeParams.Z_origination == 0
                 || feeParams.A_origination == 0 || feeParams.m_origination == 0
+        );
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidDynamicFeeParameters
+                .selector
+        );
+        lendingFacility.setDynamicFeeCalculatorParams(feeParams);
+    }
+
+    function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParamsMax(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams
+    ) public {
+        vm.assume(
+            feeParams.Z_issueRedeem > MAX_FEE_PERCENTAGE
+                || feeParams.A_issueRedeem > MAX_FEE_PERCENTAGE
+                || feeParams.m_issueRedeem > MAX_FEE_PERCENTAGE
+                || feeParams.Z_origination > MAX_FEE_PERCENTAGE
+                || feeParams.A_origination > MAX_FEE_PERCENTAGE
+                || feeParams.m_origination > MAX_FEE_PERCENTAGE
         );
         vm.expectRevert(
             ILM_PC_Lending_Facility_v1
@@ -1133,14 +1153,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             feeParams.Z_issueRedeem != 0 && feeParams.A_issueRedeem != 0
                 && feeParams.m_issueRedeem != 0 && feeParams.Z_origination != 0
                 && feeParams.A_origination != 0 && feeParams.m_origination != 0
-        );
-        vm.assume(
-            feeParams.Z_issueRedeem < type(uint64).max
-                && feeParams.A_issueRedeem < type(uint64).max
-                && feeParams.m_issueRedeem < type(uint64).max
-                && feeParams.Z_origination < type(uint64).max
-                && feeParams.A_origination < type(uint64).max
-                && feeParams.m_origination < type(uint64).max
+                && feeParams.Z_issueRedeem <= MAX_FEE_PERCENTAGE
+                && feeParams.A_issueRedeem <= MAX_FEE_PERCENTAGE
+                && feeParams.m_issueRedeem <= MAX_FEE_PERCENTAGE
+                && feeParams.Z_origination <= MAX_FEE_PERCENTAGE
+                && feeParams.A_origination <= MAX_FEE_PERCENTAGE
+                && feeParams.m_origination <= MAX_FEE_PERCENTAGE
         );
 
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
