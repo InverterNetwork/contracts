@@ -939,7 +939,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
 
         // Given: dynamic fee calculator is set up
-        helper_setDynamicFeeCalculatorParams();
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters({
+            Z_issueRedeem: 0,
+            A_issueRedeem: 0,
+            m_issueRedeem: 0,
+            Z_origination: 0,
+            A_origination: 0,
+            m_origination: 0
+        });
+        feeParams = helper_setDynamicFeeCalculatorParams(feeParams);
 
         // When: the user borrows collateral tokens
         uint userBalanceBefore = orchestratorToken.balanceOf(user);
@@ -1090,14 +1099,19 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When trying to set parameters
     */
 
-    function testPublicSetDynamicFeeCalculatorParams_failsGivenUnauthorizedCaller(
-        address unauthorizedUser
+    function testFuzzPublicSetDynamicFeeCalculatorParams_failsGivenUnauthorizedCaller(
+        address unauthorizedUser,
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams
     ) public {
         vm.assume(
             unauthorizedUser != address(0) && unauthorizedUser != address(this)
         );
 
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
+            helper_setDynamicFeeCalculatorParams(feeParams);
+
         vm.startPrank(unauthorizedUser);
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -1105,8 +1119,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 unauthorizedUser
             )
         );
-        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_getDynamicFeeCalculatorParams();
         lendingFacility.setDynamicFeeCalculatorParams(feeParams);
         vm.stopPrank();
     }
@@ -1177,18 +1189,26 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     // Test: Dynamic Fee Calculator Library
 
     /* Test calculateOriginationFee function
-        ├── Given floorLiquidityRate is below A_origination
+        ├── Given utilizationRatio is below A_origination
         │   └── Then the fee should be Z_origination
-        └── Given floorLiquidityRate is above A_origination
-            └── Then the fee should be Z_origination + (floorLiquidityRate - A_origination) * m_origination / Sc
+        └── Given utilizationRatio is above A_origination
+            └── Then the fee should be Z_origination + (utilizationRatio - A_origination) * m_origination / SCALING_FACTOR
     */
-    function test_calculateOriginationFee_BelowThreshold() public {
+    function testFuzz_calculateOriginationFee_BelowThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint utilizationRatio_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint floorLiquidityRate = 1e16; // 1%
+        // Given: utilizationRatio is below A_origination
+        vm.assume(
+            utilizationRatio_ > 1 && utilizationRatio_ < type(uint64).max
+                && utilizationRatio_ < feeParams.A_origination
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
-            floorLiquidityRate,
+            utilizationRatio_,
             feeParams.Z_origination,
             feeParams.A_origination,
             feeParams.m_origination
@@ -1196,22 +1216,31 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(fee, feeParams.Z_origination);
     }
 
-    function test_calculateOriginationFee_AboveThreshold() public {
+    function testFuzz_calculateOriginationFee_AboveThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint utilizationRatio_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint floorLiquidityRate = 9e16; // 9%
+        // Given: utilizationRatio is above A_origination
+        vm.assume(
+            utilizationRatio_ > 1 && utilizationRatio_ < type(uint64).max
+                && utilizationRatio_ > feeParams.A_origination
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
-            floorLiquidityRate,
+            utilizationRatio_,
             feeParams.Z_origination,
             feeParams.A_origination,
             feeParams.m_origination
         );
+
         assertEq(
             fee,
             feeParams.Z_origination
                 + (
-                    (floorLiquidityRate - feeParams.A_origination)
+                    (utilizationRatio_ - feeParams.A_origination)
                         * feeParams.m_origination
                 ) / 1e18
         );
@@ -1223,13 +1252,21 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── Given premiumRate is above A_issueRedeem
             └── Then the fee should be Z_issueRedeem + (premiumRate - A_issueRedeem) * m_issueRedeem / SCALING_FACTOR
     */
-    function test_calculateIssuanceFee_BelowThreshold() public {
+    function testFuzz_calculateIssuanceFee_BelowThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint premiumRate_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint premiumRate = 1e16; // 1%
+        // Given: premiumRate is below A_issueRedeem
+        vm.assume(
+            premiumRate_ > 1 && premiumRate_ < type(uint64).max
+                && premiumRate_ < feeParams.A_issueRedeem
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
-            premiumRate,
+            premiumRate_,
             feeParams.Z_issueRedeem,
             feeParams.A_issueRedeem,
             feeParams.m_issueRedeem
@@ -1237,13 +1274,21 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(fee, feeParams.Z_issueRedeem);
     }
 
-    function test_calculateIssuanceFee_AboveThreshold() public {
+    function testFuzz_calculateIssuanceFee_AboveThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint premiumRate_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint premiumRate = 9e16; // 9%
+        // Given: premiumRate is above A_issueRedeem
+        vm.assume(
+            premiumRate_ > 1 && premiumRate_ < type(uint64).max
+                && premiumRate_ > feeParams.A_issueRedeem
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
-            premiumRate,
+            premiumRate_,
             feeParams.Z_issueRedeem,
             feeParams.A_issueRedeem,
             feeParams.m_issueRedeem
@@ -1251,7 +1296,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(
             fee,
             feeParams.Z_issueRedeem
-                + (premiumRate - feeParams.A_issueRedeem) * feeParams.m_issueRedeem
+                + (premiumRate_ - feeParams.A_issueRedeem) * feeParams.m_issueRedeem
                     / 1e18
         );
     }
@@ -1264,13 +1309,21 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 + (feeParams.A_issueRedeem - premiumRate) * feeParams.m_issueRedeem
                     / SCALING_FACTOR
     */
-    function test_calculateRedemptionFee_BelowThreshold() public {
+    function testFuzz_calculateRedemptionFee_BelowThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint premiumRate_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint premiumRate = 1e16; // 1%
+        // Given: premiumRate is below A_issueRedeem
+        vm.assume(
+            premiumRate_ > 1 && premiumRate_ < type(uint64).max
+                && premiumRate_ < feeParams.A_issueRedeem
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
-            premiumRate,
+            premiumRate_,
             feeParams.Z_issueRedeem,
             feeParams.A_issueRedeem,
             feeParams.m_issueRedeem
@@ -1278,18 +1331,26 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(
             fee,
             feeParams.Z_issueRedeem
-                + (feeParams.A_issueRedeem - premiumRate) * feeParams.m_issueRedeem
+                + (feeParams.A_issueRedeem - premiumRate_) * feeParams.m_issueRedeem
                     / 1e18
         );
     }
 
-    function test_calculateRedemptionFee_AboveThreshold() public {
+    function testFuzz_calculateRedemptionFee_AboveThreshold(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_,
+        uint premiumRate_
+    ) public {
         ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams =
-            helper_setDynamicFeeCalculatorParams();
+            helper_setDynamicFeeCalculatorParams(feeParams_);
 
-        uint premiumRate = 9e16; // 9%
+        // Given: premiumRate is above A_issueRedeem
+        vm.assume(
+            premiumRate_ > 1 && premiumRate_ < type(uint64).max
+                && premiumRate_ > feeParams.A_issueRedeem
+        );
+
         uint fee = DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
-            premiumRate,
+            premiumRate_,
             feeParams.Z_issueRedeem,
             feeParams.A_issueRedeem,
             feeParams.m_issueRedeem
@@ -1700,29 +1761,43 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
     function helper_getDynamicFeeCalculatorParams()
         internal
-        pure
+        view
         returns (
             ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory dynamicFeeParameters
         )
     {
-        dynamicFeeParameters = ILM_PC_Lending_Facility_v1.DynamicFeeParameters({
-            Z_issueRedeem: 1e16, // 1%
-            A_issueRedeem: 7.5e16, // 7.5%
-            m_issueRedeem: 2e15, // 0.2%
-            Z_origination: 1e16, // 1%
-            A_origination: 2e16, // 2%
-            m_origination: 2e15 // 0.2%
-        });
-        return dynamicFeeParameters;
+        return lendingFacility.getDynamicFeeParameters();
     }
 
-    function helper_setDynamicFeeCalculatorParams()
+    function helper_setDynamicFeeCalculatorParams(
+        ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory feeParams_
+    )
         internal
         returns (
             ILM_PC_Lending_Facility_v1.DynamicFeeParameters memory dynamicFeeParameters
         )
     {
-        dynamicFeeParameters = helper_getDynamicFeeCalculatorParams();
+        feeParams_.Z_issueRedeem =
+            bound(feeParams_.Z_issueRedeem, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.A_issueRedeem =
+            bound(feeParams_.A_issueRedeem, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.m_issueRedeem =
+            bound(feeParams_.m_issueRedeem, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.Z_origination =
+            bound(feeParams_.Z_origination, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.A_origination =
+            bound(feeParams_.A_origination, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.m_origination =
+            bound(feeParams_.m_origination, 1e15, MAX_FEE_PERCENTAGE);
+
+        dynamicFeeParameters = ILM_PC_Lending_Facility_v1.DynamicFeeParameters({
+            Z_issueRedeem: feeParams_.Z_issueRedeem,
+            A_issueRedeem: feeParams_.A_issueRedeem,
+            m_issueRedeem: feeParams_.m_issueRedeem,
+            Z_origination: feeParams_.Z_origination,
+            A_origination: feeParams_.A_origination,
+            m_origination: feeParams_.m_origination
+        });
 
         lendingFacility.setDynamicFeeCalculatorParams(dynamicFeeParameters);
 
