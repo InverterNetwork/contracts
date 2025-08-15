@@ -1084,6 +1084,53 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         lendingFacility.setBorrowableQuota(invalidQuota);
     }
 
+    // Test: setDynamicFeeCalculator
+
+    /* Test external setDynamicFeeCalculator function
+        ├── Given caller has LENDING_FACILITY_MANAGER_ROLE
+        │   └── When setting new dynamic fee calculator
+        │       ├── Then the calculator should be updated
+        │       └── Then an event should be emitted
+        └── Given invalid fee calculator address
+            └── When trying to set calculator
+                └── Then it should revert with InvalidFeeCalculatorAddress
+    */
+
+    function testPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator()
+        public
+    {
+        // Grant role to this test contract
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(lendingFacility),
+            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
+        );
+        _authorizer.grantRole(roleId, address(this));
+
+        address newFeeCalculator = makeAddr("newFeeCalculator");
+        lendingFacility.setDynamicFeeCalculator(newFeeCalculator);
+
+        assertEq(lendingFacility.dynamicFeeCalculator(), newFeeCalculator);
+    }
+
+    function testPublicSetDynamicFeeCalculator_failsGivenInvalidCalculator()
+        public
+    {
+        // Grant role to this test contract
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(lendingFacility),
+            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
+        );
+        _authorizer.grantRole(roleId, address(this));
+
+        address invalidFeeCalculator = address(0);
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress
+                .selector
+        );
+        lendingFacility.setDynamicFeeCalculator(invalidFeeCalculator);
+    }
+
     // =========================================================================
     // Test: Dynamic Fee Calculator
 

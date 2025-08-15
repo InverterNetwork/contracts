@@ -112,6 +112,9 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Caller is not authorized to perform this action
     error Module__LM_PC_Lending_Facility_CallerNotAuthorized();
 
+    /// @notice Invalid fee calculator address
+    error Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
+
     // =========================================================================
     // Structs
 

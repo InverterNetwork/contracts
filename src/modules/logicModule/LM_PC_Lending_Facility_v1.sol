@@ -188,6 +188,9 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice DBC FM address for floor price calculations
     address internal _dbcFmAddress;
 
+    /// @notice Address of the Dynamic Fee Calculator contract
+    address public dynamicFeeCalculator;
+
     /// @notice Parameters for the dynamic fee calculator
     DynamicFeeParameters internal _dynamicFeeParameters;
 
@@ -400,6 +403,21 @@ contract LM_PC_Lending_Facility_v1 is
         }
         borrowableQuota = newBorrowableQuota_;
         emit BorrowableQuotaUpdated(newBorrowableQuota_);
+    }
+
+    /// @notice Set the Dynamic Fee Calculator address
+    /// @param newFeeCalculator_ The new fee calculator address
+    function setDynamicFeeCalculator(address newFeeCalculator_)
+        external
+        onlyLendingFacilityManager
+    {
+        if (newFeeCalculator_ == address(0)) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
+        }
+        dynamicFeeCalculator = newFeeCalculator_;
+        emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
     }
 
     // =========================================================================
