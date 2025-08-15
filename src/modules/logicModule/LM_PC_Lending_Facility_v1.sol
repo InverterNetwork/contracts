@@ -158,9 +158,6 @@ contract LM_PC_Lending_Facility_v1 is
     bytes32 public constant LENDING_FACILITY_MANAGER_ROLE =
         "LENDING_FACILITY_MANAGER";
 
-    /// @dev The role for managing the dynamic fee calculator parameters
-    bytes32 public constant FEE_CALCULATOR_ADMIN_ROLE = "FEE_CALCULATOR_ADMIN";
-
     /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
     uint public borrowableQuota;
 

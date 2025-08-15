@@ -22,8 +22,8 @@ import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {DiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
-import {DynamicFeeCalculatorLib_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+import {IDynamicFeeCalculator_v1} from
+    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -73,15 +73,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     /// @dev Project fee for sell operations, in Basis Points (BPS). 100 BPS = 1%.
     uint internal constant PROJECT_SELL_FEE_BPS = 100;
 
-    // --- Dynamic Fee Calculator Storage ---
-    /// @dev Dynamic fee parameters for trading operations
-    struct DynamicFeeParameters {
-        uint Z_issueRedeem;
-        uint A_issueRedeem;
-        uint m_issueRedeem;
-    }
-
-    DynamicFeeParameters internal _dynamicFeeParameters;
+    address internal _dynamicFeeAddress;
     bool internal _useDynamicFees;
 
     // --- End Fee Related Storage ---
@@ -304,20 +296,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // ------------------------------------------------------------------------
     // Public - Dynamic Fee Configuration
 
-    /// @notice Set dynamic fee parameters for trading operations
-    /// @param Z_issueRedeem_ Base fee component
-    /// @param A_issueRedeem_ Premium rate threshold
-    /// @param m_issueRedeem_ Multiplier for dynamic fee component
-    function setDynamicFeeParameters(
-        uint Z_issueRedeem_,
-        uint A_issueRedeem_,
-        uint m_issueRedeem_
-    ) external onlyOrchestratorAdmin {
-        _dynamicFeeParameters = DynamicFeeParameters({
-            Z_issueRedeem: Z_issueRedeem_,
-            A_issueRedeem: A_issueRedeem_,
-            m_issueRedeem: m_issueRedeem_
-        });
+    /// @notice Set dynamic fee address for trading operations
+    /// @param dynamicFeeAddress_ The address of the dynamic fee calculator
+    function setDynamicFeeAddress(address dynamicFeeAddress_)
+        external
+        onlyOrchestratorAdmin
+    {
+        _dynamicFeeAddress = dynamicFeeAddress_;
     }
 
     /// @notice Enable or disable dynamic fee calculation
@@ -329,20 +314,14 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         _useDynamicFees = useDynamicFees_;
     }
 
-    /// @notice Get current dynamic fee parameters
-    /// @return Z_issueRedeem Base fee component
-    /// @return A_issueRedeem Premium rate threshold
-    /// @return m_issueRedeem Multiplier for dynamic fee component
-    function getDynamicFeeParameters()
+    /// @notice Get current dynamic fee address
+    /// @return dynamicFeeAddress The address of the dynamic fee calculator
+    function getDynamicFeeAddress()
         external
         view
-        returns (uint Z_issueRedeem, uint A_issueRedeem, uint m_issueRedeem)
+        returns (address dynamicFeeAddress)
     {
-        return (
-            _dynamicFeeParameters.Z_issueRedeem,
-            _dynamicFeeParameters.A_issueRedeem,
-            _dynamicFeeParameters.m_issueRedeem
-        );
+        return _dynamicFeeAddress;
     }
 
     /// @notice Get current premium rate
@@ -524,11 +503,8 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         uint premiumRate = _calculatePremiumRate();
 
         // Use DFC for issuance fee calculation
-        return DynamicFeeCalculatorLib_v1.calculateIssuanceFee(
-            premiumRate,
-            _dynamicFeeParameters.Z_issueRedeem,
-            _dynamicFeeParameters.A_issueRedeem,
-            _dynamicFeeParameters.m_issueRedeem
+        return IDynamicFeeCalculator_v1(_dynamicFeeAddress).calculateIssuanceFee(
+            premiumRate
         );
     }
 
@@ -545,12 +521,8 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         uint premiumRate = _calculatePremiumRate();
 
         // Use DFC for redemption fee calculation
-        return DynamicFeeCalculatorLib_v1.calculateRedemptionFee(
-            premiumRate,
-            _dynamicFeeParameters.Z_issueRedeem,
-            _dynamicFeeParameters.A_issueRedeem,
-            _dynamicFeeParameters.m_issueRedeem
-        );
+        return IDynamicFeeCalculator_v1(_dynamicFeeAddress)
+            .calculateRedemptionFee(premiumRate);
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)
