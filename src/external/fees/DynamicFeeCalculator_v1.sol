@@ -1,10 +1,33 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.23;
+pragma solidity 0.8.23;
 
+// Internal Interfaces
 import {IDynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 
-contract DynamicFeeCalculator_v1 is IDynamicFeeCalculator_v1 {
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {Ownable2StepUpgradeable} from
+    "@oz-up/access/Ownable2StepUpgradeable.sol";
+
+contract DynamicFeeCalculator_v1 is
+    ERC165Upgradeable,
+    IDynamicFeeCalculator_v1,
+    Ownable2StepUpgradeable
+{
+    /// @inheritdoc ERC165Upgradeable
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165Upgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IDynamicFeeCalculator_v1).interfaceId
+            || ERC165Upgradeable.supportsInterface(interfaceId);
+    }
+
     // =========================================================================
     // Constants
 
@@ -13,13 +36,32 @@ contract DynamicFeeCalculator_v1 is IDynamicFeeCalculator_v1 {
 
     /// @notice Maximum fee percentage (100% in 1e18 format)
     uint internal constant _MAX_FEE_PERCENTAGE = 1e18;
+
     // =========================================================================
-    // State
+    // Storage
 
     /// @notice Parameters for the dynamic fee calculator
     DynamicFeeParameters public dynamicFeeParameters;
 
-    // --- Fee Calculation Functions ---
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
+    // =========================================================================
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    // =========================================================================
+    // Initialization
+
+    function init(address owner) external initializer {
+        __Ownable_init(owner);
+    }
+
+    // =========================================================================
+    // Public - Fee Calculation Functions
 
     /// @notice Calculate origination fee based on utilization ratio
     /// @param utilizationRatio_ Current utilization ratio
@@ -96,7 +138,7 @@ contract DynamicFeeCalculator_v1 is IDynamicFeeCalculator_v1 {
     /// @param dynamicFeeParameters_ The new dynamic fee calculator parameters
     function setDynamicFeeCalculatorParams(
         DynamicFeeParameters memory dynamicFeeParameters_
-    ) external {
+    ) external onlyOwner {
         if (
             dynamicFeeParameters_.Z_issueRedeem == 0
                 || dynamicFeeParameters_.A_issueRedeem == 0

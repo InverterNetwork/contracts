@@ -21,7 +21,7 @@ import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
 import {IBondingCurveBase_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IDynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {PackedSegmentLib} from

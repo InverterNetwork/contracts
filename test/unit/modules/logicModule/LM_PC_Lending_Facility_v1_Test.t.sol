@@ -27,9 +27,8 @@ import {DiscreteCurveMathLib_v1} from
 import {PackedSegmentLib} from
     "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
 import {IDynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
-import {DynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
+import {DynamicFeeCalculator_v1} from "@ex/fees/DynamicFeeCalculator_v1.sol";
 
 // External Dependencies
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -258,7 +257,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         fmBcDiscrete.setVirtualCollateralSupply(initialVirtualSupply);
 
         // Deploy the dynamic fee calculator
-        dynamicFeeCalculator = new DynamicFeeCalculator_v1();
+        address impl_dynamicFeeCalculator =
+            address(new DynamicFeeCalculator_v1());
+        dynamicFeeCalculator =
+            DynamicFeeCalculator_v1(Clones.clone(impl_dynamicFeeCalculator));
+        dynamicFeeCalculator.init(address(this));
 
         // Initiate the Logic Module with the metadata and config data
         lendingFacility.init(

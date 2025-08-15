@@ -4,11 +4,13 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import {DynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+import {DynamicFeeCalculator_v1} from "@ex/fees/DynamicFeeCalculator_v1.sol";
 import {IDynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
+import {Clones} from "@oz/proxy/Clones.sol";
+import {Ownable2StepUpgradeable} from
+    "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 contract DynamicFeeCalculator_v1_Test is Test {
     // System Under Test
@@ -25,9 +27,22 @@ contract DynamicFeeCalculator_v1_Test is Test {
 
     function setUp() public {
         // Deploy the fee calculator
-        feeCalculator = new DynamicFeeCalculator_v1();
+        address feeCalculatorImpl = address(new DynamicFeeCalculator_v1());
+        feeCalculator = DynamicFeeCalculator_v1(Clones.clone(feeCalculatorImpl));
+        feeCalculator.init(address(this));
 
         params = helper_setDynamicFeeCalculatorParams(params);
+    }
+
+    // ===========================================================
+    // Test: Interface Support
+
+    function testSupportsInterface() public {
+        assertTrue(
+            feeCalculator.supportsInterface(
+                type(IDynamicFeeCalculator_v1).interfaceId
+            )
+        );
     }
 
     // =========================================================================
@@ -45,29 +60,26 @@ contract DynamicFeeCalculator_v1_Test is Test {
             └── When trying to set parameters
     */
 
-    // function testFuzzPublicSetDynamicFeeCalculatorParams_failsGivenUnauthorizedCaller(
-    //     address unauthorizedUser,
-    //     IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams
-    // ) public {
-    //     vm.assume(
-    //         unauthorizedUser != address(0) && unauthorizedUser != address(this)
-    //     );
+    function testFuzzPublicSetDynamicFeeCalculatorParams_failsGivenUnauthorizedCaller(
+        address unauthorizedUser,
+        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams
+    ) public {
+        vm.assume(
+            unauthorizedUser != address(0) && unauthorizedUser != address(this)
+        );
 
-    //     IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
-    //         helper_setDynamicFeeCalculatorParams(feeParams);
+        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
+            helper_setDynamicFeeCalculatorParams(feeParams);
 
-    //     vm.startPrank(unauthorizedUser);
-
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             IModule_v1.Module__CallerNotAuthorized.selector,
-    //             lendingFacility.FEE_CALCULATOR_ADMIN_ROLE(),
-    //             unauthorizedUser
-    //         )
-    //     );
-    //     lendingFacility.setDynamicFeeCalculatorParams(feeParams);
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(unauthorizedUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OZErrors.Ownable__UnauthorizedAccount, unauthorizedUser
+            )
+        );
+        feeCalculator.setDynamicFeeCalculatorParams(feeParams);
+        vm.stopPrank();
+    }
 
     function testPublicSetDynamicFeeCalculatorParams_failsGivenInvalidParamsZero(
         IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams

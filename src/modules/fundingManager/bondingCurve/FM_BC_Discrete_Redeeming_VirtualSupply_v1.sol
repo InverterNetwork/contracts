@@ -23,8 +23,7 @@ import {PackedSegment} from
 import {DiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {IDynamicFeeCalculator_v1} from
-    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
-
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
