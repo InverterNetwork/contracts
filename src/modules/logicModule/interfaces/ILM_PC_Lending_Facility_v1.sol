@@ -70,12 +70,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @param newCalculator The new fee calculator address
     event DynamicFeeCalculatorUpdated(address newCalculator);
 
-    /// @notice Emitted when the dynamic fee calculator parameters are updated
-    /// @param dynamicFeeParameters_ The dynamic fee parameters
-    event DynamicFeeCalculatorParamsUpdated(
-        DynamicFeeParameters dynamicFeeParameters_
-    );
-
     // =========================================================================
     // Errors
 
@@ -116,27 +110,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     error Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
 
     // =========================================================================
-    // Structs
-
-    /// @notice Parameters for the dynamic fee calculator
-    /// @dev These parameters are used to calculate the dynamic fee for issuance/redemption and origination fees
-    ///      based on the floor liquidity rate.
-    ///      Z_issueRedeem: Base fee component for issuance/redemption fees.
-    ///      A_issueRedeem: PremiumRate threshold for dynamic issuance/redemption fee adjustment.
-    ///      m_issueRedeem: Multiplier for dynamic issuance/redemption fee component.
-    ///      Z_origination: Base fee component for origination fees.
-    ///      A_origination: FloorLiquidityRate threshold for dynamic origination fee adjustment.
-    ///      m_origination: Multiplier for dynamic origination fee component.
-    struct DynamicFeeParameters {
-        uint Z_issueRedeem;
-        uint A_issueRedeem;
-        uint m_issueRedeem;
-        uint Z_origination;
-        uint A_origination;
-        uint m_origination;
-    }
-
-    // =========================================================================
     // Public - Getters
 
     /// @notice Returns the amount of issuance tokens locked by a user
@@ -175,13 +148,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (uint power_);
 
-    /// @notice Returns the dynamic fee parameters
-    /// @return dynamicFeeParameters_ The dynamic fee parameters
-    function getDynamicFeeParameters()
-        external
-        view
-        returns (DynamicFeeParameters memory dynamicFeeParameters_);
-
     // =========================================================================
     // Public - Mutating
 
@@ -208,10 +174,4 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set the borrowable quota
     /// @param newBorrowableQuota_ The new borrowable quota (in basis points)
     function setBorrowableQuota(uint newBorrowableQuota_) external;
-
-    /// @notice Set the Dynamic Fee Calculator parameters
-    /// @param dynamicFeeParameters_ The dynamic fee parameters
-    function setDynamicFeeCalculatorParams(
-        DynamicFeeParameters memory dynamicFeeParameters_
-    ) external;
 }

@@ -20,8 +20,8 @@ import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {IBondingCurveBase_v1} from
     "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {DynamicFeeCalculatorLib_v1} from
-    "src/modules/logicModule/libraries/DynamicFeeCalculator_v1.sol";
+import {IDynamicFeeCalculator_v1} from
+    "src/modules/logicModule/libraries/IDynamicFeeCalculator_v1.sol";
 import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {PackedSegmentLib} from
@@ -129,7 +129,6 @@ contract LM_PC_Lending_Facility_v1 is
     // Libraries
 
     using SafeERC20 for IERC20;
-    using DynamicFeeCalculatorLib_v1 for uint;
 
     // =========================================================================
     // ERC165
@@ -152,8 +151,6 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice Maximum borrowable quota percentage (100%)
     uint internal constant _MAX_BORROWABLE_QUOTA = 10_000; // 100% in basis points
 
-    /// @notice Maximum fee percentage (100% in 1e18 format)
-    uint internal constant _MAX_FEE_PERCENTAGE = 1e18;
     //--------------------------------------------------------------------------
     // State
 
@@ -189,10 +186,7 @@ contract LM_PC_Lending_Facility_v1 is
     address internal _dbcFmAddress;
 
     /// @notice Address of the Dynamic Fee Calculator contract
-    address public dynamicFeeCalculator;
-
-    /// @notice Parameters for the dynamic fee calculator
-    DynamicFeeParameters internal _dynamicFeeParameters;
+    address internal _dynamicFeeCalculator;
 
     /// @notice Storage gap for future upgrades
     uint[50] private __gap;
@@ -207,11 +201,6 @@ contract LM_PC_Lending_Facility_v1 is
 
     modifier onlyValidBorrowAmount(uint amount_) {
         _ensureValidBorrowAmount(amount_);
-        _;
-    }
-
-    modifier onlyFeeCalculatorAdmin() {
-        _checkRoleModifier(FEE_CALCULATOR_ADMIN_ROLE, _msgSender());
         _;
     }
 
@@ -231,14 +220,18 @@ contract LM_PC_Lending_Facility_v1 is
             address collateralToken,
             address issuanceToken,
             address dbcFmAddress,
+            address dynamicFeeCalculator,
             uint borrowableQuota_,
             uint individualBorrowLimit_
-        ) = abi.decode(configData_, (address, address, address, uint, uint));
+        ) = abi.decode(
+            configData_, (address, address, address, address, uint, uint)
+        );
 
         // Set init state
         _collateralToken = IERC20(collateralToken);
         _issuanceToken = IERC20(issuanceToken);
         _dbcFmAddress = dbcFmAddress;
+        _dynamicFeeCalculator = dynamicFeeCalculator;
         borrowableQuota = borrowableQuota_;
         individualBorrowLimit = individualBorrowLimit_;
     }
@@ -416,37 +409,8 @@ contract LM_PC_Lending_Facility_v1 is
                 ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
         }
-        dynamicFeeCalculator = newFeeCalculator_;
+        _dynamicFeeCalculator = newFeeCalculator_;
         emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
-    }
-
-    // =========================================================================
-    // Public - Configuration (Fee Calculator Admin only)
-
-    /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function setDynamicFeeCalculatorParams(
-        DynamicFeeParameters memory dynamicFeeParameters_
-    ) external onlyFeeCalculatorAdmin {
-        if (
-            dynamicFeeParameters_.Z_issueRedeem == 0
-                || dynamicFeeParameters_.A_issueRedeem == 0
-                || dynamicFeeParameters_.m_issueRedeem == 0
-                || dynamicFeeParameters_.Z_origination == 0
-                || dynamicFeeParameters_.A_origination == 0
-                || dynamicFeeParameters_.m_origination == 0
-                || dynamicFeeParameters_.Z_issueRedeem > _MAX_FEE_PERCENTAGE
-                || dynamicFeeParameters_.A_issueRedeem > _MAX_FEE_PERCENTAGE
-                || dynamicFeeParameters_.m_issueRedeem > _MAX_FEE_PERCENTAGE
-                || dynamicFeeParameters_.Z_origination > _MAX_FEE_PERCENTAGE
-                || dynamicFeeParameters_.A_origination > _MAX_FEE_PERCENTAGE
-                || dynamicFeeParameters_.m_origination > _MAX_FEE_PERCENTAGE
-        ) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidDynamicFeeParameters();
-        }
-        _dynamicFeeParameters = dynamicFeeParameters_;
-        emit DynamicFeeCalculatorParamsUpdated(dynamicFeeParameters_);
     }
 
     // =========================================================================
@@ -496,15 +460,6 @@ contract LM_PC_Lending_Facility_v1 is
         returns (uint)
     {
         return _calculateUserBorrowingPower(user_);
-    }
-
-    /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function getDynamicFeeParameters()
-        external
-        view
-        returns (DynamicFeeParameters memory)
-    {
-        return _dynamicFeeParameters;
     }
 
     // =========================================================================
@@ -574,12 +529,8 @@ contract LM_PC_Lending_Facility_v1 is
         // Calculate fee using the dynamic fee calculator library
         uint utilizationRatio =
             (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
-        uint feeRate = DynamicFeeCalculatorLib_v1.calculateOriginationFee(
-            utilizationRatio,
-            _dynamicFeeParameters.Z_origination,
-            _dynamicFeeParameters.A_origination,
-            _dynamicFeeParameters.m_origination
-        );
+        uint feeRate = IDynamicFeeCalculator_v1(_dynamicFeeCalculator)
+            .calculateOriginationFee(utilizationRatio);
         return (requestedAmount_ * feeRate) / 1e18; // Fee based on calculated rate
     }
 
