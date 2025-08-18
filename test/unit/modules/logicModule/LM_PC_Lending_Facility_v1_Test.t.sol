@@ -814,12 +814,23 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should succeed
     */
-    function testPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan(
+    function testFuzzPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan(
+        uint firstBorrowAmount_,
+        uint secondBorrowAmount_
     ) public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
-        uint firstBorrowAmount = 300 ether; // First borrow
-        uint secondBorrowAmount = 150 ether; // Second borrow that stays within limit when combined
+        vm.assume(
+            firstBorrowAmount_ > 0
+                && firstBorrowAmount_ < lendingFacility.individualBorrowLimit() / 2
+        );
+        uint firstBorrowAmount = firstBorrowAmount_; // First borrow
+        uint remainingLimit =
+            lendingFacility.individualBorrowLimit() - firstBorrowAmount;
+        vm.assume(
+            secondBorrowAmount_ > 0 && secondBorrowAmount_ < remainingLimit
+        );
+        uint secondBorrowAmount = secondBorrowAmount_; // Second borrow that stays within limit when combined
 
         // Setup: user borrows first amount
         uint requiredIssuanceTokens = lendingFacility
@@ -876,11 +887,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── When the borrow transaction completes
             └── Then the outstanding loan should equal the net amount received by the user
     */
-    function testPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount(
+    function testFuzzPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount(
+        uint borrowAmount_
     ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
+        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
+        uint borrowAmount = borrowAmount_;
 
         // Calculate how much issuance tokens will be needed
         uint requiredIssuanceTokens = lendingFacility
@@ -952,9 +965,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with InvalidBorrowAmount error
     */
-    function testPublicBorrow_failsGivenZeroAmount() public {
+    function testFuzzPublicBorrow_failsGivenZeroAmount(address user) public {
         // Given: a user wants to borrow tokens
-        address user = makeAddr("user");
+        vm.assume(user != address(0) && user != address(this));
 
         // Given: the borrow amount is zero
         uint borrowAmount = 0;
@@ -983,9 +996,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When trying to set limit
                 └── Then it should revert with CallerNotAuthorized
     */
-    function testPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller()
-        public
-    {
+    function testFuzzPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller(
+        uint newLimit_
+    ) public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -993,16 +1006,19 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        uint newLimit = 2000 ether;
+        vm.assume(newLimit_ > 0 && newLimit_ < type(uint64).max);
+        uint newLimit = newLimit_;
         lendingFacility.setIndividualBorrowLimit(newLimit);
 
         assertEq(lendingFacility.individualBorrowLimit(), newLimit);
     }
 
-    function testPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller()
-        public
-    {
-        address unauthorizedUser = makeAddr("unauthorized");
+    function testFuzzPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller(
+        address unauthorizedUser
+    ) public {
+        vm.assume(
+            unauthorizedUser != address(0) && unauthorizedUser != address(this)
+        );
 
         vm.startPrank(unauthorizedUser);
         vm.expectRevert(
@@ -1025,7 +1041,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When trying to set quota
                 └── Then it should revert with appropriate error
     */
-    function testPublicSetBorrowableQuota_succeedsGivenValidQuota() public {
+    function testFuzzPublicSetBorrowableQuota_succeedsGivenValidQuota(
+        uint newQuota_
+    ) public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1033,13 +1051,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        uint newQuota = 9000; // 90% in basis points
+        vm.assume(newQuota_ > 0 && newQuota_ <= 10_000);
+        uint newQuota = newQuota_;
         lendingFacility.setBorrowableQuota(newQuota);
 
         assertEq(lendingFacility.borrowableQuota(), newQuota);
     }
 
-    function testPublicSetBorrowableQuota_failsGivenExceedsMaxQuota() public {
+    function testFuzzPublicSetBorrowableQuota_failsGivenExceedsMaxQuota(
+        uint newQuota_
+    ) public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1047,7 +1068,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        uint invalidQuota = 10_001; // Exceeds 100%
+        vm.assume(newQuota_ > 10_000);
+        uint invalidQuota = newQuota_; // Exceeds 100%
         vm.expectRevert(
             ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh
@@ -1068,9 +1090,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 └── Then it should revert with InvalidFeeCalculatorAddress
     */
 
-    function testPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator()
-        public
-    {
+    function testFuzzPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator(
+        address newFeeCalculator_
+    ) public {
         // Grant role to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
             address(lendingFacility),
@@ -1078,7 +1100,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        address newFeeCalculator = makeAddr("newFeeCalculator");
+        vm.assume(
+            newFeeCalculator_ != address(0)
+                && newFeeCalculator_ != address(this)
+        );
+        address newFeeCalculator = newFeeCalculator_;
         vm.expectEmit(true, true, true, true);
         emit ILM_PC_Lending_Facility_v1.DynamicFeeCalculatorUpdated(
             newFeeCalculator
@@ -1169,7 +1195,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertGt(capacity, 0);
     }
 
-    function testCalculateUserBorrowingPower() public {
+    function testFuzzCalculateUserBorrowingPower() public {
         address user = makeAddr("user");
         uint power = lendingFacility.exposed_calculateUserBorrowingPower(user);
         assertEq(power, 0); // No locked tokens initially
@@ -1234,13 +1260,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             ├── And issuance tokens should be transferred back to user
             └── And an event should be emitted
     */
-    function testPublicUnlockIssuanceTokens_succeedsGivenValidUnlockRequest()
-        public
-    {
+    function testFuzzPublicUnlockIssuanceTokens_succeedsGivenValidUnlockRequest(
+        uint borrowAmount_,
+        uint unlockAmount_
+    ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
-        uint unlockAmount = 200 ether;
+        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
+        vm.assume(unlockAmount_ > 0 && unlockAmount_ <= borrowAmount_);
+        uint borrowAmount = borrowAmount_;
+        uint unlockAmount = unlockAmount_;
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
         uint requiredIssuanceTokens = lendingFacility
