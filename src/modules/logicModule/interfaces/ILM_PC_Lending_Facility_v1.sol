@@ -79,9 +79,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice User has insufficient borrowing power for the requested amount
     error Module__LM_PC_Lending_Facility_InsufficientBorrowingPower();
 
-    /// @notice User has insufficient issuance tokens to lock for the requested borrow amount
-    error Module__LM_PC_Lending_Facility_InsufficientIssuanceTokens();
-
     /// @notice Borrowing would exceed the system-wide borrowable quota
     error Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
 

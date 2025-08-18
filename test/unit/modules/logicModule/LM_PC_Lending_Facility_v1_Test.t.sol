@@ -649,33 +649,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     // }
 
     /* Test: Function borrow()
-        ├── Given a user has insufficient issuance tokens
-        └── When the user tries to borrow collateral tokens
-            └── Then the transaction should revert with InsufficientIssuanceTokens error
-    */
-    function testPublicBorrow_failsGivenInsufficientIssuanceTokens() public {
-        // Given: a user has insufficient issuance tokens
-        address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
-        uint insufficientTokens = 100 ether; // Less than required
-
-        issuanceToken.mint(user, insufficientTokens);
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), insufficientTokens);
-
-        // When: the user tries to borrow collateral tokens
-        vm.prank(user);
-        vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokens
-                .selector
-        );
-        lendingFacility.borrow(borrowAmount);
-
-        // Then: the transaction should revert with InsufficientIssuanceTokens error
-    }
-
-    /* Test: Function borrow()
         ├── Given a user has sufficient issuance tokens
         ├── And the borrow amount exceeds borrowable quota
         └── When the user tries to borrow collateral tokens
@@ -903,9 +876,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── When the borrow transaction completes
             └── Then the outstanding loan should equal the net amount received by the user
     */
-    function testPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount()
-        public
-    {
+    function testPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount(
+    ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
@@ -967,7 +939,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint userBalanceAfter = orchestratorToken.balanceOf(user);
         uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
 
-        assertEq(outstandingLoan, borrowAmount, "Outstanding loan should equal requested amount");
+        assertEq(
+            outstandingLoan,
+            borrowAmount,
+            "Outstanding loan should equal requested amount"
+        );
     }
 
     /* Test: Function borrow()
