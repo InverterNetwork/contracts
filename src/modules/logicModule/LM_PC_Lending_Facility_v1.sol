@@ -59,22 +59,12 @@ import {ERC165Upgradeable} from
  *                                 adminAddress
  *                               );
  *
- *                  2. Configure FEE_CALCULATOR_ADMIN_ROLE:
- *                     - Purpose: Implements access control for configuring dynamic fee
- *                               calculator parameters
- *                     - How:     The OrchestratorAdmin must:
- *                               1. Retrieve the fee calculator admin role identifier
- *                               2. Grant the role to designated admins
- *                     - Example: module.grantModuleRole(
- *                                 module.FEE_CALCULATOR_ADMIN_ROLE(),
- *                                 feeAdminAddress
- *                               );
- *
- *                  3. Initialize Dynamic Fee Parameters:
- *                     - Purpose: Sets up the dynamic fee calculation parameters for
- *                               origination, issuance, and redemption fees
- *                     - How:     A user with FEE_CALCULATOR_ADMIN_ROLE must call:
- *                               setDynamicFeeCalculatorParams() with appropriate parameters
+ *                  2. Initialize Lending Facility Parameters:
+ *                     - Purpose: Sets up the lending facility parameters
+ *                     - How:     A user with LENDING_FACILITY_MANAGER_ROLE must call:
+ *                               1. setBorrowableQuota()
+ *                               2. setIndividualBorrowLimit()
+ *                               3. setDynamicFeeCalculator()
  *
  * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
  *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
@@ -82,35 +72,6 @@ import {ERC165Upgradeable} from
  *                  carefully tested to ensure no state corruption and proper initialization
  *                  of new functionality. The storage gap pattern is used to reserve space
  *                  for future upgrades.
- *
- * @custom:security This contract handles user funds and should be thoroughly audited.
- *                  Key security considerations:
- *                  - Reentrancy protection: Uses SafeERC20 for all token transfers
- *                  - Access control: Role-based access control for administrative functions
- *                  - Input validation: All user inputs are validated before processing
- *                  - State consistency: Borrowing and repayment operations maintain
- *                    consistent state across all mappings and counters
- *                  - Fee calculation: Dynamic fee calculation is deterministic and
- *                    cannot be manipulated by users
- *                  - Collateralization: Users must lock sufficient issuance tokens
- *                    before borrowing collateral tokens
- *                  - Liquidation protection: The system prevents over-borrowing through
- *                    individual and system-wide limits
- *
- * @custom:audit    This contract has been audited by [auditor name] on [date].
- *                  Audit report: [link to audit report]
- *                  Key findings: [summary of key findings if any]
- *                  Remediation status: [status of any remediation if needed]
- *
- * @custom:deployment This contract should be deployed using the Inverter deployment pattern:
- *                    1. Deploy the implementation contract
- *                    2. Deploy the proxy contract pointing to the implementation
- *                    3. Initialize the proxy with proper configuration data
- *                    4. Set up roles and permissions through the orchestrator
- *                    5. Configure dynamic fee parameters
- *                    6. Verify all functionality through comprehensive testing
- *                    Note: The contract requires a valid DBC FM address and proper
- *                    token addresses during initialization.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -244,19 +205,9 @@ contract LM_PC_Lending_Facility_v1 is
     {
         address user = _msgSender();
 
-        // Calculate user's borrowing power based on their available issuance tokens
-        uint userIssuanceTokens = _issuanceToken.balanceOf(user);
-
         // Calculate how much issuance tokens need to be locked for this borrow amount
         uint requiredIssuanceTokens =
             _calculateRequiredIssuanceTokens(requestedLoanAmount_);
-
-        // Ensure user has sufficient issuance tokens to lock
-        if (userIssuanceTokens < requiredIssuanceTokens) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokens();
-        }
 
         // Check if borrowing would exceed borrowable quota
         if (
@@ -289,22 +240,22 @@ contract LM_PC_Lending_Facility_v1 is
             _calculateDynamicBorrowingFee(requestedLoanAmount_);
         uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
 
-        // Update state (use netAmountToUser, not requestedLoanAmount_)
-        currentlyBorrowedAmount += netAmountToUser;
-        _outstandingLoans[user] += netAmountToUser;
+        // Update state (track gross requested amount as debt; fee is paid at repayment)
+        currentlyBorrowedAmount += requestedLoanAmount_;
+        _outstandingLoans[user] += requestedLoanAmount_;
 
-        // Instruct DBC FM to transfer fee to fee manager
+        // Pull gross from DBC FM to this module
+        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
+            address(this), requestedLoanAmount_
+        );
+
+        // Transfer fee back to DBC FM (retained to increase base price)
         if (dynamicBorrowingFee > 0) {
-            IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-                __Module_orchestrator.governor().getFeeManager(),
-                dynamicBorrowingFee
-            );
+            _collateralToken.safeTransfer(_dbcFmAddress, dynamicBorrowingFee);
         }
 
-        // Instruct DBC FM to transfer net amount to user
-        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-            user, netAmountToUser
-        );
+        // Transfer net amount to user
+        _collateralToken.safeTransfer(user, netAmountToUser);
 
         // Emit events
         emit IssuanceTokensLocked(user, requiredIssuanceTokens);

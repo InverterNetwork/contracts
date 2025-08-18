@@ -898,12 +898,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function borrow() - Outstanding loan should match net amount received
+    /* Test: Function borrow() - Outstanding loan should equal gross requested amount (fee on top)
         ├── Given a user borrows tokens with a dynamic fee
         └── When the borrow transaction completes
             └── Then the outstanding loan should equal the net amount received by the user
     */
-    function testPublicBorrow_succeedsGivenOutstandingLoanMatchesNetAmount()
+    function testPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount()
         public
     {
         // Given: a user has issuance tokens
@@ -963,23 +963,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
-        // Then: the outstanding loan should equal the net amount received by the user
+        // Then: the outstanding loan should equal the requested amount (fee on top model)
         uint userBalanceAfter = orchestratorToken.balanceOf(user);
-        uint netAmountReceived = userBalanceAfter - userBalanceBefore;
         uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
 
-        assertEq(
-            outstandingLoan,
-            netAmountReceived,
-            "Outstanding loan should equal net amount received by user"
-        );
-
-        // And: the outstanding loan should be less than the requested amount (due to fees)
-        assertLt(
-            outstandingLoan,
-            borrowAmount,
-            "Outstanding loan should be less than requested amount due to fees"
-        );
+        assertEq(outstandingLoan, borrowAmount, "Outstanding loan should equal requested amount");
     }
 
     /* Test: Function borrow()
