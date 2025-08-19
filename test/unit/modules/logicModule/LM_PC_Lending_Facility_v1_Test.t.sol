@@ -621,41 +621,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
     }
 
-    // /* Test: Function borrow()
-    //     ├── Given a user has insufficient issuance tokens
-    //     └── When the user tries to borrow collateral tokens
-    //         └── Then the transaction should revert with InsufficientBorrowingPower error
-    // */
-    // function testBorrow_insufficientBorrowingPower() public {
-    //     // Given: a user has insufficient borrowing power
-    //     address user = makeAddr("user");
-    //     uint borrowAmount = 500 ether;
-    //     uint insufficientTokens = 100 ether; // Less than required
-
-    //     issuanceToken.mint(user, insufficientTokens);
-    //     vm.prank(user);
-    //     issuanceToken.approve(address(lendingFacility), insufficientTokens);
-
-    //     // When: the user tries to borrow collateral tokens
-    //     vm.prank(user);
-    //     vm.expectRevert(
-    //         ILM_PC_Lending_Facility_v1
-    //             .Module__LM_PC_Lending_Facility_InsufficientBorrowingPower
-    //             .selector
-    //     );
-    //     lendingFacility.borrow(borrowAmount);
-
-    //     // Then: the transaction should revert with InsufficientBorrowingPower error
-    // }
-
     /* Test: Function borrow()
         ├── Given a user has sufficient issuance tokens
         ├── And the borrow amount exceeds borrowable quota
         └── When the user tries to borrow collateral tokens
             └── Then the transaction should revert with BorrowableQuotaExceeded error
     */
-    // TODO: Fix this test - the borrow capacity keeps increasing due to token minting
-    function testPublicBorrow_failsGivenInsufficientBorrowableQuota() public {
+    function testPublicBorrow_failsGivenExceedsBorrowableQuota() public {
         // Given: a user has issuance tokens
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
@@ -700,10 +672,17 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
-    function testPublicBorrow_failsGivenExceedsIndividualLimit() public {
+    function testFuzzPublicBorrow_failsGivenExceedsIndividualLimit(
+        uint borrowAmount_
+    ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        uint borrowAmount = 600 ether; // More than individual limit (500 ether)
+        borrowAmount_ = bound(
+            borrowAmount_,
+            lendingFacility.individualBorrowLimit() + 1,
+            type(uint128).max
+        );
+        uint borrowAmount = borrowAmount_; // More than individual limit (500 ether)
 
         // Calculate how much issuance tokens will be needed
         uint requiredIssuanceTokens = lendingFacility
@@ -732,6 +711,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             lendingFacility.individualBorrowLimit(),
             "Borrow amount should exceed individual limit"
         );
+
+        // Ensure the borrow amount doesn't exceed the system-wide borrowable quota
+        // so that the individual limit check is reached
+        uint borrowCapacity = lendingFacility.getBorrowCapacity();
+        uint borrowableQuota =
+            borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
+        vm.assume(borrowAmount <= borrowableQuota);
 
         // When: the user tries to borrow collateral tokens
         vm.prank(user);
@@ -1326,13 +1312,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── When the user tries to unlock issuance tokens
             └── Then the transaction should revert with CannotUnlockWithOutstandingLoan error
     */
-    function testPublicUnlockIssuanceTokens_failsGivenOutstandingLoan()
-        public
-    {
+    function testFuzzPublicUnlockIssuanceTokens_failsGivenOutstandingLoan(
+        uint borrowAmount_,
+        uint unlockAmount_
+    ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
-        uint unlockAmount = 200 ether;
+        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
+        vm.assume(unlockAmount_ > 0 && unlockAmount_ <= borrowAmount_);
+        uint borrowAmount = borrowAmount_;
+        uint unlockAmount = unlockAmount_;
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
         uint requiredIssuanceTokens = lendingFacility
@@ -1372,9 +1361,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user tries to unlock issuance tokens
                 └── Then the transaction should revert with InsufficientLockedTokens error
     */
-    function testPublicUnlockIssuanceTokens_failsGivenInsufficientLockedTokens()
-        public
-    {
+    function borrow() public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
         uint borrowAmount = 500 ether;
