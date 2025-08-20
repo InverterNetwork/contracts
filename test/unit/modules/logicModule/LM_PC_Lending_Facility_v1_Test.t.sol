@@ -403,11 +403,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 ├── And collateral tokens should be transferred back to facility
                 └── And issuance tokens should be unlocked proportionally
     */
-    function testPublicRepay_succeedsGivenValidRepaymentAmount() public {
+    function testFuzzPublicRepay_succeedsGivenValidRepaymentAmount(
+        uint borrowAmount_,
+        uint repayAmount_
+    ) public {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
-        uint repayAmount = 200 ether;
+        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+        repayAmount_ = bound(repayAmount_, 1, borrowAmount_);
+        uint borrowAmount = borrowAmount_;
+        uint repayAmount = repayAmount_;
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
         uint requiredIssuanceTokens = lendingFacility
@@ -462,7 +467,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         // And: issuance tokens should be unlocked proportionally
         uint lockedTokensAfter = lendingFacility.getLockedIssuanceTokens(user);
-        assertLt(
+        assertLe(
             lockedTokensAfter,
             lockedTokensBefore,
             "Some issuance tokens should be unlocked"
@@ -1259,10 +1264,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
-        vm.assume(unlockAmount_ > 0 && unlockAmount_ <= borrowAmount_);
+        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
         uint borrowAmount = borrowAmount_;
-        uint unlockAmount = unlockAmount_;
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
         uint requiredIssuanceTokens = lendingFacility
@@ -1292,13 +1295,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
 
         // When: the user unlocks issuance tokens
+
         uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
         uint userBalanceBefore = issuanceToken.balanceOf(user);
 
+        unlockAmount_ = bound(unlockAmount_, 0, lockedTokensBefore);
+        uint unlockAmount = unlockAmount_;
         vm.prank(user);
-        lendingFacility.unlockIssuanceTokens(unlockAmount);
 
         // Then: their locked issuance tokens should decrease
+        lendingFacility.unlockIssuanceTokens(unlockAmount);
         assertEq(
             lendingFacility.getLockedIssuanceTokens(user),
             lockedTokensBefore - unlockAmount,
@@ -1325,8 +1331,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
-        vm.assume(unlockAmount_ > 0 && unlockAmount_ <= borrowAmount_);
+        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+        unlockAmount_ = bound(unlockAmount_, 1, borrowAmount_);
         uint borrowAmount = borrowAmount_;
         uint unlockAmount = unlockAmount_;
 

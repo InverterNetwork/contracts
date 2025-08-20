@@ -32,6 +32,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {console2} from "forge-std/console2.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -272,10 +273,6 @@ contract LM_PC_Lending_Facility_v1 is
             repaymentAmount_ = _outstandingLoans[user];
         }
 
-        // Update state
-        _outstandingLoans[user] -= repaymentAmount_;
-        currentlyBorrowedAmount -= repaymentAmount_;
-
         // Transfer collateral back to DBC FM
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
 
@@ -287,6 +284,9 @@ contract LM_PC_Lending_Facility_v1 is
             _lockedIssuanceTokens[user] -= issuanceTokensToUnlock;
             _issuanceToken.safeTransfer(user, issuanceTokensToUnlock);
         }
+        // Update state
+        _outstandingLoans[user] -= repaymentAmount_;
+        currentlyBorrowedAmount -= repaymentAmount_;
 
         // Emit event
         emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
@@ -494,10 +494,9 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Calculate the proportion of the loan being repaid
         uint repaymentProportion =
-            (repaymentAmount_ * 10_000) / _outstandingLoans[user_];
-
+            (repaymentAmount_ * 1e27) / _outstandingLoans[user_];
         // Calculate the proportion of locked issuance tokens to unlock
-        return (_lockedIssuanceTokens[user_] * repaymentProportion) / 10_000;
+        return (_lockedIssuanceTokens[user_] * repaymentProportion) / 1e27;
     }
 
     /// @dev Calculate the required collateral amount for a given issuance token amount
