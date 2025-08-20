@@ -538,10 +538,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 ├── And net amount should be transferred to user
                 └── And the system's currently borrowed amount should increase
     */
-    function testPublicBorrow_succeedsGivenValidBorrowRequest() public {
+    function testFuzzPublicBorrow_succeedsGivenValidBorrowRequest(
+        uint borrowAmount_
+    ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        uint borrowAmount = 500 ether;
+        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+        uint borrowAmount = borrowAmount_;
 
         // Calculate how much issuance tokens will be needed
         uint requiredIssuanceTokens = lendingFacility
@@ -737,13 +740,17 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user tries to borrow additional collateral tokens
                 └── Then the transaction should revert with IndividualBorrowLimitExceeded error
     */
-    function testPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan()
-        public
-    {
+    function testFuzzPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan(
+        uint firstBorrowAmount_
+    ) public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
-        uint firstBorrowAmount = 300 ether; // First borrow
-        uint secondBorrowAmount = 250 ether; // Second borrow that would exceed limit when combined
+        firstBorrowAmount_ = bound(
+            firstBorrowAmount_, 1, lendingFacility.individualBorrowLimit()
+        );
+        uint firstBorrowAmount = firstBorrowAmount_; // First borrow
+        uint secondBorrowAmount =
+            lendingFacility.individualBorrowLimit() - firstBorrowAmount + 1 wei; // Second borrow that would exceed limit when combined
 
         // Setup: user borrows first amount
         uint requiredIssuanceTokens = lendingFacility
