@@ -28,23 +28,26 @@ Follow these steps to deploy the Yield Bearing Stable Token workflow:
         ```
 
 4.  **Deploy and Verify the Workflow:**
-    *   Execute the deployment script using `forge`. This command performs the deployment, setup, and contract verification.
-    *   You will need to provide the following command-line arguments (ensure the corresponding environment variables like `$OPTIMISM_SEPOLIA_RPC_URL`, `$OPTIMISM_ETHERSCAN_API_KEY`, and `$VERIFIER_URL` are set, either from the sourced file or your shell environment):
-        *   `--rpc-url`: The RPC endpoint URL for your target blockchain network (e.g., `$OPTIMISM_SEPOLIA_RPC_URL` for Optimism Sepolia).
-        *   `--etherscan-api-key`: Your Etherscan API key for the target network (e.g., `$OPTIMISM_ETHERSCAN_API_KEY`).
-        *   `--verifier-url`: The Etherscan API URL used for verification on the target network (e.g., `$OPTIMISM_SEPOLIA_ETHERSCAN_URL`).
-
+    *   Run the deployment and verification using the following `forge` command. This command will deploy the contracts, perform setup, and attempt contract verification on Etherscan:
+        *   `--rpc-url`: The RPC endpoint for your target network (e.g., `$SEPOLIA_RPC_URL` for Sepolia).
+        *   `-vvv`: Enables verbose output for detailed logs.
+        *   `--broadcast`: Broadcasts the transactions to the network.
+        *   `--etherscan-api-key`: Your Etherscan API key for the target network (e.g., `$ETHERSCAN_API_KEY`).
+        *   `--verify`: Enables contract verification after deployment.
+        *   `--verifier etherscan`: Specifies Etherscan as the verification service.
+        *   `--chain sepolia`: Specifies the target chain (e.g., Sepolia).
     *   Run the following command:
         ```bash
         forge script script/workflowDeploymentAndSetupScripts/DeployAndSetupNavBasedPimWorkflow.s.sol \
-          --rpc-url $OPTIMISM_SEPOLIA_RPC_URL \
+          --rpc-url $SEPOLIA_RPC_URL \
           -vvv \
           --broadcast \
-          --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY \
-          --verifier-url $OPTIMISM_SEPOLIA_ETHERSCAN_URL \
-          --verify
+          --etherscan-api-key $ETHERSCAN_API_KEY \
+          --verify \
+          --verifier etherscan \
+          --chain sepolia
         ```
-        *(Note: Replace `$OPTIMISM_SEPOLIA_RPC_URL`, `$OPTIMISM_ETHERSCAN_API_KEY`, and `$OPTIMISM_SEPOLIA_ETHERSCAN_URL` with the actual environment variables containing your specific URLs and key if they differ from the example names.)*
+    *   *(If you are deploying to a different network, update the environment variables, `--chain` argument, and replace `$SEPOLIA_RPC_URL` with the appropriate environment variables for your specific network and keys.)*
 
 ---
 
@@ -53,13 +56,14 @@ Follow these steps to deploy the Yield Bearing Stable Token workflow:
 Contract verification can sometimes fail due to intermittent Etherscan issues. If a contract doesn't verify automatically during deployment:
 
 1.  Identify the address (`<CONTRACT_ADDRESS>`) of the contract that failed verification (usually visible in the `forge script` output).
-2.  Run the `forge verify-contract` command manually for that specific address:
+2.  Run the `forge verify-contract` command manually for that specific address. Below is an example for Sepolia:
 
     ```bash
     forge verify-contract <CONTRACT_ADDRESS> \
-      --rpc-url $RPC_URL \
+      --rpc-url $SEPOLIA_RPC_URL \
       --etherscan-api-key $ETHERSCAN_API_KEY \
-      --verifier-url $VERIFIER_URL \
+      --verifier etherscan \
+      --chain sepolia \
       --watch
     ```
-    *(Ensure you use the same `$RPC_URL`, `$ETHERSCAN_API_KEY`, and `$VERIFIER_URL` values corresponding to the network where the contract was deployed.)*
+    *(Ensure you use the same `$RPC_URL`, `$ETHERSCAN_API_KEY`, and `chain` values corresponding to the network where the contract was deployed.)*
