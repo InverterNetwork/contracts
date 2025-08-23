@@ -409,7 +409,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
-        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
+        uint maxRepayAmount = borrowAmount_;
         repayAmount_ = bound(repayAmount_, 1, borrowAmount_);
         uint borrowAmount = borrowAmount_;
         uint repayAmount = repayAmount_;
@@ -548,7 +554,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
 
         // Calculate how much issuance tokens will be needed
@@ -750,9 +761,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
-        firstBorrowAmount_ = bound(
-            firstBorrowAmount_, 1, lendingFacility.individualBorrowLimit()
-        );
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        firstBorrowAmount_ = bound(firstBorrowAmount_, 1, maxBorrowableQuota);
         uint firstBorrowAmount = firstBorrowAmount_; // First borrow
         uint secondBorrowAmount =
             lendingFacility.individualBorrowLimit() - firstBorrowAmount + 1 wei; // Second borrow that would exceed limit when combined
@@ -818,16 +831,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has an existing outstanding loan
         address user = makeAddr("user");
-        vm.assume(
-            firstBorrowAmount_ > 0
-                && firstBorrowAmount_ < lendingFacility.individualBorrowLimit() / 2
+        firstBorrowAmount_ = bound(
+            firstBorrowAmount_, 1, lendingFacility.individualBorrowLimit() / 2
         );
         uint firstBorrowAmount = firstBorrowAmount_; // First borrow
         uint remainingLimit =
             lendingFacility.individualBorrowLimit() - firstBorrowAmount;
-        vm.assume(
-            secondBorrowAmount_ > 0 && secondBorrowAmount_ < remainingLimit
-        );
+        secondBorrowAmount_ = bound(secondBorrowAmount_, 1, remainingLimit);
         uint secondBorrowAmount = secondBorrowAmount_; // Second borrow that stays within limit when combined
 
         // Setup: user borrows first amount
@@ -890,7 +900,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        vm.assume(borrowAmount_ > 0 && borrowAmount_ < type(uint64).max);
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
 
         // Calculate how much issuance tokens will be needed
@@ -1004,7 +1019,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        vm.assume(newLimit_ > 0 && newLimit_ < type(uint64).max);
+        newLimit_ = bound(newLimit_, 1, type(uint128).max);
         uint newLimit = newLimit_;
         lendingFacility.setIndividualBorrowLimit(newLimit);
 
@@ -1049,7 +1064,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        vm.assume(newQuota_ > 0 && newQuota_ <= 10_000);
+        newQuota_ = bound(newQuota_, 1, 10_000);
         uint newQuota = newQuota_;
         lendingFacility.setBorrowableQuota(newQuota);
 
@@ -1066,7 +1081,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         _authorizer.grantRole(roleId, address(this));
 
-        vm.assume(newQuota_ > 10_000);
+        newQuota_ = bound(newQuota_, 10_001, type(uint16).max);
         uint invalidQuota = newQuota_; // Exceeds 100%
         vm.expectRevert(
             ILM_PC_Lending_Facility_v1
@@ -1264,7 +1279,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
@@ -1331,7 +1350,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     ) public {
         // Given: a user has locked issuance tokens
         address user = makeAddr("user");
-        borrowAmount_ = bound(borrowAmount_, 1, type(uint64).max);
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         unlockAmount_ = bound(unlockAmount_, 1, borrowAmount_);
         uint borrowAmount = borrowAmount_;
         uint unlockAmount = unlockAmount_;
