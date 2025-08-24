@@ -219,6 +219,8 @@ contract LM_PC_Lending_Facility_v1 is
                 .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
         }
 
+        _issuanceToken.approve(address(this), requiredIssuanceTokens);
+
         // Lock the required issuance tokens automatically
         _issuanceToken.safeTransferFrom(
             user, address(this), requiredIssuanceTokens
