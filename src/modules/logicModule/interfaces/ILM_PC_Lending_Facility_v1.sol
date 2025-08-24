@@ -66,6 +66,20 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @param newCalculator The new fee calculator address
     event DynamicFeeCalculatorUpdated(address newCalculator);
 
+    /// @notice Emitted when a user completes a buyAndBorrow operation
+    /// @param user The address of the user who performed the operation
+    /// @param leverage The leverage used for the operation
+    /// @param totalIssuanceTokensReceived Total issuance tokens received from all iterations
+    /// @param totalBorrowed Total amount borrowed across all iterations
+    /// @param collateralUsed Total collateral used for the operation
+    event BuyAndBorrowCompleted(
+        address indexed user,
+        uint leverage,
+        uint totalIssuanceTokensReceived,
+        uint totalBorrowed,
+        uint collateralUsed
+    );
+
     // =========================================================================
     // Errors
 
@@ -83,6 +97,18 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid fee calculator address
     error Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
+
+    /// @notice Leverage must be at least 1
+    error Module__LM_PC_Lending_Facility_InvalidLeverage();
+
+    /// @notice No collateral tokens available for the user
+    error Module__LM_PC_Lending_Facility_NoCollateralAvailable();
+
+    /// @notice Insufficient issuance tokens would be received from purchase
+    error Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived();
+
+    /// @notice No issuance tokens received in iteration
+    error Module__LM_PC_Lending_Facility_NoIssuanceTokensInIteration();
 
     // =========================================================================
     // Public - Getters
@@ -133,6 +159,10 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Repay a loan with collateral tokens
     /// @param repaymentAmount_ The amount of collateral tokens to repay
     function repay(uint repaymentAmount_) external;
+
+    /// @notice Buy issuance tokens and borrow against them in a single transaction
+    /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)
+    function buyAndBorrow(uint leverage_) external;
 
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)

@@ -192,7 +192,7 @@ contract LM_PC_Lending_Facility_v1 is
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
     function borrow(uint requestedLoanAmount_)
-        external
+        public
         virtual
         onlyValidBorrowAmount(requestedLoanAmount_)
     {
@@ -272,6 +272,108 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Emit event
         emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function buyAndBorrow(uint leverage_) external virtual {
+        address user = _msgSender();
+
+        // Require leverage to be at least 1 (minimum 1 loop)
+        if (leverage_ < 1) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidLeverage();
+        }
+
+        // Track total issuance tokens received and total borrowed
+        uint totalIssuanceTokensReceived = 0;
+        uint totalBorrowed = 0;
+        uint totalCollateralUsed = 0;
+
+        // Loop through leverage iterations
+        for (uint8 i = 0; i < leverage_; i++) {
+            // Get user's collateral balance
+            uint userCollateralBalance = _collateralToken.balanceOf(user);
+            if (userCollateralBalance == 0) {
+                revert
+                    ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
+            }
+
+            if (userCollateralBalance < 1) break;
+
+            // Calculate how much collateral to use for the initial purchase
+            uint collateralForPurchase = userCollateralBalance;
+
+            // Calculate minimum amount of issuance tokens expected from the purchase
+            uint minIssuanceTokensOut = IBondingCurveBase_v1(_dbcFmAddress)
+                .calculatePurchaseReturn(collateralForPurchase);
+
+            // Require minimum issuance tokens to be greater than 0
+            if (minIssuanceTokensOut == 0) {
+                revert
+                    ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived(
+                );
+            }
+
+            // Transfer collateral from user to this contract for this iteration
+            _collateralToken.safeTransferFrom(
+                user, address(this), collateralForPurchase
+            );
+
+            _collateralToken.approve(_dbcFmAddress, collateralForPurchase);
+
+            // Buy issuance tokens from the funding manager
+            IBondingCurveBase_v1(_dbcFmAddress).buyFor(
+                user, // receiver (user)
+                collateralForPurchase, // deposit amount
+                minIssuanceTokensOut // minimum amount out
+            );
+
+            // Get the actual amount of issuance tokens received in this iteration
+            uint actualIssuanceTokensReceived =
+                _issuanceToken.balanceOf(user) - totalIssuanceTokensReceived;
+            if (actualIssuanceTokensReceived == 0) {
+                revert
+                    ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_NoIssuanceTokensInIteration();
+            }
+
+            // Add to total issuance tokens received
+            totalIssuanceTokensReceived += actualIssuanceTokensReceived;
+
+            // Track collateral used in this iteration
+            totalCollateralUsed += collateralForPurchase;
+
+            // Now calculate borrowing power based on balance of issuance
+            uint borrowingPower =
+                _calculateCollateralAmount(actualIssuanceTokensReceived);
+
+            // Calculate how much can be borrowed in this iteration
+            // Each iteration can borrow up to the value of the issuance tokens received
+            uint borrowAmountThisIteration = borrowingPower;
+
+            // If we can't borrow anything more, break the loop
+            if (borrowAmountThisIteration <= 0) {
+                break;
+            }
+
+            // Call the borrow function with the calculated amount
+            borrow(borrowAmountThisIteration);
+
+            // Update our tracking
+            totalBorrowed += borrowAmountThisIteration;
+        }
+
+        // Emit event for the completed buyAndBorrow operation
+        emit ILM_PC_Lending_Facility_v1.BuyAndBorrowCompleted(
+            user,
+            leverage_,
+            totalIssuanceTokensReceived,
+            totalBorrowed,
+            totalCollateralUsed
+        );
     }
 
     // =========================================================================

@@ -412,7 +412,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             * lendingFacility.borrowableQuota() / 10_000;
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
-        uint maxRepayAmount = borrowAmount_;
         repayAmount_ = bound(repayAmount_, 1, borrowAmount_);
         uint borrowAmount = borrowAmount_;
         uint repayAmount = repayAmount_;
@@ -688,12 +687,10 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         feeParams = helper_setDynamicFeeCalculatorParams(feeParams);
 
         // When: the user borrows collateral tokens
-        uint userBalanceBefore = orchestratorToken.balanceOf(user);
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
         // Then: the outstanding loan should equal the requested amount (fee on top model)
-        uint userBalanceAfter = orchestratorToken.balanceOf(user);
         uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
 
         assertEq(
@@ -726,6 +723,56 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         lendingFacility.borrow(borrowAmount);
 
         // Then: the transaction should revert with InvalidBorrowAmount error
+    }
+
+    // =========================================================================
+    // Test: Buy and Borrow
+
+    function testPublicBuyAndBorrow_succeedsGivenValidLeverage() public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        orchestratorToken.mint(user, 100 ether);
+
+        fmBcDiscrete.openBuy();
+
+        // Record initial state
+        uint userCollateralBalanceBefore = orchestratorToken.balanceOf(user);
+        uint userIssuanceBalanceBefore = issuanceToken.balanceOf(user);
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+
+        vm.startPrank(user);
+        orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
+        orchestratorToken.approve(address(lendingFacility), type(uint).max);
+        issuanceToken.approve(address(fmBcDiscrete), type(uint).max);
+        issuanceToken.approve(address(lendingFacility), type(uint).max);
+
+        lendingFacility.buyAndBorrow(25);
+        vm.stopPrank();
+
+        // Then: verify state changes
+        // User should have received issuance tokens from the buy operation
+        uint userIssuanceBalanceAfter = issuanceToken.balanceOf(user);
+        assertGt(
+            userIssuanceBalanceAfter,
+            userIssuanceBalanceBefore,
+            "User should receive issuance tokens from buy operation"
+        );
+
+        // User should have some collateral remaining (less than initial amount due to fees and purchases)
+        uint userCollateralBalanceAfter = orchestratorToken.balanceOf(user);
+        assertLt(
+            userCollateralBalanceAfter,
+            userCollateralBalanceBefore,
+            "User should have spent some collateral on purchases"
+        );
+
+        // User should have an outstanding loan
+        uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
+        assertGt(
+            outstandingLoanAfter,
+            outstandingLoanBefore,
+            "User should have an outstanding loan after borrowing"
+        );
     }
 
     // =========================================================================
