@@ -11,6 +11,24 @@ import {ERC165Upgradeable} from
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
+
+/**
+ * @title   Inverter Dynamic Fee Calculator Contract
+ *
+ * @notice  This contract calculates dynamic fees for origination, issuance, and redemption operations
+ *          based on utilization ratios and premium rates. Fees scale dynamically according to market
+ *          conditions and can be configured by the contract owner.
+ *
+ *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {Ownable2StepUpgradeable} for owner-based
+ *          access control, and implements the {IDynamicFeeCalculator_v1} interface.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @author  Inverter Network
+ */
+ 
 contract DynamicFeeCalculator_v1 is
     ERC165Upgradeable,
     IDynamicFeeCalculator_v1,
