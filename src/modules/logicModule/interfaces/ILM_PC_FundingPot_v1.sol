@@ -205,17 +205,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     // -------------------------------------------------------------------------
     // Errors
 
-    /// @notice Amount can not be zero.
-    error Module__LM_PC_FundingPot__InvalidDepositAmount();
-
-    /// @notice Round start time must be in the future.
-    error Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
-
-    /// @notice Round parameters are invalid.
-    error Module__LM_PC_FundingPot__RoundParamsInvalid();
-
-    /// @notice Error for invalid hook settings
-    error Module__LM_PC_FundingPot__InvalidHookConfiguration();
+    /// @notice Invalid input validation.
+    error Module__LM_PC_FundingPot__InvalidInput();
 
     /// @notice Round does not exist.
     error Module__LM_PC_FundingPot__RoundNotCreated();
@@ -226,18 +217,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Invalid access criteria type.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
 
-    /// @notice Invalid times.
-    error Module__LM_PC_FundingPot__InvalidTimes();
-
     /// @notice Round has not started yet.
     error Module__LM_PC_FundingPot__RoundHasNotStarted();
 
     /// @notice Round has already ended.
     error Module__LM_PC_FundingPot__RoundHasEnded();
 
+    /// @notice Access criteria failed.
     error Module__LM_PC_FundingPot__AccessCriteriaFailed();
 
-    /// @notice User has reached their personal contribution cap.
+    /// @notice User has reached their personal contribution cap. 
     error Module__LM_PC_FundingPot__PersonalCapReached();
 
     /// @notice Round contribution cap has been reached.
@@ -246,18 +235,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round Closure conditions are not met.
     error Module__LM_PC_FundingPot__ClosureConditionsNotMet();
 
-    /// @notice Hook execution failed.
-    error Module__LM_PC_FundingPot__HookExecutionFailed();
-
     /// @notice No contributions were made to the round.
     error Module__LM_PC_FundingPot__NoContributions();
 
     /// @notice Round is not closed.
     error Module__LM_PC_FundingPot__RoundNotClosed();
-
-    /// @notice Invalid start index.
-    error Module__LM_PC_FundingPot__InvalidStartIndex();
-
 
     /// @notice Start round ID must be greater than zero.
     error Module__LM_PC_FundingPot__StartRoundCannotBeZero();
@@ -267,6 +249,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Unspent caps must be from previous rounds.
     error Module__LM_PC_FundingPot__UnspentCapsMustBeFromPreviousRounds();
+
+    /// @notice Thrown when someone tries to use another user's unspent caps
+    error Module__LM_PC_FundingPot__OnlyOwnerCanUseUnspentCaps();
+
+    /// @notice Hook execution failed.
+    error Module__LM_PC_FundingPot__HookExecutionFailed();
 
 
     // -------------------------------------------------------------------------

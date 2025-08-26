@@ -162,7 +162,7 @@ contract LM_PC_FundingPot_v1 is
         usedUnspentCaps;
 
     /// @notice Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[47] private __gap;
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -436,7 +436,6 @@ contract LM_PC_FundingPot_v1 is
         round.accessCriterias[criteriaId].nftContract = address(0);
         round.accessCriterias[criteriaId].merkleRoot = bytes32(0);
         // @note: When changing allowlists, call removeAllowlistedAddresses first to clear previous entries
-
         // Set the access criteria type
         round.accessCriterias[criteriaId].accessCriteriaType =
             accessCriteriaType;
@@ -508,7 +507,7 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         if (!_validTimes(start_, cliff_, end_)) {
-            revert Module__LM_PC_FundingPot__InvalidTimes();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
         AccessCriteriaPrivileges storage accessCriteriaPrivileges =
@@ -542,11 +541,15 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] memory merkleProof_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external {
+        // If using unspent caps, only the owner can use them
+        if (unspentPersonalRoundCaps_.length > 0 && _msgSender() != user_) {
+            revert Module__LM_PC_FundingPot__OnlyOwnerCanUseUnspentCaps();
+        }
+        
         uint unspentPersonalCap = _calculateUnspentPersonalCap(
             user_, roundId_, unspentPersonalRoundCaps_
         );
 
-    
 
         _contributeToRoundFor(
             user_,
@@ -721,30 +724,19 @@ contract LM_PC_FundingPot_v1 is
         // Validate round start time is in the future
         // @note: The below condition wont allow _roundStart == block.timestamp
         if (round_.roundStart <= block.timestamp) {
-            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
         // Validate that either end time or cap is set
         if (round_.roundEnd == 0 && round_.roundCap == 0) {
-            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
         // If end time is set, validate it's after start time
         if (round_.roundEnd > 0 && round_.roundEnd < round_.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
-        // Validate hook contract and function consistency
-        if (
-            round_.hookContract != address(0) && round_.hookFunction.length == 0
-        ) {
-            revert Module__LM_PC_FundingPot__InvalidHookConfiguration();
-        }
-
-        if (round_.hookContract == address(0) && round_.hookFunction.length > 0)
-        {
-            revert Module__LM_PC_FundingPot__InvalidHookConfiguration();
-        }
     }
 
     /// @notice Validates the round parameters before editing.
@@ -756,7 +748,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (block.timestamp > round_.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundParamsInvalid();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
     }
 
@@ -789,7 +781,7 @@ contract LM_PC_FundingPot_v1 is
         uint unspentPersonalCap_
     ) internal {
         if (amount_ == 0) {
-            revert Module__LM_PC_FundingPot__InvalidDepositAmount();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
         Round storage round = rounds[roundId_];
@@ -1083,12 +1075,10 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
 
         roundIdToClosedStatus[roundId_] = true;
-
+        // @note: we don't check if the hook contract is valid here, because we don't want to revert the round closure
+        // if the hook contract is invalid.
         if (round.hookContract != address(0)) {
             (bool success,) = round.hookContract.call(round.hookFunction);
-            if (!success) {
-                revert Module__LM_PC_FundingPot__HookExecutionFailed();
-            }
         }
 
         emit RoundClosed(roundId_, roundIdToTotalContributions[roundId_]);
@@ -1114,7 +1104,7 @@ contract LM_PC_FundingPot_v1 is
         uint contributorCount = contributors.length;
 
         if (startIndex_ >= contributorCount) {
-            revert Module__LM_PC_FundingPot__InvalidStartIndex();
+            revert Module__LM_PC_FundingPot__InvalidInput();
         }
 
         // Calculate the end index (don't exceed array bounds)
