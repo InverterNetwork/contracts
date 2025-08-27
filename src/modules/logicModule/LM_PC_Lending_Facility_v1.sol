@@ -112,6 +112,9 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice Maximum borrowable quota percentage (100%)
     uint internal constant _MAX_BORROWABLE_QUOTA = 10_000; // 100% in basis points
 
+    /// @notice Maximum leverage buyAndBorrow loops
+    uint public constant _MAX_LEVERAGE = 50;
+
     //--------------------------------------------------------------------------
     // State
 
@@ -279,7 +282,7 @@ contract LM_PC_Lending_Facility_v1 is
         address user = _msgSender();
 
         // Require leverage to be at least 1 (minimum 1 loop)
-        if (leverage_ < 1) {
+        if (leverage_ < 1 || leverage_ > _MAX_LEVERAGE) {
             revert
                 ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();

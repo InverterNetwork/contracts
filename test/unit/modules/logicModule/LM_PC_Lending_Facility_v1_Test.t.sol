@@ -728,6 +728,71 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     // =========================================================================
     // Test: Buy and Borrow
 
+    /* Test: Function buyAndBorrow()
+        ├── Given a user wants to use buyAndBorrow
+        └── And the user provides leverage exceeding maximum allowed limit
+            └── When the user executes buyAndBorrow
+                └── Then the transaction should revert with InvalidLeverage error
+    */
+    function testFuzzPublicBuyAndBorrow_revertsGivenInvalidLeverage(
+        uint leverage_
+    ) public {
+        // Given: a user wants to use buyAndBorrow
+        address user = makeAddr("user");
+        orchestratorToken.mint(user, 100 ether);
+        fmBcDiscrete.openBuy();
+
+        leverage_ = bound(
+            leverage_, lendingFacility._MAX_LEVERAGE() + 1, type(uint8).max
+        );
+        uint leverage = leverage_;
+
+        vm.startPrank(user);
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidLeverage
+                .selector
+        );
+        lendingFacility.buyAndBorrow(leverage);
+        vm.stopPrank();
+    }
+
+    /* Test: Function buyAndBorrow()
+        ├── Given a user wants to use buyAndBorrow
+        │   └── And the user has no collateral tokens
+        │       └── When the user executes buyAndBorrow
+        │           └── Then the transaction should revert with NoCollateralAvailable error
+    */
+
+    function testFuzzPublicBuyAndBorrow_revertsGivenNoCollateralAvailable(
+        uint leverage_
+    ) public {
+        // Given: a user wants to use buyAndBorrow
+        address user = makeAddr("user");
+
+        leverage_ = bound(leverage_, 1, lendingFacility._MAX_LEVERAGE());
+        uint leverage = leverage_;
+
+        vm.prank(user);
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoCollateralAvailable
+                .selector
+        );
+        lendingFacility.buyAndBorrow(leverage);
+    }
+
+    /* Test: Function buyAndBorrow()
+        ├── Given a user wants to use buyAndBorrow
+        │   └── And the user has sufficient collateral tokens
+        │   └── And the bonding curve is open for buying
+        │   └── And the user provides valid leverage within limits
+        │   └── And the user has approved sufficient token allowances
+        │       └── When the user executes buyAndBorrow
+        │           ├── Then the user should receive issuance tokens from the buy operation
+        │           ├── And the user's collateral balance should decrease (due to fees and purchases)
+        │           └── And the user should have an outstanding loan
+    */
     function testPublicBuyAndBorrow_succeedsGivenValidLeverage() public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
