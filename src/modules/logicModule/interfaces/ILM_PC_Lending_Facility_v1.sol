@@ -80,6 +80,10 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
         uint collateralUsed
     );
 
+    /// @notice Emitted when the maximum leverage is updated
+    /// @param newMaxLeverage The new maximum leverage
+    event MaxLeverageUpdated(uint newMaxLeverage);
+
     // =========================================================================
     // Errors
 

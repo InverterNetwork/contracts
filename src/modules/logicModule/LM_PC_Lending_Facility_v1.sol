@@ -112,9 +112,6 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice Maximum borrowable quota percentage (100%)
     uint internal constant _MAX_BORROWABLE_QUOTA = 10_000; // 100% in basis points
 
-    /// @notice Maximum leverage buyAndBorrow loops
-    uint public constant _MAX_LEVERAGE = 50;
-
     //--------------------------------------------------------------------------
     // State
 
@@ -124,6 +121,9 @@ contract LM_PC_Lending_Facility_v1 is
 
     /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
     uint public borrowableQuota;
+
+    /// @notice Maximum leverage allowed for buyAndBorrow operations
+    uint public maxLeverage;
 
     /// @notice Currently borrowed amount across all users
     uint public currentlyBorrowedAmount;
@@ -179,8 +179,11 @@ contract LM_PC_Lending_Facility_v1 is
             address issuanceToken,
             address dbcFmAddress,
             address dynamicFeeCalculator,
-            uint borrowableQuota_
-        ) = abi.decode(configData_, (address, address, address, address, uint));
+            uint borrowableQuota_,
+            uint maxLeverage_
+        ) = abi.decode(
+            configData_, (address, address, address, address, uint, uint)
+        );
 
         // Set init state
         _collateralToken = IERC20(collateralToken);
@@ -188,6 +191,7 @@ contract LM_PC_Lending_Facility_v1 is
         _dbcFmAddress = dbcFmAddress;
         _dynamicFeeCalculator = dynamicFeeCalculator;
         borrowableQuota = borrowableQuota_;
+        maxLeverage = maxLeverage_;
     }
 
     // =========================================================================
@@ -281,8 +285,7 @@ contract LM_PC_Lending_Facility_v1 is
     function buyAndBorrow(uint leverage_) external virtual {
         address user = _msgSender();
 
-        // Require leverage to be at least 1 (minimum 1 loop)
-        if (leverage_ < 1 || leverage_ > _MAX_LEVERAGE) {
+        if (leverage_ < 1 || leverage_ > maxLeverage) {
             revert
                 ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();
@@ -410,6 +413,21 @@ contract LM_PC_Lending_Facility_v1 is
         }
         _dynamicFeeCalculator = newFeeCalculator_;
         emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
+    }
+
+    /// @notice Set the maximum leverage allowed for buyAndBorrow operations
+    /// @param newMaxLeverage_ The new maximum leverage (must be >= 1)
+    function setMaxLeverage(uint newMaxLeverage_)
+        external
+        onlyLendingFacilityManager
+    {
+        if (newMaxLeverage_ < 1 || newMaxLeverage_ > type(uint8).max) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidLeverage();
+        }
+        maxLeverage = newMaxLeverage_;
+        emit MaxLeverageUpdated(newMaxLeverage_);
     }
 
     // =========================================================================

@@ -78,6 +78,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
     uint constant LOCKED_ISSUANCE_TOKENS = 1000 ether;
     uint constant MAX_FEE_PERCENTAGE = 1e18;
+    uint constant MAX_LEVERAGE = 50;
 
     // Structs for organizing test data
     struct CurveTestData {
@@ -271,7 +272,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 address(issuanceToken),
                 address(fmBcDiscrete),
                 address(dynamicFeeCalculator),
-                BORROWABLE_QUOTA
+                BORROWABLE_QUOTA,
+                MAX_LEVERAGE
             )
         );
 
@@ -742,9 +744,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         orchestratorToken.mint(user, 100 ether);
         fmBcDiscrete.openBuy();
 
-        leverage_ = bound(
-            leverage_, lendingFacility._MAX_LEVERAGE() + 1, type(uint8).max
-        );
+        leverage_ =
+            bound(leverage_, lendingFacility.maxLeverage() + 1, type(uint8).max);
         uint leverage = leverage_;
 
         vm.startPrank(user);
@@ -770,7 +771,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Given: a user wants to use buyAndBorrow
         address user = makeAddr("user");
 
-        leverage_ = bound(leverage_, 1, lendingFacility._MAX_LEVERAGE());
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
         uint leverage = leverage_;
 
         vm.prank(user);
@@ -940,6 +941,35 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 .selector
         );
         lendingFacility.setDynamicFeeCalculator(invalidFeeCalculator);
+    }
+
+    /* Test external setMaxLeverage function
+        ├── Given caller has LENDING_FACILITY_MANAGER_ROLE
+        │   └── When setting new maximum leverage
+        │       ├── Then the maximum leverage should be updated
+        └── Given invalid maximum leverage
+            └── When trying to set maximum leverage
+                └── Then it should revert with InvalidLeverage
+    */
+
+    function testFuzzPublicSetMaxLeverage_succeedsGivenValidLeverage(
+        uint newMaxLeverage_
+    ) public {
+        newMaxLeverage_ = bound(newMaxLeverage_, 1, type(uint8).max);
+        uint newMaxLeverage = newMaxLeverage_;
+        lendingFacility.setMaxLeverage(newMaxLeverage);
+
+        assertEq(lendingFacility.maxLeverage(), newMaxLeverage);
+    }
+
+    function testPublicSetMaxLeverage_failsGivenInvalidLeverage() public {
+        uint invalidMaxLeverage = 0;
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidLeverage
+                .selector
+        );
+        lendingFacility.setMaxLeverage(invalidMaxLeverage);
     }
 
     // =========================================================================
