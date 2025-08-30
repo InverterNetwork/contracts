@@ -76,7 +76,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
     // Test constants
     uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
-    uint constant INDIVIDUAL_BORROW_LIMIT = 500 ether;
     uint constant LOCKED_ISSUANCE_TOKENS = 1000 ether;
     uint constant MAX_FEE_PERCENTAGE = 1e18;
 
@@ -272,8 +271,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 address(issuanceToken),
                 address(fmBcDiscrete),
                 address(dynamicFeeCalculator),
-                BORROWABLE_QUOTA,
-                INDIVIDUAL_BORROW_LIMIT
+                BORROWABLE_QUOTA
             )
         );
 
@@ -412,7 +410,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint maxRepayAmount = borrowAmount_;
@@ -557,7 +554,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
@@ -581,13 +577,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             userBorrowingPower,
             borrowAmount,
             "User should have sufficient borrowing power"
-        );
-
-        // Given: the borrow amount is within individual and system limits
-        assertLe(
-            borrowAmount,
-            lendingFacility.individualBorrowLimit(),
-            "Borrow amount should be within individual limit"
         );
 
         uint borrowCapacity = lendingFacility.getBorrowCapacity();
@@ -640,212 +629,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function borrow()
-        ├── Given a user has issuance tokens
-        ├── And the user has sufficient borrowing power
-        └── And the borrow amount exceeds individual limit
-            └── When the user tries to borrow collateral tokens
-                └── Then the transaction should revert with IndividualBorrowLimitExceeded error
-    */
-    function testFuzzPublicBorrow_failsGivenExceedsIndividualLimit(
-        uint borrowAmount_
-    ) public {
-        // Given: a user has issuance tokens
-        address user = makeAddr("user");
-        borrowAmount_ = bound(
-            borrowAmount_,
-            lendingFacility.individualBorrowLimit() + 1,
-            type(uint128).max
-        );
-        uint borrowAmount = borrowAmount_; // More than individual limit (500 ether)
-
-        // Calculate how much issuance tokens will be needed
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer);
-
-        vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
-
-        // Given: the user has sufficient borrowing power
-        uint userBorrowingPower = issuanceTokensWithBuffer
-            * lendingFacility.exposed_getFloorPrice() / 1e18;
-        assertGe(
-            userBorrowingPower,
-            borrowAmount,
-            "User should have sufficient borrowing power"
-        );
-
-        // Given: the borrow amount exceeds individual limit
-        assertGt(
-            borrowAmount,
-            lendingFacility.individualBorrowLimit(),
-            "Borrow amount should exceed individual limit"
-        );
-
-        // Ensure the borrow amount doesn't exceed the system-wide borrowable quota
-        // so that the individual limit check is reached
-        uint borrowCapacity = lendingFacility.getBorrowCapacity();
-        uint borrowableQuota =
-            borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
-        vm.assume(borrowAmount <= borrowableQuota);
-
-        // When: the user tries to borrow collateral tokens
-        vm.prank(user);
-        vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded
-                .selector
-        );
-        lendingFacility.borrow(borrowAmount);
-
-        // Then: the transaction should revert with IndividualBorrowLimitExceeded error
-    }
-
-    /* Test: Function borrow() - Individual limit with existing outstanding loans
-        ├── Given a user has an existing outstanding loan
-        └── And the user tries to borrow additional tokens that would exceed the individual limit when combined
-            └── When the user tries to borrow additional collateral tokens
-                └── Then the transaction should revert with IndividualBorrowLimitExceeded error
-    */
-    function testFuzzPublicBorrow_failsGivenExceedsIndividualLimitWithExistingLoan(
-        uint firstBorrowAmount_
-    ) public {
-        // Given: a user has an existing outstanding loan
-        address user = makeAddr("user");
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
-
-        firstBorrowAmount_ = bound(firstBorrowAmount_, 1, maxBorrowableQuota);
-        uint firstBorrowAmount = firstBorrowAmount_; // First borrow
-        uint secondBorrowAmount =
-            lendingFacility.individualBorrowLimit() - firstBorrowAmount + 1 wei; // Second borrow that would exceed limit when combined
-
-        // Setup: user borrows first amount
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(firstBorrowAmount);
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer);
-        vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
-        vm.prank(user);
-        lendingFacility.borrow(firstBorrowAmount);
-
-        // Verify user has outstanding loan
-        assertEq(
-            lendingFacility.getOutstandingLoan(user),
-            firstBorrowAmount,
-            "User should have outstanding loan"
-        );
-
-        // Given: the user tries to borrow additional tokens that would exceed the individual limit when combined
-        uint totalBorrowed = firstBorrowAmount + secondBorrowAmount;
-        assertGt(
-            totalBorrowed,
-            lendingFacility.individualBorrowLimit(),
-            "Total borrowed amount should exceed individual limit"
-        );
-
-        // Setup for second borrow attempt
-        uint requiredIssuanceTokens2 = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(secondBorrowAmount);
-        uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer2);
-        vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer2
-        );
-
-        // When: the user tries to borrow additional collateral tokens
-        vm.prank(user);
-        vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded
-                .selector
-        );
-        lendingFacility.borrow(secondBorrowAmount);
-
-        // Then: the transaction should revert with IndividualBorrowLimitExceeded error
-    }
-
-    /* Test: Function borrow() - Individual limit allows borrowing within limit with existing loans
-        ├── Given a user has an existing outstanding loan
-        └── And the user tries to borrow additional tokens that would stay within the individual limit when combined
-            └── When the user tries to borrow additional collateral tokens
-                └── Then the transaction should succeed
-    */
-    function testFuzzPublicBorrow_succeedsGivenWithinIndividualLimitWithExistingLoan(
-        uint firstBorrowAmount_,
-        uint secondBorrowAmount_
-    ) public {
-        // Given: a user has an existing outstanding loan
-        address user = makeAddr("user");
-        firstBorrowAmount_ = bound(
-            firstBorrowAmount_, 1, lendingFacility.individualBorrowLimit() / 2
-        );
-        uint firstBorrowAmount = firstBorrowAmount_; // First borrow
-        uint remainingLimit =
-            lendingFacility.individualBorrowLimit() - firstBorrowAmount;
-        secondBorrowAmount_ = bound(secondBorrowAmount_, 1, remainingLimit);
-        uint secondBorrowAmount = secondBorrowAmount_; // Second borrow that stays within limit when combined
-
-        // Setup: user borrows first amount
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(firstBorrowAmount);
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer);
-        vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
-        vm.prank(user);
-        lendingFacility.borrow(firstBorrowAmount);
-
-        // Verify user has outstanding loan
-        assertEq(
-            lendingFacility.getOutstandingLoan(user),
-            firstBorrowAmount,
-            "User should have outstanding loan"
-        );
-
-        // Given: the user tries to borrow additional tokens that would stay within the individual limit when combined
-        uint totalBorrowed = firstBorrowAmount + secondBorrowAmount;
-        assertLe(
-            totalBorrowed,
-            lendingFacility.individualBorrowLimit(),
-            "Total borrowed amount should be within individual limit"
-        );
-
-        // Setup for second borrow attempt
-        uint requiredIssuanceTokens2 = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(secondBorrowAmount);
-        uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer2);
-        vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer2
-        );
-
-        // When: the user tries to borrow additional collateral tokens
-        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
-        vm.prank(user);
-        lendingFacility.borrow(secondBorrowAmount);
-
-        // Then: the transaction should succeed and outstanding loan should increase
-        assertEq(
-            lendingFacility.getOutstandingLoan(user),
-            outstandingLoanBefore + secondBorrowAmount,
-            "Outstanding loan should increase by second borrow amount"
-        );
-    }
-
     /* Test: Function borrow() - Outstanding loan should equal gross requested amount (fee on top)
         ├── Given a user borrows tokens with a dynamic fee
         └── When the borrow transaction completes
@@ -859,7 +642,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
@@ -882,13 +664,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             userBorrowingPower,
             borrowAmount,
             "User should have sufficient borrowing power"
-        );
-
-        // Given: the borrow amount is within limits
-        assertLe(
-            borrowAmount,
-            lendingFacility.individualBorrowLimit(),
-            "Borrow amount should be within individual limit"
         );
 
         uint borrowCapacity = lendingFacility.getBorrowCapacity();
@@ -955,51 +730,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
     // =========================================================================
     // Test: Configuration Functions
-
-    /* Test external setIndividualBorrowLimit function
-        ├── Given caller has LENDING_FACILITY_MANAGER_ROLE
-        │   └── When setting new individual borrow limit
-        │       ├── Then the limit should be updated
-        │       └── Then an event should be emitted
-        └── Given caller doesn't have role
-            └── When trying to set limit
-                └── Then it should revert with CallerNotAuthorized
-    */
-    function testFuzzPublicSetIndividualBorrowLimit_succeedsGivenAuthorizedCaller(
-        uint newLimit_
-    ) public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
-        newLimit_ = bound(newLimit_, 1, type(uint128).max);
-        uint newLimit = newLimit_;
-        lendingFacility.setIndividualBorrowLimit(newLimit);
-
-        assertEq(lendingFacility.individualBorrowLimit(), newLimit);
-    }
-
-    function testFuzzPublicSetIndividualBorrowLimit_failsGivenUnauthorizedCaller(
-        address unauthorizedUser
-    ) public {
-        vm.assume(
-            unauthorizedUser != address(0) && unauthorizedUser != address(this)
-        );
-
-        vm.startPrank(unauthorizedUser);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                lendingFacility.LENDING_FACILITY_MANAGER_ROLE(),
-                unauthorizedUser
-            )
-        );
-        lendingFacility.setIndividualBorrowLimit(2000 ether);
-        vm.stopPrank();
-    }
 
     /* Test external setBorrowableQuota function
         ├── Given caller has LENDING_FACILITY_MANAGER_ROLE
@@ -1237,7 +967,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         address user = makeAddr("user");
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
@@ -1308,7 +1037,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         address user = makeAddr("user");
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
-        lendingFacility.setIndividualBorrowLimit(maxBorrowableQuota);
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         unlockAmount_ = bound(unlockAmount_, 1, borrowAmount_);

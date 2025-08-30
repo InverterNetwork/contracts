@@ -58,10 +58,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @param amount The amount of issuance tokens unlocked
     event IssuanceTokensUnlocked(address indexed user, uint amount);
 
-    /// @notice Emitted when the individual borrow limit is updated
-    /// @param newLimit The new individual borrow limit
-    event IndividualBorrowLimitUpdated(uint newLimit);
-
     /// @notice Emitted when the borrowable quota is updated
     /// @param newQuota The new borrowable quota (in basis points)
     event BorrowableQuotaUpdated(uint newQuota);
@@ -81,9 +77,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Borrowing would exceed the system-wide borrowable quota
     error Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
-
-    /// @notice Borrowing would exceed the individual borrow limit
-    error Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded();
 
     /// @notice Borrowable quota cannot exceed 100% (10,000 basis points)
     error Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh();
@@ -162,11 +155,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
 
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)
-
-    /// @notice Set the individual borrow limit
-    /// @param newIndividualBorrowLimit_ The new individual borrow limit
-    function setIndividualBorrowLimit(uint newIndividualBorrowLimit_)
-        external;
 
     /// @notice Set the borrowable quota
     /// @param newBorrowableQuota_ The new borrowable quota (in basis points)

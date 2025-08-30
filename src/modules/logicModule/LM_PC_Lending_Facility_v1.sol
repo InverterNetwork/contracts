@@ -64,8 +64,7 @@ import {console2} from "forge-std/console2.sol";
  *                     - Purpose: Sets up the lending facility parameters
  *                     - How:     A user with LENDING_FACILITY_MANAGER_ROLE must call:
  *                               1. setBorrowableQuota()
- *                               2. setIndividualBorrowLimit()
- *                               3. setDynamicFeeCalculator()
+ *                               2. setDynamicFeeCalculator()
  *
  * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
  *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
@@ -123,9 +122,6 @@ contract LM_PC_Lending_Facility_v1 is
     /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
     uint public borrowableQuota;
 
-    /// @notice Individual borrow limit per user
-    uint public individualBorrowLimit;
-
     /// @notice Currently borrowed amount across all users
     uint public currentlyBorrowedAmount;
 
@@ -180,11 +176,8 @@ contract LM_PC_Lending_Facility_v1 is
             address issuanceToken,
             address dbcFmAddress,
             address dynamicFeeCalculator,
-            uint borrowableQuota_,
-            uint individualBorrowLimit_
-        ) = abi.decode(
-            configData_, (address, address, address, address, uint, uint)
-        );
+            uint borrowableQuota_
+        ) = abi.decode(configData_, (address, address, address, address, uint));
 
         // Set init state
         _collateralToken = IERC20(collateralToken);
@@ -192,7 +185,6 @@ contract LM_PC_Lending_Facility_v1 is
         _dbcFmAddress = dbcFmAddress;
         _dynamicFeeCalculator = dynamicFeeCalculator;
         borrowableQuota = borrowableQuota_;
-        individualBorrowLimit = individualBorrowLimit_;
     }
 
     // =========================================================================
@@ -218,16 +210,6 @@ contract LM_PC_Lending_Facility_v1 is
             revert
                 ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
-        }
-
-        // Check individual borrow limit (including existing outstanding loans)
-        if (
-            requestedLoanAmount_ + _outstandingLoans[user]
-                > individualBorrowLimit
-        ) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_IndividualBorrowLimitExceeded();
         }
 
         // Lock the required issuance tokens automatically
@@ -320,16 +302,6 @@ contract LM_PC_Lending_Facility_v1 is
 
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)
-
-    /// @notice Set the individual borrow limit
-    /// @param newIndividualBorrowLimit_ The new individual borrow limit
-    function setIndividualBorrowLimit(uint newIndividualBorrowLimit_)
-        external
-        onlyLendingFacilityManager
-    {
-        individualBorrowLimit = newIndividualBorrowLimit_;
-        emit IndividualBorrowLimitUpdated(newIndividualBorrowLimit_);
-    }
 
     /// @notice Set the borrowable quota
     /// @param newBorrowableQuota_ The new borrowable quota (in basis points)
