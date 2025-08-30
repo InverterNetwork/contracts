@@ -435,16 +435,7 @@ contract LM_PC_Lending_Facility_v1 is
             IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
         ).totalSupply();
 
-        // Get the first segment's initial price (P_floor)
-        PackedSegment[] memory segments = dbcFm.getSegments();
-        if (segments.length == 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
-        }
-
-        // Use PackedSegmentLib to get the initial price of the first segment
-        uint pFloor = PackedSegmentLib._initialPrice(segments[0]);
+        uint pFloor = _getFloorPrice();
 
         // Borrow Capacity = virtualIssuanceSupply * P_floor
         return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
@@ -458,11 +449,9 @@ contract LM_PC_Lending_Facility_v1 is
         view
         returns (uint)
     {
-        // Use the DBC FM to get the actual floor price
+        // Use the DBC FM to get the actual floor price from the first segment
         // User borrowing power = locked issuance tokens * floor price
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
-            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-        uint floorPrice = dbcFm.getStaticPriceForBuying();
+        uint floorPrice = _getFloorPrice();
         return _lockedIssuanceTokens[user_] * floorPrice / 1e18; // Adjust for decimals
     }
 
@@ -507,11 +496,9 @@ contract LM_PC_Lending_Facility_v1 is
         view
         returns (uint)
     {
-        // Use the DBC FM to get the actual floor price
+        // Use the DBC FM to get the actual floor price from the first segment
         // Required collateral = issuance tokens * floor price
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
-            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-        uint floorPrice = dbcFm.getStaticPriceForBuying();
+        uint floorPrice = _getFloorPrice();
         return issuanceTokenAmount_ * floorPrice / 1e18; // Adjust for decimals
     }
 
@@ -533,6 +520,17 @@ contract LM_PC_Lending_Facility_v1 is
     function _getFloorPrice() internal view returns (uint) {
         IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
             IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-        return dbcFm.getStaticPriceForBuying();
+
+        // Get the segments from the funding manager
+        PackedSegment[] memory segments = dbcFm.getSegments();
+
+        if (segments.length == 0) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
+        }
+
+        // Return the initial price of the first segment (floor price)
+        return PackedSegmentLib._initialPrice(segments[0]);
     }
 }

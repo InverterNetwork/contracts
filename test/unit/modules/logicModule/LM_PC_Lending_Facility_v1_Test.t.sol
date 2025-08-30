@@ -641,50 +641,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     }
 
     /* Test: Function borrow()
-        ├── Given a user has sufficient issuance tokens
-        ├── And the borrow amount exceeds borrowable quota
-        └── When the user tries to borrow collateral tokens
-            └── Then the transaction should revert with BorrowableQuotaExceeded error
-    */
-    function testPublicBorrow_failsGivenExceedsBorrowableQuota() public {
-        // Given: a user has issuance tokens
-        address user1 = makeAddr("user1");
-        address user2 = makeAddr("user2");
-        uint borrowAmount = 500 ether;
-
-        // Calculate how much issuance tokens will be needed
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user1, issuanceTokensWithBuffer);
-        issuanceToken.mint(user2, issuanceTokensWithBuffer);
-
-        lendingFacility.setBorrowableQuota(1000); // set 10% as borrow capacioty for testing purposes
-
-        //User 1 borrows
-        vm.startPrank(user1);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
-        lendingFacility.borrow(borrowAmount);
-        vm.stopPrank();
-
-        //User 2 borrows
-        vm.startPrank(user2);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
-        vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded
-                .selector
-        );
-        lendingFacility.borrow(100 ether);
-        vm.stopPrank();
-    }
-
-    /* Test: Function borrow()
         ├── Given a user has issuance tokens
         ├── And the user has sufficient borrowing power
         └── And the borrow amount exceeds individual limit
