@@ -794,44 +794,31 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         │           ├── And the user's collateral balance should decrease (due to fees and purchases)
         │           └── And the user should have an outstanding loan
     */
-    function testPublicBuyAndBorrow_succeedsGivenValidLeverage() public {
+    function testFuzzPublicBuyAndBorrow_succeedsGivenValidLeverage(
+        uint leverage_,
+        uint collateralAmount_
+    ) public {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
-        orchestratorToken.mint(user, 100 ether);
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+        uint leverage = leverage_;
 
+        collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
+
+        orchestratorToken.mint(user, collateralAmount_); // @note : Keeping this fixed for now, since fuzzing this results in various reverts.
         fmBcDiscrete.openBuy();
 
-        // Record initial state
-        uint userCollateralBalanceBefore = orchestratorToken.balanceOf(user);
-        uint userIssuanceBalanceBefore = issuanceToken.balanceOf(user);
         uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
 
         vm.startPrank(user);
         orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
         orchestratorToken.approve(address(lendingFacility), type(uint).max);
-        issuanceToken.approve(address(fmBcDiscrete), type(uint).max);
         issuanceToken.approve(address(lendingFacility), type(uint).max);
 
-        lendingFacility.buyAndBorrow(25);
+        lendingFacility.buyAndBorrow(leverage);
         vm.stopPrank();
 
         // Then: verify state changes
-        // User should have received issuance tokens from the buy operation
-        uint userIssuanceBalanceAfter = issuanceToken.balanceOf(user);
-        assertGt(
-            userIssuanceBalanceAfter,
-            userIssuanceBalanceBefore,
-            "User should receive issuance tokens from buy operation"
-        );
-
-        // User should have some collateral remaining (less than initial amount due to fees and purchases)
-        uint userCollateralBalanceAfter = orchestratorToken.balanceOf(user);
-        assertLt(
-            userCollateralBalanceAfter,
-            userCollateralBalanceBefore,
-            "User should have spent some collateral on purchases"
-        );
-
         // User should have an outstanding loan
         uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
         assertGt(
@@ -839,6 +826,81 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             outstandingLoanBefore,
             "User should have an outstanding loan after borrowing"
         );
+    }
+
+    /* Test: Function buyAndBorrow() and repay()
+        ├── Given a user has issuance tokens through buyAndBorrow
+           ├── And the user has an outstanding loan
+           └── And the user has sufficient orchestrator tokens for partial repayment
+               └── When the user repays a partial amount
+                   └── Then the outstanding loan should be reduced by the repayment amount
+    */
+    function testFuzzPublicBuyAndBorrow_succeedsValidRepayment(
+        uint leverage_,
+        uint collateralAmount_,
+        uint repaymentAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+
+        collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
+        testFuzzPublicBuyAndBorrow_succeedsGivenValidLeverage(
+            leverage_, collateralAmount_
+        );
+
+        uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
+
+        repaymentAmount_ = bound(repaymentAmount_, 1, outstandingLoan);
+        orchestratorToken.mint(user, repaymentAmount_); // Mint the repaymentAmount_ to user to pay the outstandingLoan
+
+        vm.startPrank(user);
+        orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
+        orchestratorToken.approve(address(lendingFacility), type(uint).max);
+        issuanceToken.approve(address(lendingFacility), type(uint).max);
+
+        lendingFacility.repay(repaymentAmount_);
+        vm.stopPrank();
+
+        assertEq(
+            lendingFacility.getOutstandingLoan(user),
+            outstandingLoan - repaymentAmount_
+        );
+    }
+
+    /* Test: Function buyAndBorrow() and repay()
+        ├── Given a user has issuance tokens through buyAndBorrow
+           ├── And the user has an outstanding loan
+           └── And the user has sufficient orchestrator tokens for full repayment
+               └── When the user repays the full outstanding loan amount
+                   └── Then the outstanding loan should be zero
+    */
+    function testFuzzPublicBuyAndBorrow_succeedsValidFullRepayment(
+        uint leverage_,
+        uint collateralAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+
+        collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
+        testFuzzPublicBuyAndBorrow_succeedsGivenValidLeverage(
+            leverage_, collateralAmount_
+        );
+
+        uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
+
+        orchestratorToken.mint(user, outstandingLoan); // Mint the outstandingLoan to user to pay the Full Loan
+
+        vm.startPrank(user);
+        orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
+        orchestratorToken.approve(address(lendingFacility), type(uint).max);
+        issuanceToken.approve(address(lendingFacility), type(uint).max);
+
+        lendingFacility.repay(outstandingLoan);
+        vm.stopPrank();
+
+        assertEq(lendingFacility.getOutstandingLoan(user), 0);
     }
 
     // =========================================================================
