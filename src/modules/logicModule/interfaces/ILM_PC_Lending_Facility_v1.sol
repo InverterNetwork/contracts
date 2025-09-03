@@ -72,9 +72,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Amount cannot be zero
     error Module__LM_PC_Lending_Facility_InvalidBorrowAmount();
 
-    /// @notice User has insufficient borrowing power for the requested amount
-    error Module__LM_PC_Lending_Facility_InsufficientBorrowingPower();
-
     /// @notice Borrowing would exceed the system-wide borrowable quota
     error Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
 
@@ -83,18 +80,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice No segments are configured in the DBC FM
     error Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
-
-    /// @notice User has insufficient locked issuance tokens for the requested unlock amount
-    error Module__LM_PC_Lending_Facility_InsufficientLockedTokens();
-
-    /// @notice Cannot unlock issuance tokens while there is an outstanding loan
-    error Module__LM_PC_Lending_Facility_CannotUnlockWithOutstandingLoan();
-
-    /// @notice Dynamic fee parameters are invalid (zero values not allowed)
-    error Module__LM_PC_Lending_Facility_InvalidDynamicFeeParameters();
-
-    /// @notice Caller is not authorized to perform this action
-    error Module__LM_PC_Lending_Facility_CallerNotAuthorized();
 
     /// @notice Invalid fee calculator address
     error Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
@@ -148,10 +133,6 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Repay a loan with collateral tokens
     /// @param repaymentAmount_ The amount of collateral tokens to repay
     function repay(uint repaymentAmount_) external;
-
-    /// @notice Unlock issuance tokens (only if no outstanding loan)
-    /// @param amount_ The amount of issuance tokens to unlock
-    function unlockIssuanceTokens(uint amount_) external;
 
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)

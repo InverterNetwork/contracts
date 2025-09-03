@@ -274,32 +274,6 @@ contract LM_PC_Lending_Facility_v1 is
         emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
     }
 
-    /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function unlockIssuanceTokens(uint amount_) external virtual {
-        address user = _msgSender();
-
-        if (_lockedIssuanceTokens[user] < amount_) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InsufficientLockedTokens();
-        }
-
-        if (_outstandingLoans[user] > 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_CannotUnlockWithOutstandingLoan();
-        }
-
-        // Update locked amount
-        _lockedIssuanceTokens[user] -= amount_;
-
-        // Transfer tokens back to user
-        _issuanceToken.safeTransfer(user, amount_);
-
-        // Emit event
-        emit IssuanceTokensUnlocked(user, amount_);
-    }
-
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)
 
