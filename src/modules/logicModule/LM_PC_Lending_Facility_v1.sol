@@ -1,0 +1,482 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.23;
+
+// Internal
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {
+    IERC20PaymentClientBase_v2,
+    IPaymentProcessor_v2
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+import {
+    ERC20PaymentClientBase_v2,
+    Module_v1
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+import {ILM_PC_Lending_Facility_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
+import {IFundingManager_v1} from
+    "src/modules/fundingManager/IFundingManager_v1.sol";
+import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {IBondingCurveBase_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IDynamicFeeCalculator_v1} from
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
+import {PackedSegment} from
+    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {PackedSegmentLib} from
+    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
+
+// External
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {console2} from "forge-std/console2.sol";
+
+/**
+ * @title   House Protocol Lending Facility Logic Module
+ *
+ * @notice  A lending facility that allows users to borrow collateral tokens against issuance tokens.
+ *          The system uses dynamic fee calculation based on liquidity rates and enforces borrowing limits.
+ *
+ * @dev     This contract implements the following key functionality:
+ *          - Borrowing collateral tokens against locked issuance tokens
+ *          - Dynamic fee calculation based on floor liquidity rate
+ *          - Repayment functionality with issuance token unlocking
+ *          - Configurable borrowing limits and quotas
+ *          - Role-based access control for facility management
+ *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Configure LENDING_FACILITY_MANAGER_ROLE:
+ *                     - Purpose: Implements access control for managing the lending facility
+ *                               parameters (borrowable quota, individual limits, etc.)
+ *                     - How:     The OrchestratorAdmin must:
+ *                               1. Retrieve the lending facility manager role identifier
+ *                               2. Grant the role to designated admins
+ *                     - Example: module.grantModuleRole(
+ *                                 module.LENDING_FACILITY_MANAGER_ROLE(),
+ *                                 adminAddress
+ *                               );
+ *
+ *                  2. Initialize Lending Facility Parameters:
+ *                     - Purpose: Sets up the lending facility parameters
+ *                     - How:     A user with LENDING_FACILITY_MANAGER_ROLE must call:
+ *                               1. setBorrowableQuota()
+ *                               2. setDynamicFeeCalculator()
+ *
+ * @custom:upgrades This contract is upgradeable and uses the Inverter upgrade pattern.
+ *                  The contract inherits from ERC20PaymentClientBase_v2 which provides
+ *                  upgradeability through the Inverter proxy system. Upgrades should be
+ *                  carefully tested to ensure no state corruption and proper initialization
+ *                  of new functionality. The storage gap pattern is used to reserve space
+ *                  for future upgrades.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.0.0
+ *
+ * @author  Inverter Network
+ */
+contract LM_PC_Lending_Facility_v1 is
+    ILM_PC_Lending_Facility_v1,
+    ERC20PaymentClientBase_v2
+{
+    // =========================================================================
+    // Libraries
+
+    using SafeERC20 for IERC20;
+
+    // =========================================================================
+    // ERC165
+
+    /// @inheritdoc ERC165Upgradeable
+    function supportsInterface(bytes4 interfaceId_)
+        public
+        view
+        virtual
+        override(ERC20PaymentClientBase_v2)
+        returns (bool)
+    {
+        return interfaceId_ == type(ILM_PC_Lending_Facility_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
+    }
+
+    //--------------------------------------------------------------------------
+    // Constants
+
+    /// @notice Maximum borrowable quota percentage (100%)
+    uint internal constant _MAX_BORROWABLE_QUOTA = 10_000; // 100% in basis points
+
+    //--------------------------------------------------------------------------
+    // State
+
+    /// @dev The role that allows managing the lending facility parameters
+    bytes32 public constant LENDING_FACILITY_MANAGER_ROLE =
+        "LENDING_FACILITY_MANAGER";
+
+    /// @notice Borrowable Quota as percentage of Borrow Capacity (in basis points)
+    uint public borrowableQuota;
+
+    /// @notice Currently borrowed amount across all users
+    uint public currentlyBorrowedAmount;
+
+    /// @notice Mapping of user addresses to their locked issuance token amounts
+    mapping(address user => uint amount) internal _lockedIssuanceTokens;
+
+    /// @notice Mapping of user addresses to their outstanding loan principals
+    mapping(address user => uint amount) internal _outstandingLoans;
+
+    /// @notice Collateral token (the token being borrowed)
+    IERC20 internal _collateralToken;
+
+    /// @notice Issuance token (the token being locked as collateral)
+    IERC20 internal _issuanceToken;
+
+    /// @notice DBC FM address for floor price calculations
+    address internal _dbcFmAddress;
+
+    /// @notice Address of the Dynamic Fee Calculator contract
+    address internal _dynamicFeeCalculator;
+
+    /// @notice Storage gap for future upgrades
+    uint[50] private __gap;
+
+    // =========================================================================
+    // Modifiers
+
+    modifier onlyLendingFacilityManager() {
+        _checkRoleModifier(LENDING_FACILITY_MANAGER_ROLE, _msgSender());
+        _;
+    }
+
+    modifier onlyValidBorrowAmount(uint amount_) {
+        _ensureValidBorrowAmount(amount_);
+        _;
+    }
+
+    // =========================================================================
+    // Constructor & Init
+
+    /// @inheritdoc Module_v1
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata_,
+        bytes memory configData_
+    ) external override(Module_v1) initializer {
+        __Module_init(orchestrator_, metadata_);
+
+        // Decode module specific init data
+        (
+            address collateralToken,
+            address issuanceToken,
+            address dbcFmAddress,
+            address dynamicFeeCalculator,
+            uint borrowableQuota_
+        ) = abi.decode(configData_, (address, address, address, address, uint));
+
+        // Set init state
+        _collateralToken = IERC20(collateralToken);
+        _issuanceToken = IERC20(issuanceToken);
+        _dbcFmAddress = dbcFmAddress;
+        _dynamicFeeCalculator = dynamicFeeCalculator;
+        borrowableQuota = borrowableQuota_;
+    }
+
+    // =========================================================================
+    // Public - Mutating
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function borrow(uint requestedLoanAmount_)
+        external
+        virtual
+        onlyValidBorrowAmount(requestedLoanAmount_)
+    {
+        address user = _msgSender();
+
+        // Calculate how much issuance tokens need to be locked for this borrow amount
+        uint requiredIssuanceTokens =
+            _calculateRequiredIssuanceTokens(requestedLoanAmount_);
+
+        // Check if borrowing would exceed borrowable quota
+        if (
+            currentlyBorrowedAmount + requestedLoanAmount_
+                > _calculateBorrowCapacity() * borrowableQuota / 10_000
+        ) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
+        }
+
+        // Lock the required issuance tokens automatically
+        _issuanceToken.safeTransferFrom(
+            user, address(this), requiredIssuanceTokens
+        );
+        _lockedIssuanceTokens[user] += requiredIssuanceTokens;
+
+        // Calculate dynamic borrowing fee
+        uint dynamicBorrowingFee =
+            _calculateDynamicBorrowingFee(requestedLoanAmount_);
+        uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
+
+        // Update state (track gross requested amount as debt; fee is paid at repayment)
+        currentlyBorrowedAmount += requestedLoanAmount_;
+        _outstandingLoans[user] += requestedLoanAmount_;
+
+        // Pull gross from DBC FM to this module
+        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
+            address(this), requestedLoanAmount_
+        );
+
+        // Transfer fee back to DBC FM (retained to increase base price)
+        if (dynamicBorrowingFee > 0) {
+            _collateralToken.safeTransfer(_dbcFmAddress, dynamicBorrowingFee);
+        }
+
+        // Transfer net amount to user
+        _collateralToken.safeTransfer(user, netAmountToUser);
+
+        // Emit events
+        emit IssuanceTokensLocked(user, requiredIssuanceTokens);
+        emit Borrowed(
+            user, requestedLoanAmount_, dynamicBorrowingFee, netAmountToUser
+        );
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function repay(uint repaymentAmount_) external virtual {
+        address user = _msgSender();
+
+        if (_outstandingLoans[user] < repaymentAmount_) {
+            repaymentAmount_ = _outstandingLoans[user];
+        }
+
+        // Transfer collateral back to DBC FM
+        _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
+
+        // Calculate and unlock issuance tokens
+        uint issuanceTokensToUnlock =
+            _calculateIssuanceTokensToUnlock(user, repaymentAmount_);
+
+        if (issuanceTokensToUnlock > 0) {
+            _lockedIssuanceTokens[user] -= issuanceTokensToUnlock;
+            _issuanceToken.safeTransfer(user, issuanceTokensToUnlock);
+        }
+        // Update state
+        _outstandingLoans[user] -= repaymentAmount_;
+        currentlyBorrowedAmount -= repaymentAmount_;
+
+        // Emit event
+        emit Repaid(user, repaymentAmount_, issuanceTokensToUnlock);
+    }
+
+    // =========================================================================
+    // Public - Configuration (Lending Facility Manager only)
+
+    /// @notice Set the borrowable quota
+    /// @param newBorrowableQuota_ The new borrowable quota (in basis points)
+    function setBorrowableQuota(uint newBorrowableQuota_)
+        external
+        onlyLendingFacilityManager
+    {
+        if (newBorrowableQuota_ > _MAX_BORROWABLE_QUOTA) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh();
+        }
+        borrowableQuota = newBorrowableQuota_;
+        emit BorrowableQuotaUpdated(newBorrowableQuota_);
+    }
+
+    /// @notice Set the Dynamic Fee Calculator address
+    /// @param newFeeCalculator_ The new fee calculator address
+    function setDynamicFeeCalculator(address newFeeCalculator_)
+        external
+        onlyLendingFacilityManager
+    {
+        if (newFeeCalculator_ == address(0)) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
+        }
+        _dynamicFeeCalculator = newFeeCalculator_;
+        emit DynamicFeeCalculatorUpdated(newFeeCalculator_);
+    }
+
+    // =========================================================================
+    // Public - Getters
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getLockedIssuanceTokens(address user_)
+        external
+        view
+        returns (uint)
+    {
+        return _lockedIssuanceTokens[user_];
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getOutstandingLoan(address user_) external view returns (uint) {
+        return _outstandingLoans[user_];
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getBorrowCapacity() external view returns (uint) {
+        return _calculateBorrowCapacity();
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getCurrentBorrowQuota() external view returns (uint) {
+        uint borrowCapacity = _calculateBorrowCapacity();
+        if (borrowCapacity == 0) return 0;
+        return (currentlyBorrowedAmount * 10_000) / borrowCapacity;
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getFloorLiquidityRate() external view returns (uint) {
+        uint borrowCapacity = _calculateBorrowCapacity();
+        uint borrowableAmount = borrowCapacity * borrowableQuota / 10_000;
+
+        if (borrowableAmount == 0) return 0;
+
+        return ((borrowableAmount - currentlyBorrowedAmount) * 10_000)
+            / borrowableAmount;
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function getUserBorrowingPower(address user_)
+        external
+        view
+        returns (uint)
+    {
+        return _calculateUserBorrowingPower(user_);
+    }
+
+    // =========================================================================
+    // Internal
+
+    /// @dev Ensures the borrow amount is valid
+    /// @param amount_ The amount to validate
+    function _ensureValidBorrowAmount(uint amount_) internal pure {
+        if (amount_ == 0) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount();
+        }
+    }
+
+    /// @dev Calculate the system-wide Borrow Capacity
+    /// @return The borrow capacity
+    function _calculateBorrowCapacity() internal view returns (uint) {
+        // Get the DBC FM interface
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+
+        // Get the issuance token's total supply (this represents the virtual issuance supply)
+        uint virtualIssuanceSupply = IERC20(
+            IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
+        ).totalSupply();
+
+        uint pFloor = _getFloorPrice();
+
+        // Borrow Capacity = virtualIssuanceSupply * P_floor
+        return virtualIssuanceSupply * pFloor / 1e18; // Adjust for decimals
+    }
+
+    /// @dev Calculate user's borrowing power based on locked issuance tokens
+    /// @param user_ The user address
+    /// @return The user's borrowing power
+    function _calculateUserBorrowingPower(address user_)
+        internal
+        view
+        returns (uint)
+    {
+        // Use the DBC FM to get the actual floor price from the first segment
+        // User borrowing power = locked issuance tokens * floor price
+        uint floorPrice = _getFloorPrice();
+        return _lockedIssuanceTokens[user_] * floorPrice / 1e18; // Adjust for decimals
+    }
+
+    /// @dev Calculate dynamic borrowing fee using the fee calculator
+    /// @param requestedAmount_ The requested loan amount
+    /// @return The dynamic borrowing fee
+    function _calculateDynamicBorrowingFee(uint requestedAmount_)
+        internal
+        view
+        returns (uint)
+    {
+        // Calculate fee using the dynamic fee calculator library
+        uint utilizationRatio =
+            (currentlyBorrowedAmount * 1e18) / _calculateBorrowCapacity();
+        uint feeRate = IDynamicFeeCalculator_v1(_dynamicFeeCalculator)
+            .calculateOriginationFee(utilizationRatio);
+        return (requestedAmount_ * feeRate) / 1e18; // Fee based on calculated rate
+    }
+
+    /// @dev Calculate issuance tokens to unlock based on repayment amount
+    /// @param user_ The user address
+    /// @param repaymentAmount_ The repayment amount
+    /// @return The amount of issuance tokens to unlock
+    function _calculateIssuanceTokensToUnlock(
+        address user_,
+        uint repaymentAmount_
+    ) internal view returns (uint) {
+        if (_outstandingLoans[user_] == 0) return 0;
+
+        // Calculate the proportion of the loan being repaid
+        uint repaymentProportion =
+            (repaymentAmount_ * 1e27) / _outstandingLoans[user_];
+        // Calculate the proportion of locked issuance tokens to unlock
+        return (_lockedIssuanceTokens[user_] * repaymentProportion) / 1e27;
+    }
+
+    /// @dev Calculate the required collateral amount for a given issuance token amount
+    /// @param issuanceTokenAmount_ The amount of issuance tokens
+    /// @return The required collateral amount
+    function _calculateCollateralAmount(uint issuanceTokenAmount_)
+        internal
+        view
+        returns (uint)
+    {
+        // Use the DBC FM to get the actual floor price from the first segment
+        // Required collateral = issuance tokens * floor price
+        uint floorPrice = _getFloorPrice();
+        return issuanceTokenAmount_ * floorPrice / 1e18; // Adjust for decimals
+    }
+
+    /// @dev Calculate the required issuance tokens for a given borrow amount
+    /// @param borrowAmount_ The amount to borrow
+    /// @return The required issuance tokens to lock
+    function _calculateRequiredIssuanceTokens(uint borrowAmount_)
+        internal
+        view
+        returns (uint)
+    {
+        // Required issuance tokens = borrow amount / floor price
+        uint floorPrice = _getFloorPrice();
+        return borrowAmount_ * 1e18 / floorPrice; // Adjust for decimals
+    }
+
+    /// @dev Get the current floor price from the DBC FM
+    /// @return The current floor price
+    function _getFloorPrice() internal view returns (uint) {
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
+            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
+
+        // Get the segments from the funding manager
+        PackedSegment[] memory segments = dbcFm.getSegments();
+
+        if (segments.length == 0) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
+        }
+
+        // Return the initial price of the first segment (floor price)
+        return PackedSegmentLib._initialPrice(segments[0]);
+    }
+}

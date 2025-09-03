@@ -22,7 +22,8 @@ import {PackedSegment} from
     "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
 import {DiscreteCurveMathLib_v1} from
     "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
-
+import {IDynamicFeeCalculator_v1} from
+    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
@@ -70,6 +71,9 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     uint internal constant PROJECT_BUY_FEE_BPS = 100;
     /// @dev Project fee for sell operations, in Basis Points (BPS). 100 BPS = 1%.
     uint internal constant PROJECT_SELL_FEE_BPS = 100;
+
+    address internal _dynamicFeeAddress;
+    bool internal _useDynamicFees;
 
     // --- End Fee Related Storage ---
 
@@ -288,6 +292,43 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         _setVirtualCollateralSupply(virtualSupply_);
     }
 
+    // ------------------------------------------------------------------------
+    // Public - Dynamic Fee Configuration
+
+    /// @notice Set dynamic fee address for trading operations
+    /// @param dynamicFeeAddress_ The address of the dynamic fee calculator
+    function setDynamicFeeAddress(address dynamicFeeAddress_)
+        external
+        onlyOrchestratorAdmin
+    {
+        _dynamicFeeAddress = dynamicFeeAddress_;
+    }
+
+    /// @notice Enable or disable dynamic fee calculation
+    /// @param useDynamicFees_ Whether to use dynamic fees
+    function setUseDynamicFees(bool useDynamicFees_)
+        external
+        onlyOrchestratorAdmin
+    {
+        _useDynamicFees = useDynamicFees_;
+    }
+
+    /// @notice Get current dynamic fee address
+    /// @return dynamicFeeAddress The address of the dynamic fee calculator
+    function getDynamicFeeAddress()
+        external
+        view
+        returns (address dynamicFeeAddress)
+    {
+        return _dynamicFeeAddress;
+    }
+
+    /// @notice Get current premium rate
+    /// @return The current premium rate
+    function getPremiumRate() external view returns (uint) {
+        return _calculatePremiumRate();
+    }
+
     /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function reconfigureSegments(PackedSegment[] memory newSegments_)
         external
@@ -449,11 +490,38 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     }
 
     // ------------------------------------------------------------------------
+    // Internal - Overrides - BondingCurveBase_v1
+
+    /// @inheritdoc BondingCurveBase_v1
+    function _getBuyFee() internal view virtual override returns (uint) {
+        if (!_useDynamicFees) {
+            return super._getBuyFee(); // Use the base class implementation (respects setBuyFee)
+        }
+
+        // Calculate premium rate (quote price / floor price)
+        uint premiumRate = _calculatePremiumRate();
+
+        // Use DFC for issuance fee calculation
+        return IDynamicFeeCalculator_v1(_dynamicFeeAddress).calculateIssuanceFee(
+            premiumRate
+        );
+    }
+
+    // ------------------------------------------------------------------------
     // Internal - Overrides - RedeemingBondingCurveBase_v1
 
     /// @inheritdoc RedeemingBondingCurveBase_v1
     function _getSellFee() internal view virtual override returns (uint) {
-        return PROJECT_SELL_FEE_BPS;
+        if (!_useDynamicFees) {
+            return super._getSellFee(); // Use the base class implementation (respects setSellFee)
+        }
+
+        // Calculate premium rate (quote price / floor price)
+        uint premiumRate = _calculatePremiumRate();
+
+        // Use DFC for redemption fee calculation
+        return IDynamicFeeCalculator_v1(_dynamicFeeAddress)
+            .calculateRedemptionFee(premiumRate);
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)
@@ -474,6 +542,26 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         uint _collateralTokenAmount
     ) internal virtual override {
         _token.safeTransfer(_receiver, _collateralTokenAmount);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Dynamic Fee Calculator
+
+    /// @dev Calculate the premium rate (quote price / floor price)
+    /// @return The premium rate as a percentage (in basis points)
+    function _calculatePremiumRate() internal view returns (uint) {
+        // Get current quote price (price for buying 1 token)
+        (, uint quotePrice) = _segments._calculatePurchaseReturn(
+            1e18, issuanceToken.totalSupply()
+        );
+
+        // Get floor price (minimum price)
+        (, uint floorPrice) = _segments._calculatePurchaseReturn(1e18, 0);
+
+        if (floorPrice == 0) return 0;
+
+        // Calculate premium rate: (quote_price / floor_price - 1) * 1e18
+        return ((quotePrice * 1e18) / floorPrice) - 1e18;
     }
 
     // ------------------------------------------------------------------------
