@@ -10,7 +10,6 @@ import {PackedSegment} from "../types/PackedSegment_v1.sol";
 // External
 import {Math} from "@oz/utils/math/Math.sol";
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
-import {console2} from "forge-std/console2.sol";
 
 /**
  * @title DiscreteCurveMathLib_v1
