@@ -112,7 +112,7 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     error Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived();
 
     /// @notice No issuance tokens received in iteration
-    error Module__LM_PC_Lending_Facility_NoIssuanceTokensInIteration();
+    error Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
 
     // =========================================================================
     // Public - Getters

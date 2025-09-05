@@ -337,23 +337,22 @@ contract LM_PC_Lending_Facility_v1 is
             );
 
             // Get the actual amount of issuance tokens received in this iteration
-            uint actualIssuanceTokensReceived =
-                _issuanceToken.balanceOf(user) - totalIssuanceTokensReceived;
-            if (actualIssuanceTokensReceived == 0) {
+            uint issuanceTokensReceived = _issuanceToken.balanceOf(user);
+            if (issuanceTokensReceived == 0) {
                 revert
                     ILM_PC_Lending_Facility_v1
-                    .Module__LM_PC_Lending_Facility_NoIssuanceTokensInIteration();
+                    .Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
             }
 
             // Add to total issuance tokens received
-            totalIssuanceTokensReceived += actualIssuanceTokensReceived;
+            totalIssuanceTokensReceived += issuanceTokensReceived;
 
             // Track collateral used in this iteration
             totalCollateralUsed += userCollateralBalance;
 
             // Now calculate borrowing power based on balance of issuance
             uint borrowingPower =
-                _calculateCollateralAmount(actualIssuanceTokensReceived);
+                _calculateCollateralAmount(issuanceTokensReceived);
 
             // If we can't borrow anything more, break the loop
             if (borrowingPower <= 0) {

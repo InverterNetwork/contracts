@@ -11,7 +11,6 @@ import {ERC165Upgradeable} from
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
-
 /**
  * @title   Inverter Dynamic Fee Calculator Contract
  *
@@ -28,7 +27,6 @@ import {Ownable2StepUpgradeable} from
  *
  * @author  Inverter Network
  */
- 
 contract DynamicFeeCalculator_v1 is
     ERC165Upgradeable,
     IDynamicFeeCalculator_v1,
