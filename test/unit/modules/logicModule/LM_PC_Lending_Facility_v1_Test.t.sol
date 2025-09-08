@@ -984,13 +984,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function testFuzzPublicSetBorrowableQuota_succeedsGivenValidQuota(
         uint newQuota_
     ) public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
         newQuota_ = bound(newQuota_, 1, 10_000);
         uint newQuota = newQuota_;
         lendingFacility.setBorrowableQuota(newQuota);
@@ -1001,13 +994,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function testFuzzPublicSetBorrowableQuota_failsGivenExceedsMaxQuota(
         uint newQuota_
     ) public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
         newQuota_ = bound(newQuota_, 10_001, type(uint16).max);
         uint invalidQuota = newQuota_; // Exceeds 100%
         vm.expectRevert(
@@ -1033,13 +1019,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function testFuzzPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator(
         address newFeeCalculator_
     ) public {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
         vm.assume(
             newFeeCalculator_ != address(0)
                 && newFeeCalculator_ != address(this)
@@ -1055,13 +1034,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function testPublicSetDynamicFeeCalculator_failsGivenInvalidCalculator()
         public
     {
-        // Grant role to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(lendingFacility),
-            lendingFacility.LENDING_FACILITY_MANAGER_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
         address invalidFeeCalculator = address(0);
         vm.expectRevert(
             ILM_PC_Lending_Facility_v1

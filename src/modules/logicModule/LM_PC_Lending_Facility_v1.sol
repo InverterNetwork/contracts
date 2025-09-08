@@ -32,7 +32,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-import {console2} from "forge-std/console2.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -218,8 +217,6 @@ contract LM_PC_Lending_Facility_v1 is
                 ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
         }
-
-        _issuanceToken.approve(address(this), requiredIssuanceTokens);
 
         // Lock the required issuance tokens automatically
         _issuanceToken.safeTransferFrom(
@@ -489,10 +486,6 @@ contract LM_PC_Lending_Facility_v1 is
     /// @dev Calculate the system-wide Borrow Capacity
     /// @return The borrow capacity
     function _calculateBorrowCapacity() internal view returns (uint) {
-        // Get the DBC FM interface
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1 dbcFm =
-            IFM_BC_Discrete_Redeeming_VirtualSupply_v1(_dbcFmAddress);
-
         // Get the issuance token's total supply (this represents the virtual issuance supply)
         uint virtualIssuanceSupply = IERC20(
             IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
