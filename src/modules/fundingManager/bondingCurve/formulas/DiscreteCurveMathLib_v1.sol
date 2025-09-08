@@ -667,26 +667,13 @@ library DiscreteCurveMathLib_v1 {
                     .DiscreteCurveMathLib__SingleStepMustBeFlat(i_);
             }
 
-            // Final price of the current segment.
-            // If numberOfSteps_ is 1, final price is initialPrice_.
-            // Otherwise, it's initialPrice_ + (numberOfSteps_ - 1) * priceIncrease_.
-            uint finalPriceCurrentSegment_;
-            if (currentNumberOfSteps_ == 0) {
-                // This case should be prevented by PackedSegmentLib._create's check for numberOfSteps_ > 0.
-                // If somehow reached, treat as an invalid state or handle as per specific requirements.
-                // For safety, assume it implies an issue, though _create() should prevent it.
-                // As a defensive measure, one might revert or assign a value that ensures progression check logic.
-                // However, relying on _create() validation is typical.
-                // If steps is 0, let's consider its "final price" to be its initial price to avoid underflow with (steps-1).
-                finalPriceCurrentSegment_ = currentInitialPrice_;
-            } else if (currentNumberOfSteps_ == 1) {
-                finalPriceCurrentSegment_ = currentInitialPrice_;
-            } else {
-                finalPriceCurrentSegment_ = currentInitialPrice_
-                    + (currentNumberOfSteps_ - 1) * currentPriceIncrease_;
-                // Check for overflow in final price calculation, though bit limits on components make this unlikely
-                // to overflow uint256 unless priceIncrease_ is extremely large.
-                // Max initialPrice_ ~2^72, max (steps-1)*priceIncrease_ ~ (2^16)*(2^72) ~ 2^88. Sum ~2^88. Fits uint256.
+            // Calculate final price of the current segment
+            // For single steps: final price = initial price
+            // For multiple steps: final price = initial price + (steps - 1) * price increase
+            uint finalPriceCurrentSegment_ = currentInitialPrice_;
+            if (currentNumberOfSteps_ > 1) {
+                finalPriceCurrentSegment_ +=
+                    (currentNumberOfSteps_ - 1) * currentPriceIncrease_;
             }
 
             uint initialPriceNextSegment_ = nextSegment_._initialPrice();
