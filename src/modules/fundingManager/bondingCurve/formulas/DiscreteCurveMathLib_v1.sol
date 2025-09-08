@@ -241,7 +241,7 @@ library DiscreteCurveMathLib_v1 {
         uint currentTotalIssuanceSupply_
     )
         internal
-        pure // Already pure, ensuring it stays
+        pure
         returns (uint tokensToMint_, uint collateralSpentByPurchaser_)
     {
         if (collateralToSpendProvided_ == 0) {
@@ -298,9 +298,7 @@ library DiscreteCurveMathLib_v1 {
         // Check if there's any segment to purchase from
         if (segmentIndex_ >= segments_.length) {
             // currentTotalIssuanceSupply_ is at or beyond total capacity. No purchase possible.
-            collateralSpentByPurchaser_ = 0; // No budget spent
-            // tokensToMint_ is already 0
-            return (tokensToMint_, collateralSpentByPurchaser_);
+            return (0, 0); // No tokens minted, no budget spent
         }
 
         {
@@ -332,21 +330,16 @@ library DiscreteCurveMathLib_v1 {
                     tokensToMint_ += remainingStepIssuanceSupply_;
                     stepIndex_++;
                 } else {
-                    // Partial fill and exit
-                    uint additionalIssuanceAmount_ = Math.mulDiv(
+                    // Partial fill and exit - calculate tokens from remaining budget
+                    uint partialIssuance_ = Math.mulDiv(
                         remainingBudget_, SCALING_FACTOR, stepPrice_
                     );
-                    tokensToMint_ += additionalIssuanceAmount_; // tokensToMint_ was 0 before this line in this specific path
-                    // Calculate actual collateral spent for this partial amount
-                    collateralSpentByPurchaser_ = FixedPointMathLib._mulDivUp(
-                        additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR
-                    );
+                    tokensToMint_ += partialIssuance_;
+                    collateralSpentByPurchaser_ = collateralToSpendProvided_;
                     return (tokensToMint_, collateralSpentByPurchaser_);
                 }
             }
         }
-
-        uint fullStepBacking = 0;
 
         // Phase 3: Purchase through remaining steps until budget exhausted
         while (remainingBudget_ > 0 && segmentIndex_ < segments_.length) {
@@ -375,20 +368,16 @@ library DiscreteCurveMathLib_v1 {
                 remainingBudget_ -= stepCollateralCapacity_;
                 tokensToMint_ += supplyPerStep_;
                 stepIndex_++;
-                fullStepBacking += stepCollateralCapacity_;
             } else {
-                // Partial step purchase and exit
+                // Partial step purchase and exit - calculate tokens from remaining budget
                 uint partialIssuance_ =
                     Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
                 tokensToMint_ += partialIssuance_;
-                remainingBudget_ -= FixedPointMathLib._mulDivUp(
-                    partialIssuance_, stepPrice_, SCALING_FACTOR
-                );
-
                 break;
             }
         }
 
+        // Calculate total collateral spent
         collateralSpentByPurchaser_ =
             collateralToSpendProvided_ - remainingBudget_;
         return (tokensToMint_, collateralSpentByPurchaser_);
