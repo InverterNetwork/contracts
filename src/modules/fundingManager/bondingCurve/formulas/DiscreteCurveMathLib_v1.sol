@@ -706,6 +706,13 @@ library DiscreteCurveMathLib_v1 {
             uint currentPriceIncrease_ = currentSegment_._priceIncrease();
             uint currentNumberOfSteps_ = currentSegment_._numberOfSteps();
 
+            // Validate single-step segments are flat
+            if (currentNumberOfSteps_ == 1 && currentPriceIncrease_ > 0) {
+                revert
+                    IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__SingleStepMustBeFlat(i_);
+            }
+
             // Final price of the current segment.
             // If numberOfSteps_ is 1, final price is initialPrice_.
             // Otherwise, it's initialPrice_ + (numberOfSteps_ - 1) * priceIncrease_.

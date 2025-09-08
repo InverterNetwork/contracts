@@ -133,6 +133,12 @@ interface IDiscreteCurveMathLib_v1 {
         uint requested, uint available
     );
 
+    /**
+     * @notice Reverted when a single-step segment is configured with a non-zero price increase.
+     * @param segmentIndex The index of the segment that is configured with a non-zero price increase.
+     */
+    error DiscreteCurveMathLib__SingleStepMustBeFlat(uint segmentIndex);
+
     // --- Events ---
 
     /**
