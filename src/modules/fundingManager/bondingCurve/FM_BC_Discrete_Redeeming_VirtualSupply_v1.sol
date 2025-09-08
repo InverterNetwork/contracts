@@ -525,20 +525,21 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
         bytes4 calculateSaleReturnSelector = this.calculateSaleReturn.selector;
 
+        // Set common treasuries once
+        collateralTreasury_ = _protocolFeeCache.collateralTreasury;
+        issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
+
+        // Then just handle the different fees
         if (
             functionSelector_ == buyOrderSelector
                 || functionSelector_ == calculatePurchaseReturnSelector
         ) {
-            collateralTreasury_ = _protocolFeeCache.collateralTreasury;
-            issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
             collateralFeeBps_ = _protocolFeeCache.collateralFeeBuyBps;
             issuanceFeeBps_ = _protocolFeeCache.issuanceFeeBuyBps;
         } else if (
             functionSelector_ == sellOrderSelector
                 || functionSelector_ == calculateSaleReturnSelector
         ) {
-            collateralTreasury_ = _protocolFeeCache.collateralTreasury;
-            issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
             collateralFeeBps_ = _protocolFeeCache.collateralFeeSellBps;
             issuanceFeeBps_ = _protocolFeeCache.issuanceFeeSellBps;
         } else {
