@@ -197,48 +197,13 @@ library DiscreteCurveMathLib_v1 {
             uint supplyToProcessInSegment_ = supplyRemainingInTarget_
                 > segmentCapacity_ ? segmentCapacity_ : supplyRemainingInTarget_;
 
-            // Calculate full steps and partial step for this segment
-            uint fullStepsToProcess_ =
-                supplyToProcessInSegment_ / supplyPerStep_;
-            uint partialStepSupply_ = supplyToProcessInSegment_ % supplyPerStep_;
-
-            uint collateralForPortion_ = 0;
-
-            // Calculate cost for full steps
-            if (fullStepsToProcess_ > 0) {
-                if (priceIncreasePerStep_ == 0) {
-                    // Flat segment
-                    if (initialPrice_ > 0) {
-                        collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                            fullStepsToProcess_ * supplyPerStep_,
-                            initialPrice_,
-                            SCALING_FACTOR
-                        );
-                    }
-                } else {
-                    // Sloped segment: arithmetic series for full steps
-                    uint firstStepPrice_ = initialPrice_;
-                    uint lastStepPrice_ = initialPrice_
-                        + (fullStepsToProcess_ - 1) * priceIncreasePerStep_;
-                    uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
-                    uint totalPriceForAllSteps_ =
-                        Math.mulDiv(fullStepsToProcess_, sumOfPrices_, 2);
-                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                        supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
-                    );
-                }
-            }
-
-            // Calculate cost for partial step (if any)
-            if (partialStepSupply_ > 0) {
-                uint partialStepPrice_ = initialPrice_
-                    + (fullStepsToProcess_ * priceIncreasePerStep_);
-                if (partialStepPrice_ > 0) {
-                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                        partialStepSupply_, partialStepPrice_, SCALING_FACTOR
-                    );
-                }
-            }
+            // Calculate collateral required for this portion of the segment
+            uint collateralForPortion_ = _calculateSegmentReserve(
+                initialPrice_,
+                priceIncreasePerStep_,
+                supplyPerStep_,
+                supplyToProcessInSegment_
+            );
 
             totalReserve_ += collateralForPortion_;
 
