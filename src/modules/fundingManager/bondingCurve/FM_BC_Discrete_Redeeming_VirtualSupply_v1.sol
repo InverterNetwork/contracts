@@ -71,6 +71,19 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     /// @dev Project fee for sell operations, in Basis Points (BPS). 100 BPS = 1%.
     uint internal constant PROJECT_SELL_FEE_BPS = 100;
 
+    /// @dev Cached function selectors for buy operations.
+    bytes4 internal constant BUY_ORDER_SELECTOR =
+        bytes4(keccak256("_buyOrder(address,uint,uint)"));
+    /// @dev Cached function selectors for sell operations.
+    bytes4 internal constant SELL_ORDER_SELECTOR =
+        bytes4(keccak256("_sellOrder(address,uint,uint)"));
+    /// @dev Cached function selectors for calculating purchase returns.
+    bytes4 internal constant CALCULATE_PURCHASE_RETURN_SELECTOR =
+        this.calculatePurchaseReturn.selector;
+    /// @dev Cached function selectors for calculating sale returns.
+    bytes4 internal constant CALCULATE_SALE_RETURN_SELECTOR =
+        this.calculateSaleReturn.selector;
+
     // --- End Fee Related Storage ---
 
     /// @notice Storage gap for future upgrades.
@@ -228,21 +241,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
     /// @inheritdoc IFM_BC_Discrete_Redeeming_VirtualSupply_v1
     function updateProtocolFeeCache() external {
-        // Fetch and cache protocol fees for buy operations
-        bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
-
         // Populate the cache directly for buy operations
         (
             _protocolFeeCache.collateralTreasury,
             _protocolFeeCache.issuanceTreasury,
             _protocolFeeCache.collateralFeeBuyBps,
             _protocolFeeCache.issuanceFeeBuyBps
-        ) = super._getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
-
-        // Fetch and cache protocol fees for sell operations
-        bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
+        ) = super._getFunctionFeesAndTreasuryAddresses(BUY_ORDER_SELECTOR);
 
         address sellCollateralTreasury; // Temporary variable for sell collateral treasury
         address sellIssuanceTreasury; // Temporary variable for sell issuance treasury
@@ -251,7 +256,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             sellIssuanceTreasury,
             _protocolFeeCache.collateralFeeSellBps,
             _protocolFeeCache.issuanceFeeSellBps
-        ) = super._getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
+        ) = super._getFunctionFeesAndTreasuryAddresses(SELL_ORDER_SELECTOR);
 
         // Logic to ensure consistent treasury addresses are stored in the cache,
         // prioritizing non-zero addresses from buy operations if FeeManager could return different ones.
@@ -515,30 +520,20 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
             uint issuanceFeeBps_
         )
     {
-        // Selectors for the functions that will internally call _getFunctionFeesAndTreasuryAddresses
-        bytes4 buyOrderSelector =
-            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
-        bytes4 calculatePurchaseReturnSelector =
-            this.calculatePurchaseReturn.selector;
-
-        bytes4 sellOrderSelector =
-            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
-        bytes4 calculateSaleReturnSelector = this.calculateSaleReturn.selector;
-
         // Set common treasuries once
         collateralTreasury_ = _protocolFeeCache.collateralTreasury;
         issuanceTreasury_ = _protocolFeeCache.issuanceTreasury;
 
         // Then just handle the different fees
         if (
-            functionSelector_ == buyOrderSelector
-                || functionSelector_ == calculatePurchaseReturnSelector
+            functionSelector_ == BUY_ORDER_SELECTOR
+                || functionSelector_ == CALCULATE_PURCHASE_RETURN_SELECTOR
         ) {
             collateralFeeBps_ = _protocolFeeCache.collateralFeeBuyBps;
             issuanceFeeBps_ = _protocolFeeCache.issuanceFeeBuyBps;
         } else if (
-            functionSelector_ == sellOrderSelector
-                || functionSelector_ == calculateSaleReturnSelector
+            functionSelector_ == SELL_ORDER_SELECTOR
+                || functionSelector_ == CALCULATE_SALE_RETURN_SELECTOR
         ) {
             collateralFeeBps_ = _protocolFeeCache.collateralFeeSellBps;
             issuanceFeeBps_ = _protocolFeeCache.issuanceFeeSellBps;
