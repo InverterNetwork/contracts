@@ -679,7 +679,6 @@ library DiscreteCurveMathLib_v1 {
             uint initialPriceNextSegment_ = nextSegment_._initialPrice();
 
             if (initialPriceNextSegment_ < finalPriceCurrentSegment_) {
-                // Note: DiscreteCurveMathLib__InvalidPriceProgression error needs to be defined in IDiscreteCurveMathLib_v1.sol
                 revert
                     IDiscreteCurveMathLib_v1
                     .DiscreteCurveMathLib__InvalidPriceProgression(
