@@ -704,6 +704,44 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
     /* Test: Function borrow()
         ├── Given a user wants to borrow tokens
+        └── And the borrow amount exceeds the borrowable quota
+            └── When the user tries to borrow collateral tokens
+                └── Then the transaction should revert with BorrowableQuotaExceeded error
+    */
+    function testFuzzPublicBorrow_revertsGivenBorrowableQuotaExcedded(
+        uint borrowAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+
+        borrowAmount_ =
+            bound(borrowAmount_, maxBorrowableQuota + 1, type(uint128).max);
+        uint borrowAmount = borrowAmount_;
+
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        issuanceToken.mint(user, requiredIssuanceTokens);
+
+        lendingFacility.setBorrowableQuota(1000); //mock set it to 10%
+
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded
+                .selector
+        );
+
+        lendingFacility.borrow(borrowAmount);
+        vm.stopPrank();
+    }
+
+    /* Test: Function borrow()
+        ├── Given a user wants to borrow tokens
         └── And the borrow amount is zero
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with InvalidBorrowAmount error
@@ -781,6 +819,34 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 .selector
         );
         lendingFacility.buyAndBorrow(leverage);
+    }
+
+    /* Test: Function buyAndBorrow()
+    ├── Given a user wants to use buyAndBorrow
+    └── And the bonding curve is not open for buying
+        └── When the user executes buyAndBorrow
+            └── Then the transaction should revert with appropriate error
+    */
+    function testFuzzPublicBuyAndBorrow_revertsGivenBondingCurveClosed(
+        uint leverage_
+    ) public {
+        // Given: a user wants to use buyAndBorrow
+        address user = makeAddr("user");
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+        uint leverage = leverage_;
+
+        orchestratorToken.mint(user, 100 ether);
+        //bonding curve is closed by default (not calling fmBcDiscrete.openBuy())
+
+        vm.startPrank(user);
+        orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
+        orchestratorToken.approve(address(lendingFacility), type(uint).max);
+        issuanceToken.approve(address(lendingFacility), type(uint).max);
+
+        // The transaction should revert when trying to buy from a closed bonding curve
+        vm.expectRevert(); // This will revert due to bonding curve being closed
+        lendingFacility.buyAndBorrow(leverage);
+        vm.stopPrank();
     }
 
     /* Test: Function buyAndBorrow()
