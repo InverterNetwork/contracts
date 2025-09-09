@@ -160,10 +160,7 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: utilizationRatio is below A_origination
-        vm.assume(
-            utilizationRatio_ > 1 && utilizationRatio_ < type(uint64).max
-                && utilizationRatio_ < feeParams.A_origination
-        );
+        utilizationRatio_ = bound(utilizationRatio_, 1, feeParams.A_origination);
 
         uint fee = feeCalculator.calculateOriginationFee(utilizationRatio_);
         assertEq(fee, feeParams.Z_origination);
@@ -177,10 +174,8 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: utilizationRatio is above A_origination
-        vm.assume(
-            utilizationRatio_ > 1 && utilizationRatio_ < type(uint64).max
-                && utilizationRatio_ > feeParams.A_origination
-        );
+        utilizationRatio_ =
+            bound(utilizationRatio_, feeParams.A_origination, type(uint64).max);
 
         uint fee = feeCalculator.calculateOriginationFee(utilizationRatio_);
 
@@ -208,10 +203,7 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: premiumRate is below A_issueRedeem
-        vm.assume(
-            premiumRate_ > 1 && premiumRate_ < type(uint64).max
-                && premiumRate_ < feeParams.A_issueRedeem
-        );
+        premiumRate_ = bound(premiumRate_, 1, feeParams.A_issueRedeem);
 
         uint fee = feeCalculator.calculateIssuanceFee(premiumRate_);
         assertEq(fee, feeParams.Z_issueRedeem);
@@ -225,10 +217,8 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: premiumRate is above A_issueRedeem
-        vm.assume(
-            premiumRate_ > 1 && premiumRate_ < type(uint64).max
-                && premiumRate_ > feeParams.A_issueRedeem
-        );
+        premiumRate_ =
+            bound(premiumRate_, feeParams.A_issueRedeem, type(uint64).max);
 
         uint fee = feeCalculator.calculateIssuanceFee(premiumRate_);
         assertEq(
@@ -255,10 +245,7 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: premiumRate is below A_issueRedeem
-        vm.assume(
-            premiumRate_ > 1 && premiumRate_ < type(uint64).max
-                && premiumRate_ < feeParams.A_issueRedeem
-        );
+        premiumRate_ = bound(premiumRate_, 1, feeParams.A_issueRedeem);
 
         uint fee = feeCalculator.calculateRedemptionFee(premiumRate_);
         assertEq(
@@ -277,10 +264,8 @@ contract DynamicFeeCalculator_v1_Test is Test {
             helper_setDynamicFeeCalculatorParams(feeParams_);
 
         // Given: premiumRate is above A_issueRedeem
-        vm.assume(
-            premiumRate_ > 1 && premiumRate_ < type(uint64).max
-                && premiumRate_ > feeParams.A_issueRedeem
-        );
+        premiumRate_ =
+            bound(premiumRate_, feeParams.A_issueRedeem, type(uint64).max);
 
         uint fee = feeCalculator.calculateRedemptionFee(premiumRate_);
         assertEq(fee, feeParams.Z_issueRedeem);
