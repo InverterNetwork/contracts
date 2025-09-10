@@ -106,7 +106,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
             Clones.clone(impl)
         );
 
-        orchestratorToken = new ERC20Mock("Orchestrator Token", "OTK", 18);
+        orchestratorToken = _token;
         issuanceToken = new ERC20Issuance_v1(
             ISSUANCE_TOKEN_NAME,
             ISSUANCE_TOKEN_SYMBOL,
