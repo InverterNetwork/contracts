@@ -342,9 +342,8 @@ contract E2EModuleRegistry is Test {
 
     function setUpFM_BC_Discrete_Redeeming_VirtualSupply_v1() internal {
         // Deploy module implementations.
-        FM_BC_Discrete_Redeeming_VirtualSupply_v1
-            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Impl =
-                new FM_BC_Discrete_Redeeming_VirtualSupply_v1();
+        FM_BC_Discrete_Redeeming_VirtualSupply_v1_Impl =
+            new FM_BC_Discrete_Redeeming_VirtualSupply_v1();
 
         // Deploy module beacons.
         FM_BC_Discrete_Redeeming_VirtualSupply_v1_Beacon = new InverterBeacon_v1(

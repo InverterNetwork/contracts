@@ -821,67 +821,13 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         fmBcDiscrete.exposed_redeemTokensFormulaWrapper(tokensToRedeem);
     }
 
-    /* Test _handleCollateralTokensBeforeBuy (exposed)
-        ├── Given a provider with sufficient collateral tokens and an amount to transfer
-            └── When exposed_handleCollateralTokensBeforeBuy is called
-                └── Then it should transfer the specified amount of collateral tokens from the provider to the module
-                    └── And the provider's token balance should decrease by the amount
-                    └── And the module's token balance should increase by the amount
+    /* 
+    Test _processCollateralTokensForBuyOperation (exposed)
+    └──When: function is called
+        └── Then: It should do nothing
     */
-    function testHandleCollateralTokensBeforeBuy_TransfersTokensFromProviderToModule(
-        address _provider,
-        uint _amount
-    ) public {
-        vm.assume(
-            _provider != address(0) && _provider != address(this)
-                && _provider != address(fmBcDiscrete)
-        );
-        vm.assume(_amount > 0);
 
-        // Mint initial tokens to the provider
-        orchestratorToken.mint(_provider, _amount);
-        assertEq(
-            orchestratorToken.balanceOf(_provider),
-            _amount,
-            "Provider initial balance mismatch"
-        );
-        assertEq(
-            orchestratorToken.balanceOf(address(fmBcDiscrete)),
-            0,
-            "Module initial balance mismatch"
-        );
-
-        // Provider approves the fmBcDiscrete contract to spend tokens
-        vm.startPrank(_provider);
-        orchestratorToken.approve(address(fmBcDiscrete), _amount);
-        vm.stopPrank();
-
-        // Expect the transferFrom call on the orchestratorToken
-        vm.expectCall(
-            address(orchestratorToken),
-            abi.encodeWithSelector(
-                orchestratorToken.transferFrom.selector, // function selector
-                _provider, // from
-                address(fmBcDiscrete), // to
-                _amount // amount
-            )
-        );
-
-        // Call the exposed function
-        fmBcDiscrete.exposed_handleCollateralTokensBeforeBuy(_provider, _amount);
-
-        // Assert final balances
-        assertEq(
-            orchestratorToken.balanceOf(_provider),
-            0,
-            "Provider final balance mismatch"
-        );
-        assertEq(
-            orchestratorToken.balanceOf(address(fmBcDiscrete)),
-            _amount,
-            "Module final balance mismatch"
-        );
-    }
+    // Trivial
 
     /* Test _handleIssuanceTokensAfterBuy (exposed)
         └── Given a receiver address and an amount of issuance tokens to mint

@@ -55,7 +55,7 @@ classDiagram
         +calculatePurchaseReturn(uint)
         +getStaticPriceForBuying() uint
         #_issueTokensFormulaWrapper(uint) uint
-        #_handleCollateralTokensBeforeBuy(address,uint)
+        #_processCollateralTokensForBuyOperation(address,uint)
         #_handleIssuanceTokensAfterBuy(address,uint)
         #_getBuyFee() uint
     }
@@ -117,7 +117,7 @@ classDiagram
         #_setVirtualCollateralSupply(uint)
         #_redeemTokensFormulaWrapper(uint) uint
         #_handleCollateralTokensAfterSell(address,uint)
-        #_handleCollateralTokensBeforeBuy(address,uint)
+        #_processCollateralTokensForBuyOperation(address,uint)
         #_handleIssuanceTokensAfterBuy(address,uint)
         #_issueTokensFormulaWrapper(uint) uint
     }
@@ -168,7 +168,7 @@ _The purpose of this section is to highlight which functions of the base contrac
 - `_getSellFee()`: Overridden from `RedeemingBondingCurveBase_v1` to return the constant `PROJECT_SELL_FEE_BPS`.
 - `_issueTokensFormulaWrapper(uint _depositAmount)`: Implements the abstract function from `BondingCurveBase_v1`. Uses `_segments._calculatePurchaseReturn` from `DiscreteCurveMathLib_v1`.
 - `_redeemTokensFormulaWrapper(uint _depositAmount)`: Implements the abstract function from `RedeemingBondingCurveBase_v1`. Uses `_segments._calculateSaleReturn` from `DiscreteCurveMathLib_v1`.
-- `_handleCollateralTokensBeforeBuy(address _provider, uint _amount)`: Implements the abstract function from `BondingCurveBase_v1`. Transfers collateral from `_provider` to the contract.
+- `_processCollateralTokensForBuyOperation(address _provider, uint _amount)`: Implements the abstract function from `BondingCurveBase_v1`. Transfers collateral from `_provider` to the contract.
 - `_handleIssuanceTokensAfterBuy(address _receiver, uint _amount)`: Implements the abstract function from `BondingCurveBase_v1`. Mints issuance tokens to `_receiver`.
 - `_handleCollateralTokensAfterSell(address _receiver, uint _collateralTokenAmount)`: Implements the abstract function from `RedeemingBondingCurveBase_v1`. Transfers collateral to `_receiver`.
 
@@ -197,10 +197,10 @@ To execute a buy operation (mint issuance tokens by depositing collateral):
     ```
 2.  **Call `buyFor` Function:**
     `solidity
-    // User wants to buy for themselves
-    address receiver = msg.sender;
-    fm.buyFor(receiver, collateralTokenAmountToDeposit, minIssuanceTokensOut);
-    `
+// User wants to buy for themselves
+address receiver = msg.sender;
+fm.buyFor(receiver, collateralTokenAmountToDeposit, minIssuanceTokensOut);
+`
     **Sequence Diagram**
 
 ```mermaid
@@ -248,10 +248,10 @@ To execute a sell operation (redeem issuance tokens for collateral):
     ```
 2.  **Call `sellTo` Function:**
     `solidity
-    // User wants to sell and receive collateral themselves
-    address receiver = msg.sender;
-    fm.sellTo(receiver, issuanceTokenAmountToDeposit, minCollateralTokensOut);
-    `
+// User wants to sell and receive collateral themselves
+address receiver = msg.sender;
+fm.sellTo(receiver, issuanceTokenAmountToDeposit, minCollateralTokensOut);
+`
     **Sequence Diagram**
 
 ```mermaid

@@ -129,10 +129,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1, IFundingManager_v1 {
 
     function call_processProtocolFeeViaTransfer(
         address _treasury,
-        IERC20 _token,
+        IERC20 token_,
         uint _feeAmount
     ) external {
-        _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
+        _processProtocolFeeViaTransfer(_treasury, token_, _feeAmount);
     }
 
     function call_processProtocolFeeViaMinting(

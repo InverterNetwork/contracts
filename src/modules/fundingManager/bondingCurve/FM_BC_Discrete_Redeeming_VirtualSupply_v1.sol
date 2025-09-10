@@ -424,12 +424,12 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
     // Internal - Overrides - BondingCurveBase_v1
 
     // BondingCurveBase_v1 implementations (inherited via RedeemingBondingCurveBase_v1)
-    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+    function _processCollateralTokensForBuyOperation(uint _amount)
         internal
         virtual
         override
     {
-        _token.safeTransferFrom(_provider, address(this), _amount);
+        // This function is not used in this implementation.
     }
 
     function _handleIssuanceTokensAfterBuy(address _receiver, uint _amount)

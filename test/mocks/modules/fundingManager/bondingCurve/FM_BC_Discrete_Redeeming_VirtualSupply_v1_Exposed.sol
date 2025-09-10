@@ -37,13 +37,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed is
         _handleCollateralTokensAfterSell(_receiver, _collateralTokenAmount);
     }
 
-    function exposed_handleCollateralTokensBeforeBuy(
-        address _provider,
-        uint _amount
-    ) external {
-        _handleCollateralTokensBeforeBuy(_provider, _amount);
-    }
-
     function exposed_handleIssuanceTokensAfterBuy(
         address _receiver,
         uint _amount
