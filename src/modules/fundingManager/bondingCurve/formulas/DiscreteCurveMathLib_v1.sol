@@ -10,7 +10,6 @@ import {PackedSegment} from "../types/PackedSegment_v1.sol";
 // External
 import {Math} from "@oz/utils/math/Math.sol";
 import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
-import {console2} from "forge-std/console2.sol";
 
 /**
  * @title DiscreteCurveMathLib_v1
@@ -198,48 +197,13 @@ library DiscreteCurveMathLib_v1 {
             uint supplyToProcessInSegment_ = supplyRemainingInTarget_
                 > segmentCapacity_ ? segmentCapacity_ : supplyRemainingInTarget_;
 
-            // Calculate full steps and partial step for this segment
-            uint fullStepsToProcess_ =
-                supplyToProcessInSegment_ / supplyPerStep_;
-            uint partialStepSupply_ = supplyToProcessInSegment_ % supplyPerStep_;
-
-            uint collateralForPortion_ = 0;
-
-            // Calculate cost for full steps
-            if (fullStepsToProcess_ > 0) {
-                if (priceIncreasePerStep_ == 0) {
-                    // Flat segment
-                    if (initialPrice_ > 0) {
-                        collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                            fullStepsToProcess_ * supplyPerStep_,
-                            initialPrice_,
-                            SCALING_FACTOR
-                        );
-                    }
-                } else {
-                    // Sloped segment: arithmetic series for full steps
-                    uint firstStepPrice_ = initialPrice_;
-                    uint lastStepPrice_ = initialPrice_
-                        + (fullStepsToProcess_ - 1) * priceIncreasePerStep_;
-                    uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
-                    uint totalPriceForAllSteps_ =
-                        Math.mulDiv(fullStepsToProcess_, sumOfPrices_, 2);
-                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                        supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
-                    );
-                }
-            }
-
-            // Calculate cost for partial step (if any)
-            if (partialStepSupply_ > 0) {
-                uint partialStepPrice_ = initialPrice_
-                    + (fullStepsToProcess_ * priceIncreasePerStep_);
-                if (partialStepPrice_ > 0) {
-                    collateralForPortion_ += FixedPointMathLib._mulDivUp(
-                        partialStepSupply_, partialStepPrice_, SCALING_FACTOR
-                    );
-                }
-            }
+            // Calculate collateral required for this portion of the segment
+            uint collateralForPortion_ = _calculateSegmentReserve(
+                initialPrice_,
+                priceIncreasePerStep_,
+                supplyPerStep_,
+                supplyToProcessInSegment_
+            );
 
             totalReserve_ += collateralForPortion_;
 
@@ -277,7 +241,7 @@ library DiscreteCurveMathLib_v1 {
         uint currentTotalIssuanceSupply_
     )
         internal
-        pure // Already pure, ensuring it stays
+        pure
         returns (uint tokensToMint_, uint collateralSpentByPurchaser_)
     {
         if (collateralToSpendProvided_ == 0) {
@@ -334,9 +298,7 @@ library DiscreteCurveMathLib_v1 {
         // Check if there's any segment to purchase from
         if (segmentIndex_ >= segments_.length) {
             // currentTotalIssuanceSupply_ is at or beyond total capacity. No purchase possible.
-            collateralSpentByPurchaser_ = 0; // No budget spent
-            // tokensToMint_ is already 0
-            return (tokensToMint_, collateralSpentByPurchaser_);
+            return (0, 0); // No tokens minted, no budget spent
         }
 
         {
@@ -368,21 +330,16 @@ library DiscreteCurveMathLib_v1 {
                     tokensToMint_ += remainingStepIssuanceSupply_;
                     stepIndex_++;
                 } else {
-                    // Partial fill and exit
-                    uint additionalIssuanceAmount_ = Math.mulDiv(
+                    // Partial fill and exit - calculate tokens from remaining budget
+                    uint partialIssuance_ = Math.mulDiv(
                         remainingBudget_, SCALING_FACTOR, stepPrice_
                     );
-                    tokensToMint_ += additionalIssuanceAmount_; // tokensToMint_ was 0 before this line in this specific path
-                    // Calculate actual collateral spent for this partial amount
-                    collateralSpentByPurchaser_ = FixedPointMathLib._mulDivUp(
-                        additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR
-                    );
+                    tokensToMint_ += partialIssuance_;
+                    collateralSpentByPurchaser_ = collateralToSpendProvided_;
                     return (tokensToMint_, collateralSpentByPurchaser_);
                 }
             }
         }
-
-        uint fullStepBacking = 0;
 
         // Phase 3: Purchase through remaining steps until budget exhausted
         while (remainingBudget_ > 0 && segmentIndex_ < segments_.length) {
@@ -411,20 +368,16 @@ library DiscreteCurveMathLib_v1 {
                 remainingBudget_ -= stepCollateralCapacity_;
                 tokensToMint_ += supplyPerStep_;
                 stepIndex_++;
-                fullStepBacking += stepCollateralCapacity_;
             } else {
-                // Partial step purchase and exit
+                // Partial step purchase and exit - calculate tokens from remaining budget
                 uint partialIssuance_ =
                     Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
                 tokensToMint_ += partialIssuance_;
-                remainingBudget_ -= FixedPointMathLib._mulDivUp(
-                    partialIssuance_, stepPrice_, SCALING_FACTOR
-                );
-
                 break;
             }
         }
 
+        // Calculate total collateral spent
         collateralSpentByPurchaser_ =
             collateralToSpendProvided_ - remainingBudget_;
         return (tokensToMint_, collateralSpentByPurchaser_);
@@ -707,32 +660,25 @@ library DiscreteCurveMathLib_v1 {
             uint currentPriceIncrease_ = currentSegment_._priceIncrease();
             uint currentNumberOfSteps_ = currentSegment_._numberOfSteps();
 
-            // Final price of the current segment.
-            // If numberOfSteps_ is 1, final price is initialPrice_.
-            // Otherwise, it's initialPrice_ + (numberOfSteps_ - 1) * priceIncrease_.
-            uint finalPriceCurrentSegment_;
-            if (currentNumberOfSteps_ == 0) {
-                // This case should be prevented by PackedSegmentLib._create's check for numberOfSteps_ > 0.
-                // If somehow reached, treat as an invalid state or handle as per specific requirements.
-                // For safety, assume it implies an issue, though _create() should prevent it.
-                // As a defensive measure, one might revert or assign a value that ensures progression check logic.
-                // However, relying on _create() validation is typical.
-                // If steps is 0, let's consider its "final price" to be its initial price to avoid underflow with (steps-1).
-                finalPriceCurrentSegment_ = currentInitialPrice_;
-            } else if (currentNumberOfSteps_ == 1) {
-                finalPriceCurrentSegment_ = currentInitialPrice_;
-            } else {
-                finalPriceCurrentSegment_ = currentInitialPrice_
-                    + (currentNumberOfSteps_ - 1) * currentPriceIncrease_;
-                // Check for overflow in final price calculation, though bit limits on components make this unlikely
-                // to overflow uint256 unless priceIncrease_ is extremely large.
-                // Max initialPrice_ ~2^72, max (steps-1)*priceIncrease_ ~ (2^16)*(2^72) ~ 2^88. Sum ~2^88. Fits uint256.
+            // Validate single-step segments are flat
+            if (currentNumberOfSteps_ == 1 && currentPriceIncrease_ > 0) {
+                revert
+                    IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__SingleStepMustBeFlat(i_);
+            }
+
+            // Calculate final price of the current segment
+            // For single steps: final price = initial price
+            // For multiple steps: final price = initial price + (steps - 1) * price increase
+            uint finalPriceCurrentSegment_ = currentInitialPrice_;
+            if (currentNumberOfSteps_ > 1) {
+                finalPriceCurrentSegment_ +=
+                    (currentNumberOfSteps_ - 1) * currentPriceIncrease_;
             }
 
             uint initialPriceNextSegment_ = nextSegment_._initialPrice();
 
             if (initialPriceNextSegment_ < finalPriceCurrentSegment_) {
-                // Note: DiscreteCurveMathLib__InvalidPriceProgression error needs to be defined in IDiscreteCurveMathLib_v1.sol
                 revert
                     IDiscreteCurveMathLib_v1
                     .DiscreteCurveMathLib__InvalidPriceProgression(

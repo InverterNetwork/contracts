@@ -51,11 +51,6 @@ interface IDiscreteCurveMathLib_v1 {
     error DiscreteCurveMathLib__ZeroSupplyPerStep();
 
     /**
-     * @notice Reverted when a segment is configured with zero initial price and zero price increase.
-     */
-    error DiscreteCurveMathLib__SegmentHasNoPrice(); // Existing error, may need review if it overlaps with SegmentIsFree
-
-    /**
      * @notice Reverted when an attempt is made to configure a segment that is entirely free
      * (i.e., initialPrice is 0 and priceIncreasePerStep is 0).
      */
@@ -132,6 +127,12 @@ interface IDiscreteCurveMathLib_v1 {
     error DiscreteCurveMathLib__InsufficientIssuanceToSell(
         uint requested, uint available
     );
+
+    /**
+     * @notice Reverted when a single-step segment is configured with a non-zero price increase.
+     * @param segmentIndex The index of the segment that is configured with a non-zero price increase.
+     */
+    error DiscreteCurveMathLib__SingleStepMustBeFlat(uint segmentIndex);
 
     // --- Events ---
 
