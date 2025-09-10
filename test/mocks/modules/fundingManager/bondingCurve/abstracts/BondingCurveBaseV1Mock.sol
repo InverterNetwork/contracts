@@ -75,13 +75,14 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1, IFundingManager_v1 {
         distributeIssuanceTokenFunctionCalled++;
     }
 
-    uint public distributeCollateralTokenBeforeBuyFunctionCalled;
+    uint public processCollateralTokensForBuyOperationFunctionCalled;
 
-    function _handleCollateralTokensBeforeBuy(
-        address, /*_provider*/
-        uint /*_amount*/
-    ) internal virtual override {
-        distributeCollateralTokenBeforeBuyFunctionCalled++;
+    function _processCollateralTokensForBuyOperation(uint /*_amount*/ )
+        internal
+        virtual
+        override
+    {
+        processCollateralTokensForBuyOperationFunctionCalled++;
     }
 
     function token() public view returns (IERC20) {
@@ -178,6 +179,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1, IFundingManager_v1 {
         _projectFeeCollected(_workflowFeeAmount);
     }
 
+    // Returns the internal variable of the issuance token storage
+    function exposed_issuanceToken() external view returns (address) {
+        return address(issuanceToken);
+    }
     // -------------------------------------------------------------------------
     // Helper function
 

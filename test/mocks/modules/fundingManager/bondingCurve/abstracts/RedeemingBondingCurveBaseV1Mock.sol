@@ -101,13 +101,14 @@ contract RedeemingBondingCurveBaseV1Mock is
         distributeCollateralTokenAfterSellFunctionCalled++;
     }
 
-    uint public distributeCollateralTokenBeforeBuyFunctionCalled;
+    uint public processCollateralTokensForBuyOperationFunctionCalled;
 
-    function _handleCollateralTokensBeforeBuy(
-        address, /*_provder*/
-        uint /*_amount*/
-    ) internal virtual override {
-        distributeCollateralTokenBeforeBuyFunctionCalled++;
+    function _processCollateralTokensForBuyOperation(uint /*_amount*/ )
+        internal
+        virtual
+        override
+    {
+        processCollateralTokensForBuyOperationFunctionCalled++;
     }
 
     function getStaticPriceForSelling()
