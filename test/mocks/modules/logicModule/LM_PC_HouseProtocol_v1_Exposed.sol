@@ -34,13 +34,6 @@ contract LM_PC_Lending_Facility_v1_Exposed is LM_PC_Lending_Facility_v1 {
         return _calculateDynamicBorrowingFee(requestedAmount_);
     }
 
-    function exposed_calculateIssuanceTokensToUnlock(
-        address user_,
-        uint repaymentAmount_
-    ) external view returns (uint) {
-        return _calculateIssuanceTokensToUnlock(user_, repaymentAmount_);
-    }
-
     function exposed_calculateCollateralAmount(uint issuanceTokenAmount_)
         external
         view
@@ -59,5 +52,18 @@ contract LM_PC_Lending_Facility_v1_Exposed is LM_PC_Lending_Facility_v1 {
 
     function exposed_getFloorPrice() external view returns (uint) {
         return _getFloorPrice();
+    }
+
+    function exposed_removeLoanFromUserLoans(address user_, uint loanId_)
+        external
+    {
+        _removeLoanFromUserLoans(user_, loanId_);
+    }
+
+    function exposed_calculateIssuanceTokensToUnlockForLoan(
+        Loan memory loan_,
+        uint repaymentAmount_
+    ) external pure returns (uint) {
+        return _calculateIssuanceTokensToUnlockForLoan(loan_, repaymentAmount_);
     }
 }

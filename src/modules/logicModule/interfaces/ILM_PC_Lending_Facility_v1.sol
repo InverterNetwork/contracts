@@ -10,6 +10,7 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @notice  Interface for the House Protocol lending facility that allows users to borrow
  *          collateral tokens against issuance tokens with dynamic fee calculation.
+ *          Each loan is tracked individually with a unique ID to handle floor price changes properly.
  *
  * @dev     This interface defines the following key functionality:
  *          - Borrowing collateral tokens against locked issuance tokens
@@ -17,6 +18,7 @@ import {IERC20PaymentClientBase_v2} from
  *          - Repayment functionality with issuance token unlocking
  *          - Configurable borrowing limits and quotas
  *          - Role-based access control for facility management
+ *          - Individual loan tracking with unique IDs for proper floor price handling
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -29,23 +31,46 @@ import {IERC20PaymentClientBase_v2} from
  */
 interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     // =========================================================================
+    // Structs
+
+    /// @notice Represents an individual loan with its specific terms
+    /// @dev Each loan is tracked separately to handle floor price changes properly
+    struct Loan {
+        uint id; // Unique loan identifier
+        address borrower; // Address of the borrower
+        uint principalAmount; // Original loan amount (collateral tokens)
+        uint lockedIssuanceTokens; // Issuance tokens locked for this specific loan
+        uint floorPriceAtBorrow; // Floor price when the loan was taken
+        uint remainingPrincipal; // Remaining principal to be repaid
+        uint timestamp; // Block timestamp when loan was created
+        bool isActive; // Whether the loan is still active
+    }
+
+    // =========================================================================
     // Events
 
-    /// @notice Emitted when a user borrows collateral tokens
-    /// @param user The address of the borrower
-    /// @param requestedAmount The requested loan amount
-    /// @param fee The dynamic borrowing fee deducted
-    /// @param netAmount The net amount received by the user
-    event Borrowed(
-        address indexed user, uint requestedAmount, uint fee, uint netAmount
+    /// @notice Emitted when a new loan is created
+    /// @param loanId The unique loan identifier
+    /// @param borrower The address of the borrower
+    /// @param principalAmount The principal amount of the loan
+    /// @param floorPriceAtBorrow The floor price when the loan was taken
+    event LoanCreated(
+        uint indexed loanId,
+        address indexed borrower,
+        uint principalAmount,
+        uint floorPriceAtBorrow
     );
 
-    /// @notice Emitted when a user repays their loan
-    /// @param user The address of the borrower
-    /// @param repaymentAmount The amount repaid
-    /// @param issuanceTokensUnlocked The amount of issuance tokens unlocked
-    event Repaid(
-        address indexed user, uint repaymentAmount, uint issuanceTokensUnlocked
+    /// @notice Emitted when a specific loan is repaid
+    /// @param loanId The unique loan identifier
+    /// @param borrower The address of the borrower
+    /// @param repaymentAmount The amount repaid for this loan
+    /// @param issuanceTokensUnlocked The amount of issuance tokens unlocked for this loan
+    event LoanRepaid(
+        uint indexed loanId,
+        address indexed borrower,
+        uint repaymentAmount,
+        uint issuanceTokensUnlocked
     );
 
     /// @notice Emitted when a user locks issuance tokens
@@ -114,6 +139,9 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice No issuance tokens received in iteration
     error Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
 
+    /// @notice Invalid loan ID or loan does not belong to caller
+    error Module__LM_PC_Lending_Facility_InvalidLoanId();
+
     // =========================================================================
     // Public - Getters
 
@@ -132,6 +160,35 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
         external
         view
         returns (uint amount_);
+
+    /// @notice Get details of a specific loan
+    /// @param loanId_ The loan ID
+    /// @return loan The loan details
+    function getLoan(uint loanId_) external view returns (Loan memory loan);
+
+    /// @notice Get all active loan IDs for a user
+    /// @param user_ The user address
+    /// @return loanIds Array of active loan IDs
+    function getUserLoanIds(address user_)
+        external
+        view
+        returns (uint[] memory loanIds);
+
+    /// @notice Get all active loans for a user
+    /// @param user_ The user address
+    /// @return loans Array of active loan details
+    function getUserLoans(address user_)
+        external
+        view
+        returns (Loan[] memory loans);
+
+    /// @notice Calculate the repayment amount for a specific loan based on current floor price
+    /// @param loanId_ The loan ID
+    /// @return repaymentAmount The amount needed to fully repay the loan
+    function calculateLoanRepaymentAmount(uint loanId_)
+        external
+        view
+        returns (uint repaymentAmount);
 
     /// @notice Returns the system-wide Borrow Capacity
     /// @return capacity_ The borrow capacity
@@ -160,9 +217,14 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @param requestedLoanAmount_ The amount of collateral tokens to borrow
     function borrow(uint requestedLoanAmount_) external;
 
-    /// @notice Repay a loan with collateral tokens
+    /// @notice Repay a loan with collateral tokens (repays oldest loans first)
     /// @param repaymentAmount_ The amount of collateral tokens to repay
     function repay(uint repaymentAmount_) external;
+
+    // /// @notice Repay a specific loan by ID
+    // /// @param loanId_ The ID of the loan to repay
+    // /// @param repaymentAmount_ The amount to repay (if 0, repay the full loan)
+    // function repayLoan(uint loanId_, uint repaymentAmount_) external;
 
     /// @notice Buy issuance tokens and borrow against them in a single transaction
     /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)
