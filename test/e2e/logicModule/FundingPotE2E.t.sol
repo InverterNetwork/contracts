@@ -199,13 +199,16 @@ contract FundingPotE2E is E2ETest {
         allowedAddresses[0] = contributor1;
         allowedAddresses[1] = contributor2;
 
+        address[] memory removedAddresses = new address[](0);
+
         fundingPot.setAccessCriteria(
             round1Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
             0,
             address(0),
             bytes32(0),
-            allowedAddresses
+            allowedAddresses,
+            removedAddresses
         );
 
         // Add access criteria to round 2
@@ -218,7 +221,8 @@ contract FundingPotE2E is E2ETest {
             0,
             address(0),
             bytes32(0),
-            allowedAddresses
+            allowedAddresses,
+            removedAddresses
         );
 
         // 5. Set access criteria privileges for the rounds
@@ -257,22 +261,28 @@ contract FundingPotE2E is E2ETest {
 
         vm.startPrank(contributor1);
         contributionToken.approve(address(fundingPot), contributor1Amount);
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            unspentPersonalRoundCaps =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](0);
         fundingPot.contributeToRoundFor(
-            contributor1, round1Id, contributor1Amount, 1, new bytes32[](0)
+            contributor1, round1Id, contributor1Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 
         vm.startPrank(contributor2);
         contributionToken.approve(address(fundingPot), contributor2Amount);
+        unspentPersonalRoundCaps =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](0);
         fundingPot.contributeToRoundFor(
-            contributor2, round1Id, contributor2Amount, 1, new bytes32[](0)
+            contributor2, round1Id, contributor2Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 
         vm.startPrank(contributor3);
         contributionToken.approve(address(fundingPot), contributor3Amount);
+
         fundingPot.contributeToRoundFor(
-            contributor3, round2Id, contributor3Amount, 1, new bytes32[](0)
+            contributor3, round2Id, contributor3Amount, 1, new bytes32[](0), unspentPersonalRoundCaps
         );
         vm.stopPrank();
 
@@ -281,8 +291,8 @@ contract FundingPotE2E is E2ETest {
 
         // 8. Close rounds
         fundingPot.closeRound(round1Id);
-        assertEq(fundingPot.isRoundClosed(round1Id), true);
-        assertEq(fundingPot.isRoundClosed(round2Id), true); // round2 is auto closed
+        assertEq(fundingPot.roundIdToClosedStatus(round1Id), true);
+        assertEq(fundingPot.roundIdToClosedStatus(round2Id), true); // round2 is auto closed
         assertEq(contributionToken.balanceOf(address(fundingPot)), 0);
         assertGt(issuanceToken.balanceOf(address(fundingPot)), 0);
 
