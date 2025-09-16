@@ -11,7 +11,6 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "forge-std/console.sol";
 
 // Tests and Mocks
 import {
@@ -64,6 +63,9 @@ contract PP_Queue_v1_Test is ModuleTest {
     bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
         bytes4(keccak256(bytes("processPayments(address)")));
     uint internal constant BPS = 10_000;
+    uint internal constant DEFAULT_MAX_ORDERS_PER_EXECUTION = 50;
+    uint internal constant FLAG_ORDER_ID = 0;
+    uint internal constant FLAG_PROJECT_FEE = 4;
 
     //Role
     bytes32 internal roleIDqueue;
@@ -115,6 +117,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(queue.getFailedOrdersTreasury()),
             address(failedOrdersTreasury)
         );
+        assertEq(
+            queue.getMaxOrdersPerExecution(), DEFAULT_MAX_ORDERS_PER_EXECUTION
+        );
     }
 
     function testSupportsInterface() public {
@@ -161,7 +166,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setIsAuthorized(address(queue), true);
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -407,42 +412,72 @@ contract PP_Queue_v1_Test is ModuleTest {
         }
     }
 
-    /* Test testGetPaymentQueueId_GivenFlagsAndData()
-        └── Given flags and data for queue ID retrieval
-            └── When validating the payment queue ID
-                ├── If ORDER_ID bit is set and data exists
-                │   └── Then it should return the correct queue ID.
-                └── If ORDER_ID bit is not set or data is empty
-                    └── Then it should return 0.
+    // ================================================================================
+    // Test Set Max Orders Per Execution
+
+    /* Test: Function setMaxOrdersPerExecution()
+        └── Given the caller does not have the QUEUE_OPERATOR_ROLE_ADMIN role
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should revert
     */
-    function testGetPaymentQueueId_GivenFlagsAndData(
-        uint queueId_,
-        uint8 flagBits_,
-        uint8 dataLength_
+    function testSetMaxOrdersPerExecution_revertGivenNonQueueOperator(
+        address nonQueueOperator_
     ) public {
-        dataLength_ = uint8(bound(dataLength_, 0, 10));
-        bytes32 flags_ = bytes32(uint(flagBits_));
+        // Setup
+        vm.assume(nonQueueOperator_ != address(this));
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(queue), queue.getQueueOperatorRole()
+        );
 
-        bytes32[] memory data_ = new bytes32[](dataLength_);
-        if (dataLength_ > 0) {
-            data_[0] = bytes32(queueId_);
-        }
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                roleId,
+                nonQueueOperator_
+            )
+        );
+        // Test
+        vm.prank(nonQueueOperator_);
+        queue.setMaxOrdersPerExecution(100);
+    }
 
-        uint retrievedId_ = queue.exposed_getPaymentQueueId(flags_, data_);
+    /* Test: Function setMaxOrdersPerExecution()
+        ├── Given the caller has the QUEUE_OPERATOR_ROLE_ADMIN role
+        └── And the number of orders per execution is zero
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should revert with Module__PP_Queue_ZeroAmount
+    */
+    function testSetMaxOrdersPerExecution_revertGivenZeroAmount() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Queue_v1.Module__PP_Queue_ZeroAmount.selector
+            )
+        );
+        queue.setMaxOrdersPerExecution(0);
+    }
 
-        if ((flagBits_ & 1 == 1) && dataLength_ > 0) {
-            assertEq(
-                retrievedId_,
-                queueId_,
-                "Queue ID mismatch when flag is set and data exists."
-            );
-        } else {
-            assertEq(
-                retrievedId_,
-                0,
-                "Should return 0 when flag is not set or data is empty."
-            );
-        }
+    /* Test: Function setMaxOrdersPerExecution()
+        ├── Given the caller has the QUEUE_OPERATOR_ROLE_ADMIN role
+        └── And the number of orders per execution is not zero
+            └── When the function setMaxOrdersPerExecution is called
+                └── Then it should update the state
+    */
+    function testSetMaxOrdersPerExecution_worksGivenQueueOperatorAndNonZeroAmount(
+        uint maxOrdersPerExecution_
+    ) public {
+        // Setup
+        uint currentMaxOrdersPerExecution_ = queue.getMaxOrdersPerExecution();
+        vm.assume(maxOrdersPerExecution_ > 0);
+        vm.assume(maxOrdersPerExecution_ != DEFAULT_MAX_ORDERS_PER_EXECUTION);
+
+        // Test
+        queue.setMaxOrdersPerExecution(maxOrdersPerExecution_);
+
+        // Post Assertion
+        assertNotEq(
+            queue.getMaxOrdersPerExecution(), currentMaxOrdersPerExecution_
+        );
+        assertEq(queue.getMaxOrdersPerExecution(), maxOrdersPerExecution_);
     }
 
     // ================================================================================
@@ -463,7 +498,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: makeAddr("recipient"),
@@ -524,7 +559,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         for (uint8 i = 0; i < numOrders_; i++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper__encodePaymentOrderData(i + 1);
+                helper__encodePaymentOrderData(i + 1, 0);
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: makeAddr(string.concat("recipient", vm.toString(i))),
@@ -679,7 +714,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -730,7 +765,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -884,7 +919,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -946,7 +981,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -981,7 +1016,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1019,7 +1054,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1058,7 +1093,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1083,7 +1118,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1136,7 +1171,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1161,7 +1196,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1225,7 +1260,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1260,7 +1295,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1283,7 +1318,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1331,7 +1366,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1356,7 +1391,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1409,7 +1444,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1434,7 +1469,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper__encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1566,7 +1601,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1589,17 +1624,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertFalse(success_, "Processing empty queue should fail.");
     }
 
+    // ================================================================================
+    // Test Execute Payment Transfer
+
     /* Test: Function _executePaymentTransfer()
-        ├── Given the payment transfer succeeds
-        │   └── When the function _executePaymentTransfer() is called
-        │       ├── Then the order state is set to PROCESSED
-        │       └── And the order is removed from the queue
-        └── Given the payment transfer fails (receiver blacklisted)
+        └── Given the payment transfer succeeds
             └── When the function _executePaymentTransfer() is called
-                ├── Then the order state is set to FAILED
+                ├── Then the order state is set to PROCESSED
                 └── And the order is removed from the queue
     */
-
     function testInternalExecutePaymentTransfer_worksGivenStateIsProcessedAndRemovedFromQueue(
         address recipient_,
         uint96 amount_
@@ -1650,6 +1683,13 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(_token.balanceOf(recipient_), amount_);
         assertEq(queueSize_, 0);
     }
+
+    /* Test: Function _executePaymentTransfer()
+        └── Given the payment transfer fails (receiver blacklisted)
+            └── When the function _executePaymentTransfer() is called
+                ├── Then the order state is set to FAILED
+                └── And the order is removed from the queue
+    */
 
     function testInternalExecutePaymentTransfer_worksGivenStateIsFailedAndRemovedFromQueue(
         address recipient_,
@@ -1753,7 +1793,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(0);
+            helper__encodePaymentOrderData(0, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1787,7 +1827,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1834,7 +1874,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1882,7 +1922,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1917,7 +1957,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2159,7 +2199,8 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             invalidRecipient_,
             amount_,
-            false // don't collect protocol fee when cancelling
+            false, // don't collect protocol fee when cancelling
+            0
         );
 
         // Assert post-conditions
@@ -2256,13 +2297,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         emit IModule_v1.ProtocolFeeTransferred(
             address(_token), protocolTreasury_, protocolFeeAmount
         );
+
         // Test
         bool success_ = queue.exposed_tryPaymentTransfer(
             address(_token),
             address(paymentClient),
             validRecipient_,
             amount_,
-            collectProtocolFee_
+            collectProtocolFee_,
+            0
         );
 
         // Assert post-conditions
@@ -2355,7 +2398,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper__encodePaymentOrderData(i_ + 1);
+                helper__encodePaymentOrderData(i_ + 1, 0);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2399,6 +2442,44 @@ contract PP_Queue_v1_Test is ModuleTest {
         }
     }
 
+    /* Test: Function executePaymentQueue()
+        └── Given the number of orders in queue is greater than max orders per execution
+            └── When the function executePaymentQueue() is called
+                ├── Then the function should execute only until maxOrdersPerExecution is reached
+                └── And the the remaining orders should be left in the queue
+    */
+    function testExecutePaymentQueue_worksGivenMaxOrdersPerExecutionIsReached()
+        public
+    {
+        // Setup
+        // Get max orders per execution
+        uint maxOrdersPerExecution = queue.getMaxOrdersPerExecution();
+        // Number of orders to add to the queue such that max orders per execution is reached
+        uint numberOfOrders = maxOrdersPerExecution + 50;
+        // Total amount of collateral that is being redeemed
+        uint96 totalSellAmount = 1000e6;
+        // Setup large queue with helper function
+        helper_setupLargeQueue(totalSellAmount, numberOfOrders);
+        // Get queue size before execution
+        uint preExecutionQueueSize_ =
+            queue.getQueueSizeForClient(address(paymentClient));
+
+        // Pre-assertions
+        assertEq(preExecutionQueueSize_, numberOfOrders);
+        uint blockNumber_ = block.number;
+        vm.roll(blockNumber_ + 10);
+        // Test
+        vm.prank(address(paymentClient));
+        queue.exposed_executePaymentQueue(address(paymentClient));
+
+        // Post-assertions
+        uint postExecutionQueueSize_ =
+            queue.getQueueSizeForClient(address(paymentClient));
+        assertEq(
+            postExecutionQueueSize_, numberOfOrders - maxOrdersPerExecution
+        );
+    }
+
     /* Test testExecutePaymentQueue_GivenMultipleOrders()
         └── Given multiple valid orders in queue
             └── When executing payment queue
@@ -2430,7 +2511,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper__encodePaymentOrderData(i_ + 1);
+                helper__encodePaymentOrderData(i_ + 1, 0);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2471,7 +2552,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2536,7 +2617,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2736,7 +2817,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -3273,24 +3354,95 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function _getProtocolFeeDetails()
-        └── Given valid protocol fee amount
-            ├── And the collectProtocolFee flag is true
-            │   └── When the function _getProtocolFeeDetails() is called
-            │       └── Then it should return the correct fee amount and treasury address
-            └── And the collectProtocolFee flag is false
-                └── When the function _getProtocolFeeDetails() is called
+    /*  Test: Function _calculateProtocolFeeAmount()
+        └── Given collectProtocolFee flag is set to false
+            └── When the function _calculateProtocolFeeAmount() is called
+                └── Then it should return 0 for the fee and total amount as net amount
+    */
+    function testInternalCalculateProtocolFeeAmount_worksGivenCollectProtocolFeeFlagIsFalse(
+        uint totalAmount_,
+        uint projectFee_
+    ) public {
+        // Setup
+        vm.assume(projectFee_ > 0);
+        bool collectProtocolFee_ = false;
+
+        // Test function call
+        (uint feeAmount, uint netAmount, address treasury) = queue
+            .exposed_calculateProtocolFeeAmount(
+            totalAmount_,
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            collectProtocolFee_,
+            projectFee_
+        );
+
+        // Post-assertions
+        assertEq(feeAmount, 0, "Fee amount should be 0");
+        assertEq(netAmount, totalAmount_, "Net amount should be correct");
+        assertEq(treasury, address(0), "Treasury should be 0 address");
+    }
+
+    /*  Test: Function _calculateProtocolFeeAmount()
+        └── Given collectProtocolFee flag is set to true
+            └── And the protocol fee == 0
+                └── When the function _calculateProtocolFeeAmount() is called
                     └── Then it should return 0 for the fee and total amount as net amount
     */
-
-    function testInternalGetProtocolFeeAmountAndTreasury_worksGivenCorrectFeeDetailsRetrieved(
-        uint protocolFee_,
-        uint totalAmount_
+    function testInternalCalculateProtocolFeeAmount_worksGivenCollectProtocolFeeFlagIsTrueAndProtocolFeeIsZero(
+        uint totalAmount_,
+        uint projectFee_
     ) public {
-        protocolFee_ = bound(protocolFee_, 1, feeManager.maxFee());
-        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+        // Setup
+        projectFee_ = 0;
         bool collectProtocolFee_ = true;
 
+        // Set protocol fee to 0
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(queue),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            0 // protocol fee is 0
+        );
+
+        // Calculate expected values
+        address expectedTreasury =
+            feeManager.getWorkflowTreasuries(address(_orchestrator));
+
+        // Test function call
+        (uint feeAmount, uint netAmount, address treasury) = queue
+            .exposed_calculateProtocolFeeAmount(
+            totalAmount_,
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            collectProtocolFee_,
+            projectFee_
+        );
+
+        // Post-assertions
+        assertEq(feeAmount, 0, "Fee amount should be 0");
+        assertEq(netAmount, totalAmount_, "Net amount should be correct");
+        assertEq(treasury, expectedTreasury, "Treasury should be correct");
+    }
+
+    /*  Test: Function _calculateProtocolFeeAmount()
+        └── Given collectProtocolFee flag is set to true
+            ├── And the protocol fee is > 0
+            └── And the project fee == 0
+                └── When the function _calculateProtocolFeeAmount() is called
+                    └── Then it should return the correct fee amount and treasury address
+    */
+    function testInternalCalculateProtocolFeeAmount_worksGivenCollectProtocolFeeFlagIsTrueAndProtocolFeeIsGreaterThanZeroAndProjectFeeIsZero(
+        uint protocolFee_,
+        uint totalAmount_,
+        uint projectFee_
+    ) public {
+        // Setup
+        protocolFee_ = bound(protocolFee_, 10, 1000); // max 10%
+        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+        projectFee_ = 0;
+        bool collectProtocolFee_ = true;
+
+        // Set protocol fee
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(queue),
@@ -3299,40 +3451,114 @@ contract PP_Queue_v1_Test is ModuleTest {
             protocolFee_
         );
 
-        uint expectedFeeAmount = totalAmount_ * protocolFee_ / BPS;
+        // Calculate expected values
+        (uint expectedNetAmount, uint expectedProtocolFeeAmount,) =
+        helper_calculateNetAndSplitFees(totalAmount_, protocolFee_, projectFee_);
         address expectedTreasury =
             feeManager.getWorkflowTreasuries(address(_orchestrator));
 
+        // Test function call
         (uint feeAmount, uint netAmount, address treasury) = queue
-            .exposed_getProtocolFeeDetails(
-            totalAmount_,
+            .exposed_calculateProtocolFeeAmount(
+            expectedNetAmount + expectedProtocolFeeAmount,
             PROCESS_PAYMENTS_FUNCTION_SELECTOR,
-            collectProtocolFee_
+            collectProtocolFee_,
+            projectFee_
         );
 
-        assertEq(feeAmount, expectedFeeAmount, "Fee amount should be correct");
-        assertEq(
-            netAmount, totalAmount_ - feeAmount, "Net amount should be correct"
+        // Post-assertions
+        assertApproxEqAbs(
+            feeAmount,
+            expectedProtocolFeeAmount,
+            1,
+            "Fee amount should be correct"
+        );
+        assertApproxEqAbs(
+            netAmount, expectedNetAmount, 1, "Net amount should be correct"
+        );
+        assertEq(treasury, expectedTreasury, "Treasury should be correct");
+    }
+    /*  Test: Function _calculateProtocolFeeAmount()
+        └── Given collectProtocolFee flag is set to true
+            ├── And the protocol fee is > 0
+            └── And the project fee > 0
+                └── When the function _calculateProtocolFeeAmount() is called
+                    └── Then it should return the correct fee amount and treasury address
+    */
+
+    function testInternalCalculateProtocolFeeAmount_worksGivenCollectProtocolFeeFlagIsTrueAndProtocolFeeAndProjectFeeAreGreaterThanZero(
+        uint protocolFee_,
+        uint totalAmount_,
+        uint projectFee_
+    ) public {
+        // Setup
+        protocolFee_ = bound(protocolFee_, 10, 1000); // max 10%
+        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+        projectFee_ = bound(projectFee_, 10, 1000); // max 10%
+        bool collectProtocolFee_ = true;
+        // Set protocol fee
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(queue),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolFee_
+        );
+
+        // Calculate expected values
+        (uint expectedNetAmount, uint expectedProtocolFeeAmount,) =
+        helper_calculateNetAndSplitFees(totalAmount_, protocolFee_, projectFee_);
+        address expectedTreasury =
+            feeManager.getWorkflowTreasuries(address(_orchestrator));
+
+        // Test function call
+        (uint feeAmount, uint netAmount, address treasury) = queue
+            .exposed_calculateProtocolFeeAmount(
+            expectedNetAmount + expectedProtocolFeeAmount,
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            collectProtocolFee_,
+            projectFee_
+        );
+
+        // Post-assertions
+        assertApproxEqAbs(
+            feeAmount,
+            expectedProtocolFeeAmount,
+            1,
+            "Fee amount should be correct"
+        );
+        assertApproxEqAbs(
+            netAmount, expectedNetAmount, 1, "Net amount should be correct"
         );
         assertEq(treasury, expectedTreasury, "Treasury should be correct");
     }
 
-    function testInternalGetProtocolFeeAmountAndTreasury_worksGivenNoFee(
-        uint totalAmount_
-    ) public {
-        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
-        bool collectProtocolFee_ = false;
+    /* Test: function _validateOrderFlags()
+        └── Given valid order flags
+            └── When the function _validateOrderFlags() is called
+                └── Then it should return true
+    */
 
-        (uint feeAmount, uint netAmount, address treasury) = queue
-            .exposed_getProtocolFeeDetails(
-            totalAmount_,
-            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
-            collectProtocolFee_
-        );
+    function testInternalValidateOrderFlags_worksGivenValidFlags() public {
+        bytes32 flags = bytes32(uint(0));
+        flags |= bytes32((1 << FLAG_ORDER_ID));
+        flags |= bytes32((1 << FLAG_PROJECT_FEE));
 
-        assertEq(feeAmount, 0, "Fee amount should be 0");
-        assertEq(netAmount, totalAmount_, "Net amount should be correct");
-        assertEq(treasury, address(0), "Treasury should be 0 address");
+        assertTrue(queue.exposed_validateOrderFlags(flags));
+    }
+
+    /* Test: function _validateOrderFlags()
+        └── Given invalid order flags
+            └── When the function _validateOrderFlags() is called
+                └── Then it should return false
+    */
+
+    function testInternalValidateOrderFlags_worksGivenInvalidFlags() public {
+        bytes32 flags = bytes32(uint(0));
+        flags |= bytes32((1 << uint(200)));
+        flags |= bytes32((1 << uint(21)));
+
+        assertFalse(queue.exposed_validateOrderFlags(flags));
     }
 
     /* Test testValidChainId_GivenValidAndInvalidIds()
@@ -3624,60 +3850,106 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertFalse(queue.exposed_validPaymentToken(address(0)));
     }
 
-    /* Test testValidateFlagsAndData_GivenValidFlagsAndData()
-        └── Given valid flags with ORDER_ID bit set
-            └── And data array with order ID
-                └── Then it should return true
+    /* Test: Function _getOrderDetailsFromFlagsAndData()
+        └── Given valid flags and data
+            └── When the function _getOrderDetailsFromFlagsAndData() is called
+                └── Then it should return the correct order details
     */
-    function testInternalValidateFlagsAndData_worksGivenValidFlagsAndData()
-        public
-    {
-        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
-        bytes32[] memory data = new bytes32[](1);
-        data[0] = bytes32(uint(123)); // Some order ID
-
-        assertTrue(queue.exposed_validateFlagsAndData(flags, data));
-    }
-
-    /* Test testValidateFlagsAndData_GivenValidFlagsWithoutData()
-        └── Given valid flags without ORDER_ID bit set
-            └── And empty data array
-                └── Then it should return true
-    */
-    function testInternalValidateFlagsAndData_worksGivenValidFlagsWithoutData()
-        public
-    {
-        bytes32 flags = bytes32(uint(0)); // No bits set
-        bytes32[] memory data = new bytes32[](0);
-
-        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
-    }
-
-    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithData()
-        └── Given flags with ORDER_ID bit set
-            └── And empty data array
-                └── Then it should return false
-    */
-    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithData()
-        public
-    {
-        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
-        bytes32[] memory data = new bytes32[](0); // Empty data array
-
-        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
-    }
-
-    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithoutData()
-        └── Given flags with invalid bits set
-            └── And empty data array
-                └── Then it should return false
-    */
-    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithoutData(
+    function testInternalGetOrderDetailsFromFlagsAndData_worksGivenValidFlagsAndData(
+        uint orderId_,
+        uint projectFee_
     ) public {
-        bytes32 flags = bytes32(uint(2)); // Set invalid bit
-        bytes32[] memory data = new bytes32[](0);
+        // Setup
+        bytes32 flags = bytes32(uint(0));
+        bytes32[] memory data = new bytes32[](2);
+        // Set flags
+        flags |= bytes32((1 << FLAG_ORDER_ID)); // ORDER_ID
+        flags |= bytes32((1 << FLAG_PROJECT_FEE)); // PROJECT_FEE
 
-        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+        // Fill data array in the order of set bits
+        data[0] = bytes32(uint(orderId_)); // Bit 0 data
+        data[1] = bytes32(uint(projectFee_)); // Bit 4 data
+
+        // Test function call
+        (uint orderId, uint projectFee) =
+            queue.exposed_getOrderDetailsFromFlagsAndData(flags, data);
+
+        // Post-assertions
+        assertEq(orderId, orderId_, "Order ID should be correct");
+        assertEq(projectFee, projectFee_, "Project fee should be correct");
+    }
+
+    function testInternalGetOrderDetailsFromFlagsAndData_worksGivenValidFlagsAndDataWithExtraData(
+        uint orderId_,
+        uint projectFee_
+    ) public {
+        // Setup
+        bytes32 flags = bytes32(uint(0));
+
+        // Order provides 5 data slots with corresponding flags set
+        bytes32[] memory data = new bytes32[](5);
+
+        // Set up the order with extra data:
+        // Bit 0: ORDER_ID (processor needs this)
+        // Bit 1: Some extra data (processor doesn't need)
+        // Bit 2: Some extra data (processor doesn't need)
+        // Bit 3: Some extra data (processor doesn't need)
+        // Bit 4: PROJECT_FEE (processor needs this)
+
+        flags |= bytes32((1 << FLAG_ORDER_ID)); // ORDER_ID
+        flags |= bytes32((1 << uint(1))); // Extra data 1
+        flags |= bytes32((1 << uint(2))); // Extra data 2
+        flags |= bytes32((1 << uint(3))); // Extra data 3
+        flags |= bytes32((1 << FLAG_PROJECT_FEE)); // PROJECT_FEE
+
+        // Fill data array in the order of set bits
+        data[0] = bytes32(uint(orderId_)); // Bit 0 data
+        data[1] = bytes32(uint(9999)); // Bit 1 data (extra)
+        data[2] = bytes32(uint(8888)); // Bit 2 data (extra)
+        data[3] = bytes32(uint(7777)); // Bit 3 data (extra)
+        data[4] = bytes32(uint(projectFee_)); // Bit 4 data
+
+        // The function should:
+        // 1. Read data[0] for bit 0 (processor needs it)
+        // 2. Skip data[1] for bit 1 (processor doesn't need it)
+        // 3. Skip data[2] for bit 2 (processor doesn't need it)
+        // 4. Skip data[3] for bit 3 (processor doesn't need it)
+        // 5. Read data[4] for bit 4 (processor needs it)
+
+        // Test function call
+        (uint orderId, uint projectFee) =
+            queue.exposed_getOrderDetailsFromFlagsAndData(flags, data);
+
+        // Post-assertions
+        assertEq(orderId, orderId_, "Order ID should be correct");
+        assertEq(projectFee, projectFee_, "Project fee should be correct");
+    }
+
+    /* Test: function _getOrderDetailsFromFlagsAndData()
+        └── Given flags are not valid
+            └── When the function _getOrderDetailsFromFlagsAndData() is called
+                └── Then it should return 0 for the order ID and project fee
+    */
+    function testInternalGetOrderDetailsFromFlagsAndData_worksGivenInvalidFlagsReturnsZero(
+    ) public {
+        // Setup
+        // Set invalid flags
+        bytes32 flags = bytes32(uint(0));
+        flags |= bytes32((1 << uint(11)));
+        flags |= bytes32((1 << uint(12)));
+
+        // Set data
+        bytes32[] memory data = new bytes32[](2);
+        data[0] = bytes32(uint(112));
+        data[1] = bytes32(uint(122));
+
+        // Test function call
+        (uint orderId, uint projectFee) =
+            queue.exposed_getOrderDetailsFromFlagsAndData(flags, data);
+
+        // Post-assertions
+        assertEq(orderId, 0, "Order ID should be 0");
+        assertEq(projectFee, 0, "Project fee should be 0");
     }
 
     /* Test testValidStateTransition_RevertGivenInvalidTransition()
@@ -3803,7 +4075,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
         (bytes32 flags, bytes32[] memory data) =
-            helper__encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1, 0);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory invalidOrder =
         IERC20PaymentClientBase_v2.PaymentOrder({
@@ -3840,6 +4112,32 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
+    /*  Test: Function _validProjectFee()
+        └── Given the project fee is > BPS
+            └── When the function _validProjectFee() is called
+                └── Then it should return false
+    */
+
+    function testInternalValidProjectFee_failsGivenProjectFeeGreaterThanBPS(
+        uint projectFee_
+    ) public {
+        vm.assume(projectFee_ > BPS);
+        assertFalse(queue.exposed_validProjectFee(projectFee_));
+    }
+
+    /*  Test: Function _validProjectFee()
+        └── Given the project fee is < BPS
+            └── When the function _validProjectFee() is called
+                └── Then it should return true
+    */
+
+    function testInternalValidProjectFee_worksGivenProjectFeeLessThanBPS(
+        uint projectFee_
+    ) public {
+        vm.assume(projectFee_ < BPS);
+        assertTrue(queue.exposed_validProjectFee(projectFee_));
+    }
+
     // ================================================================================
     // Helper Functions
 
@@ -3857,6 +4155,29 @@ contract PP_Queue_v1_Test is ModuleTest {
         return recipient_;
     }
 
+    function helper_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _projectFee
+    )
+        internal
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+    {
+        // Calculate protocol fee amount if applicable
+        if (_protocolFee > 0) {
+            protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+            // Revert if calculated protocol fee amount rounded down to zero
+        }
+        // Calculate project fee amount if applicable
+        if (_projectFee > 0) {
+            projectFeeAmount = _totalAmount * _projectFee / BPS;
+            // Revert if calculated project fee amount rounded down to zero
+        }
+
+        netAmount = _totalAmount - protocolFeeAmount - projectFeeAmount;
+    }
+
     function helper_createTestPaymentOrder(
         address recipient_,
         uint96 amount_,
@@ -3864,7 +4185,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address token_
     ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
         (bytes32 flags, bytes32[] memory data) =
-            helper__encodePaymentOrderData(orderNum_);
+            helper__encodePaymentOrderData(orderNum_, 0);
         return IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
             amount: amount_,
@@ -3914,7 +4235,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(uint(queuedOrder.state_), uint(expectedState_), "Wrong state");
     }
 
-    function helper__encodePaymentOrderData(uint orderId_)
+    function helper__encodePaymentOrderData(uint orderId_, uint projectFee_)
         internal
         pure
         returns (bytes32 flags_, bytes32[] memory data_)
@@ -3922,14 +4243,50 @@ contract PP_Queue_v1_Test is ModuleTest {
         bytes32 _flags;
         _flags = 0;
 
-        uint8[] memory flags = new uint8[](1); // The Module will use 1 flag
-        flags[0] = 0;
+        uint8[] memory flags = new uint8[](2); // The Module will use 2 flag
+        flags[0] = 0; // ORDER_ID
+        flags[1] = 4; // PROJECT_FEE
 
         _flags |= bytes32((1 << flags[0]));
+        _flags |= bytes32((1 << flags[1]));
 
-        bytes32[] memory paymentParameters = new bytes32[](1);
+        bytes32[] memory paymentParameters = new bytes32[](2);
         paymentParameters[0] = bytes32(orderId_);
+        paymentParameters[1] = bytes32(projectFee_);
 
         return (_flags, paymentParameters);
+    }
+
+    function helper_setupLargeQueue(
+        uint96 totalSellAmount_,
+        uint numberOfOrders_
+    ) internal {
+        // Start Queue ID for adding the orders
+        uint queueId = 1;
+
+        // Max number of orders that can be processed in a single execution
+        uint maxOrdersPerExecution = queue.getMaxOrdersPerExecution();
+
+        // Amount of collateral to be redeemed for each order
+        uint96 sellAmountForEachOrder =
+            uint96(totalSellAmount_ / maxOrdersPerExecution);
+
+        // Mint tokens to payment client and approve PP Queue
+        helper_setupPaymentTokenBalanceAndApproval(totalSellAmount_, _token);
+
+        vm.startPrank(address(paymentClient));
+        for (uint i = 0; i < numberOfOrders_; i++) {
+            address recipient_ =
+                makeAddr(string.concat("recipient", vm.toString(i)));
+            // Create payment order
+            IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
+            helper_createTestPaymentOrder(
+                recipient_, sellAmountForEachOrder, queueId, address(_token)
+            );
+            // Add order to queue
+            queue.exposed_addPaymentOrderToQueue(order_, address(paymentClient));
+            queueId++;
+        }
+        vm.stopPrank();
     }
 }

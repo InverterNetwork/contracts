@@ -18,6 +18,8 @@ import {
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // External imports
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -52,6 +54,10 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     string internal constant SYMBOL = "IST";
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
+
+    // PROCESSOR_FLAGS
+    bytes32 internal constant PROCESSOR_FLAGS =
+        0x0000000000000000000000000000000000000000000000000000000000000011;
 
     // Basis points (100%)
     uint internal constant BPS = 10_000;
@@ -1248,27 +1254,23 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function _handleCollateralTokensBeforeBuy()
-        └── When the function _handleCollateralTokensBeforeBuy() is called
-            └── Then it should mint tokens to the recipient
+    /* Test: Function _processCollateralTokensForBuyOperation()
+        └── When the function _processCollateralTokensForBuyOperation() is called
+            └── Then it should transfer the amount of tokens to the project treasury
     */
-    function testInternalHandleCollateralTokensBeforeBuy_worksGivenMintedTokens(
-        address recipient_,
+    function testInternalProcessCollateralTokensForBuyOperation_worksGivenMintedTokens(
         uint amount_
     ) public {
         // Setup
-        vm.assume(recipient_ != address(0));
-        vm.assume(recipient_ != address(projectTreasury));
         vm.assume(amount_ > 0);
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, recipient_, address(fundingManager)
-        );
+
+        deal(address(_token), address(fundingManager), amount_);
 
         // Assert
         assertEq(
-            _token.balanceOf(recipient_),
+            _token.balanceOf(address(fundingManager)),
             amount_,
-            "Recipient should the right amount of tokens"
+            "Funding manager should have the right amount of tokens"
         );
         assertEq(
             _token.balanceOf(projectTreasury),
@@ -1277,13 +1279,11 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
 
         // Test
-        fundingManager.exposed_handleCollateralTokensBeforeBuy(
-            recipient_, amount_
-        );
+        fundingManager.exposed_processCollateralTokensForBuyOperation(amount_);
 
         // Assert
         assertEq(
-            _token.balanceOf(recipient_),
+            _token.balanceOf(address(fundingManager)),
             0,
             "Tokens should be transferred to the project treasury"
         );
@@ -1724,6 +1724,58 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             collateralRedeemAmount_,
             projectSellFeeAmount_,
             protocolSellFeeAmount_
+        );
+
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory localPaymentOrders =
+            IERC20PaymentClientBase_v2(address(fundingManager)).paymentOrders();
+
+        assertEq(
+            localPaymentOrders.length, 1, "Payment orders length should be 1"
+        );
+        assertEq(
+            localPaymentOrders[0].amount,
+            collateralRedeemAmount_ + protocolSellFeeAmount_,
+            "Payment order amount should be the same as the final redemption amount plus the protocol fee"
+        );
+        assertEq(
+            localPaymentOrders[0].recipient,
+            receiver_,
+            "Payment order recipient should be the same as the receiver"
+        );
+        assertEq(
+            localPaymentOrders[0].paymentToken,
+            address(_token),
+            "Payment order payment token should be the same as the collateral token"
+        );
+        assertEq(
+            localPaymentOrders[0].originChainId,
+            block.chainid,
+            "Payment order origin chain id should be the same as the current chain id"
+        );
+        assertEq(
+            localPaymentOrders[0].targetChainId,
+            block.chainid,
+            "Payment order target chain id should be the same as the current chain id"
+        );
+        assertEq(
+            localPaymentOrders[0].flags,
+            PROCESSOR_FLAGS,
+            "Payment order flags should be 0"
+        );
+        assertEq(
+            localPaymentOrders[0].data.length,
+            2,
+            "Payment order data length should be 2"
+        );
+        assertEq(
+            uint(localPaymentOrders[0].data[0]),
+            1,
+            "Payment order data[0] should be 1"
+        );
+        assertEq(
+            uint(localPaymentOrders[0].data[1]),
+            sellFee_,
+            "Payment order data[1] should be the sell fee"
         );
 
         // Assert

@@ -451,7 +451,7 @@ contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
         return (defaultValues[0], defaultValues[1], defaultValues[2]);
     }
 
-    function getProcessorFlags() public view returns (bytes32 flags_) {
+    function getProcessorFlags() public pure returns (bytes32 flags_) {
         return PROCESSOR_FLAGS;
     }
 

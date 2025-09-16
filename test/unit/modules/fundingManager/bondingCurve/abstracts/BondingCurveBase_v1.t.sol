@@ -28,6 +28,8 @@ import {
     IBondingCurveBase_v1
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
+import {IssuanceTokenWrapperV1Mock} from
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/IssuanceTokenWrapperV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 contract BondingCurveBaseV1Test is ModuleTest {
@@ -258,9 +260,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(amount > 0);
 
         address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
-        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(_token.balanceOf(buyer), amount);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Emit event
@@ -274,7 +277,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
-        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(
@@ -283,7 +286,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(
             bondingCurveFundingManager
-                .distributeCollateralTokenBeforeBuyFunctionCalled(),
+                .processCollateralTokensForBuyOperationFunctionCalled(),
             1
         );
     }
@@ -323,11 +326,12 @@ contract BondingCurveBaseV1Test is ModuleTest {
         }
 
         address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(_token.balanceOf(buyer), amount);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
@@ -351,9 +355,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
 
         //Pepare fee amount that will betaken from bondingCurveManager
-        _token.mint(
-            address(bondingCurveFundingManager), protocolCollateralFeeAmount
-        );
+        // _token.mint(
+        //     address(bondingCurveFundingManager), protocolCollateralFeeAmount
+        // );
 
         if (projectCollateralFeeAmount != 0) {
             // Emit event
@@ -385,7 +389,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)), balanceBefore
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            balanceBefore + amount - protocolCollateralFeeAmount
         );
         assertEq(_token.balanceOf(buyer), 0);
 
@@ -871,8 +876,45 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
 
+    /* Test getIssuanceToken function
+        ├── When the token is a regular token
+        │       └── it should return the token address
+        └── When the token is wrapped
+                └── it should return the underlying token address
+    */
+    function testGetIssuanceToken() public {
+        address actualIssuanceToken =
+            bondingCurveFundingManager.getIssuanceToken();
+
+        // Verify that the returned token is the actual token (i.e. works as
+        // expected)
+        ERC20Issuance_v1(actualIssuanceToken).mint(address(this), 100);
+        assertEq(
+            ERC20Issuance_v1(actualIssuanceToken).balanceOf(address(this)), 100
+        );
+
+        // Create the wrapper
+        IssuanceTokenWrapperV1Mock wrapper =
+            new IssuanceTokenWrapperV1Mock(actualIssuanceToken);
+        assertEq(wrapper.issuanceToken(), actualIssuanceToken);
+
+        // Set the wrapper as the new issuance token
+        // and verify that it's set
+        bondingCurveFundingManager.call_setIssuanceToken(address(wrapper));
+        assertEq(
+            bondingCurveFundingManager.exposed_issuanceToken(), address(wrapper)
+        );
+
+        // Obtain the issuance token again
+        address issuanceTokenAfterWrapper =
+            bondingCurveFundingManager.getIssuanceToken();
+
+        // Verify that the returned token is not the wrapper,
+        // but the actual underlying token
+        assertEq(issuanceTokenAfterWrapper, actualIssuanceToken);
+    }
+
     /* Test _setIssuanceToken function
-       
         └── when setting the Token
             ├── it should set the new token
             ├── it should emit an event

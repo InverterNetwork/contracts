@@ -58,11 +58,13 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public
         impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1;
     address public impl_mod_FM_DepositVault_v1;
+    address public impl_mod_FM_PC_Oracle_Redeeming_v1;
 
     // Funding Managers - Extensions
     address public impl_mod_FM_EXT_TokenVault_v1;
 
     // Logic Modules
+    address public impl_mod_LM_PC_Oracle_Permissioned_v1;
     address public impl_mod_LM_PC_Bounties_v2;
     address public impl_mod_LM_PC_KPIRewarder_v2;
     address public impl_mod_LM_PC_PaymentRouter_v2;
@@ -70,6 +72,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_LM_PC_Staking_v2;
 
     // Payment Processors
+    address public impl_mod_PP_Queue_ManualExecution_v1;
+    address public impl_mod_PP_Queue_v1;
     address public impl_mod_PP_Simple_v2;
     address public impl_mod_PP_Streaming_v2;
 
@@ -144,13 +148,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Factories
         console2.log("  - Factories");
 
-        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
-            "ModuleFactory_v1",
-            abi.encodePacked(
-                vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
-                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
-            )
-        );
+        createModuleFactorySingleton(transactionForwarder);
 
         impl_fac_OrchestratorFactory_v1 = deployAndLogWithCreate2(
             "OrchestratorFactory_v1",
@@ -215,6 +213,13 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         );
 
+        impl_mod_FM_PC_Oracle_Redeeming_v1 = deployAndLogWithCreate2(
+            "FM_PC_Oracle_Redeeming_v1",
+            vm.getCode(
+                "FM_PC_Oracle_Redeeming_v1.sol:FM_PC_Oracle_Redeeming_v1"
+            )
+        );
+
         // Funding Manager - Extensions
         console2.log("  --- Funding Managers - Extensions");
 
@@ -225,6 +230,13 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         // Logic Modules
         console2.log("  -- Logic Modules");
+
+        impl_mod_LM_PC_Oracle_Permissioned_v1 = deployAndLogWithCreate2(
+            "LM_Oracle_Permissioned_v1",
+            vm.getCode(
+                "LM_Oracle_Permissioned_v1.sol:LM_Oracle_Permissioned_v1"
+            )
+        );
 
         impl_mod_LM_PC_Bounties_v2 = deployAndLogWithCreate2(
             "LM_PC_Bounties_v2",
@@ -252,6 +264,16 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Payment Processors
         console2.log("  -- Payment Processors");
 
+        impl_mod_PP_Queue_ManualExecution_v1 = deployAndLogWithCreate2(
+            "PP_Queue_ManualExecution_v1",
+            vm.getCode(
+                "PP_Queue_ManualExecution_v1.sol:PP_Queue_ManualExecution_v1"
+            )
+        );
+        impl_mod_PP_Queue_v1 = deployAndLogWithCreate2(
+            "PP_Queue_v1", vm.getCode("PP_Queue_v1.sol:PP_Queue_v1")
+        );
+
         impl_mod_PP_Simple_v2 = deployAndLogWithCreate2(
             "PP_Simple_v2", vm.getCode("PP_Simple_v2.sol:PP_Simple_v2")
         );
@@ -267,6 +289,22 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             abi.encodePacked(
                 vm.getCode("Orchestrator_v1.sol:Orchestrator_v1"),
                 abi.encode(transactionForwarder)
+            )
+        );
+    }
+
+    // Function to create the module factory singleton.
+    // Externalized into a function so it can be overridden for the
+    // testnet deployment.
+    function createModuleFactorySingleton(address transactionForwarder)
+        internal
+        virtual
+    {
+        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
+            "ModuleFactory_v1",
+            abi.encodePacked(
+                vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
             )
         );
     }

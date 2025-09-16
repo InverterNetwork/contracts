@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.3
+ * @custom:version 1.1.4
  *
  * @author  Inverter Network
  */
