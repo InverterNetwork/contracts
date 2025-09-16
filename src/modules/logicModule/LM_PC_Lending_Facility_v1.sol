@@ -32,6 +32,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {console2} from "forge-std/console2.sol";
 
 /**
  * @title   House Protocol Lending Facility Logic Module
@@ -222,75 +223,11 @@ contract LM_PC_Lending_Facility_v1 is
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
     function borrow(uint requestedLoanAmount_)
-        public
+        external
         virtual
         onlyValidBorrowAmount(requestedLoanAmount_)
     {
-        address user = _msgSender();
-
-        // Calculate how much issuance tokens need to be locked for this borrow amount
-        uint requiredIssuanceTokens =
-            _calculateRequiredIssuanceTokens(requestedLoanAmount_);
-
-        // Check if borrowing would exceed borrowable quota
-        if (
-            currentlyBorrowedAmount + requestedLoanAmount_
-                > _calculateBorrowCapacity() * borrowableQuota / 10_000 // @note: Optimize this to an internal function later
-        ) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
-        }
-
-        // Lock the required issuance tokens automatically
-        _issuanceToken.safeTransferFrom(
-            user, address(this), requiredIssuanceTokens
-        );
-        _lockedIssuanceTokens[user] += requiredIssuanceTokens;
-
-        // Calculate dynamic borrowing fee
-        uint dynamicBorrowingFee =
-            _calculateDynamicBorrowingFee(requestedLoanAmount_);
-        uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
-
-        // Create new loan
-        uint loanId = nextLoanId++;
-        uint currentFloorPrice = _getFloorPrice();
-
-        _loans[loanId] = Loan({
-            id: loanId,
-            borrower: user,
-            principalAmount: requestedLoanAmount_,
-            lockedIssuanceTokens: requiredIssuanceTokens,
-            floorPriceAtBorrow: currentFloorPrice,
-            remainingPrincipal: requestedLoanAmount_,
-            timestamp: block.timestamp,
-            isActive: true
-        });
-
-        // Add loan to user's loan list
-        _userLoans[user].push(loanId);
-
-        // Update state (track gross requested amount as debt; fee is paid at repayment)
-        currentlyBorrowedAmount += requestedLoanAmount_;
-        _userTotalOutstandingLoans[user] += requestedLoanAmount_;
-
-        // Pull gross from DBC FM to this module
-        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-            address(this), requestedLoanAmount_
-        );
-
-        // Transfer fee back to DBC FM (retained to increase base price)
-        if (dynamicBorrowingFee > 0) {
-            _collateralToken.safeTransfer(_dbcFmAddress, dynamicBorrowingFee);
-        }
-
-        // Transfer net amount to user
-        _collateralToken.safeTransfer(user, netAmountToUser);
-
-        // Emit events
-        emit IssuanceTokensLocked(user, requiredIssuanceTokens);
-        emit LoanCreated(loanId, user, requestedLoanAmount_, currentFloorPrice);
+        _borrow(requestedLoanAmount_, _msgSender());
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
@@ -412,26 +349,41 @@ contract LM_PC_Lending_Facility_v1 is
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();
         }
 
+        // Get user's total collateral balance at the start
+        uint userCollateralBalance = _collateralToken.balanceOf(user);
+        if (userCollateralBalance == 0) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
+        }
+
+        // Transfer all user's collateral to contract at once
+        _collateralToken.safeTransferFrom(
+            user, address(this), userCollateralBalance
+        );
+
         // Track total issuance tokens received and total borrowed
         uint totalIssuanceTokensReceived;
         uint totalBorrowed;
         uint totalCollateralUsed;
+        uint remainingCollateral = userCollateralBalance;
 
         // Loop through leverage iterations
         for (uint8 i = 0; i < leverage_; i++) {
-            // Get user's collateral balance
-            uint userCollateralBalance = _collateralToken.balanceOf(user);
-            if (userCollateralBalance == 0) {
-                revert
-                    ILM_PC_Lending_Facility_v1
-                    .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
+            // Check if we have any collateral left
+            if (remainingCollateral == 0) {
+                break;
             }
 
-            if (userCollateralBalance < 1) break;
+            // Use all remaining collateral for this iteration
+            uint collateralForThisIteration = remainingCollateral;
+
+            // Approve the DBC FM for the collateral for this iteration
+            _collateralToken.approve(_dbcFmAddress, collateralForThisIteration);
 
             // Calculate minimum amount of issuance tokens expected from the purchase
             uint minIssuanceTokensOut = IBondingCurveBase_v1(_dbcFmAddress)
-                .calculatePurchaseReturn(userCollateralBalance);
+                .calculatePurchaseReturn(collateralForThisIteration);
 
             // Require minimum issuance tokens to be greater than 0
             if (minIssuanceTokensOut == 0) {
@@ -441,22 +393,19 @@ contract LM_PC_Lending_Facility_v1 is
                 );
             }
 
-            // Transfer collateral from user to this contract for this iteration
-            _collateralToken.safeTransferFrom(
-                user, address(this), userCollateralBalance
-            );
+            uint issuanceBalanceBefore = _issuanceToken.balanceOf(address(this));
 
-            _collateralToken.approve(_dbcFmAddress, userCollateralBalance);
-
-            // Buy issuance tokens from the funding manager
+            // Buy issuance tokens from the funding manager - store in contract
             IBondingCurveBase_v1(_dbcFmAddress).buyFor(
-                user, // receiver (user)
-                userCollateralBalance, // deposit amount
+                address(this), // receiver (contract instead of user)
+                collateralForThisIteration, // deposit amount
                 minIssuanceTokensOut // minimum amount out
             );
 
             // Get the actual amount of issuance tokens received in this iteration
-            uint issuanceTokensReceived = _issuanceToken.balanceOf(user);
+            uint issuanceBalanceAfter = _issuanceToken.balanceOf(address(this));
+            uint issuanceTokensReceived =
+                issuanceBalanceAfter - issuanceBalanceBefore;
             if (issuanceTokensReceived == 0) {
                 revert
                     ILM_PC_Lending_Facility_v1
@@ -467,7 +416,7 @@ contract LM_PC_Lending_Facility_v1 is
             totalIssuanceTokensReceived += issuanceTokensReceived;
 
             // Track collateral used in this iteration
-            totalCollateralUsed += userCollateralBalance;
+            totalCollateralUsed += collateralForThisIteration;
 
             // Now calculate borrowing power based on balance of issuance
             uint borrowingPower =
@@ -478,11 +427,24 @@ contract LM_PC_Lending_Facility_v1 is
                 break;
             }
 
-            // Call the borrow function with the calculated amount
-            borrow(borrowingPower);
+            uint collateralBalanceBefore =
+                _collateralToken.balanceOf(address(this));
+
+            _borrow(borrowingPower, address(this));
+
+            uint collateralBalanceAfter =
+                _collateralToken.balanceOf(address(this));
+
+            remainingCollateral =
+                collateralBalanceAfter - collateralBalanceBefore;
 
             // Update our tracking
             totalBorrowed += borrowingPower;
+        }
+
+        // Return any unused collateral back to the user
+        if (remainingCollateral > 0) {
+            _collateralToken.safeTransfer(user, remainingCollateral);
         }
 
         // Emit event for the completed buyAndBorrow operation
@@ -775,5 +737,138 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Return the initial price of the first segment (floor price)
         return PackedSegmentLib._initialPrice(segments[0]);
+    }
+
+    /// @dev Internal function that handles all borrowing logic
+    function _borrow(uint requestedLoanAmount_, address tokenReceiver_)
+        internal
+    {
+        address user = _msgSender();
+
+        // Calculate how much issuance tokens need to be locked for this borrow amount
+        uint requiredIssuanceTokens =
+            _calculateRequiredIssuanceTokens(requestedLoanAmount_);
+
+        // Check if borrowing would exceed borrowable quota
+        if (
+            currentlyBorrowedAmount + requestedLoanAmount_
+                > _calculateBorrowCapacity() * borrowableQuota / 10_000 // @note: Optimize this to an internal function later
+        ) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
+        }
+
+        // Lock the required issuance tokens automatically
+        // Transfer Tokens only when the user is the tokenReceiver_
+        if (tokenReceiver_ != address(this)) {
+            _issuanceToken.safeTransferFrom(
+                user, address(this), requiredIssuanceTokens
+            );
+        }
+        _lockedIssuanceTokens[user] += requiredIssuanceTokens;
+
+        // Calculate dynamic borrowing fee
+        uint dynamicBorrowingFee =
+            _calculateDynamicBorrowingFee(requestedLoanAmount_);
+        uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
+
+        uint currentFloorPrice = _getFloorPrice();
+        uint[] storage userLoanIds = _userLoans[user];
+
+        // Check if user has any active loans and if the most recent one has the same floor price
+        if (userLoanIds.length > 0) {
+            uint lastLoanId = userLoanIds[userLoanIds.length - 1];
+            Loan storage lastLoan = _loans[lastLoanId];
+
+            // If the last loan is active and has the same floor price, modify it instead of creating a new one
+            if (
+                lastLoan.isActive
+                    && lastLoan.floorPriceAtBorrow == currentFloorPrice
+            ) {
+                // Update the existing loan
+                lastLoan.principalAmount += requestedLoanAmount_;
+                lastLoan.lockedIssuanceTokens += requiredIssuanceTokens;
+                lastLoan.remainingPrincipal += requestedLoanAmount_;
+                lastLoan.timestamp = block.timestamp;
+
+                // Execute common borrowing logic
+                _executeBorrowingLogic(
+                    requestedLoanAmount_,
+                    dynamicBorrowingFee,
+                    netAmountToUser,
+                    tokenReceiver_,
+                    user,
+                    requiredIssuanceTokens,
+                    lastLoanId,
+                    currentFloorPrice
+                );
+                return;
+            }
+        }
+
+        // Create new loan (either no existing loans or floor price changed)
+        uint loanId = nextLoanId++;
+
+        _loans[loanId] = Loan({
+            id: loanId,
+            borrower: user,
+            principalAmount: requestedLoanAmount_,
+            lockedIssuanceTokens: requiredIssuanceTokens,
+            floorPriceAtBorrow: currentFloorPrice,
+            remainingPrincipal: requestedLoanAmount_,
+            timestamp: block.timestamp,
+            isActive: true
+        });
+
+        // Add loan to user's loan list
+        _userLoans[user].push(loanId);
+
+        // Execute common borrowing logic
+        _executeBorrowingLogic(
+            requestedLoanAmount_,
+            dynamicBorrowingFee,
+            netAmountToUser,
+            tokenReceiver_,
+            user,
+            requiredIssuanceTokens,
+            loanId,
+            currentFloorPrice
+        );
+    }
+
+    /// @dev Execute the common borrowing logic (transfers, state updates, events)
+    function _executeBorrowingLogic(
+        uint requestedLoanAmount_,
+        uint dynamicBorrowingFee_,
+        uint netAmountToUser_,
+        address tokenReceiver_,
+        address user_,
+        uint requiredIssuanceTokens_,
+        uint loanId_,
+        uint currentFloorPrice_
+    ) internal {
+        // Update state (track gross requested amount as debt; fee is paid at repayment)
+        currentlyBorrowedAmount += requestedLoanAmount_;
+        _userTotalOutstandingLoans[user_] += requestedLoanAmount_;
+
+        // Pull gross from DBC FM to this module
+        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
+            address(this), requestedLoanAmount_
+        );
+
+        // Transfer fee back to DBC FM (retained to increase base price)
+        if (dynamicBorrowingFee_ > 0) {
+            _collateralToken.safeTransfer(_dbcFmAddress, dynamicBorrowingFee_);
+        }
+
+        // Transfer net amount to collateral receiver
+        _collateralToken.safeTransfer(tokenReceiver_, netAmountToUser_);
+
+        // Emit events
+        emit IssuanceTokensLocked(user_, requiredIssuanceTokens_);
+        emit LoanCreated(
+            loanId_, user_, requestedLoanAmount_, currentFloorPrice_
+        );
     }
 }

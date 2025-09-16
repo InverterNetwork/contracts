@@ -568,7 +568,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
 
         // When: the user borrows collateral tokens
-        uint userBalanceBefore = orchestratorToken.balanceOf(user);
         uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
         uint currentlyBorrowedBefore = lendingFacility.currentlyBorrowedAmount();
         uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
@@ -874,10 +873,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         //bonding curve is closed by default (not calling fmBcDiscrete.openBuy())
 
         vm.startPrank(user);
-        orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
-        orchestratorToken.approve(address(lendingFacility), type(uint).max);
-        issuanceToken.approve(address(lendingFacility), type(uint).max);
-
         // The transaction should revert when trying to buy from a closed bonding curve
         vm.expectRevert(); // This will revert due to bonding curve being closed
         lendingFacility.buyAndBorrow(leverage);
@@ -895,39 +890,64 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         │           ├── And the user's collateral balance should decrease (due to fees and purchases)
         │           └── And the user should have an outstanding loan
     */
-    // function testFuzzPublicBuyAndBorrow_succeedsGivenValidLeverage(
-    //     uint leverage_,
-    //     uint collateralAmount_
-    // ) public {
-    //     // Given: a user has issuance tokens
-    //     address user = makeAddr("user");
-    //     leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
-    //     uint leverage = leverage_;
+    function testFuzzPublicBuyAndBorrow_succeedsGivenValidLeverage(
+        uint leverage_,
+        uint collateralAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+        uint leverage = leverage_;
 
-    //     collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
+        collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
 
-    //     orchestratorToken.mint(user, collateralAmount_); // @note : Keeping this fixed for now, since fuzzing this results in various reverts.
-    //     fmBcDiscrete.openBuy();
+        orchestratorToken.mint(user, collateralAmount_); // @note : Keeping this fixed for now, since fuzzing this results in various reverts.
+        fmBcDiscrete.openBuy();
 
-    //     uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        uint collateralBalanceBefore = orchestratorToken.balanceOf(user);
 
-    //     vm.startPrank(user);
-    //     orchestratorToken.approve(address(fmBcDiscrete), type(uint).max);
-    //     orchestratorToken.approve(address(lendingFacility), type(uint).max);
-    //     issuanceToken.approve(address(lendingFacility), type(uint).max);
+        vm.startPrank(user);
+        orchestratorToken.approve(
+            address(lendingFacility), collateralBalanceBefore
+        );
 
-    //     lendingFacility.buyAndBorrow(leverage);
-    //     vm.stopPrank();
+        lendingFacility.buyAndBorrow(leverage);
+        vm.stopPrank();
 
-    //     // Then: verify state changes
-    //     // User should have an outstanding loan
-    //     uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
-    //     assertGt(
-    //         outstandingLoanAfter,
-    //         outstandingLoanBefore,
-    //         "User should have an outstanding loan after borrowing"
-    //     );
-    // }
+        // Then: verify state changes
+        // User should have an outstanding loan
+        uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
+        uint collateralBalanceAfter = orchestratorToken.balanceOf(user);
+        assertGt(
+            outstandingLoanAfter,
+            outstandingLoanBefore,
+            "User should have an outstanding loan after borrowing"
+        );
+
+        // Get current loan IDs and verify loan amounts
+        uint[] memory loanIds = lendingFacility.getUserLoanIds(user);
+
+        uint totalLoanAmount = 0;
+        for (uint i = 0; i < loanIds.length; i++) {
+            ILM_PC_Lending_Facility_v1.Loan memory loan =
+                lendingFacility.getLoan(loanIds[i]);
+            totalLoanAmount += loan.remainingPrincipal;
+        }
+
+        // Assert that the sum of individual loan amounts equals the total outstanding loan
+        assertEq(
+            totalLoanAmount,
+            outstandingLoanAfter,
+            "Sum of individual loan amounts should equal total outstanding loan"
+        );
+
+        assertLt(
+            collateralBalanceAfter,
+            collateralBalanceBefore,
+            "Collateral balance should decrease"
+        );
+    }
 
     /* Test: Function buyAndBorrow() and repay()
         ├── Given a user has issuance tokens through buyAndBorrow
