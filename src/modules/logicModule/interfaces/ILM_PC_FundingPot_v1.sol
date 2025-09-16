@@ -226,7 +226,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Access criteria failed.
     error Module__LM_PC_FundingPot__AccessCriteriaFailed();
 
-    /// @notice User has reached their personal contribution cap. 
+    /// @notice User has reached their personal contribution cap.
     error Module__LM_PC_FundingPot__PersonalCapReached();
 
     /// @notice Round contribution cap has been reached.
@@ -255,7 +255,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Hook execution failed.
     error Module__LM_PC_FundingPot__HookExecutionFailed();
-
 
     // -------------------------------------------------------------------------
     // Public - Getters
