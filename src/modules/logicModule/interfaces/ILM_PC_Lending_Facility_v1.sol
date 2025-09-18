@@ -217,14 +217,10 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @param requestedLoanAmount_ The amount of collateral tokens to borrow
     function borrow(uint requestedLoanAmount_) external;
 
-    /// @notice Repay a loan with collateral tokens (repays oldest loans first)
-    /// @param repaymentAmount_ The amount of collateral tokens to repay
-    function repay(uint repaymentAmount_) external;
-
-    // /// @notice Repay a specific loan by ID
-    // /// @param loanId_ The ID of the loan to repay
-    // /// @param repaymentAmount_ The amount to repay (if 0, repay the full loan)
-    // function repayLoan(uint loanId_, uint repaymentAmount_) external;
+    /// @notice Repay a specific loan by ID
+    /// @param loanId_ The ID of the loan to repay
+    /// @param repaymentAmount_ The amount to repay (if 0, repay the full loan)
+    function repay(uint loanId_, uint repaymentAmount_) external;
 
     /// @notice Buy issuance tokens and borrow against them in a single transaction
     /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)

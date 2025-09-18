@@ -231,58 +231,36 @@ contract LM_PC_Lending_Facility_v1 is
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function repay(uint repaymentAmount_) external virtual {
+    function repay(uint loanId_, uint repaymentAmount_)
+        external
+        onlyValidLoanId(loanId_)
+    {
         address user = _msgSender();
-        uint totalOutstanding = _userTotalOutstandingLoans[user];
+        Loan storage loan = _loans[loanId_];
 
-        if (totalOutstanding < repaymentAmount_) {
-            repaymentAmount_ = totalOutstanding;
+        if (repaymentAmount_ == 0 || repaymentAmount_ > loan.remainingPrincipal)
+        {
+            repaymentAmount_ = loan.remainingPrincipal;
         }
 
-        uint remainingToRepay = repaymentAmount_;
+        // Calculate issuance tokens to unlock for this specific loan
+        uint issuanceTokensToUnlock =
+            _calculateIssuanceTokensToUnlockForLoan(loan, repaymentAmount_);
 
-        // Process repayment across all active loans (FIFO - First In, First Out)
-        uint[] storage userLoanIds = _userLoans[user];
+        // Update loan state
+        loan.remainingPrincipal -= repaymentAmount_;
 
-        for (uint i = 0; i < userLoanIds.length && remainingToRepay > 0; i++) {
-            uint loanId = userLoanIds[i];
-            Loan storage loan = _loans[loanId];
+        // If loan is fully repaid, mark as inactive
+        if (loan.remainingPrincipal == 0) {
+            loan.isActive = false;
+            // Remove from user's active loans
+            _removeLoanFromUserLoans(user, loanId_);
+        }
 
-            if (!loan.isActive) continue;
-
-            // if the remainingToRepay is greater than the loan.remainingPrincipal, set the loanRepaymentAmount to the loan.remainingPrincipal
-            // otherwise, set the loanRepaymentAmount to the remainingToRepay
-            uint loanRepaymentAmount = remainingToRepay
-                > loan.remainingPrincipal
-                ? loan.remainingPrincipal
-                : remainingToRepay;
-
-            // Calculate issuance tokens to unlock for this specific loan
-            uint issuanceTokensToUnlock =
-            _calculateIssuanceTokensToUnlockForLoan(loan, loanRepaymentAmount);
-
-            // Update loan state
-            loan.remainingPrincipal -= loanRepaymentAmount;
-            remainingToRepay -= loanRepaymentAmount;
-
-            // If loan is fully repaid, mark as inactive
-            if (loan.remainingPrincipal == 0) {
-                loan.isActive = false;
-                // Remove from user's active loans (swap with last element and pop)
-                userLoanIds[i] = userLoanIds[userLoanIds.length - 1];
-                userLoanIds.pop();
-                i--; // Adjust index since we removed an element
-            }
-
-            // Unlock issuance tokens for this loan
-            if (issuanceTokensToUnlock > 0) {
-                _lockedIssuanceTokens[user] -= issuanceTokensToUnlock;
-                _issuanceToken.safeTransfer(user, issuanceTokensToUnlock);
-            }
-
-            emit LoanRepaid(
-                loanId, user, loanRepaymentAmount, issuanceTokensToUnlock
-            );
+        // Unlock issuance tokens for this loan
+        if (issuanceTokensToUnlock > 0) {
+            _lockedIssuanceTokens[user] -= issuanceTokensToUnlock;
+            _issuanceToken.safeTransfer(user, issuanceTokensToUnlock);
         }
 
         // Update global state
@@ -291,53 +269,10 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Transfer collateral back to DBC FM
         _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
+
+        // Emit events
+        emit LoanRepaid(loanId_, user, repaymentAmount_, issuanceTokensToUnlock);
     }
-
-    // /// @notice Repay a specific loan by ID
-    // /// @param loanId_ The ID of the loan to repay
-    // /// @param repaymentAmount_ The amount to repay (if 0, repay the full loan)
-    // function repayLoan(uint loanId_, uint repaymentAmount_)
-    //     external
-    //     onlyValidLoanId(loanId_)
-    // {
-    //     address user = _msgSender();
-    //     Loan storage loan = _loans[loanId_];
-
-    //     if (repaymentAmount_ == 0 || repaymentAmount_ > loan.remainingPrincipal)
-    //     {
-    //         repaymentAmount_ = loan.remainingPrincipal;
-    //     }
-
-    //     // Calculate issuance tokens to unlock for this specific loan
-    //     uint issuanceTokensToUnlock =
-    //         _calculateIssuanceTokensToUnlockForLoan(loan, repaymentAmount_);
-
-    //     // Update loan state
-    //     loan.remainingPrincipal -= repaymentAmount_;
-
-    //     // If loan is fully repaid, mark as inactive
-    //     if (loan.remainingPrincipal == 0) {
-    //         loan.isActive = false;
-    //         // Remove from user's active loans
-    //         _removeLoanFromUserLoans(user, loanId_);
-    //     }
-
-    //     // Unlock issuance tokens for this loan
-    //     if (issuanceTokensToUnlock > 0) {
-    //         _lockedIssuanceTokens[user] -= issuanceTokensToUnlock;
-    //         _issuanceToken.safeTransfer(user, issuanceTokensToUnlock);
-    //     }
-
-    //     // Update global state
-    //     _userTotalOutstandingLoans[user] -= repaymentAmount_;
-    //     currentlyBorrowedAmount -= repaymentAmount_;
-
-    //     // Transfer collateral back to DBC FM
-    //     _collateralToken.safeTransferFrom(user, _dbcFmAddress, repaymentAmount_);
-
-    //     // Emit events
-    //     emit LoanRepaid(loanId_, user, repaymentAmount_, issuanceTokensToUnlock);
-    // }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
     function buyAndBorrow(uint leverage_) external virtual {
@@ -529,9 +464,7 @@ contract LM_PC_Lending_Facility_v1 is
         return _loans[loanId_];
     }
 
-    /// @notice Get all active loan IDs for a user
-    /// @param user_ The user address
-    /// @return loanIds Array of active loan IDs
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getUserLoanIds(address user_)
         external
         view
@@ -540,9 +473,7 @@ contract LM_PC_Lending_Facility_v1 is
         return _userLoans[user_];
     }
 
-    /// @notice Get all active loans for a user
-    /// @param user_ The user address
-    /// @return loans Array of active loan details
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getUserLoans(address user_)
         external
         view
@@ -556,9 +487,7 @@ contract LM_PC_Lending_Facility_v1 is
         }
     }
 
-    /// @notice Calculate the repayment amount for a specific loan based on current floor price
-    /// @param loanId_ The loan ID
-    /// @return repaymentAmount The amount needed to fully repay the loan
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function calculateLoanRepaymentAmount(uint loanId_)
         external
         view
