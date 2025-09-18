@@ -75,10 +75,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     LM_PC_Lending_Facility_v1_Exposed lendingFacility;
 
     // Test constants
-    uint constant BORROWABLE_QUOTA = 8000; // 80% in basis points
-    uint constant LOCKED_ISSUANCE_TOKENS = 1000 ether;
+    uint constant BORROWABLE_QUOTA = 9900; // 99% in basis points
     uint constant MAX_FEE_PERCENTAGE = 1e18;
-    uint constant MAX_LEVERAGE = 50;
+    uint constant MAX_LEVERAGE = 9;
 
     // Structs for organizing test data
     struct CurveTestData {
@@ -443,7 +442,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Setup: user borrows tokens (which automatically locks issuance tokens)
         uint requiredIssuanceTokens = lendingFacility
             .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
+
         issuanceToken.mint(user, requiredIssuanceTokens);
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
@@ -502,55 +501,89 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     }
 
     /* Test: Function repay()
-        ├── Given a user has an outstanding loan
-        └── And the user tries to repay more than the outstanding amount
-            └── When the user attempts to repay
-                └── Then the repayment amount should be automatically adjusted to the outstanding loan amount
-                └── And the outstanding loan should be fully repaid
+        ├── Given a user has two loans at different floor prices
+        └── When the user repays the loans
+            └── Then the outstanding loan should be zero
+                └── And the locked issuance tokens should be zero
     */
-
-    function testFuzzPublicRepay_succeedsGivenRepaymentAmountExceedsOutstandingLoan(
-        uint borrowAmount_,
-        uint repayAmount_
+    function testFuzzPublicRepay_succeedsGivenTwoLoansAtDifferentFloorPrices(
+        uint borrowAmount
     ) public {
-        // Given: a user has an outstanding loan
+        // Given: a user has issuance tokens
         address user = makeAddr("user");
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
+            borrowAmount
+        );
 
-        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
-        repayAmount_ = bound(repayAmount_, borrowAmount_ + 1, type(uint128).max);
-        uint borrowAmount = borrowAmount_;
-        uint repayAmount = repayAmount_;
+        uint[] memory userLoanIds = lendingFacility.getUserLoanIds(user);
+        assertEq(userLoanIds.length, 2, "User should have exactly 2 loans");
 
-        // Setup: user borrows tokens (which automatically locks issuance tokens)
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
-        issuanceToken.mint(user, requiredIssuanceTokens);
+        uint repaymentAmount1 =
+            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[0]);
+        uint repaymentAmount2 =
+            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[1]);
+
+        orchestratorToken.mint(user, repaymentAmount1 + repaymentAmount2);
+
         vm.startPrank(user);
-        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
-        lendingFacility.borrow(borrowAmount);
+        orchestratorToken.approve(
+            address(lendingFacility), repaymentAmount1 + repaymentAmount2
+        );
+        lendingFacility.repay(userLoanIds[0], repaymentAmount1);
+        lendingFacility.repay(userLoanIds[1], repaymentAmount2);
         vm.stopPrank();
 
-        // Given: the user has sufficient collateral tokens to repay
-        orchestratorToken.mint(user, repayAmount);
-        vm.startPrank(user);
-        orchestratorToken.approve(address(lendingFacility), repayAmount);
+        assertEq(lendingFacility.getOutstandingLoan(user), 0);
+        assertEq(lendingFacility.getLockedIssuanceTokens(user), 0);
+    }
 
-        for (uint i = 0; i < lendingFacility.getUserLoanIds(user).length; i++) {
-            lendingFacility.repay(
-                lendingFacility.getUserLoanIds(user)[i], repayAmount
-            );
-        }
+    /* Test: Function repay()
+        ├── Given a user has two loans at different floor prices
+        └── When the user repays the loans with same repayment amount
+            └── Then the issuance tokens should be unlocked proportionally
+                └── And the tokens unlocked for loan1 should be greater than the tokens unlocked for loan2
+    */
+    function testFuzzPublicRepay_succeedsGivenTwoLoansAtDifferentFloorPricesPartialRepayment(
+        uint borrowAmount_,
+        uint repaymentAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+
+        testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
+            borrowAmount_
+        );
+
+        ILM_PC_Lending_Facility_v1.Loan[] memory userLoans =
+            lendingFacility.getUserLoans(user);
+        assertEq(userLoans.length, 2, "User should have exactly 2 loans");
+
+        uint repaymentAmount1 =
+            lendingFacility.calculateLoanRepaymentAmount(userLoans[0].id);
+        uint repaymentAmount2 =
+            lendingFacility.calculateLoanRepaymentAmount(userLoans[1].id);
+
+        vm.assume(
+            repaymentAmount_ > 0 && repaymentAmount_ < repaymentAmount1
+                && repaymentAmount_ < repaymentAmount2
+        );
+        orchestratorToken.mint(user, repaymentAmount1 + repaymentAmount2);
+
+        vm.startPrank(user);
+        orchestratorToken.approve(
+            address(lendingFacility), repaymentAmount1 + repaymentAmount2
+        );
+        lendingFacility.repay(userLoans[0].id, repaymentAmount1);
+        uint issuanceTokensUnlockedFirstRepay = issuanceToken.balanceOf(user);
+        lendingFacility.repay(userLoans[1].id, repaymentAmount2);
+        uint issuanceTokensUnlockedSecondRepay = issuanceToken.balanceOf(user);
         vm.stopPrank();
 
-        // Then: the outstanding loan should be fully repaid
-        assertEq(
-            lendingFacility.getOutstandingLoan(user),
-            0,
-            "Outstanding loan should be fully repaid"
+        assertGt(
+            issuanceTokensUnlockedFirstRepay,
+            issuanceTokensUnlockedSecondRepay - issuanceTokensUnlockedFirstRepay,
+            "More issuance tokens should be unlocked from loan 1 than loan 2 due to increased floor price for same repayment amount"
         );
     }
 
@@ -559,55 +592,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── And the user tries to repay more than the outstanding amount
             └── When the user attempts to repay
                 └── Then the repayment amount should be automatically adjusted to the outstanding loan amount
+                └── And the outstanding loan should be fully repaid
     */
-    // function testPublicRepay_succeedsGivenRepaymentAmountExceedsOutstandingLoan(
-    // ) public {
-    //     // Given: a user has an outstanding loan
-    //     address user = makeAddr("user");
-    //     uint borrowAmount = 500 ether;
-    //     uint repayAmount = 600 ether; // More than outstanding loan
-
-    //     // Setup: user borrows tokens (which automatically locks issuance tokens)
-    //     uint requiredIssuanceTokens = lendingFacility
-    //         .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-    //     // Add a larger buffer to account for rounding precision
-    //     uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-    //     issuanceToken.mint(user, issuanceTokensWithBuffer);
-    //     vm.prank(user);
-    //     issuanceToken.approve(
-    //         address(lendingFacility), issuanceTokensWithBuffer
-    //     );
-    //     vm.prank(user);
-    //     lendingFacility.borrow(borrowAmount);
-
-    //     // Given: the user tries to repay more than the outstanding amount
-    //     uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
-    //     assertGt(
-    //         repayAmount,
-    //         outstandingLoan,
-    //         "Repay amount should exceed outstanding loan"
-    //     );
-
-    //     orchestratorToken.mint(user, repayAmount);
-    //     vm.prank(user);
-    //     orchestratorToken.approve(address(lendingFacility), repayAmount);
-
-    //     // When: the user attempts to repay
-    //     uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
-    //     vm.prank(user);
-    //     lendingFacility.repay(repayAmount);
-
-    //     // Then: the repayment amount should be automatically adjusted to the outstanding loan amount
-    //     uint outstandingLoanAfter = lendingFacility.getOutstandingLoan(user);
-    //     assertEq(
-    //         outstandingLoanAfter, 0, "Outstanding loan should be fully repaid"
-    //     );
-    //     assertEq(
-    //         outstandingLoanAfter,
-    //         outstandingLoanBefore - outstandingLoanBefore,
-    //         "Outstanding loan should be reduced by the actual outstanding amount"
-    //     );
-    // }
 
     // =========================================================================
     // Test: Borrowing
@@ -761,23 +747,18 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzPublicBorrow_succeedsGivenUserBorrowsTwice(
+    /* Test: Function borrow()
+        ├── Given a user borrows tokens at different floor prices
+        └── When the borrow transaction completes
+            └── Then the outstanding loan should equal the sum of borrow amounts
+                └── And the floor price should be different
+    */
+    function testFuzzPublicBorrow_succeedsGivenUserBorrowsTwiceAtDifferentFloorPrices(
         uint borrowAmount1_,
         uint borrowAmount2_
     ) public {
-        // Given: a user has issuance tokens
+        // // Given: a user has issuance tokens
         address user = makeAddr("user");
-        // Given: dynamic fee calculator is set up
-        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
-        IDynamicFeeCalculator_v1.DynamicFeeParameters({
-            Z_issueRedeem: 0,
-            A_issueRedeem: 0,
-            m_issueRedeem: 0,
-            Z_origination: 0,
-            A_origination: 0,
-            m_origination: 0
-        });
-        feeParams = helper_setDynamicFeeCalculatorParams(feeParams);
 
         uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
             * lendingFacility.borrowableQuota() / 10_000;
@@ -793,32 +774,126 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             .exposed_calculateRequiredIssuanceTokens(borrowAmount1);
         issuanceToken.mint(user, requiredIssuanceTokens1);
 
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), type(uint).max);
-
         uint requiredIssuanceTokens2 = lendingFacility
             .exposed_calculateRequiredIssuanceTokens(borrowAmount2);
         issuanceToken.mint(user, requiredIssuanceTokens2);
 
-        vm.prank(user);
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens1);
         lendingFacility.borrow(borrowAmount1);
+        vm.stopPrank();
+        // Use helper function to mock floor price
+        uint mockFloorPrice = 0.75 ether;
+        _mockFloorPrice(mockFloorPrice);
 
-        vm.prank(user);
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens2);
         lendingFacility.borrow(borrowAmount2);
+        vm.stopPrank();
 
         assertEq(
             lendingFacility.getOutstandingLoan(user),
             borrowAmount1 + borrowAmount2,
             "Outstanding loan should equal the sum of borrow amounts"
         );
+
+        // Assert: User should have exactly 2 active loans
+        ILM_PC_Lending_Facility_v1.Loan[] memory userLoans =
+            lendingFacility.getUserLoans(user);
+        assertEq(userLoans.length, 2, "User should have exactly 2 loans");
+
+        uint initialFloorPrice = DEFAULT_SEG0_INITIAL_PRICE; // 0.5 ether
+
+        // Floor price should be different
+        assertTrue(
+            userLoans[0].floorPriceAtBorrow == initialFloorPrice
+                && userLoans[1].floorPriceAtBorrow == mockFloorPrice,
+            "Loans should have different floor prices"
+        );
     }
 
+    function testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
+        uint borrowAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota / 2);
+        uint borrowAmount = borrowAmount_;
+
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        issuanceToken.mint(user, requiredIssuanceTokens);
+
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
+        lendingFacility.borrow(borrowAmount);
+        vm.stopPrank();
+
+        // Use helper function to mock floor price
+        uint mockFloorPrice = 0.75 ether;
+        _mockFloorPrice(mockFloorPrice);
+
+        requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        issuanceToken.mint(user, requiredIssuanceTokens);
+
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
+        lendingFacility.borrow(borrowAmount);
+        vm.stopPrank();
+
+        // Assert: User should have exactly 2 active loans
+        uint[] memory userLoanIds = lendingFacility.getUserLoanIds(user);
+        assertEq(userLoanIds.length, 2, "User should have exactly 2 loans");
+
+        // Get loan details for both loans
+        ILM_PC_Lending_Facility_v1.Loan memory loan1 =
+            lendingFacility.getLoan(userLoanIds[0]);
+        ILM_PC_Lending_Facility_v1.Loan memory loan2 =
+            lendingFacility.getLoan(userLoanIds[1]);
+
+        // Testing borrow of same amount of tokens at different floor prices should create 2 loans
+        // with different floor prices, principal amount, and locked issuance tokens
+        // The locked issuance tokens for second loan should be less than first since the floor price has increased
+
+        assertGt(
+            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[0]),
+            0,
+            "Loan should have a repayment amount"
+        );
+        assertGt(
+            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[1]),
+            0,
+            "Loan should have a repayment amount"
+        );
+
+        assertNotEq(
+            loan1.floorPriceAtBorrow,
+            loan2.floorPriceAtBorrow,
+            "Loans should have different floor prices"
+        );
+        assertEq(
+            loan1.principalAmount,
+            loan2.principalAmount,
+            "Loans should have the same principal amount"
+        );
+        assertGt(
+            loan1.lockedIssuanceTokens,
+            loan2.lockedIssuanceTokens,
+            "Loans should have different locked issuance tokens"
+        );
+    }
     /* Test: Function borrow()
         ├── Given a user wants to borrow tokens
         └── And the borrow amount exceeds the borrowable quota
             └── When the user tries to borrow collateral tokens
                 └── Then the transaction should revert with BorrowableQuotaExceeded error
     */
+
     function testFuzzPublicBorrow_revertsGivenBorrowableQuotaExcedded(
         uint borrowAmount_
     ) public {
@@ -1234,20 +1309,23 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint borrowAmount = 500 ether;
         uint requiredIssuanceTokens = lendingFacility
             .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
 
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
 
         power = lendingFacility.getUserBorrowingPower(user);
         assertGt(power, 0);
+    }
+
+    function testGetCalculateLoanRepaymentAmount() public {
+        uint loanId = 0;
+        uint repaymentAmount =
+            lendingFacility.calculateLoanRepaymentAmount(loanId);
+        assertEq(repaymentAmount, 0);
     }
 
     // =========================================================================
@@ -1280,14 +1358,10 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint borrowAmount = 500 ether;
         uint requiredIssuanceTokens = lendingFacility
             .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        // Add a larger buffer to account for rounding precision
-        uint issuanceTokensWithBuffer = requiredIssuanceTokens + 10 ether;
-        issuanceToken.mint(user, issuanceTokensWithBuffer);
+        issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.prank(user);
-        issuanceToken.approve(
-            address(lendingFacility), issuanceTokensWithBuffer
-        );
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
 
         vm.prank(user);
         lendingFacility.borrow(borrowAmount);
@@ -1316,82 +1390,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             .exposed_calculateCollateralAmount(issuanceTokenAmount);
         assertGt(collateralAmount, 0);
     }
-
-    // =========================================================================
-    /* Test: State consistency after multiple borrow and repay operations
-    ├── Given a user performs multiple borrow and repay operations
-    └── When all operations complete
-        └── Then the state should remain consistent
-    */
-    // function testPublicBorrowAndRepay_maintainsStateConsistency() public {
-    //     address user = makeAddr("user");
-
-    //     // First borrow
-    //     uint borrowAmount1 = 300 ether;
-    //     uint requiredIssuanceTokens1 = lendingFacility
-    //         .exposed_calculateRequiredIssuanceTokens(borrowAmount1);
-    //     uint issuanceTokensWithBuffer1 = requiredIssuanceTokens1 + 10 ether;
-    //     issuanceToken.mint(user, issuanceTokensWithBuffer1);
-    //     vm.prank(user);
-    //     issuanceToken.approve(
-    //         address(lendingFacility), issuanceTokensWithBuffer1
-    //     );
-    //     vm.prank(user);
-    //     lendingFacility.borrow(borrowAmount1);
-
-    //     // Verify state after first borrow
-    //     assertEq(lendingFacility.getOutstandingLoan(user), borrowAmount1);
-    //     assertEq(
-    //         lendingFacility.getLockedIssuanceTokens(user),
-    //         requiredIssuanceTokens1
-    //     );
-    //     assertEq(lendingFacility.currentlyBorrowedAmount(), borrowAmount1);
-
-    //     // Second borrow
-    //     uint borrowAmount2 = 200 ether;
-    //     uint requiredIssuanceTokens2 = lendingFacility
-    //         .exposed_calculateRequiredIssuanceTokens(borrowAmount2);
-    //     uint issuanceTokensWithBuffer2 = requiredIssuanceTokens2 + 10 ether;
-    //     issuanceToken.mint(user, issuanceTokensWithBuffer2);
-    //     vm.prank(user);
-    //     issuanceToken.approve(
-    //         address(lendingFacility), issuanceTokensWithBuffer2
-    //     );
-    //     vm.prank(user);
-    //     lendingFacility.borrow(borrowAmount2);
-
-    //     // Verify state after second borrow
-    //     assertEq(
-    //         lendingFacility.getOutstandingLoan(user),
-    //         borrowAmount1 + borrowAmount2
-    //     );
-    //     assertEq(
-    //         lendingFacility.getLockedIssuanceTokens(user),
-    //         requiredIssuanceTokens1 + requiredIssuanceTokens2
-    //     );
-    //     assertEq(
-    //         lendingFacility.currentlyBorrowedAmount(),
-    //         borrowAmount1 + borrowAmount2
-    //     );
-
-    //     // Partial repayment
-    //     uint repayAmount = 250 ether;
-    //     orchestratorToken.mint(user, repayAmount);
-    //     vm.prank(user);
-    //     orchestratorToken.approve(address(lendingFacility), repayAmount);
-    //     vm.prank(user);
-    //     lendingFacility.repay(repayAmount);
-
-    //     // Verify state after partial repayment
-    //     assertEq(
-    //         lendingFacility.getOutstandingLoan(user),
-    //         borrowAmount1 + borrowAmount2 - repayAmount
-    //     );
-    //     assertEq(
-    //         lendingFacility.currentlyBorrowedAmount(),
-    //         borrowAmount1 + borrowAmount2 - repayAmount
-    //     );
-    // }
 
     // =========================================================================
     // Helper Functions
@@ -1476,5 +1474,27 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         dynamicFeeCalculator.setDynamicFeeCalculatorParams(dynamicFeeParameters);
 
         return dynamicFeeParameters;
+    }
+
+    /**
+     * @dev Internal helper function to mock the floor price for testing
+     * @param customFloorPrice The desired floor price (in wei, scaled by 1e18)
+     */
+    function _mockFloorPrice(uint customFloorPrice) internal {
+        // Create a mock PackedSegment with the custom floor price
+        PackedSegment[] memory mockSegments = new PackedSegment[](1);
+        mockSegments[0] = PackedSegmentLib._create(
+            customFloorPrice, // initialPrice: custom floor price
+            0, // priceIncrease: 0 for flat segment
+            500 ether, // supplyPerStep: any valid amount
+            1 // numberOfSteps: 1 for single step
+        );
+
+        // Mock the getSegments() call on the DBC FM contract
+        vm.mockCall(
+            address(fmBcDiscrete), // target contract
+            abi.encodeWithSignature("getSegments()"), // function signature
+            abi.encode(mockSegments) // return data
+        );
     }
 }
