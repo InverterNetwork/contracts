@@ -226,9 +226,12 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     function repay(uint loanId_, uint repaymentAmount_) external;
 
     /// @notice Buy issuance tokens and borrow against them in a single transaction
+    /// @param amount_ The amount of collateral to use for the operation
     /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)
     /// @return loanId_ The ID of the created loan
-    function buyAndBorrow(uint leverage_) external returns (uint loanId_);
+    function buyAndBorrow(uint amount_, uint leverage_)
+        external
+        returns (uint loanId_);
 
     // =========================================================================
     // Public - Configuration (Lending Facility Manager only)

@@ -983,7 +983,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 .Module__LM_PC_Lending_Facility_InvalidLeverage
                 .selector
         );
-        lendingFacility.buyAndBorrow(leverage);
+        lendingFacility.buyAndBorrow(100 ether, leverage);
         vm.stopPrank();
     }
 
@@ -1009,7 +1009,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 .Module__LM_PC_Lending_Facility_NoCollateralAvailable
                 .selector
         );
-        lendingFacility.buyAndBorrow(leverage);
+        lendingFacility.buyAndBorrow(0, leverage);
     }
 
     /* Test: Function buyAndBorrow()
@@ -1032,7 +1032,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         vm.startPrank(user);
         // The transaction should revert when trying to buy from a closed bonding curve
         vm.expectRevert(); // This will revert due to bonding curve being closed
-        lendingFacility.buyAndBorrow(leverage);
+        lendingFacility.buyAndBorrow(100 ether, leverage);
         vm.stopPrank();
     }
 
@@ -1065,11 +1065,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint collateralBalanceBefore = orchestratorToken.balanceOf(user);
 
         vm.startPrank(user);
-        orchestratorToken.approve(
-            address(lendingFacility), collateralBalanceBefore
-        );
+        orchestratorToken.approve(address(lendingFacility), collateralAmount_);
 
-        lendingFacility.buyAndBorrow(leverage);
+        lendingFacility.buyAndBorrow(collateralAmount_, leverage);
         vm.stopPrank();
 
         // Then: verify state changes

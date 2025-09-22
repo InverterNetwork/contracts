@@ -276,7 +276,7 @@ contract LM_PC_Lending_Facility_v1 is
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function buyAndBorrow(uint leverage_)
+    function buyAndBorrow(uint amount_, uint leverage_)
         external
         virtual
         returns (uint loanId_)
@@ -289,8 +289,7 @@ contract LM_PC_Lending_Facility_v1 is
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();
         }
 
-        // Get user's total collateral balance at the start
-        uint userCollateralBalance = _collateralToken.balanceOf(user);
+        uint userCollateralBalance = amount_;
         if (userCollateralBalance == 0) {
             revert
                 ILM_PC_Lending_Facility_v1
@@ -692,7 +691,7 @@ contract LM_PC_Lending_Facility_v1 is
         // Check if borrowing would exceed borrowable quota
         if (
             currentlyBorrowedAmount + requestedLoanAmount_
-                > _calculateBorrowCapacity() * borrowableQuota / 10_000 // @note: Optimize this to an internal function later
+                > _calculateBorrowCapacity() * borrowableQuota / 10_000
         ) {
             revert
                 ILM_PC_Lending_Facility_v1
