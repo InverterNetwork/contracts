@@ -226,8 +226,9 @@ contract LM_PC_Lending_Facility_v1 is
         external
         virtual
         onlyValidBorrowAmount(requestedLoanAmount_)
+        returns (uint loanId_)
     {
-        _borrow(requestedLoanAmount_, _msgSender());
+        return _borrow(requestedLoanAmount_, _msgSender());
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
@@ -275,7 +276,11 @@ contract LM_PC_Lending_Facility_v1 is
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function buyAndBorrow(uint leverage_) external virtual {
+    function buyAndBorrow(uint leverage_)
+        external
+        virtual
+        returns (uint loanId_)
+    {
         address user = _msgSender();
 
         if (leverage_ < 1 || leverage_ > maxLeverage) {
@@ -302,6 +307,9 @@ contract LM_PC_Lending_Facility_v1 is
         uint totalBorrowed;
         uint totalCollateralUsed;
         uint remainingCollateral = userCollateralBalance;
+
+        // Track the loan ID (will be the same for all iterations due to consolidation)
+        uint loanId;
 
         // Loop through leverage iterations
         for (uint8 i = 0; i < leverage_; i++) {
@@ -365,7 +373,7 @@ contract LM_PC_Lending_Facility_v1 is
             uint collateralBalanceBefore =
                 _collateralToken.balanceOf(address(this));
 
-            _borrow(borrowingPower, address(this));
+            loanId = _borrow(borrowingPower, address(this));
 
             uint collateralBalanceAfter =
                 _collateralToken.balanceOf(address(this));
@@ -390,6 +398,8 @@ contract LM_PC_Lending_Facility_v1 is
             totalBorrowed,
             totalCollateralUsed
         );
+
+        return loanId;
     }
 
     // =========================================================================
@@ -671,6 +681,7 @@ contract LM_PC_Lending_Facility_v1 is
     /// @dev Internal function that handles all borrowing logic
     function _borrow(uint requestedLoanAmount_, address tokenReceiver_)
         internal
+        returns (uint loanId_)
     {
         address user = _msgSender();
 
@@ -732,7 +743,7 @@ contract LM_PC_Lending_Facility_v1 is
                     lastLoanId,
                     currentFloorPrice
                 );
-                return;
+                return lastLoanId;
             }
         }
 
@@ -764,6 +775,8 @@ contract LM_PC_Lending_Facility_v1 is
             loanId,
             currentFloorPrice
         );
+
+        return loanId;
     }
 
     /// @dev Execute the common borrowing logic (transfers, state updates, events)

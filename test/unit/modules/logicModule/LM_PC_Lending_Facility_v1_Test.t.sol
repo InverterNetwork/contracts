@@ -635,9 +635,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
 
         vm.prank(user);
-        lendingFacility.borrow(borrowAmount);
+        uint loanId = lendingFacility.borrow(borrowAmount);
 
-        // Then: verify the core state changes
+        // Then: verify the core state
+
+        assertGt(loanId, 0, "Loan ID should be greater than 0");
+
         assertEq(
             lendingFacility.getOutstandingLoan(user),
             outstandingLoanBefore + borrowAmount,
@@ -780,7 +783,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens1);
-        lendingFacility.borrow(borrowAmount1);
+        uint loanId1 = lendingFacility.borrow(borrowAmount1);
         vm.stopPrank();
         // Use helper function to mock floor price
         uint mockFloorPrice = 0.75 ether;
@@ -788,7 +791,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens2);
-        lendingFacility.borrow(borrowAmount2);
+        uint loanId2 = lendingFacility.borrow(borrowAmount2);
         vm.stopPrank();
 
         assertEq(
@@ -810,6 +813,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 && userLoans[1].floorPriceAtBorrow == mockFloorPrice,
             "Loans should have different floor prices"
         );
+
+        assertNotEq(loanId1, loanId2, "Loan IDs should be different");
     }
 
     function testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
@@ -830,7 +835,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
-        lendingFacility.borrow(borrowAmount);
+        uint loanId1 = lendingFacility.borrow(borrowAmount);
         vm.stopPrank();
 
         // Use helper function to mock floor price
@@ -843,7 +848,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
-        lendingFacility.borrow(borrowAmount);
+        uint loanId2 = lendingFacility.borrow(borrowAmount);
         vm.stopPrank();
 
         // Assert: User should have exactly 2 active loans
@@ -860,6 +865,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // with different floor prices, principal amount, and locked issuance tokens
         // The locked issuance tokens for second loan should be less than first since the floor price has increased
 
+        assertNotEq(loanId1, loanId2, "Loan IDs should be different");
         assertGt(
             lendingFacility.calculateLoanRepaymentAmount(userLoanIds[0]),
             0,
