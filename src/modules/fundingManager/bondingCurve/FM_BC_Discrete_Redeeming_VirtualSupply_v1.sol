@@ -181,7 +181,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         returns (uint)
     {
         (,, uint priceAtCurrentStep) =
-            _segments._findPositionForSupply(issuanceToken.totalSupply() + 1);
+            _segments._findPositionForSupply(virtualCollateralSupply + 1);
         return priceAtCurrentStep;
     }
 
