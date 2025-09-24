@@ -956,6 +956,112 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Then: the transaction should revert with InvalidBorrowAmount error
     }
 
+    // ================================================================
+    // Test: borrowFor
+
+    /* Test: Function borrowFor()
+        ├── Given a user wants to borrow tokens for another user
+        └── And the receiver address is invalid
+            └── When the user tries to borrow collateral tokens
+                └── Then the transaction should revert with InvalidReceiver error
+    */
+
+    function testPublicBorrowFor_revertsGivenInvalidReceiver() public {
+        address receiver = address(0);
+        uint borrowAmount = 25 ether;
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidReceiver
+                .selector
+        );
+        lendingFacility.borrowFor(receiver, borrowAmount);
+    }
+
+    /* Test: Function borrowFor()
+        ├── Given a user wants to borrow tokens for another user
+        └── And the receiver address is valid
+            └── When the user tries to borrow collateral tokens
+                └── Then the transaction should succeed
+                └── And the loan shoudl be created on behalf of the receiver
+    */
+    function testFuzzPublicBorrowFor_succeedsGivenValidReceiver(
+        uint borrowAmount_,
+        address receiver_
+    ) public {
+        // Given: a user wants to borrow tokens for another user
+        address user = makeAddr("user");
+        vm.assume(
+            receiver_ != address(0) && receiver_ != address(this)
+                && receiver_ != address(user)
+        );
+
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
+            * lendingFacility.borrowableQuota() / 10_000;
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
+        uint borrowAmount = borrowAmount_;
+
+        // Calculate how much issuance tokens will be needed
+        uint requiredIssuanceTokens = lendingFacility
+            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        issuanceToken.mint(user, requiredIssuanceTokens);
+
+        vm.startPrank(user);
+        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
+
+        // When: the user borrows collateral tokens
+        uint outstandingLoanBefore = lendingFacility.getOutstandingLoan(user);
+        uint currentlyBorrowedBefore = lendingFacility.currentlyBorrowedAmount();
+        uint lockedTokensBefore = lendingFacility.getLockedIssuanceTokens(user);
+
+        uint loanId = lendingFacility.borrowFor(receiver_, borrowAmount);
+        vm.stopPrank();
+        // Then: verify the core state
+
+        assertGt(loanId, 0, "Loan ID should be greater than 0");
+
+        assertEq(
+            lendingFacility.getOutstandingLoan(receiver_),
+            outstandingLoanBefore + borrowAmount,
+            "Outstanding loan should increase by borrow amount"
+        );
+
+        assertEq(
+            lendingFacility.getLockedIssuanceTokens(receiver_),
+            lockedTokensBefore + requiredIssuanceTokens,
+            "Issuance tokens should be locked automatically"
+        );
+
+        assertEq(
+            lendingFacility.currentlyBorrowedAmount(),
+            currentlyBorrowedBefore + borrowAmount,
+            "System borrowed amount should increase by borrow amount"
+        );
+
+        // And: verify the loan was created correctly
+        ILM_PC_Lending_Facility_v1.Loan memory createdLoan =
+            lendingFacility.getLoan(lendingFacility.nextLoanId() - 1);
+        assertEq(
+            createdLoan.borrower, receiver_, "Loan borrower should be correct"
+        );
+        assertEq(
+            createdLoan.principalAmount,
+            borrowAmount,
+            "Loan principal should match borrow amount"
+        );
+        assertEq(
+            createdLoan.lockedIssuanceTokens,
+            requiredIssuanceTokens,
+            "Locked issuance tokens should match"
+        );
+        assertTrue(createdLoan.isActive, "Loan should be active");
+        assertEq(
+            createdLoan.timestamp,
+            block.timestamp,
+            "Loan timestamp should be current block timestamp"
+        );
+    }
+
     // =========================================================================
     // Test: Buy and Borrow
 
@@ -1183,6 +1289,97 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(lendingFacility.getOutstandingLoan(user), 0);
     }
 
+    // =========================================================================
+    // Test: buyAndBorrowFor
+
+    /* Test: Function buyAndBorrowFor()
+        ├── Given a user wants to use buyAndBorrowFor
+        └── And the user provides leverage exceeding maximum allowed limit
+            └── When the user executes buyAndBorrowFor
+                └── Then the transaction should revert with InvalidLeverage error
+    */
+    function testPublicBuyAndBorrowFor_revertsGivenInvalidReceiver() public {
+        address user = makeAddr("user");
+        address receiver = address(0);
+        orchestratorToken.mint(user, 25 ether);
+        fmBcDiscrete.openBuy();
+
+        uint leverage = 2;
+
+        vm.startPrank(user);
+        vm.expectRevert(
+            ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidReceiver
+                .selector
+        );
+        lendingFacility.buyAndBorrowFor(receiver, 25 ether, leverage);
+        vm.stopPrank();
+    }
+
+    /* Test: Function buyAndBorrowFor()
+        ├── Given a user wants to use buyAndBorrowFor
+        └── And the receiver address is valid
+            └── When the user executes buyAndBorrowFor
+                └── Then the transaction should succeed
+    */
+    function testFuzzPublicBuyAndBorrowFor_succeedsGivenValidReceiver(
+        address receiver_,
+        uint leverage_,
+        uint collateralAmount_
+    ) public {
+        // Given: a user has issuance tokens
+        address user = makeAddr("user");
+        vm.assume(
+            receiver_ != address(0) && receiver_ != address(this)
+                && receiver_ != address(user)
+        );
+        leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
+        uint leverage = leverage_;
+
+        collateralAmount_ = bound(collateralAmount_, 1 ether, 100 ether);
+
+        orchestratorToken.mint(user, collateralAmount_);
+        fmBcDiscrete.openBuy();
+
+        uint outstandingLoanBefore =
+            lendingFacility.getOutstandingLoan(receiver_);
+        uint collateralBalanceBefore = orchestratorToken.balanceOf(user);
+
+        vm.startPrank(user);
+        orchestratorToken.approve(address(lendingFacility), collateralAmount_);
+
+        vm.expectEmit(true, false, false, true);
+        emit ILM_PC_Lending_Facility_v1.BuyAndBorrowCompleted(
+            receiver_, leverage
+        );
+        lendingFacility.buyAndBorrowFor(receiver_, collateralAmount_, leverage);
+        vm.stopPrank();
+
+        // Then: verify state changes
+        // User should have an outstanding loan
+        uint outstandingLoanAfter =
+            lendingFacility.getOutstandingLoan(receiver_);
+        uint collateralBalanceAfter = orchestratorToken.balanceOf(user);
+        assertGt(
+            outstandingLoanAfter,
+            outstandingLoanBefore,
+            "User should have an outstanding loan after borrowing"
+        );
+
+        uint lockedIssuanceTokens =
+            lendingFacility.getLockedIssuanceTokens(receiver_);
+        assertGt(
+            lockedIssuanceTokens,
+            0,
+            "Issuance tokens should be locked for the receiver"
+        );
+
+        assertLt(
+            collateralBalanceAfter,
+            collateralBalanceBefore,
+            "Collateral balance should decrease"
+        );
+    }
     // =========================================================================
     // Test: Configuration Functions
 

@@ -94,16 +94,7 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Emitted when a user completes a buyAndBorrow operation
     /// @param user The address of the user who performed the operation
     /// @param leverage The leverage used for the operation
-    /// @param totalIssuanceTokensReceived Total issuance tokens received from all iterations
-    /// @param totalBorrowed Total amount borrowed across all iterations
-    /// @param collateralUsed Total collateral used for the operation
-    event BuyAndBorrowCompleted(
-        address indexed user,
-        uint leverage,
-        uint totalIssuanceTokensReceived,
-        uint totalBorrowed,
-        uint collateralUsed
-    );
+    event BuyAndBorrowCompleted(address indexed user, uint leverage);
 
     /// @notice Emitted when the maximum leverage is updated
     /// @param newMaxLeverage The new maximum leverage
@@ -141,6 +132,9 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid loan ID or loan does not belong to caller
     error Module__LM_PC_Lending_Facility_InvalidLoanId();
+
+    /// @notice Invalid receiver address for borrowFor function
+    error Module__LM_PC_Lending_Facility_InvalidReceiver();
 
     // =========================================================================
     // Public - Getters
@@ -220,16 +214,33 @@ interface ILM_PC_Lending_Facility_v1 is IERC20PaymentClientBase_v2 {
         external
         returns (uint loanId_);
 
+    /// @notice Borrow collateral tokens on behalf of another user
+    /// @param receiver_ The address of the user on whose behalf the loan is opened
+    /// @param requestedLoanAmount_ The amount of collateral tokens to borrow
+    /// @return loanId_ The ID of the created loan
+    function borrowFor(address receiver_, uint requestedLoanAmount_)
+        external
+        returns (uint loanId_);
+
     /// @notice Repay a specific loan by ID
     /// @param loanId_ The ID of the loan to repay
     /// @param repaymentAmount_ The amount to repay (if 0, repay the full loan)
     function repay(uint loanId_, uint repaymentAmount_) external;
 
-    /// @notice Buy issuance tokens and borrow against them in a single transaction
+    /// @notice Buy issuance tokens and borrow collateral tokens with leverage
     /// @param amount_ The amount of collateral to use for the operation
     /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)
     /// @return loanId_ The ID of the created loan
     function buyAndBorrow(uint amount_, uint leverage_)
+        external
+        returns (uint loanId_);
+
+    /// @notice Buy issuance tokens and borrow collateral tokens with leverage on behalf of another user
+    /// @param receiver_ The address of the user on whose behalf the operation is performed
+    /// @param amount_ The amount of collateral to use for the operation
+    /// @param leverage_ The leverage multiplier for the borrowing (must be >= 1)
+    /// @return loanId_ The ID of the created loan
+    function buyAndBorrowFor(address receiver_, uint amount_, uint leverage_)
         external
         returns (uint loanId_);
 

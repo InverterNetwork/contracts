@@ -228,7 +228,22 @@ contract LM_PC_Lending_Facility_v1 is
         onlyValidBorrowAmount(requestedLoanAmount_)
         returns (uint loanId_)
     {
-        return _borrow(requestedLoanAmount_, _msgSender());
+        return _borrow(requestedLoanAmount_, _msgSender(), _msgSender());
+    }
+
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function borrowFor(address receiver_, uint requestedLoanAmount_)
+        external
+        virtual
+        onlyValidBorrowAmount(requestedLoanAmount_)
+        returns (uint loanId_)
+    {
+        if (receiver_ == address(0)) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidReceiver();
+        }
+        return _borrow(requestedLoanAmount_, receiver_, receiver_);
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
@@ -281,124 +296,21 @@ contract LM_PC_Lending_Facility_v1 is
         virtual
         returns (uint loanId_)
     {
-        address user = _msgSender();
+        return _buyAndBorrow(amount_, leverage_, _msgSender());
+    }
 
-        if (leverage_ < 1 || leverage_ > maxLeverage) {
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
+    function buyAndBorrowFor(address receiver_, uint amount_, uint leverage_)
+        external
+        virtual
+        returns (uint loanId_)
+    {
+        if (receiver_ == address(0)) {
             revert
                 ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidLeverage();
+                .Module__LM_PC_Lending_Facility_InvalidReceiver();
         }
-
-        uint userCollateralBalance = amount_;
-        if (userCollateralBalance == 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
-        }
-
-        // Transfer all user's collateral to contract at once
-        _collateralToken.safeTransferFrom(
-            user, address(this), userCollateralBalance
-        );
-
-        // Track total issuance tokens received and total borrowed
-        uint totalIssuanceTokensReceived;
-        uint totalBorrowed;
-        uint totalCollateralUsed;
-        uint remainingCollateral = userCollateralBalance;
-
-        // Track the loan ID (will be the same for all iterations due to consolidation)
-        uint loanId;
-
-        // Loop through leverage iterations
-        for (uint8 i = 0; i < leverage_; i++) {
-            // Check if we have any collateral left
-            if (remainingCollateral == 0) {
-                break;
-            }
-
-            // Use all remaining collateral for this iteration
-            uint collateralForThisIteration = remainingCollateral;
-
-            // Approve the DBC FM for the collateral for this iteration
-            _collateralToken.approve(_dbcFmAddress, collateralForThisIteration);
-
-            // Calculate minimum amount of issuance tokens expected from the purchase
-            uint minIssuanceTokensOut = IBondingCurveBase_v1(_dbcFmAddress)
-                .calculatePurchaseReturn(collateralForThisIteration);
-
-            // Require minimum issuance tokens to be greater than 0
-            if (minIssuanceTokensOut == 0) {
-                revert
-                    ILM_PC_Lending_Facility_v1
-                    .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived(
-                );
-            }
-
-            uint issuanceBalanceBefore = _issuanceToken.balanceOf(address(this));
-
-            // Buy issuance tokens from the funding manager - store in contract
-            IBondingCurveBase_v1(_dbcFmAddress).buyFor(
-                address(this), // receiver (contract instead of user)
-                collateralForThisIteration, // deposit amount
-                minIssuanceTokensOut // minimum amount out
-            );
-
-            // Get the actual amount of issuance tokens received in this iteration
-            uint issuanceBalanceAfter = _issuanceToken.balanceOf(address(this));
-            uint issuanceTokensReceived =
-                issuanceBalanceAfter - issuanceBalanceBefore;
-            if (issuanceTokensReceived == 0) {
-                revert
-                    ILM_PC_Lending_Facility_v1
-                    .Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
-            }
-
-            // Add to total issuance tokens received
-            totalIssuanceTokensReceived += issuanceTokensReceived;
-
-            // Track collateral used in this iteration
-            totalCollateralUsed += collateralForThisIteration;
-
-            // Now calculate borrowing power based on balance of issuance
-            uint borrowingPower =
-                _calculateCollateralAmount(issuanceTokensReceived);
-
-            // If we can't borrow anything more, break the loop
-            if (borrowingPower <= 0) {
-                break;
-            }
-
-            uint collateralBalanceBefore =
-                _collateralToken.balanceOf(address(this));
-
-            loanId = _borrow(borrowingPower, address(this));
-
-            uint collateralBalanceAfter =
-                _collateralToken.balanceOf(address(this));
-
-            remainingCollateral =
-                collateralBalanceAfter - collateralBalanceBefore;
-
-            // Update our tracking
-            totalBorrowed += borrowingPower;
-        }
-
-        // Return any unused collateral back to the user
-        if (remainingCollateral > 0) {
-            _collateralToken.safeTransfer(user, remainingCollateral);
-        }
-
-        // Emit event for the completed buyAndBorrow operation
-        emit BuyAndBorrowCompleted(
-            user,
-            leverage_,
-            totalIssuanceTokensReceived,
-            totalBorrowed,
-            totalCollateralUsed
-        );
-
-        return loanId;
+        return _buyAndBorrow(amount_, leverage_, receiver_);
     }
 
     // =========================================================================
@@ -466,9 +378,7 @@ contract LM_PC_Lending_Facility_v1 is
         return _userTotalOutstandingLoans[user_];
     }
 
-    /// @notice Get details of a specific loan
-    /// @param loanId_ The loan ID
-    /// @return loan The loan details
+    /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getLoan(uint loanId_) external view returns (Loan memory loan) {
         return _loans[loanId_];
     }
@@ -678,12 +588,11 @@ contract LM_PC_Lending_Facility_v1 is
     }
 
     /// @dev Internal function that handles all borrowing logic
-    function _borrow(uint requestedLoanAmount_, address tokenReceiver_)
-        internal
-        returns (uint loanId_)
-    {
-        address user = _msgSender();
-
+    function _borrow(
+        uint requestedLoanAmount_,
+        address tokenReceiver_,
+        address borrower_
+    ) internal returns (uint loanId_) {
         // Calculate how much issuance tokens need to be locked for this borrow amount
         uint requiredIssuanceTokens =
             _calculateRequiredIssuanceTokens(requestedLoanAmount_);
@@ -699,13 +608,13 @@ contract LM_PC_Lending_Facility_v1 is
         }
 
         // Lock the required issuance tokens automatically
-        // Transfer Tokens only when the user is the tokenReceiver_
+        // Transfer Tokens only when the caller is the tokenReceiver_
         if (tokenReceiver_ != address(this)) {
             _issuanceToken.safeTransferFrom(
-                user, address(this), requiredIssuanceTokens
+                _msgSender(), address(this), requiredIssuanceTokens
             );
         }
-        _lockedIssuanceTokens[user] += requiredIssuanceTokens;
+        _lockedIssuanceTokens[borrower_] += requiredIssuanceTokens;
 
         // Calculate dynamic borrowing fee
         uint dynamicBorrowingFee =
@@ -713,9 +622,9 @@ contract LM_PC_Lending_Facility_v1 is
         uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
 
         uint currentFloorPrice = _getFloorPrice();
-        uint[] storage userLoanIds = _userLoans[user];
+        uint[] storage userLoanIds = _userLoans[borrower_];
 
-        // Check if user has any active loans and if the most recent one has the same floor price
+        // Check if borrower has any active loans and if the most recent one has the same floor price
         if (userLoanIds.length > 0) {
             uint lastLoanId = userLoanIds[userLoanIds.length - 1];
             Loan storage lastLoan = _loans[lastLoanId];
@@ -737,7 +646,7 @@ contract LM_PC_Lending_Facility_v1 is
                     dynamicBorrowingFee,
                     netAmountToUser,
                     tokenReceiver_,
-                    user,
+                    borrower_,
                     requiredIssuanceTokens,
                     lastLoanId,
                     currentFloorPrice
@@ -751,7 +660,7 @@ contract LM_PC_Lending_Facility_v1 is
 
         _loans[loanId] = Loan({
             id: loanId,
-            borrower: user,
+            borrower: borrower_,
             principalAmount: requestedLoanAmount_,
             lockedIssuanceTokens: requiredIssuanceTokens,
             floorPriceAtBorrow: currentFloorPrice,
@@ -760,8 +669,8 @@ contract LM_PC_Lending_Facility_v1 is
             isActive: true
         });
 
-        // Add loan to user's loan list
-        _userLoans[user].push(loanId);
+        // Add loan to borrower's loan list
+        _userLoans[borrower_].push(loanId);
 
         // Execute common borrowing logic
         _executeBorrowingLogic(
@@ -769,11 +678,119 @@ contract LM_PC_Lending_Facility_v1 is
             dynamicBorrowingFee,
             netAmountToUser,
             tokenReceiver_,
-            user,
+            borrower_,
             requiredIssuanceTokens,
             loanId,
             currentFloorPrice
         );
+
+        return loanId;
+    }
+
+    /// @dev Internal function that handles buyAndBorrow logic
+    /// @param collateralAmount_ The amount of collateral to use for the operation
+    /// @param leverage_ The leverage multiplier for the borrowing
+    /// @param borrower_ The address of the user on whose behalf the loan is created
+    /// @return loanId_ The ID of the created loan
+    function _buyAndBorrow(
+        uint collateralAmount_,
+        uint leverage_,
+        address borrower_
+    ) internal returns (uint loanId_) {
+        if (leverage_ < 1 || leverage_ > maxLeverage) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_InvalidLeverage();
+        }
+
+        if (collateralAmount_ == 0) {
+            revert
+                ILM_PC_Lending_Facility_v1
+                .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
+        }
+
+        // Transfer all user's collateral to contract at once
+        _collateralToken.safeTransferFrom(
+            _msgSender(), address(this), collateralAmount_
+        );
+
+        uint remainingCollateral = collateralAmount_;
+
+        // Track the loan ID (will be the same for all iterations due to consolidation)
+        uint loanId;
+
+        // Loop through leverage iterations
+        for (uint8 i = 0; i < leverage_; i++) {
+            // Check if we have any collateral left
+            if (remainingCollateral == 0) {
+                break;
+            }
+
+            // Use all remaining collateral for this iteration
+            uint collateralForThisIteration = remainingCollateral;
+
+            // Approve the DBC FM for the collateral for this iteration
+            _collateralToken.approve(_dbcFmAddress, collateralForThisIteration);
+
+            // Calculate minimum amount of issuance tokens expected from the purchase
+            uint minIssuanceTokensOut = IBondingCurveBase_v1(_dbcFmAddress)
+                .calculatePurchaseReturn(collateralForThisIteration);
+
+            // Require minimum issuance tokens to be greater than 0
+            if (minIssuanceTokensOut == 0) {
+                revert
+                    ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived(
+                );
+            }
+
+            uint issuanceBalanceBefore = _issuanceToken.balanceOf(address(this));
+
+            // Buy issuance tokens from the funding manager - store in contract
+            IBondingCurveBase_v1(_dbcFmAddress).buyFor(
+                address(this), // receiver (contract instead of user)
+                collateralForThisIteration, // deposit amount
+                minIssuanceTokensOut // minimum amount out
+            );
+
+            // Get the actual amount of issuance tokens received in this iteration
+            uint issuanceBalanceAfter = _issuanceToken.balanceOf(address(this));
+            uint issuanceTokensReceived =
+                issuanceBalanceAfter - issuanceBalanceBefore;
+            if (issuanceTokensReceived == 0) {
+                revert
+                    ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
+            }
+
+            // Now calculate borrowing power based on balance of issuance
+            uint borrowingPower =
+                _calculateCollateralAmount(issuanceTokensReceived);
+
+            // If we can't borrow anything more, break the loop
+            if (borrowingPower <= 0) {
+                break;
+            }
+
+            uint collateralBalanceBefore =
+                _collateralToken.balanceOf(address(this));
+
+            loanId = _borrow(borrowingPower, address(this), borrower_);
+
+            uint collateralBalanceAfter =
+                _collateralToken.balanceOf(address(this));
+
+            remainingCollateral =
+                collateralBalanceAfter - collateralBalanceBefore;
+        }
+
+        // Return any unused collateral back to the caller
+        if (remainingCollateral > 0) {
+            _collateralToken.safeTransfer(_msgSender(), remainingCollateral);
+        }
+
+        // Emit event for the completed buyAndBorrow operation
+        emit BuyAndBorrowCompleted(borrower_, leverage_);
 
         return loanId;
     }
