@@ -154,7 +154,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Deduct protocol and project buy fee from collateral, if applicable
         (_depositAmount, /* protocolFeeAmount */ /* projectFeeAmount */,) =
         _calculateNetAndSplitFees(
-            _depositAmount, collateralBuyFeePercentage, buyFee
+            _depositAmount, collateralBuyFeePercentage, _getBuyFee()
         );
 
         // Get issuance token return from formula and deduct protocol buy fee, if applicable
@@ -234,6 +234,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         view
         virtual
         returns (uint);
+
+    /// @dev    Returns the current buy fee. This function can be overridden by downstream
+    ///         contracts to implement dynamic fee structures.
+    /// @return uint The current buy fee in BPS.
+    function _getBuyFee() internal view virtual returns (uint) {
+        return buyFee;
+    }
 
     // -------------------------------------------------------------------------
     // Internal Functions

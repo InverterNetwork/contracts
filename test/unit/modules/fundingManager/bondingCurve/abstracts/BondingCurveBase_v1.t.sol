@@ -90,6 +90,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
             _METADATA,
             abi.encode(address(issuanceToken), formula, BUY_FEE, BUY_IS_OPEN)
         );
+
+        bondingCurveFundingManager.setCollateralTokenHelper(address(_token));
     }
 
     function testSupportsInterface() public {
@@ -282,7 +284,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
-            1
+            1,
+            "4"
         );
         assertEq(
             bondingCurveFundingManager
@@ -1246,6 +1249,33 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     // Test _handleIssuanceTokensAfterBuy function
     // this is tested in the buy tests
+
+    /* Test _getBuyFee() function (via call_getBuyFee)
+        ├── When called initially
+        │   └── It should return the initial BUY_FEE
+        └── When buyFee is updated via setBuyFee
+            └── It should return the new fee
+    */
+    function testGetBuyFee_ReturnsInitialFee() public {
+        assertEq(
+            bondingCurveFundingManager.call_getBuyFee(),
+            BUY_FEE,
+            "Initial buy fee mismatch"
+        );
+    }
+
+    function testGetBuyFee_ReturnsUpdatedFee(uint newFee)
+        public
+        callerIsOrchestratorAdmin
+    {
+        vm.assume(newFee < bondingCurveFundingManager.call_BPS());
+        bondingCurveFundingManager.setBuyFee(newFee);
+        assertEq(
+            bondingCurveFundingManager.call_getBuyFee(),
+            newFee,
+            "Updated buy fee mismatch"
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Helper functions

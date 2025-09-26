@@ -140,6 +140,16 @@ contract MetadataCollection_v1 {
             "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1"
         );
 
+    // FM_BC_Discrete_Redeeming_VirtualSupply_v1
+    IModule_v1.Metadata public
+        bondingCurveDiscreteRedeemingVirtualSupplyMetadata = IModule_v1.Metadata(
+            1,
+            0,
+            0,
+            "https://github.com/InverterNetwork/contracts",
+            "FM_BC_Discrete_Redeeming_VirtualSupply_v1"
+        );
+
     // DepositVaultFundingManager
     IModule_v1.Metadata public depositVaultFundingManagerMetadata = IModule_v1
         .Metadata(

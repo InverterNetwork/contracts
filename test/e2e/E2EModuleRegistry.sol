@@ -17,6 +17,9 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
+
+import {FM_BC_Discrete_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
@@ -280,6 +283,83 @@ contract E2EModuleRegistry is Test {
             IInverterBeacon_v1(
                 bondingSurfaceRedeemingRestrictedRepayerSeizableBeacon
             )
+        );
+    }
+
+    // FM_BC_Discrete_Redeeming_VirtualSupply_v1
+
+    FM_BC_Discrete_Redeeming_VirtualSupply_v1
+        FM_BC_Discrete_Redeeming_VirtualSupply_v1_Impl;
+
+    InverterBeacon_v1 FM_BC_Discrete_Redeeming_VirtualSupply_v1_Beacon;
+
+    IModule_v1.Metadata FM_BC_Discrete_Redeeming_VirtualSupply_v1_Metadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/contracts",
+        "FM_BC_Discrete_Redeeming_VirtualSupply_v1"
+    );
+
+    /*
+        IFM_BC_BondingSurface_Redeeming_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_BondingSurface_Redeeming_v1
+                .IssuanceToken({
+                name: bytes32(abi.encodePacked("Bonding Curve Token")),
+                symbol: bytes32(abi.encodePacked("BCT")),
+                decimals: uint8(18)
+            });
+
+        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties
+            memory bc_properties =
+            IFM_BC_BondingSurface_Redeeming_v1
+                .BondingCurveProperties({
+                 formula: address(bondingSurface),
+                capitalRequired: 1_000_000 * 1e18, // Taken from Topos repo test case
+                basePriceMultiplier: 0.000001 ether,
+                // Set pAMM properties
+                buyIsOpen: true,
+                sellIsOpen: true,
+                buyFee: 100,
+                sellFee: 100
+            });
+
+        moduleConfigurations.push(
+            IOrchestratorFactory_v1.ModuleConfig(
+                bondingSurfaceRedeemingRestrictedRepayerSeizableMetadata,
+                abi.encode(
+                    address(issuanceToken),
+                    token,
+                    bc_properties,
+                    liquidityVaultController,
+                    100, //Max_Seize
+                    false 
+                )
+            )
+        );
+    */
+
+    function setUpFM_BC_Discrete_Redeeming_VirtualSupply_v1() internal {
+        // Deploy module implementations.
+        FM_BC_Discrete_Redeeming_VirtualSupply_v1_Impl =
+            new FM_BC_Discrete_Redeeming_VirtualSupply_v1();
+
+        // Deploy module beacons.
+        FM_BC_Discrete_Redeeming_VirtualSupply_v1_Beacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Metadata.majorVersion,
+            address(FM_BC_Discrete_Redeeming_VirtualSupply_v1_Impl),
+            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Metadata.minorVersion,
+            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Metadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            FM_BC_Discrete_Redeeming_VirtualSupply_v1_Metadata,
+            IInverterBeacon_v1(FM_BC_Discrete_Redeeming_VirtualSupply_v1_Beacon)
         );
     }
 

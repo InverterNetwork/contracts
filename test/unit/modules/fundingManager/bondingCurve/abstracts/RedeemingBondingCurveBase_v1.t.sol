@@ -96,6 +96,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 SELL_IS_OPEN
             )
         );
+
+        bondingCurveFundingManager.setCollateralTokenHelper(address(_token));
     }
 
     function testSupportsInterface() public {
@@ -681,6 +683,33 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
 
         assertEq(internalFunctionReturnValue, functionReturnValue);
+    }
+
+    /* Test _getSellFee() function (via call_getSellFee)
+        ├── When called initially
+        │   └── It should return the initial SELL_FEE
+        └── When sellFee is updated via setSellFee
+            └── It should return the new fee
+    */
+    function testGetSellFee_ReturnsInitialFee() public {
+        assertEq(
+            bondingCurveFundingManager.call_getSellFee(),
+            SELL_FEE,
+            "Initial sell fee mismatch"
+        );
+    }
+
+    function testGetSellFee_ReturnsUpdatedFee(uint newFee)
+        public
+        callerIsOrchestratorAdmin
+    {
+        vm.assume(newFee <= bondingCurveFundingManager.call_BPS());
+        bondingCurveFundingManager.setSellFee(newFee);
+        assertEq(
+            bondingCurveFundingManager.call_getSellFee(),
+            newFee,
+            "Updated sell fee mismatch"
+        );
     }
 
     //--------------------------------------------------------------------------

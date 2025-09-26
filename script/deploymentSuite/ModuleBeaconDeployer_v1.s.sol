@@ -194,6 +194,26 @@ contract ModuleBeaconDeployer_v1 is
                 )
             )
         );
+        // FM_BC_Discrete_Redeeming_VirtualSupply_v1
+        initialMetadataRegistration.push(
+            bondingCurveDiscreteRedeemingVirtualSupplyMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bondingCurveDiscreteRedeemingVirtualSupplyMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_BC_Discrete_Redeeming_VirtualSupply_v1,
+                    bondingCurveDiscreteRedeemingVirtualSupplyMetadata
+                        .majorVersion,
+                    bondingCurveDiscreteRedeemingVirtualSupplyMetadata
+                        .minorVersion,
+                    bondingCurveDiscreteRedeemingVirtualSupplyMetadata
+                        .patchVersion
+                )
+            )
+        );
 
         // DepositVaultFundingManager
         initialMetadataRegistration.push(depositVaultFundingManagerMetadata);

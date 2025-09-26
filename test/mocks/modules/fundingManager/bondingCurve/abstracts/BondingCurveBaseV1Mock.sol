@@ -18,8 +18,9 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
+contract BondingCurveBaseV1Mock is BondingCurveBase_v1, IFundingManager_v1 {
     IBancorFormula public formula;
+    IERC20 internal _token;
 
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -84,6 +85,12 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         processCollateralTokensForBuyOperationFunctionCalled++;
     }
 
+    function token() public view returns (IERC20) {
+        return _token;
+    }
+
+    function transferOrchestratorToken(address to, uint amount) external {}
+
     // -------------------------------------------------------------------------
     // Mock access for internal functions
 
@@ -93,6 +100,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         returns (uint)
     {
         return calculatePurchaseReturn(_depositAmount);
+    }
+
+    function call_getBuyFee() external view returns (uint) {
+        return _getBuyFee();
     }
 
     function call_withdrawProjectCollateralFee(address _receiver, uint _amount)
@@ -118,10 +129,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_processProtocolFeeViaTransfer(
         address _treasury,
-        IERC20 _token,
+        IERC20 token_,
         uint _feeAmount
     ) external {
-        _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
+        _processProtocolFeeViaTransfer(_treasury, token_, _feeAmount);
     }
 
     function call_processProtocolFeeViaMinting(
@@ -184,5 +195,9 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         uint _minAmountOut
     ) external pure {
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+    }
+
+    function setCollateralTokenHelper(address _collateralToken) external {
+        _token = IERC20(_collateralToken);
     }
 }

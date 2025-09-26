@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
+import {Math} from "@oz/utils/math/Math.sol";
+
 /**
  * @title   Inverter Metadata Library
  *
  * @dev     Arithmetic library with operations for fixed-point numbers.
  *
  * @author  Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/utils/FixedPointMathLib.sol)
+ *          Solady (https://github.com/Vectorized/solady/blob/main/src/utils/FixedPointMathLib.sol)
  */
 library FixedPointMathLib {
     /*///////////////////////////////////////////////////////////////
@@ -195,5 +198,46 @@ library FixedPointMathLib {
             // If zRoundDown is smaller, use it.
             if lt(zRoundDown, z) { z := zRoundDown }
         }
+    }
+
+    // These implementations are copied from the Solady library
+
+    function _mulmod(uint a_, uint b_, uint modulus_)
+        internal
+        pure
+        returns (uint)
+    {
+        require(
+            modulus_ > 0,
+            "DiscreteCurveMathLib_v1: modulus_ cannot be zero in _mulmod"
+        );
+        return (a_ * b_) % modulus_;
+    }
+
+    function _mulDivUp(uint a_, uint b_, uint denominator_)
+        internal
+        pure
+        returns (uint result_)
+    {
+        require(
+            denominator_ > 0,
+            "DiscreteCurveMathLib_v1: division by zero in _mulDivUp"
+        );
+        result_ = Math.mulDiv(a_, b_, denominator_); // Standard OpenZeppelin Math.mulDiv rounds down (floor division)
+
+        // If there's any remainder from (a_ * b_) / denominator_, we need to add 1 to round up.
+        // A remainder exists if (a_ * b_) % denominator_ is not 0.
+        // We use the local _mulmod function which safely computes (a_ * b_) % denominator_.
+        if (_mulmod(a_, b_, denominator_) > 0) {
+            // Before incrementing, check if 'result_' is already at max_uint256 to prevent overflow.
+            // This scenario (overflowing after adding 1 due to rounding) is extremely unlikely if a_, b_, denominator_
+            // are such that mulDiv itself doesn't revert, but it's a good safety check.
+            require(
+                result_ < type(uint).max,
+                "DiscreteCurveMathLib_v1: _mulDivUp overflow on increment"
+            );
+            result_++;
+        }
+        return result_;
     }
 }
