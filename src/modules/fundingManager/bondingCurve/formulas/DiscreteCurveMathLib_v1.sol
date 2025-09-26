@@ -346,8 +346,6 @@ library DiscreteCurveMathLib_v1 {
             }
         }
 
-        uint fullStepBacking = 0;
-
         // Phase 3: Purchase through remaining steps until budget exhausted
         while (remainingBudget_ > 0 && segmentIndex_ < segments_.length) {
             uint numberOfSteps_ = segments_[segmentIndex_]._numberOfSteps();
@@ -375,7 +373,6 @@ library DiscreteCurveMathLib_v1 {
                 remainingBudget_ -= stepCollateralCapacity_;
                 tokensToMint_ += supplyPerStep_;
                 stepIndex_++;
-                fullStepBacking += stepCollateralCapacity_;
             } else {
                 // Partial step purchase and exit
                 uint partialIssuance_ =
