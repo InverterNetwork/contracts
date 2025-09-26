@@ -431,6 +431,16 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
         address to,
         uint amount
     ) public {
+        // Ensure we have a reasonable amount that won't trigger amount validation errors
+        amount = bound(amount, 1, 1000 ether);
+        vm.assume(caller != address(paymentClient)); // Caller must not be payment client
+
+        // Ensure contract has enough balance to cover the amount
+        orchestratorToken.mint(
+            address(fmBcDiscrete),
+            amount + fmBcDiscrete.projectCollateralFeeCollected()
+        );
+
         vm.prank(caller);
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         fmBcDiscrete.transferOrchestratorToken(to, amount);
@@ -1496,6 +1506,336 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1_Test is ModuleTest {
 
         fmBcDiscrete.sellTo(
             address(this), depositAmount, minCollateralAmountOut
+        );
+    }
+
+    /* Test setSellFee(uint _fee)
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function setSellFee() is called
+        │       └── then it should revert (test modifier is in place)
+        └── given the caller is the Orchestrator_v1 admin
+            ├── and the fee is over BPS (100%)
+            │   └── when the function setSellFee() is called
+            │       └── then it should revert with InvalidFeePercentage
+            └── and the fee is valid (<= BPS)
+                └── when the function setSellFee() is called
+                    └── then it should set the new sell fee
+                        └── and it should emit a SellFeeUpdated event
+    */
+    function testSetSellFee_FailsGivenCallerNotOrchestratorAdmin(uint _fee)
+        public
+    {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        fmBcDiscrete.setSellFee(_fee);
+    }
+
+    function testSetSellFee_FailsGivenFeeAboveBPS(uint _fee) public {
+        vm.assume(_fee > 10_000); // BPS = 10_000
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidFeePercentage
+                .selector
+        );
+        fmBcDiscrete.setSellFee(_fee);
+    }
+
+    function testSetSellFee_WorksGivenValidFee(uint _fee) public {
+        vm.assume(_fee <= 10_000); // BPS = 10_000
+        uint oldFee = fmBcDiscrete.sellFee();
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IRedeemingBondingCurveBase_v1.SellFeeUpdated(_fee, oldFee);
+
+        fmBcDiscrete.setSellFee(_fee);
+
+        assertEq(fmBcDiscrete.sellFee(), _fee, "Sell fee not updated correctly");
+    }
+
+    /* Test withdrawProjectCollateralFee(address _receiver, uint _amount)
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function withdrawProjectCollateralFee() is called
+        │       └── then it should revert (test modifier is in place)
+        ├── given the receiver is invalid (address(0) or address(this))
+        │   └── when the function withdrawProjectCollateralFee() is called
+        │       └── then it should revert with InvalidRecipient
+        ├── given the amount exceeds projectCollateralFeeCollected
+        │   └── when the function withdrawProjectCollateralFee() is called
+        │       └── then it should revert with InvalidWithdrawAmount
+        └── given valid parameters
+            └── when the function withdrawProjectCollateralFee() is called
+                └── then it should transfer the amount to receiver
+                    └── and it should reduce projectCollateralFeeCollected
+                    └── and it should emit ProjectCollateralFeeWithdrawn event
+    */
+    function testWithdrawProjectCollateralFee_FailsGivenCallerNotOrchestratorAdmin(
+        address _receiver,
+        uint _amount
+    ) public {
+        // Ensure receiver is valid to test authorization, not recipient validation
+        vm.assume(_receiver != address(0) && _receiver != address(fmBcDiscrete));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        fmBcDiscrete.withdrawProjectCollateralFee(_receiver, _amount);
+    }
+
+    function testWithdrawProjectCollateralFee_FailsGivenInvalidReceiver(
+        uint _amount
+    ) public {
+        // Test address(0)
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidRecipient
+                .selector
+        );
+        fmBcDiscrete.withdrawProjectCollateralFee(address(0), _amount);
+
+        // Test address(this)
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidRecipient
+                .selector
+        );
+        fmBcDiscrete.withdrawProjectCollateralFee(
+            address(fmBcDiscrete), _amount
+        );
+    }
+
+    function testWithdrawProjectCollateralFee_FailsGivenAmountExceedsCollected()
+        public
+    {
+        address receiver = makeAddr("feeReceiver");
+
+        // Simulate some collected fees by performing a buy operation
+        uint buyAmount = 10 ether;
+        helper_prepareBuyForTest();
+        orchestratorToken.mint(address(this), buyAmount);
+        orchestratorToken.approve(address(fmBcDiscrete), buyAmount);
+        fmBcDiscrete.buyFor(address(this), buyAmount, 1);
+
+        // Verify some fees were collected
+        uint actualCollected = fmBcDiscrete.projectCollateralFeeCollected();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidWithdrawAmount
+                .selector
+        );
+        fmBcDiscrete.withdrawProjectCollateralFee(receiver, actualCollected + 1);
+    }
+
+    function testWithdrawProjectCollateralFee_WorksGivenValidParameters()
+        public
+    {
+        address receiver = makeAddr("feeReceiver");
+
+        // Perform buy operations to collect some project fees
+        uint buyAmount = 50 ether;
+        helper_prepareBuyForTest();
+        orchestratorToken.mint(address(this), buyAmount);
+        orchestratorToken.approve(address(fmBcDiscrete), buyAmount);
+        fmBcDiscrete.buyFor(address(this), buyAmount, 1);
+
+        uint collectedFees = fmBcDiscrete.projectCollateralFeeCollected();
+        vm.assume(collectedFees > 0); // Ensure we have some fees to withdraw
+
+        uint withdrawAmount = collectedFees / 2; // Withdraw half
+        uint initialReceiverBalance = orchestratorToken.balanceOf(receiver);
+
+        vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
+        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+            receiver, withdrawAmount
+        );
+
+        fmBcDiscrete.withdrawProjectCollateralFee(receiver, withdrawAmount);
+
+        // Verify state changes
+        assertEq(
+            fmBcDiscrete.projectCollateralFeeCollected(),
+            collectedFees - withdrawAmount,
+            "Project fee collected not updated correctly"
+        );
+        assertEq(
+            orchestratorToken.balanceOf(receiver),
+            initialReceiverBalance + withdrawAmount,
+            "Receiver balance not updated correctly"
+        );
+    }
+
+    /* Test updateProtocolFeeCache()
+        ├── when the function updateProtocolFeeCache() is called
+        │   └── then it should update the cache with correct buy and sell fees
+        │       └── and it should use buy treasuries when non-zero
+        │       └── and it should fallback to sell treasuries when buy treasuries are zero
+        ├── when fee manager returns different treasuries for buy and sell
+        │   └── then it should prioritize buy treasuries when non-zero
+        │   └── and it should use sell treasuries only when buy treasuries are zero
+        └── when protocol fees are updated in fee manager
+            └── then cache should reflect new values after updateProtocolFeeCache() call
+    */
+    function testUpdateProtocolFeeCache_UpdatesCorrectly() public {
+        // Set up fee manager with specific fees
+        uint newBuyCollateralFee = 150; // 1.5%
+        uint newBuyIssuanceFee = 200; // 2%
+        uint newSellCollateralFee = 250; // 2.5%
+        uint newSellIssuanceFee = 300; // 3%
+
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
+        bytes4 sellOrderSelector =
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
+
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            buyOrderSelector,
+            true,
+            newBuyCollateralFee
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            buyOrderSelector,
+            true,
+            newBuyIssuanceFee
+        );
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            sellOrderSelector,
+            true,
+            newSellCollateralFee
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            sellOrderSelector,
+            true,
+            newSellIssuanceFee
+        );
+
+        // Act
+        fmBcDiscrete.updateProtocolFeeCache();
+
+        // Assert - Check that cache was updated correctly
+        (address cTreasury, address iTreasury, uint cBuyBps, uint iBuyBps) =
+        fmBcDiscrete.exposed_getFunctionFeesAndTreasuryAddresses(
+            buyOrderSelector
+        );
+        (,, uint cSellBps, uint iSellBps) = fmBcDiscrete
+            .exposed_getFunctionFeesAndTreasuryAddresses(sellOrderSelector);
+
+        assertEq(
+            cTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Collateral treasury not updated correctly"
+        );
+        assertEq(
+            iTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Issuance treasury not updated correctly"
+        );
+        assertEq(
+            cBuyBps,
+            newBuyCollateralFee,
+            "Buy collateral fee not cached correctly"
+        );
+        assertEq(
+            iBuyBps, newBuyIssuanceFee, "Buy issuance fee not cached correctly"
+        );
+        assertEq(
+            cSellBps,
+            newSellCollateralFee,
+            "Sell collateral fee not cached correctly"
+        );
+        assertEq(
+            iSellBps,
+            newSellIssuanceFee,
+            "Sell issuance fee not cached correctly"
+        );
+    }
+
+    function testUpdateProtocolFeeCache_CanBeCalledByAnyone() public {
+        // Test that updateProtocolFeeCache can be called by any address (no access control)
+        address randomCaller = makeAddr("randomCaller");
+
+        // Should not revert when called by non-admin
+        vm.prank(randomCaller);
+        fmBcDiscrete.updateProtocolFeeCache();
+
+        // Verify it actually works
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
+        (address cTreasury,,,) = fmBcDiscrete
+            .exposed_getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+        assertEq(
+            cTreasury,
+            TEST_PROTOCOL_TREASURY,
+            "Cache should be updated even when called by non-admin"
+        );
+    }
+
+    function testUpdateProtocolFeeCache_ReflectsLatestFeeManagerChanges()
+        public
+    {
+        bytes4 buyOrderSelector =
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
+
+        // Initial cache update
+        fmBcDiscrete.updateProtocolFeeCache();
+
+        // Verify initial state
+        (,, uint initialBuyFee,) = fmBcDiscrete
+            .exposed_getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+        assertEq(
+            initialBuyFee,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS,
+            "Initial fee should match test setup"
+        );
+
+        // Change fees in fee manager
+        uint newFee = 999;
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(fmBcDiscrete),
+            buyOrderSelector,
+            true,
+            newFee
+        );
+
+        // Cache should still have old values
+        (,, uint cachedFeeBeforeUpdate,) = fmBcDiscrete
+            .exposed_getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+        assertEq(
+            cachedFeeBeforeUpdate,
+            TEST_PROTOCOL_COLLATERAL_BUY_FEE_BPS,
+            "Cache should still have old value before update"
+        );
+
+        // Update cache
+        fmBcDiscrete.updateProtocolFeeCache();
+
+        // Cache should now have new values
+        (,, uint cachedFeeAfterUpdate,) = fmBcDiscrete
+            .exposed_getFunctionFeesAndTreasuryAddresses(buyOrderSelector);
+        assertEq(
+            cachedFeeAfterUpdate,
+            newFee,
+            "Cache should have new value after update"
         );
     }
 
