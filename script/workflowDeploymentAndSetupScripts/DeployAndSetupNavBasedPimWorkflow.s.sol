@@ -76,6 +76,21 @@ contract DeployAndSetupNavBasedPimWorkflow is DeploymentScript {
     PP_Queue_ManualExecution_v1 internal _paymentProcessor;
     LM_Oracle_Permissioned_v1 internal _oracleModule;
 
+    /**
+     * @dev This script does the following:
+     *      1. Deploys the issuance token
+     *      2. Deploys the workflow
+     *      3. Sets up the following modules:
+     *          * Funding Manager
+     *          * Authorizer
+     *          * Payment Processor
+     *          * Oracle
+     *      4. Sets up the workflow admin
+     *      5. Revokes admin role from deployer
+     * @dev To utilize the workflow, the following steps are required AFTER running this script:
+     *      1. Open buy and sell in the funding manager
+     *      2. Set the price in the oracle
+     */
     function run() public override {
         console2.log("\n===============================================");
         console2.log("  DEPLOYING NAV BASED PIM WORKFLOW");
