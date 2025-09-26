@@ -4535,10 +4535,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint supplyPerStepTpl,
         uint numberOfStepsTpl
     ) public view {
-        vm.assume(
-            numSegmentsToFuzz >= 1
-                && numSegmentsToFuzz <= DiscreteCurveMathLib_v1.MAX_SEGMENTS
-        );
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
 
         vm.assume(initialPriceTpl <= INITIAL_PRICE_MASK);
         vm.assume(priceIncreaseTpl <= PRICE_INCREASE_MASK);
@@ -4553,7 +4550,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         }
 
         if (numberOfStepsTpl == 1) {
-            vm.assume(priceIncreaseTpl == 0);
+            priceIncreaseTpl = 0;
         } else {
             vm.assume(priceIncreaseTpl > 0);
         }
