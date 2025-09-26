@@ -378,9 +378,7 @@ library DiscreteCurveMathLib_v1 {
                 uint partialIssuance_ =
                     Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
                 tokensToMint_ += partialIssuance_;
-                remainingBudget_ -= FixedPointMathLib._mulDivUp(
-                    partialIssuance_, stepPrice_, SCALING_FACTOR
-                );
+                remainingBudget_ = 0;
 
                 break;
             }
