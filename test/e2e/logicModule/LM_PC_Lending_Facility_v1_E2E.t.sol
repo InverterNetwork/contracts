@@ -41,9 +41,15 @@ import {
     LM_PC_Lending_Facility_v1,
     ILM_PC_Lending_Facility_v1
 } from "src/modules/logicModule/LM_PC_Lending_Facility_v1.sol";
+import {
+    LM_PC_Lending_Facility_v1_Exposed
+} from "test/mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
 import {DynamicFeeCalculator_v1} from "@ex/fees/DynamicFeeCalculator_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
+import {
+    IDynamicFeeCalculator_v1
+} from "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 
 contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
     using PackedSegmentLib for PackedSegment;
@@ -149,6 +155,18 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
         dynamicFeeCalculator =
             DynamicFeeCalculator_v1(Clones.clone(dynamicFeeCalculatorImpl));
         dynamicFeeCalculator.init(address(this));
+
+        // Set up dynamic fee parameters
+        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
+            IDynamicFeeCalculator_v1.DynamicFeeParameters({
+                Z_issueRedeem: 0.01 ether,
+                m_issueRedeem: 0.01 ether,
+                A_issueRedeem: 0.01 ether,
+                Z_origination: 0.01 ether,
+                A_origination: 0.01 ether,
+                m_origination: 0.01 ether
+            });
+        dynamicFeeCalculator.setDynamicFeeCalculatorParams(feeParams);
     }
 
     function test_e2e_LendingFacilityLifecycle() public {
@@ -199,8 +217,8 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
         orchestrator.executeAddModule(lendingFacilityAddress);
 
         // Get the lending facility logic module
-        LM_PC_Lending_Facility_v1 lendingFacility =
-            LM_PC_Lending_Facility_v1(lendingFacilityAddress);
+        LM_PC_Lending_Facility_v1_Exposed lendingFacility =
+            LM_PC_Lending_Facility_v1_Exposed(lendingFacilityAddress);
 
         // Grant lending facility manager role
         lendingFacility.grantModuleRole(
@@ -259,11 +277,14 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
         {
             // Approve issuance tokens for the lending facility
             issuanceToken.approve(address(lendingFacility), type(uint).max);
-
+            uint fundingManagerBalanceBefore =
+                token.balanceOf(address(fundingManager));
+            uint borrowFee =
+                lendingFacility.exposed_calculateDynamicBorrowingFee(
+                    borrowAmount
+                );
             // Borrow collateral tokens
             uint loanId = lendingFacility.borrow(borrowAmount);
-            console2.log("Loan ID created:", loanId);
-
             // Verify loan details
             ILM_PC_Lending_Facility_v1.Loan memory loan =
                 lendingFacility.getLoan(loanId);
@@ -274,20 +295,25 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
             assertTrue(loan.isActive);
 
             // Verify borrower received collateral tokens
-            assertEq(token.balanceOf(borrower1), borrowAmount);
-
+            assertEq(token.balanceOf(borrower1), borrowAmount - borrowFee);
             // Verify locked issuance tokens
             assertGt(lendingFacility.getLockedIssuanceTokens(borrower1), 0);
             assertEq(
                 lendingFacility.getOutstandingLoan(borrower1), borrowAmount
             );
+            //Verify funding manager balance
+            //balance of funding manager should be the balance before minus the borrow amount plus the borrow fee
+            assertEq(
+                token.balanceOf(address(fundingManager)),
+                fundingManagerBalanceBefore - borrowAmount + borrowFee
+            );
         }
         vm.stopPrank();
 
         //--------------------------------------------------------------------------------
-        // Test 5: Repayment
+        // Test 4: Repayment
 
-        console2.log("=== Test 5: Repayment ===");
+        console2.log("=== Test 4: Repayment ===");
 
         vm.startPrank(borrower1);
         {
@@ -298,9 +324,12 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
             // Calculate repayment amount
             uint repaymentAmount =
                 lendingFacility.calculateLoanRepaymentAmount(loanId);
-            console2.log("Repayment amount required:", repaymentAmount);
-
+            uint issuanceTokenLocked =
+                lendingFacility.getLockedIssuanceTokens(borrower1);
+            uint issuanceTokenBalanceBefore = issuanceToken.balanceOf(borrower1);
             // Approve and repay
+            uint currentCollateralBalance = token.balanceOf(borrower1);
+            token.mint(borrower1, repaymentAmount - currentCollateralBalance);
             token.approve(address(lendingFacility), repaymentAmount);
             lendingFacility.repay(loanId, repaymentAmount);
 
@@ -312,6 +341,67 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
             // Verify issuance tokens are unlocked
             assertEq(lendingFacility.getLockedIssuanceTokens(borrower1), 0);
             assertEq(lendingFacility.getOutstandingLoan(borrower1), 0);
+
+            // Verify issuance tokens were returned to the borrower
+            uint issuanceTokenBalanceAfter = issuanceToken.balanceOf(borrower1);
+            uint issuanceTokenUnlocked =
+                issuanceTokenBalanceAfter - issuanceTokenBalanceBefore;
+            assertEq(issuanceTokenUnlocked, issuanceTokenLocked);
+        }
+        vm.stopPrank();
+
+        //--------------------------------------------------------------------------------
+        // Test 5: Buy and Borrow -- borrow
+
+        console2.log("=== Test 5: Buy and Borrow ===");
+
+        vm.startPrank(borrower2);
+        {
+            uint userBalanceBefore = token.balanceOf(borrower2);
+            uint fundingManagerBalanceBefore =
+                token.balanceOf(address(fundingManager));
+
+            // Mint tokens to borrower2
+            token.mint(borrower2, 50 ether);
+
+            // Approve tokens for lending facility
+            token.approve(address(lendingFacility), type(uint).max);
+
+            // Buy and borrow
+            lendingFacility.buyAndBorrow(50 ether, 5);
+
+            // Calculate actual fees
+            uint userBalanceAfter = token.balanceOf(borrower2);
+            uint fundingManagerBalanceAfter =
+                token.balanceOf(address(fundingManager));
+
+            uint totalOutstandingLoan =
+                lendingFacility.getOutstandingLoan(borrower2);
+
+            // Calculate fees
+            uint collateralDeposited = 50 ether;
+            uint collateralReceived = userBalanceAfter - userBalanceBefore;
+            // Total Fees Paid = buyFee + borrowFee
+            uint totalFeesPaid = collateralDeposited - collateralReceived;
+            uint fundingManagerBalanceChange =
+                fundingManagerBalanceAfter - fundingManagerBalanceBefore;
+            assertEq(totalFeesPaid, fundingManagerBalanceChange);
+        }
+        vm.stopPrank();
+
+        // Test 5: Buy and Borrow -- repay
+        vm.startPrank(borrower2);
+        {
+            uint[] memory loanIds = lendingFacility.getUserLoanIds(borrower2);
+            uint loanId = loanIds[0];
+            uint totalOutstandingLoan =
+                lendingFacility.getOutstandingLoan(borrower2);
+            token.mint(borrower2, totalOutstandingLoan);
+            token.approve(address(lendingFacility), totalOutstandingLoan);
+            // Repay
+            lendingFacility.repay(loanId, totalOutstandingLoan);
+            assertEq(lendingFacility.getOutstandingLoan(borrower2), 0);
+            assertEq(lendingFacility.getLockedIssuanceTokens(borrower2), 0);
         }
         vm.stopPrank();
 

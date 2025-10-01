@@ -31,7 +31,8 @@ import {LM_PC_RecurringPayments_v2} from "@lm/LM_PC_RecurringPayments_v2.sol";
 import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
-import {LM_PC_Lending_Facility_v1} from "@lm/LM_PC_Lending_Facility_v1.sol";
+import {LM_PC_Lending_Facility_v1_Exposed} from
+    "test/mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
@@ -985,7 +986,7 @@ contract E2EModuleRegistry is Test {
 
     // LM_PC_Lending_Facility_v1
 
-    LM_PC_Lending_Facility_v1 lendingFacilityImpl;
+    LM_PC_Lending_Facility_v1_Exposed lendingFacilityImpl;
 
     InverterBeacon_v1 lendingFacilityBeacon;
     
@@ -999,7 +1000,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpLM_PC_Lending_Facility_v1() internal {
         // Deploy module implementations.
-        lendingFacilityImpl = new LM_PC_Lending_Facility_v1();
+        lendingFacilityImpl = new LM_PC_Lending_Facility_v1_Exposed();
 
         // Deploy module beacons.
         lendingFacilityBeacon = new InverterBeacon_v1(
