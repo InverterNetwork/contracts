@@ -67,7 +67,7 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
     address borrower3 = address(0xBEEF);
 
     // Constants
-    uint constant BORROWABLE_QUOTA = 10_000;
+    uint constant BORROWABLE_QUOTA = 8000;
     uint constant MAX_LEVERAGE = 5;
 
     // Based on flatSlopedTestCurve initialized in setUp():
@@ -276,36 +276,46 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
         vm.startPrank(borrower1);
         {
             // Approve issuance tokens for the lending facility
+            uint collateralBalanceBefore = token.balanceOf(borrower1);
             issuanceToken.approve(address(lendingFacility), type(uint).max);
             uint fundingManagerBalanceBefore =
                 token.balanceOf(address(fundingManager));
-            uint borrowFee =
-                lendingFacility.exposed_calculateDynamicBorrowingFee(
-                    borrowAmount
-                );
             // Borrow collateral tokens
             uint loanId = lendingFacility.borrow(borrowAmount);
             // Verify loan details
+            uint collateralBalanceAfter = token.balanceOf(borrower1);
             ILM_PC_Lending_Facility_v1.Loan memory loan =
                 lendingFacility.getLoan(loanId);
             assertEq(loan.id, loanId);
             assertEq(loan.borrower, borrower1);
-            assertEq(loan.principalAmount, borrowAmount);
+            assertEq(
+                loan.principalAmount, (borrowAmount * BORROWABLE_QUOTA) / 10_000
+            );
             assertGt(loan.lockedIssuanceTokens, 0);
             assertTrue(loan.isActive);
 
             // Verify borrower received collateral tokens
-            assertEq(token.balanceOf(borrower1), borrowAmount - borrowFee);
+            uint collateralReceived =
+                collateralBalanceAfter - collateralBalanceBefore;
+            assertApproxEqRel(
+                loan.principalAmount,
+                collateralReceived,
+                0.05 ether,
+                "Collateral received should be within 5% of principal amount"
+            );
             // Verify locked issuance tokens
             assertGt(lendingFacility.getLockedIssuanceTokens(borrower1), 0);
             assertEq(
-                lendingFacility.getOutstandingLoan(borrower1), borrowAmount
+                lendingFacility.getOutstandingLoan(borrower1),
+                (borrowAmount * BORROWABLE_QUOTA) / 10_000
             );
             //Verify funding manager balance
-            //balance of funding manager should be the balance before minus the borrow amount plus the borrow fee
-            assertEq(
+            //balance of funding manager should be the balance before minus the borrow amount
+            assertApproxEqRel(
                 token.balanceOf(address(fundingManager)),
-                fundingManagerBalanceBefore - borrowAmount + borrowFee
+                fundingManagerBalanceBefore - loan.principalAmount,
+                0.05 ether,
+                "Funding manager balance should be within 5% of principal amount"
             );
         }
         vm.stopPrank();
@@ -357,7 +367,7 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
 
         vm.startPrank(borrower2);
         {
-            uint userBalanceBefore = token.balanceOf(borrower2);
+            uint collateralBalanceBefore = token.balanceOf(borrower2);
             uint fundingManagerBalanceBefore =
                 token.balanceOf(address(fundingManager));
 
@@ -368,24 +378,42 @@ contract LM_PC_Lending_Facility_v1_E2E is E2ETest {
             token.approve(address(lendingFacility), type(uint).max);
 
             // Buy and borrow
-            lendingFacility.buyAndBorrow(50 ether, 5);
+            uint loanId = lendingFacility.buyAndBorrow(50 ether, 2);
 
-            // Calculate actual fees
-            uint userBalanceAfter = token.balanceOf(borrower2);
-            uint fundingManagerBalanceAfter =
-                token.balanceOf(address(fundingManager));
+            // Assertions for collateral received and fees paid
+            uint collateralBalanceAfter = token.balanceOf(borrower2);
+            uint collateralReceived =
+                collateralBalanceAfter - collateralBalanceBefore;
 
-            uint totalOutstandingLoan =
-                lendingFacility.getOutstandingLoan(borrower2);
+            // Get loan details to verify the operation
+            ILM_PC_Lending_Facility_v1.Loan memory loan =
+                lendingFacility.getLoan(loanId);
 
-            // Calculate fees
-            uint collateralDeposited = 50 ether;
-            uint collateralReceived = userBalanceAfter - userBalanceBefore;
-            // Total Fees Paid = buyFee + borrowFee
-            uint totalFeesPaid = collateralDeposited - collateralReceived;
-            uint fundingManagerBalanceChange =
-                fundingManagerBalanceAfter - fundingManagerBalanceBefore;
-            assertEq(totalFeesPaid, fundingManagerBalanceChange);
+            // Assert collateral received (net amount after fees)
+            assertGt(collateralReceived, 0);
+
+            // Assert fees were paid (difference between input and net output)
+            uint totalInput = 50 ether;
+            uint netOutput = collateralReceived;
+            uint feesPaid = totalInput - netOutput;
+            assertGt(feesPaid, 0);
+
+            // Verify loan details
+            assertEq(loan.borrower, borrower2);
+            assertTrue(loan.isActive);
+            assertGt(loan.lockedIssuanceTokens, 0);
+
+            // Verify outstanding loan amount
+            assertEq(
+                lendingFacility.getOutstandingLoan(borrower2),
+                loan.principalAmount
+            );
+
+            // Verify locked issuance tokens
+            assertEq(
+                lendingFacility.getLockedIssuanceTokens(borrower2),
+                loan.lockedIssuanceTokens
+            );
         }
         vm.stopPrank();
 

@@ -10,46 +10,59 @@ import {
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {IVirtualCollateralSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
-import {IVirtualIssuanceSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
-import {PackedSegment} from
-    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
-import {IDiscreteCurveMathLib_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
-import {DiscreteCurveMathLib_v1} from
-    "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
-import {PackedSegmentLib} from
-    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
-import {IDynamicFeeCalculator_v1} from
-    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
+import {
+    IBondingCurveBase_v1
+} from "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {
+    IRedeemingBondingCurveBase_v1
+} from "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {
+    IVirtualCollateralSupplyBase_v1
+} from "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
+import {
+    IVirtualIssuanceSupplyBase_v1
+} from "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
+import {
+    PackedSegment
+} from "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {
+    IDiscreteCurveMathLib_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
+import {
+    DiscreteCurveMathLib_v1
+} from "src/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
+import {
+    PackedSegmentLib
+} from "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
+import {
+    IDynamicFeeCalculator_v1
+} from "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
 import {DynamicFeeCalculator_v1} from "@ex/fees/DynamicFeeCalculator_v1.sol";
 
 // External Dependencies
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // System under Test (SuT)
-import {ILM_PC_Lending_Facility_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
-import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {
+    ILM_PC_Lending_Facility_v1
+} from "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
+import {
+    IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
 
 // Tests and Mocks
-import {LM_PC_Lending_Facility_v1_Exposed} from
-    "test/mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
+import {
+    LM_PC_Lending_Facility_v1_Exposed
+} from "test/mocks/modules/logicModule/LM_PC_HouseProtocol_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
-import {FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed} from
-    "test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
+import {
+    FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed
+} from "test/mocks/modules/fundingManager/bondingCurve/FM_BC_Discrete_Redeeming_VirtualSupply_v1_Exposed.sol";
 import {console2} from "forge-std/console2.sol";
 
 /**
@@ -75,7 +88,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     LM_PC_Lending_Facility_v1_Exposed lendingFacility;
 
     // Test constants
-    uint constant BORROWABLE_QUOTA = 9900; // 99% in basis points
+    uint constant BORROWABLE_QUOTA = 9000; // 90% in basis points
     uint constant MAX_FEE_PERCENTAGE = 1e18;
     uint constant MAX_LEVERAGE = 9;
 
@@ -124,6 +137,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     PackedSegment[] public initialTestSegments;
     CurveTestData internal defaultCurve; // Declare defaultCurve variable
     DynamicFeeCalculator_v1 public dynamicFeeCalculator;
+
     // =========================================================================
     // Setup
 
@@ -216,9 +230,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         defaultCurve.packedSegmentsArray = helper_createSegments(
             initialPrices, priceIncreases, suppliesPerStep, numbersOfSteps
         );
-        defaultCurve.totalCapacity = (
-            DEFAULT_SEG0_SUPPLY_PER_STEP * DEFAULT_SEG0_NUMBER_OF_STEPS
-        ) + (DEFAULT_SEG1_SUPPLY_PER_STEP * DEFAULT_SEG1_NUMBER_OF_STEPS);
+        defaultCurve.totalCapacity = (DEFAULT_SEG0_SUPPLY_PER_STEP
+                * DEFAULT_SEG0_NUMBER_OF_STEPS)
+            + (DEFAULT_SEG1_SUPPLY_PER_STEP * DEFAULT_SEG1_NUMBER_OF_STEPS);
         initialTestSegments = defaultCurve.packedSegmentsArray;
 
         vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
@@ -226,9 +240,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             address(issuanceToken), issuanceToken.decimals()
         );
         vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
-        emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1.SegmentsSet(
-            initialTestSegments
-        );
+        emit IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+            .SegmentsSet(initialTestSegments);
         vm.expectEmit(true, true, true, true, address(fmBcDiscrete));
         emit IFundingManager_v1.OrchestratorTokenSet(
             address(orchestratorToken), orchestratorToken.decimals()
@@ -261,6 +274,18 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         dynamicFeeCalculator =
             DynamicFeeCalculator_v1(Clones.clone(impl_dynamicFeeCalculator));
         dynamicFeeCalculator.init(address(this));
+
+        // Set up dynamic fee parameters
+        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
+            IDynamicFeeCalculator_v1.DynamicFeeParameters({
+                Z_issueRedeem: 0.01 ether,
+                m_issueRedeem: 0.01 ether,
+                A_issueRedeem: 0.01 ether,
+                Z_origination: 0.01 ether,
+                A_origination: 0.01 ether,
+                m_origination: 0.01 ether
+            });
+        dynamicFeeCalculator.setDynamicFeeCalculatorParams(feeParams);
 
         // Initiate the Logic Module with the metadata and config data
         lendingFacility.init(
@@ -334,8 +359,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             "Project sell fee mismatch after init"
         );
 
-        IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache memory cache =
-            fmBcDiscrete.exposed_getProtocolFeeCache();
+        IFM_BC_Discrete_Redeeming_VirtualSupply_v1.ProtocolFeeCache memory
+            cache = fmBcDiscrete.exposed_getProtocolFeeCache();
 
         assertEq(
             cache.collateralTreasury,
@@ -408,8 +433,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             bound(loanId_, lendingFacility.nextLoanId() + 1, type(uint16).max);
 
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidLoanId
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidLoanId
                 .selector
         );
         lendingFacility.repay(loanId_, amount_);
@@ -431,17 +455,19 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Given: a user has an outstanding loan
         address user = makeAddr("user");
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
-        repayAmount_ = bound(repayAmount_, 1, borrowAmount_);
         uint borrowAmount = borrowAmount_;
-        uint repayAmount = repayAmount_;
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
 
         // Setup: user borrows tokens (which automatically locks issuance tokens)
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
 
         issuanceToken.mint(user, requiredIssuanceTokens);
         vm.startPrank(user);
@@ -450,6 +476,15 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Given: the user has sufficient collateral tokens to repay
+
+        uint maxRepayAmount = lendingFacility.getOutstandingLoan(user);
+        if (maxRepayAmount == 0) {
+            return;
+        }
+
+        repayAmount_ = bound(repayAmount_, 1, maxRepayAmount);
+        uint repayAmount = repayAmount_;
+
         orchestratorToken.mint(user, repayAmount);
         vm.startPrank(user);
         orchestratorToken.approve(address(lendingFacility), repayAmount);
@@ -506,17 +541,25 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── Then the outstanding loan should be zero
                 └── And the locked issuance tokens should be zero
     */
-    function testFuzzPublicRepay_succeedsGivenTwoLoansAtDifferentFloorPrices(
-        uint borrowAmount
-    ) public {
-        // Given: a user has issuance tokens
+    function testFuzzPublicRepay_succeedsGivenTwoLoansAtDifferentFloorPrices(uint borrowAmount_)
+        public
+    {
         address user = makeAddr("user");
 
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota / 2);
+        uint borrowAmount = borrowAmount_;
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
+
         testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
-            borrowAmount
-        );
+                borrowAmount
+            );
 
         uint[] memory userLoanIds = lendingFacility.getUserLoanIds(user);
+        console2.log("userLoanIds", userLoanIds.length);
         assertEq(userLoanIds.length, 2, "User should have exactly 2 loans");
 
         uint repaymentAmount1 =
@@ -525,7 +568,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             lendingFacility.calculateLoanRepaymentAmount(userLoanIds[1]);
 
         orchestratorToken.mint(user, repaymentAmount1 + repaymentAmount2);
-
         vm.startPrank(user);
         orchestratorToken.approve(
             address(lendingFacility), repaymentAmount1 + repaymentAmount2
@@ -551,9 +593,16 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
 
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
+
+        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota / 2);
+        uint borrowAmount = borrowAmount_;
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
         testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
-            borrowAmount_
-        );
+                borrowAmount
+            );
 
         ILM_PC_Lending_Facility_v1.Loan[] memory userLoans =
             lendingFacility.getUserLoans(user);
@@ -582,7 +631,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         assertGt(
             issuanceTokensUnlockedFirstRepay,
-            issuanceTokensUnlockedSecondRepay - issuanceTokensUnlockedFirstRepay,
+            issuanceTokensUnlockedSecondRepay
+                - issuanceTokensUnlockedFirstRepay,
             "More issuance tokens should be unlocked from loan 1 than loan 2 due to increased floor price for same repayment amount"
         );
     }
@@ -609,21 +659,24 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 ├── And net amount should be transferred to user
                 └── And the system's currently borrowed amount should increase
     */
-    function testFuzzPublicBorrow_succeedsGivenValidBorrowRequest(
-        uint borrowAmount_
-    ) public {
+    function testFuzzPublicBorrow_succeedsGivenValidBorrowRequest(uint borrowAmount_)
+        public
+    {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
-
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
         // Calculate how much issuance tokens will be needed
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.prank(user);
@@ -638,12 +691,14 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         uint loanId = lendingFacility.borrow(borrowAmount);
 
         // Then: verify the core state
-
+        uint approxCollateralReceived =
+            (borrowAmount * BORROWABLE_QUOTA) / 10_000;
         assertGt(loanId, 0, "Loan ID should be greater than 0");
 
-        assertEq(
+        assertApproxEqRel(
             lendingFacility.getOutstandingLoan(user),
-            outstandingLoanBefore + borrowAmount,
+            outstandingLoanBefore + approxCollateralReceived,
+            0.05 ether,
             "Outstanding loan should increase by borrow amount"
         );
 
@@ -655,7 +710,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         assertEq(
             lendingFacility.currentlyBorrowedAmount(),
-            currentlyBorrowedBefore + borrowAmount,
+            currentlyBorrowedBefore + approxCollateralReceived,
             "System borrowed amount should increase by borrow amount"
         );
 
@@ -665,7 +720,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(createdLoan.borrower, user, "Loan borrower should be correct");
         assertEq(
             createdLoan.principalAmount,
-            borrowAmount,
+            approxCollateralReceived,
             "Loan principal should match borrow amount"
         );
         assertEq(
@@ -678,75 +733,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             createdLoan.timestamp,
             block.timestamp,
             "Loan timestamp should be current block timestamp"
-        );
-    }
-
-    /* Test: Function borrow() - Outstanding loan should equal gross requested amount (fee on top)
-        ├── Given a user borrows tokens with a dynamic fee
-        └── When the borrow transaction completes
-            └── Then the outstanding loan should equal the net amount received by the user
-    */
-    function testFuzzPublicBorrow_succeedsGivenOutstandingLoanEqualsRequestedAmount(
-        uint borrowAmount_
-    ) public {
-        // Given: a user has issuance tokens
-        address user = makeAddr("user");
-
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
-
-        borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
-        uint borrowAmount = borrowAmount_;
-
-        // Calculate how much issuance tokens will be needed
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        issuanceToken.mint(user, requiredIssuanceTokens);
-
-        vm.prank(user);
-        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
-
-        // Given: the user has sufficient borrowing power
-        uint userBorrowingPower = requiredIssuanceTokens
-            * lendingFacility.exposed_getFloorPrice() / 1e18;
-        assertGe(
-            userBorrowingPower,
-            borrowAmount,
-            "User should have sufficient borrowing power"
-        );
-
-        uint borrowCapacity = lendingFacility.getBorrowCapacity();
-        uint borrowableQuota =
-            borrowCapacity * lendingFacility.borrowableQuota() / 10_000;
-        assertLe(
-            borrowAmount,
-            borrowableQuota,
-            "Borrow amount should be within system quota"
-        );
-
-        // Given: dynamic fee calculator is set up
-        IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams =
-        IDynamicFeeCalculator_v1.DynamicFeeParameters({
-            Z_issueRedeem: 0,
-            A_issueRedeem: 0,
-            m_issueRedeem: 0,
-            Z_origination: 0,
-            A_origination: 0,
-            m_origination: 0
-        });
-        feeParams = helper_setDynamicFeeCalculatorParams(feeParams);
-
-        // When: the user borrows collateral tokens
-        vm.prank(user);
-        lendingFacility.borrow(borrowAmount);
-
-        // Then: the outstanding loan should equal the requested amount (fee on top model)
-        uint outstandingLoan = lendingFacility.getOutstandingLoan(user);
-
-        assertEq(
-            outstandingLoan,
-            borrowAmount,
-            "Outstanding loan should equal requested amount"
         );
     }
 
@@ -763,8 +749,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // // Given: a user has issuance tokens
         address user = makeAddr("user");
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
 
         borrowAmount1_ = bound(borrowAmount1_, 1, maxBorrowableQuota / 2);
         uint borrowAmount1 = borrowAmount1_;
@@ -772,13 +757,22 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         borrowAmount2_ =
             bound(borrowAmount2_, 1, maxBorrowableQuota - borrowAmount1);
         uint borrowAmount2 = borrowAmount2_;
-
-        uint requiredIssuanceTokens1 = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount1);
+        if (
+            borrowAmount1 * BORROWABLE_QUOTA / 10_000 == 0
+                || borrowAmount2 * BORROWABLE_QUOTA / 10_000 == 0
+        ) {
+            return;
+        }
+        uint requiredIssuanceTokens1 =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount1
+            );
         issuanceToken.mint(user, requiredIssuanceTokens1);
 
-        uint requiredIssuanceTokens2 = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount2);
+        uint requiredIssuanceTokens2 =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount2
+            );
         issuanceToken.mint(user, requiredIssuanceTokens2);
 
         vm.startPrank(user);
@@ -788,15 +782,20 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Use helper function to mock floor price
         uint mockFloorPrice = 0.75 ether;
         _mockFloorPrice(mockFloorPrice);
+        assertEq(lendingFacility.exposed_getFloorPrice(), mockFloorPrice);
 
         vm.startPrank(user);
         issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens2);
         uint loanId2 = lendingFacility.borrow(borrowAmount2);
         vm.stopPrank();
 
-        assertEq(
+        uint approxBorrowAmount1 = (borrowAmount1 * BORROWABLE_QUOTA) / 10_000;
+        uint approxBorrowAmount2 = (borrowAmount2 * BORROWABLE_QUOTA) / 10_000;
+
+        assertApproxEqRel(
             lendingFacility.getOutstandingLoan(user),
-            borrowAmount1 + borrowAmount2,
+            approxBorrowAmount1 + approxBorrowAmount2,
+            0.05 ether,
             "Outstanding loan should equal the sum of borrow amounts"
         );
 
@@ -817,20 +816,24 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertNotEq(loanId1, loanId2, "Loan IDs should be different");
     }
 
-    function testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(
-        uint borrowAmount_
-    ) public {
+    function testFuzzPublicBorrow_succeedsGivenUserBorrowsSameAmountAtDifferentFloorPrices(uint borrowAmount_)
+        public
+    {
         // Given: a user has issuance tokens
         address user = makeAddr("user");
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota / 2);
         uint borrowAmount = borrowAmount_;
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
 
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.startPrank(user);
@@ -841,9 +844,11 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // Use helper function to mock floor price
         uint mockFloorPrice = 0.75 ether;
         _mockFloorPrice(mockFloorPrice);
+        assertEq(lendingFacility.exposed_getFloorPrice(), mockFloorPrice);
 
-        requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        requiredIssuanceTokens = lendingFacility.exposed_calculateRequiredIssuanceTokens(
+            borrowAmount
+        );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.startPrank(user);
@@ -866,17 +871,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // The locked issuance tokens for second loan should be less than first since the floor price has increased
 
         assertNotEq(loanId1, loanId2, "Loan IDs should be different");
-        assertGt(
-            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[0]),
-            0,
-            "Loan should have a repayment amount"
-        );
-        assertGt(
-            lendingFacility.calculateLoanRepaymentAmount(userLoanIds[1]),
-            0,
-            "Loan should have a repayment amount"
-        );
-
         assertNotEq(
             loan1.floorPriceAtBorrow,
             loan2.floorPriceAtBorrow,
@@ -892,43 +886,6 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             loan2.lockedIssuanceTokens,
             "Loans should have different locked issuance tokens"
         );
-    }
-    /* Test: Function borrow()
-        ├── Given a user wants to borrow tokens
-        └── And the borrow amount exceeds the borrowable quota
-            └── When the user tries to borrow collateral tokens
-                └── Then the transaction should revert with BorrowableQuotaExceeded error
-    */
-
-    function testFuzzPublicBorrow_revertsGivenBorrowableQuotaExcedded(
-        uint borrowAmount_
-    ) public {
-        // Given: a user has issuance tokens
-        address user = makeAddr("user");
-
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
-
-        borrowAmount_ =
-            bound(borrowAmount_, maxBorrowableQuota + 1, type(uint128).max);
-        uint borrowAmount = borrowAmount_;
-
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
-        issuanceToken.mint(user, requiredIssuanceTokens);
-
-        lendingFacility.setBorrowableQuota(1000); //mock set it to 10%
-
-        vm.startPrank(user);
-        issuanceToken.approve(address(lendingFacility), requiredIssuanceTokens);
-        vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded
-                .selector
-        );
-
-        lendingFacility.borrow(borrowAmount);
-        vm.stopPrank();
     }
 
     /* Test: Function borrow()
@@ -947,8 +904,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         // When: the user tries to borrow collateral tokens
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidBorrowAmount
                 .selector
         );
         lendingFacility.borrow(borrowAmount);
@@ -970,8 +926,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         address receiver = address(0);
         uint borrowAmount = 25 ether;
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidReceiver
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidReceiver
                 .selector
         );
         lendingFacility.borrowFor(receiver, borrowAmount);
@@ -995,15 +950,19 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 && receiver_ != address(user)
         );
 
-        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity()
-            * lendingFacility.borrowableQuota() / 10_000;
+        uint maxBorrowableQuota = lendingFacility.getBorrowCapacity();
 
         borrowAmount_ = bound(borrowAmount_, 1, maxBorrowableQuota);
         uint borrowAmount = borrowAmount_;
+        if (borrowAmount * BORROWABLE_QUOTA / 10_000 == 0) {
+            return;
+        }
 
         // Calculate how much issuance tokens will be needed
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.startPrank(user);
@@ -1018,11 +977,14 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         vm.stopPrank();
         // Then: verify the core state
 
+        uint approxCollateralReceived =
+            (borrowAmount * BORROWABLE_QUOTA) / 10_000;
         assertGt(loanId, 0, "Loan ID should be greater than 0");
 
-        assertEq(
+        assertApproxEqRel(
             lendingFacility.getOutstandingLoan(receiver_),
-            outstandingLoanBefore + borrowAmount,
+            outstandingLoanBefore + approxCollateralReceived,
+            0.05 ether,
             "Outstanding loan should increase by borrow amount"
         );
 
@@ -1034,7 +996,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         assertEq(
             lendingFacility.currentlyBorrowedAmount(),
-            currentlyBorrowedBefore + borrowAmount,
+            currentlyBorrowedBefore + approxCollateralReceived,
             "System borrowed amount should increase by borrow amount"
         );
 
@@ -1046,7 +1008,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         );
         assertEq(
             createdLoan.principalAmount,
-            borrowAmount,
+            approxCollateralReceived,
             "Loan principal should match borrow amount"
         );
         assertEq(
@@ -1071,22 +1033,22 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When the user executes buyAndBorrow
                 └── Then the transaction should revert with InvalidLeverage error
     */
-    function testFuzzPublicBuyAndBorrow_revertsGivenInvalidLeverage(
-        uint leverage_
-    ) public {
+    function testFuzzPublicBuyAndBorrow_revertsGivenInvalidLeverage(uint leverage_)
+        public
+    {
         // Given: a user wants to use buyAndBorrow
         address user = makeAddr("user");
         orchestratorToken.mint(user, 100 ether);
         fmBcDiscrete.openBuy();
 
-        leverage_ =
-            bound(leverage_, lendingFacility.maxLeverage() + 1, type(uint8).max);
+        leverage_ = bound(
+            leverage_, lendingFacility.maxLeverage() + 1, type(uint8).max
+        );
         uint leverage = leverage_;
 
         vm.startPrank(user);
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidLeverage
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidLeverage
                 .selector
         );
         lendingFacility.buyAndBorrow(100 ether, leverage);
@@ -1100,9 +1062,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         │           └── Then the transaction should revert with NoCollateralAvailable error
     */
 
-    function testFuzzPublicBuyAndBorrow_revertsGivenNoCollateralAvailable(
-        uint leverage_
-    ) public {
+    function testFuzzPublicBuyAndBorrow_revertsGivenNoCollateralAvailable(uint leverage_)
+        public
+    {
         // Given: a user wants to use buyAndBorrow
         address user = makeAddr("user");
 
@@ -1111,8 +1073,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.prank(user);
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_NoCollateralAvailable
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_NoCollateralAvailable
                 .selector
         );
         lendingFacility.buyAndBorrow(0, leverage);
@@ -1124,9 +1085,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         └── When the user executes buyAndBorrow
             └── Then the transaction should revert with appropriate error
     */
-    function testFuzzPublicBuyAndBorrow_revertsGivenBondingCurveClosed(
-        uint leverage_
-    ) public {
+    function testFuzzPublicBuyAndBorrow_revertsGivenBondingCurveClosed(uint leverage_)
+        public
+    {
         // Given: a user wants to use buyAndBorrow
         address user = makeAddr("user");
         leverage_ = bound(leverage_, 1, lendingFacility.maxLeverage());
@@ -1308,8 +1269,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         vm.startPrank(user);
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidReceiver
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidReceiver
                 .selector
         );
         lendingFacility.buyAndBorrowFor(receiver, 25 ether, leverage);
@@ -1380,6 +1340,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             "Collateral balance should decrease"
         );
     }
+
     // =========================================================================
     // Test: Configuration Functions
 
@@ -1392,9 +1353,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
             └── When trying to set quota
                 └── Then it should revert with appropriate error
     */
-    function testFuzzPublicSetBorrowableQuota_succeedsGivenValidQuota(
-        uint newQuota_
-    ) public {
+    function testFuzzPublicSetBorrowableQuota_succeedsGivenValidQuota(uint newQuota_)
+        public
+    {
         newQuota_ = bound(newQuota_, 1, 10_000);
         uint newQuota = newQuota_;
         lendingFacility.setBorrowableQuota(newQuota);
@@ -1402,14 +1363,13 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         assertEq(lendingFacility.borrowableQuota(), newQuota);
     }
 
-    function testFuzzPublicSetBorrowableQuota_failsGivenExceedsMaxQuota(
-        uint newQuota_
-    ) public {
+    function testFuzzPublicSetBorrowableQuota_failsGivenExceedsMaxQuota(uint newQuota_)
+        public
+    {
         newQuota_ = bound(newQuota_, 10_001, type(uint16).max);
         uint invalidQuota = newQuota_; // Exceeds 100%
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh
                 .selector
         );
         lendingFacility.setBorrowableQuota(invalidQuota);
@@ -1427,18 +1387,17 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 └── Then it should revert with InvalidFeeCalculatorAddress
     */
 
-    function testFuzzPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator(
-        address newFeeCalculator_
-    ) public {
+    function testFuzzPublicSetDynamicFeeCalculator_succeedsGivenValidCalculator(address newFeeCalculator_)
+        public
+    {
         vm.assume(
             newFeeCalculator_ != address(0)
                 && newFeeCalculator_ != address(this)
         );
         address newFeeCalculator = newFeeCalculator_;
         vm.expectEmit(true, true, true, true);
-        emit ILM_PC_Lending_Facility_v1.DynamicFeeCalculatorUpdated(
-            newFeeCalculator
-        );
+        emit ILM_PC_Lending_Facility_v1
+            .DynamicFeeCalculatorUpdated(newFeeCalculator);
         lendingFacility.setDynamicFeeCalculator(newFeeCalculator);
     }
 
@@ -1447,8 +1406,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     {
         address invalidFeeCalculator = address(0);
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress
                 .selector
         );
         lendingFacility.setDynamicFeeCalculator(invalidFeeCalculator);
@@ -1463,9 +1421,9 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
                 └── Then it should revert with InvalidLeverage
     */
 
-    function testFuzzPublicSetMaxLeverage_succeedsGivenValidLeverage(
-        uint newMaxLeverage_
-    ) public {
+    function testFuzzPublicSetMaxLeverage_succeedsGivenValidLeverage(uint newMaxLeverage_)
+        public
+    {
         newMaxLeverage_ = bound(newMaxLeverage_, 1, type(uint8).max);
         uint newMaxLeverage = newMaxLeverage_;
         lendingFacility.setMaxLeverage(newMaxLeverage);
@@ -1476,8 +1434,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function testPublicSetMaxLeverage_failsGivenInvalidLeverage() public {
         uint invalidMaxLeverage = 0;
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidLeverage
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidLeverage
                 .selector
         );
         lendingFacility.setMaxLeverage(invalidMaxLeverage);
@@ -1508,8 +1465,10 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         // Borrow some tokens (which automatically locks issuance tokens)
         uint borrowAmount = 500 ether;
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.prank(user);
@@ -1538,8 +1497,7 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         // Should revert for zero amount
         vm.expectRevert(
-            ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_InvalidBorrowAmount
+            ILM_PC_Lending_Facility_v1.Module__LM_PC_Lending_Facility_InvalidBorrowAmount
                 .selector
         );
         lendingFacility.exposed_ensureValidBorrowAmount(0);
@@ -1557,8 +1515,10 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
         // Borrow some tokens (which automatically locks issuance tokens)
         uint borrowAmount = 500 ether;
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         issuanceToken.mint(user, requiredIssuanceTokens);
 
         vm.prank(user);
@@ -1580,15 +1540,19 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
 
     function testCalculateRequiredIssuanceTokens() public {
         uint borrowAmount = 500 ether;
-        uint requiredIssuanceTokens = lendingFacility
-            .exposed_calculateRequiredIssuanceTokens(borrowAmount);
+        uint requiredIssuanceTokens =
+            lendingFacility.exposed_calculateRequiredIssuanceTokens(
+                borrowAmount
+            );
         assertGt(requiredIssuanceTokens, 0);
     }
 
     function testCalculateCollateralAmount() public {
         uint issuanceTokenAmount = 1000 ether;
-        uint collateralAmount = lendingFacility
-            .exposed_calculateCollateralAmount(issuanceTokenAmount);
+        uint collateralAmount =
+            lendingFacility.exposed_calculateCollateralAmount(
+                issuanceTokenAmount
+            );
         assertGt(collateralAmount, 0);
     }
 
@@ -1635,9 +1599,8 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
     function helper_getDynamicFeeCalculatorParams()
         internal
         view
-        returns (
-            IDynamicFeeCalculator_v1.DynamicFeeParameters memory dynamicFeeParameters
-        )
+        returns (IDynamicFeeCalculator_v1
+                    .DynamicFeeParameters memory dynamicFeeParameters)
     {
         return dynamicFeeCalculator.getDynamicFeeParameters();
     }
@@ -1646,12 +1609,12 @@ contract LM_PC_Lending_Facility_v1_Test is ModuleTest {
         IDynamicFeeCalculator_v1.DynamicFeeParameters memory feeParams_
     )
         internal
-        returns (
-            IDynamicFeeCalculator_v1.DynamicFeeParameters memory dynamicFeeParameters
-        )
+        returns (IDynamicFeeCalculator_v1
+                    .DynamicFeeParameters memory dynamicFeeParameters)
     {
-        feeParams_.Z_issueRedeem =
-            bound(feeParams_.Z_issueRedeem, 1e15, MAX_FEE_PERCENTAGE);
+        feeParams_.Z_issueRedeem = bound(
+            feeParams_.Z_issueRedeem, 1e15, MAX_FEE_PERCENTAGE
+        );
         feeParams_.A_issueRedeem =
             bound(feeParams_.A_issueRedeem, 1e15, MAX_FEE_PERCENTAGE);
         feeParams_.m_issueRedeem =

@@ -2,8 +2,9 @@
 pragma solidity ^0.8.23;
 
 // Internal
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {
+    IOrchestrator_v1
+} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
     IERC20PaymentClientBase_v2,
     IPaymentProcessor_v2
@@ -12,26 +13,34 @@ import {
     ERC20PaymentClientBase_v2,
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
-import {ILM_PC_Lending_Facility_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
-import {IFundingManager_v1} from
-    "src/modules/fundingManager/IFundingManager_v1.sol";
-import {IFM_BC_Discrete_Redeeming_VirtualSupply_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
-import {IBondingCurveBase_v1} from
-    "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IDynamicFeeCalculator_v1} from
-    "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
-import {PackedSegment} from
-    "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
-import {PackedSegmentLib} from
-    "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
+import {
+    ILM_PC_Lending_Facility_v1
+} from "src/modules/logicModule/interfaces/ILM_PC_Lending_Facility_v1.sol";
+import {
+    IFundingManager_v1
+} from "src/modules/fundingManager/IFundingManager_v1.sol";
+import {
+    IFM_BC_Discrete_Redeeming_VirtualSupply_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Discrete_Redeeming_VirtualSupply_v1.sol";
+import {
+    IBondingCurveBase_v1
+} from "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {
+    IDynamicFeeCalculator_v1
+} from "@ex/fees/interfaces/IDynamicFeeCalculator_v1.sol";
+import {
+    PackedSegment
+} from "src/modules/fundingManager/bondingCurve/types/PackedSegment_v1.sol";
+import {
+    PackedSegmentLib
+} from "src/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-import {ERC165Upgradeable} from
-    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {
+    ERC165Upgradeable
+} from "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {console2} from "forge-std/console2.sol";
 
 /**
@@ -178,8 +187,7 @@ contract LM_PC_Lending_Facility_v1 is
             !_loans[loanId_].isActive
                 || _loans[loanId_].borrower != _msgSender()
         ) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidLoanId();
         }
         _;
@@ -239,8 +247,7 @@ contract LM_PC_Lending_Facility_v1 is
         returns (uint loanId_)
     {
         if (receiver_ == address(0)) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidReceiver();
         }
         return _borrow(requestedLoanAmount_, receiver_, receiver_);
@@ -306,8 +313,7 @@ contract LM_PC_Lending_Facility_v1 is
         returns (uint loanId_)
     {
         if (receiver_ == address(0)) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidReceiver();
         }
         return _buyAndBorrow(amount_, leverage_, receiver_);
@@ -323,8 +329,7 @@ contract LM_PC_Lending_Facility_v1 is
         onlyLendingFacilityManager
     {
         if (newBorrowableQuota_ > _MAX_BORROWABLE_QUOTA) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_BorrowableQuotaTooHigh();
         }
         borrowableQuota = newBorrowableQuota_;
@@ -338,8 +343,7 @@ contract LM_PC_Lending_Facility_v1 is
         onlyLendingFacilityManager
     {
         if (newFeeCalculator_ == address(0)) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidFeeCalculatorAddress();
         }
         _dynamicFeeCalculator = newFeeCalculator_;
@@ -353,8 +357,7 @@ contract LM_PC_Lending_Facility_v1 is
         onlyLendingFacilityManager
     {
         if (newMaxLeverage_ < 1 || newMaxLeverage_ > type(uint8).max) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();
         }
         maxLeverage = newMaxLeverage_;
@@ -435,20 +438,17 @@ contract LM_PC_Lending_Facility_v1 is
     /// @inheritdoc ILM_PC_Lending_Facility_v1
     function getFloorLiquidityRate() external view returns (uint) {
         uint borrowCapacity = _calculateBorrowCapacity();
-        uint borrowableAmount = borrowCapacity * borrowableQuota / 10_000;
 
-        if (borrowableAmount == 0) return 0;
+        if (borrowCapacity == 0) return 0;
 
-        return ((borrowableAmount - currentlyBorrowedAmount) * 10_000)
-            / borrowableAmount;
+        // With per-user quotas, the liquidity rate is based on total capacity vs currently borrowed
+        return
+            ((borrowCapacity - currentlyBorrowedAmount) * 10_000)
+                / borrowCapacity;
     }
 
     /// @inheritdoc ILM_PC_Lending_Facility_v1
-    function getUserBorrowingPower(address user_)
-        external
-        view
-        returns (uint)
-    {
+    function getUserBorrowingPower(address user_) external view returns (uint) {
         return _calculateUserBorrowingPower(user_);
     }
 
@@ -459,8 +459,7 @@ contract LM_PC_Lending_Facility_v1 is
     /// @param amount_ The amount to validate
     function _ensureValidBorrowAmount(uint amount_) internal pure {
         if (amount_ == 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidBorrowAmount();
         }
     }
@@ -502,8 +501,8 @@ contract LM_PC_Lending_Facility_v1 is
     function _calculateBorrowCapacity() internal view returns (uint) {
         // Get the issuance token's total supply (this represents the virtual issuance supply)
         uint virtualIssuanceSupply = IERC20(
-            IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
-        ).totalSupply();
+                IBondingCurveBase_v1(_dbcFmAddress).getIssuanceToken()
+            ).totalSupply();
 
         uint pFloor = _getFloorPrice();
 
@@ -578,8 +577,7 @@ contract LM_PC_Lending_Facility_v1 is
         PackedSegment[] memory segments = dbcFm.getSegments();
 
         if (segments.length == 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_NoSegmentsConfigured();
         }
 
@@ -597,15 +595,10 @@ contract LM_PC_Lending_Facility_v1 is
         uint requiredIssuanceTokens =
             _calculateRequiredIssuanceTokens(requestedLoanAmount_);
 
-        // Check if borrowing would exceed borrowable quota
-        if (
-            currentlyBorrowedAmount + requestedLoanAmount_
-                > _calculateBorrowCapacity() * borrowableQuota / 10_000
-        ) {
-            revert
-                ILM_PC_Lending_Facility_v1
-                .Module__LM_PC_Lending_Facility_BorrowableQuotaExceeded();
-        }
+        // Calculate the actual amount the user will receive based on borrowableQuota
+        uint actualAmountToUser =
+            requestedLoanAmount_ * borrowableQuota / 10_000;
+        _ensureValidBorrowAmount(actualAmountToUser);
 
         // Lock the required issuance tokens automatically
         // Transfer Tokens only when the caller is the tokenReceiver_
@@ -616,10 +609,10 @@ contract LM_PC_Lending_Facility_v1 is
         }
         _lockedIssuanceTokens[borrower_] += requiredIssuanceTokens;
 
-        // Calculate dynamic borrowing fee
+        // Calculate dynamic borrowing fee on the actual amount to user
         uint dynamicBorrowingFee =
-            _calculateDynamicBorrowingFee(requestedLoanAmount_);
-        uint netAmountToUser = requestedLoanAmount_ - dynamicBorrowingFee;
+            _calculateDynamicBorrowingFee(actualAmountToUser);
+        uint netAmountToUser = actualAmountToUser - dynamicBorrowingFee;
 
         uint currentFloorPrice = _getFloorPrice();
         uint[] storage userLoanIds = _userLoans[borrower_];
@@ -635,21 +628,19 @@ contract LM_PC_Lending_Facility_v1 is
                     && lastLoan.floorPriceAtBorrow == currentFloorPrice
             ) {
                 // Update the existing loan
-                lastLoan.principalAmount += requestedLoanAmount_;
+                lastLoan.principalAmount += actualAmountToUser;
                 lastLoan.lockedIssuanceTokens += requiredIssuanceTokens;
-                lastLoan.remainingPrincipal += requestedLoanAmount_;
+                lastLoan.remainingPrincipal += actualAmountToUser;
                 lastLoan.timestamp = block.timestamp;
 
                 // Execute common borrowing logic
                 _executeBorrowingLogic(
-                    requestedLoanAmount_,
+                    actualAmountToUser,
                     dynamicBorrowingFee,
-                    netAmountToUser,
                     tokenReceiver_,
                     borrower_,
                     requiredIssuanceTokens,
-                    lastLoanId,
-                    currentFloorPrice
+                    lastLoanId
                 );
                 return lastLoanId;
             }
@@ -661,10 +652,10 @@ contract LM_PC_Lending_Facility_v1 is
         _loans[loanId] = Loan({
             id: loanId,
             borrower: borrower_,
-            principalAmount: requestedLoanAmount_,
+            principalAmount: actualAmountToUser,
             lockedIssuanceTokens: requiredIssuanceTokens,
             floorPriceAtBorrow: currentFloorPrice,
-            remainingPrincipal: requestedLoanAmount_,
+            remainingPrincipal: actualAmountToUser,
             timestamp: block.timestamp,
             isActive: true
         });
@@ -674,14 +665,12 @@ contract LM_PC_Lending_Facility_v1 is
 
         // Execute common borrowing logic
         _executeBorrowingLogic(
-            requestedLoanAmount_,
+            actualAmountToUser,
             dynamicBorrowingFee,
-            netAmountToUser,
             tokenReceiver_,
             borrower_,
             requiredIssuanceTokens,
-            loanId,
-            currentFloorPrice
+            loanId
         );
 
         return loanId;
@@ -698,14 +687,12 @@ contract LM_PC_Lending_Facility_v1 is
         address borrower_
     ) internal returns (uint loanId_) {
         if (leverage_ < 1 || leverage_ > maxLeverage) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_InvalidLeverage();
         }
 
         if (collateralAmount_ == 0) {
-            revert
-                ILM_PC_Lending_Facility_v1
+            revert ILM_PC_Lending_Facility_v1
                 .Module__LM_PC_Lending_Facility_NoCollateralAvailable();
         }
 
@@ -738,28 +725,26 @@ contract LM_PC_Lending_Facility_v1 is
 
             // Require minimum issuance tokens to be greater than 0
             if (minIssuanceTokensOut == 0) {
-                revert
-                    ILM_PC_Lending_Facility_v1
-                    .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived(
-                );
+                revert ILM_PC_Lending_Facility_v1
+                    .Module__LM_PC_Lending_Facility_InsufficientIssuanceTokensReceived();
             }
 
             uint issuanceBalanceBefore = _issuanceToken.balanceOf(address(this));
 
             // Buy issuance tokens from the funding manager - store in contract
-            IBondingCurveBase_v1(_dbcFmAddress).buyFor(
-                address(this), // receiver (contract instead of user)
-                collateralForThisIteration, // deposit amount
-                minIssuanceTokensOut // minimum amount out
-            );
+            IBondingCurveBase_v1(_dbcFmAddress)
+                .buyFor(
+                    address(this), // receiver (contract instead of user)
+                    collateralForThisIteration, // deposit amount
+                    minIssuanceTokensOut // minimum amount out
+                );
 
             // Get the actual amount of issuance tokens received in this iteration
             uint issuanceBalanceAfter = _issuanceToken.balanceOf(address(this));
             uint issuanceTokensReceived =
                 issuanceBalanceAfter - issuanceBalanceBefore;
             if (issuanceTokensReceived == 0) {
-                revert
-                    ILM_PC_Lending_Facility_v1
+                revert ILM_PC_Lending_Facility_v1
                     .Module__LM_PC_Lending_Facility_NoIssuanceTokensReceived();
             }
 
@@ -797,23 +782,26 @@ contract LM_PC_Lending_Facility_v1 is
 
     /// @dev Execute the common borrowing logic (transfers, state updates, events)
     function _executeBorrowingLogic(
-        uint requestedLoanAmount_,
+        uint actualAmountToUser_,
         uint dynamicBorrowingFee_,
-        uint netAmountToUser_,
         address tokenReceiver_,
         address user_,
         uint requiredIssuanceTokens_,
-        uint loanId_,
-        uint currentFloorPrice_
+        uint loanId_
     ) internal {
-        // Update state (track gross requested amount as debt; fee is paid at repayment)
-        currentlyBorrowedAmount += requestedLoanAmount_;
-        _userTotalOutstandingLoans[user_] += requestedLoanAmount_;
+        // Calculate net amount to user (actual amount minus fee)
+        uint netAmountToUser = actualAmountToUser_ - dynamicBorrowingFee_;
 
-        // Pull gross from DBC FM to this module
-        IFundingManager_v1(_dbcFmAddress).transferOrchestratorToken(
-            address(this), requestedLoanAmount_
-        );
+        // Get current floor price
+        uint currentFloorPrice = _getFloorPrice();
+
+        // Update state (track actual amount as debt; fee is paid at repayment)
+        currentlyBorrowedAmount += actualAmountToUser_;
+        _userTotalOutstandingLoans[user_] += actualAmountToUser_;
+
+        // Pull only the actual amount from DBC FM to this module
+        IFundingManager_v1(_dbcFmAddress)
+            .transferOrchestratorToken(address(this), actualAmountToUser_);
 
         // Transfer fee back to DBC FM (retained to increase base price)
         if (dynamicBorrowingFee_ > 0) {
@@ -821,12 +809,10 @@ contract LM_PC_Lending_Facility_v1 is
         }
 
         // Transfer net amount to collateral receiver
-        _collateralToken.safeTransfer(tokenReceiver_, netAmountToUser_);
+        _collateralToken.safeTransfer(tokenReceiver_, netAmountToUser);
 
         // Emit events
         emit IssuanceTokensLocked(user_, requiredIssuanceTokens_);
-        emit LoanCreated(
-            loanId_, user_, requestedLoanAmount_, currentFloorPrice_
-        );
+        emit LoanCreated(loanId_, user_, actualAmountToUser_, currentFloorPrice);
     }
 }
