@@ -342,6 +342,52 @@ contract OrchestratorFactoryV1Test is Test {
         assertEq(address(orchestrator), address(orchestrator_retry_alice));
     }
 
+    function testExternalContractDeployment() public {
+        // Prepare external contract to be deployed
+        // As this will mostly be used for IssuanceToken deployments, we will
+        // use a simple ERC20 contract.
+        bytes memory constructorArgs = abi.encode("Test Token", "TT", 18);
+        bytes memory bytecode = abi.encodePacked(
+            vm.getCode("ERC20Mock.sol:ERC20Mock"), constructorArgs
+        );
+
+        // Create encoded calls to the two function calls we want to do
+        // into a bytes array
+        address transferTarget = makeAddr("Target");
+
+        // 1. Calling the mint function with the address of the IssuanceToken
+        bytes memory mintCall = abi.encodeWithSelector(
+            ERC20Mock.mint.selector, address(factory), 100
+        );
+
+        // 2. Calling the transfer function to transfer the minted tokens
+        bytes memory transferCall = abi.encodeWithSelector(
+            ERC20Mock.transfer.selector, address(transferTarget), 100
+        );
+
+        // Assemble the calls array
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = mintCall;
+        calls[1] = transferCall;
+
+        vm.expectEmit(true, true, true, true);
+        emit IERC20.Transfer(address(0), address(factory), 100);
+
+        vm.expectEmit(true, true, true, true);
+        emit IERC20.Transfer(address(factory), address(transferTarget), 100);
+
+        address deployedAddress =
+            factory.deployExternalContract(bytecode, calls);
+
+        // Verify that the deployed contract exists and the post-deployment
+        // calls were executed
+        assertTrue(ERC20Mock(deployedAddress).balanceOf(address(factory)) == 0);
+        assertTrue(
+            ERC20Mock(deployedAddress).balanceOf(address(transferTarget)) == 100
+        );
+        assertTrue(ERC20Mock(deployedAddress).decimals() == 18);
+    }
+
     function _deployOrchestrator() private returns (address) {
         // Create Empty ModuleConfig
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs =

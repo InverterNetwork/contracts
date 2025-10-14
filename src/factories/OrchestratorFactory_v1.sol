@@ -37,6 +37,8 @@ import {
     Initializable
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
+import {Create2} from "@oz/utils/Create2.sol";
+
 /**
  * @title   Inverter Orchestrator Factory
  *
@@ -242,6 +244,18 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
+    }
+
+    /// @inheritdoc IOrchestratorFactory_v1
+    function deployExternalContract(bytes calldata code, bytes[] calldata calls)
+        external
+        returns (address deploymentAddress)
+    {
+        deploymentAddress = Create2.deploy(0, _createSalt(), code);
+        for (uint i; i < calls.length; ++i) {
+            (bool success,) = deploymentAddress.call(calls[i]);
+            require(success, "External contract deployment failed");
+        }
     }
 
     //--------------------------------------------------------------------------
