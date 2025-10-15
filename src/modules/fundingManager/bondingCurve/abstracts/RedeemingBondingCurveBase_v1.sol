@@ -236,7 +236,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         totalCollateralTokenMovedOut = collateralRedeemAmount;
 
         // Cache Collateral Token
-        IERC20 collateralToken = IFundingManager_v1(address(this)).token();
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
         uint collateralProtocolFeeAmount;
 

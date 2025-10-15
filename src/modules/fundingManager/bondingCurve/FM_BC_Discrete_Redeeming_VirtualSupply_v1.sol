@@ -390,7 +390,7 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
         (redeemAmount,,) = _calculateNetAndSplitFees(
             grossRedeemAmount,
             _protocolFeeCache.collateralFeeSellBps, // Use cached protocol fee for sell collateral
-            sellFee // Use project sellFee state variable (set in init)
+            _getSellFee()
         );
     }
 
@@ -455,11 +455,6 @@ contract FM_BC_Discrete_Redeeming_VirtualSupply_v1 is
 
     // ------------------------------------------------------------------------
     // Internal - Overrides - RedeemingBondingCurveBase_v1
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function _getSellFee() internal view virtual override returns (uint) {
-        return PROJECT_SELL_FEE_BPS;
-    }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
