@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
 import {BondingCurveBase_v1} from
@@ -148,7 +149,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Deduct protocol and project sell fee from collateral, if applicable
         (redeemAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
-            redeemAmount, collateralSellFeePercentage, sellFee
+            redeemAmount, collateralSellFeePercentage, _getSellFee()
         );
     }
 
@@ -316,5 +317,12 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _validateProjectFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
+    }
+
+    /// @dev    Returns the current sell fee. This function can be overridden by downstream
+    ///         contracts to implement dynamic fee structures.
+    /// @return uint The current sell fee in BPS.
+    function _getSellFee() internal view virtual returns (uint) {
+        return sellFee;
     }
 }

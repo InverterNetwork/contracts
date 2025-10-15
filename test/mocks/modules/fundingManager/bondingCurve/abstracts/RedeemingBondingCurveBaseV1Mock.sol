@@ -23,8 +23,12 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
+contract RedeemingBondingCurveBaseV1Mock is
+    RedeemingBondingCurveBase_v1,
+    IFundingManager_v1
+{
     IBancorFormula public formula;
+    IERC20 internal _token;
 
     // -------------------------------------------------------------------------
     // Override Functions
@@ -121,11 +125,21 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         returns (uint)
     {}
 
+    function token() public view returns (IERC20) {
+        return _token;
+    }
+
+    function transferOrchestratorToken(address to, uint amount) external {}
+
     // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
         return BPS;
+    }
+
+    function call_getSellFee() external view returns (uint) {
+        return _getSellFee();
     }
 
     function call_sellOrder(
@@ -150,5 +164,12 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     {
         return
             _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+
+    function setCollateralTokenHelper(address _collateralToken) external {
+        _token = IERC20(_collateralToken);
     }
 }
