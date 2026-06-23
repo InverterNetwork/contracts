@@ -458,11 +458,10 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         // Delete the field.
         delete _unclaimableAmountsForRecipient[client_][token_][receiver_];
 
-        // Transfer amount to treasury. Call has to succeed otherwise no state
-        // change.
-        IERC20(token_).safeTransferFrom(
-            address(this), _failedOrdersTreasury, amount
-        );
+        // Transfer amount to treasury. The module already holds these tokens
+        // (escrowed in `_tryPaymentTransfer`), so release them with
+        // `safeTransfer`. Call has to succeed otherwise no state change.
+        IERC20(token_).safeTransfer(_failedOrdersTreasury, amount);
 
         emit TokensReleased(receiver_, address(token_), amount);
         emit UnclaimableAmountClaimedToTreasury(
@@ -824,14 +823,20 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         address token_,
         address paymentReceiver_
     ) internal virtual {
-        // Copy value over.
-        uint amount =
-            _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
-        // Delete the field.
-        delete _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
+        // Balance is keyed on the caller; `paymentReceiver_` is only the
+        // destination the funds are sent to.
+        address sender = _msgSender();
 
+        // Copy value over.
+        uint amount = _unclaimableAmountsForRecipient[client_][token_][sender];
+        // Delete the field.
+        delete _unclaimableAmountsForRecipient[client_][token_][sender];
+
+        // The module already holds these tokens (escrowed in
+        // `_tryPaymentTransfer`), so release them with `safeTransfer`.
+        // `amountPaid` is not called here: it was already called on escrow.
         // Call has to succeed otherwise no state change.
-        IERC20(token_).safeTransferFrom(address(this), paymentReceiver_, amount);
+        IERC20(token_).safeTransfer(paymentReceiver_, amount);
 
         emit TokensReleased(paymentReceiver_, address(token_), amount);
     }
