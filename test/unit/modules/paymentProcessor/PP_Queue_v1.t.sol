@@ -2442,6 +2442,130 @@ contract PP_Queue_v1_Test is ModuleTest {
         }
     }
 
+    /* Test testClaimPreviouslyUnclaimable_ReleasesEscrowedFundsWithoutSelfApproval()
+        └── Given an escrowed unclaimable balance held by the module
+            └── When the recipient claims (module given NO self-allowance)
+                ├── Then the claim should succeed using safeTransfer.
+                └── Then the recipient should receive the full amount.
+    */
+    function testClaimPreviouslyUnclaimable_ReleasesEscrowedFundsWithoutSelfApproval(
+    ) public {
+        address recipient_ = makeAddr("recipient");
+        uint96 amount_ = 100;
+
+        // Escrow the funds in the module and record the unclaimable balance,
+        // keyed on the recipient. Deliberately NO `queue -> queue` approval is
+        // granted: a correct implementation uses safeTransfer and needs none.
+        _token.mint(address(queue), amount_);
+        queue.exposed_addUnclaimableOrder(
+            helper_createTestPaymentOrder(
+                recipient_, amount_, 1, address(_token)
+            ),
+            address(paymentClient)
+        );
+
+        vm.prank(recipient_);
+        queue.claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), recipient_
+        );
+
+        assertEq(
+            _token.balanceOf(recipient_),
+            amount_,
+            "Recipient should receive the escrowed tokens."
+        );
+        assertEq(
+            queue.unclaimable(
+                address(paymentClient), address(_token), recipient_
+            ),
+            0,
+            "Unclaimable balance should be cleared."
+        );
+    }
+
+    /* Test testClaimPreviouslyUnclaimable_PaysOutToReplacementReceiver()
+        └── Given a caller with an escrowed unclaimable balance
+            └── When the caller claims to a different receiver address
+                ├── Then the balance is keyed on the caller, not the receiver.
+                ├── Then the replacement receiver gets the funds.
+                └── Then the caller's unclaimable balance is cleared.
+    */
+    function testClaimPreviouslyUnclaimable_PaysOutToReplacementReceiver()
+        public
+    {
+        address caller_ = makeAddr("originalRecipient");
+        address replacement_ = makeAddr("replacementReceiver");
+        uint96 amount_ = 100;
+
+        // Escrow funds and record the unclaimable balance keyed on the caller.
+        _token.mint(address(queue), amount_);
+        queue.exposed_addUnclaimableOrder(
+            helper_createTestPaymentOrder(caller_, amount_, 1, address(_token)),
+            address(paymentClient)
+        );
+
+        // Caller claims, but routes the payout to a different address.
+        vm.prank(caller_);
+        queue.claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), replacement_
+        );
+
+        assertEq(
+            _token.balanceOf(replacement_),
+            amount_,
+            "Replacement receiver should get the funds."
+        );
+        assertEq(
+            _token.balanceOf(caller_), 0, "Caller should not receive the funds."
+        );
+        assertEq(
+            queue.unclaimable(
+                address(paymentClient), address(_token), caller_
+            ),
+            0,
+            "Caller's unclaimable balance should be cleared."
+        );
+    }
+
+    /* Test testClaimPreviouslyUnclaimableToTreasury_ReleasesEscrowedFundsWithoutSelfApproval()
+        └── Given an escrowed unclaimable balance held by the module
+            └── When an operator sweeps it to the failed-orders treasury (no self-allowance)
+                ├── Then the sweep should succeed using safeTransfer.
+                └── Then the treasury should receive the full amount.
+    */
+    function testClaimPreviouslyUnclaimableToTreasury_ReleasesEscrowedFundsWithoutSelfApproval(
+    ) public {
+        address recipient_ = makeAddr("recipient");
+        uint96 amount_ = 100;
+
+        // Escrow the funds in the module; again no `queue -> queue` approval.
+        _token.mint(address(queue), amount_);
+        queue.exposed_addUnclaimableOrder(
+            helper_createTestPaymentOrder(
+                recipient_, amount_, 1, address(_token)
+            ),
+            address(paymentClient)
+        );
+
+        vm.prank(address(this));
+        queue.claimPreviouslyUnclaimableToTreasury(
+            address(paymentClient), address(_token), recipient_
+        );
+
+        assertEq(
+            _token.balanceOf(queue.getFailedOrdersTreasury()),
+            amount_,
+            "Failed-orders treasury should receive the escrowed tokens."
+        );
+        assertEq(
+            queue.unclaimable(
+                address(paymentClient), address(_token), recipient_
+            ),
+            0,
+            "Unclaimable balance should be cleared."
+        );
+    }
+
     /* Test: Function executePaymentQueue()
         └── Given the number of orders in queue is greater than max orders per execution
             └── When the function executePaymentQueue() is called
@@ -4035,24 +4159,18 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
 
-        // Setup: give tokens to payment client and approve queue to spend them
-        helper_setupPaymentTokenBalanceAndApproval(amount, _token);
-
-        // Transfer tokens to the queue contract first (simulating failed payment flow)
-        vm.prank(address(paymentClient));
-        _token.transfer(address(queue), amount);
-
-        // Queue needs to approve itself to transfer its own tokens
-        vm.prank(address(queue));
-        _token.approve(address(queue), amount);
-
-        // Now add it as unclaimable
+        // The unclaimable balance is keyed on the caller. The internal call is
+        // made by this test contract (the exposed mock returns msg.sender from
+        // _msgSender()), so record the balance against address(this).
+        _token.mint(address(queue), amount);
         queue.exposed_addUnclaimableOrder(
-            helper_createTestPaymentOrder(recipient, amount, 1, address(_token)),
+            helper_createTestPaymentOrder(
+                address(this), amount, 1, address(_token)
+            ),
             address(paymentClient)
         );
 
-        // Try to claim
+        // Claim, paying out to a distinct recipient address.
         queue.exposed_claimPreviouslyUnclaimable(
             address(paymentClient), address(_token), recipient
         );
