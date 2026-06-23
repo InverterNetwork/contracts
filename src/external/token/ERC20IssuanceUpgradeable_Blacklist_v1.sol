@@ -229,6 +229,26 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
         super._update(from_, to_, amount_);
     }
 
+    /// @notice Internal hook to also block a blacklisted spender from moving
+    ///         tokens via an allowance.
+    /// @dev    The `_update` hook only sees `from` and `to`, so without this a
+    ///         blacklisted address holding an allowance could still spend it
+    ///         through `transferFrom` (or any allowance-based spend). Checking
+    ///         the spender here closes that path.
+    /// @param  owner_ Address the allowance is drawn from.
+    /// @param  spender_ Address spending the allowance.
+    /// @param  value_ Amount being spent.
+    function _spendAllowance(address owner_, address spender_, uint value_)
+        internal
+        virtual
+        override
+    {
+        if (isBlacklisted(spender_)) {
+            revert ERC20Issuance_Blacklist_BlacklistedAddress(spender_);
+        }
+        super._spendAllowance(owner_, spender_, value_);
+    }
+
     /// @notice Internal function to set a blacklist manager.
     /// @param  manager_ Address to set as blacklist manager.
     /// @param  allowed_ Whether to grant or revoke the blacklist manager role.
