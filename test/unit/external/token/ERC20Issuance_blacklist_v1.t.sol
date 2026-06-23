@@ -917,6 +917,66 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         );
     }
 
+    /*  Test: blacklisted spender via transferFrom
+        ├── Given a holder approved a spender and the spender is blacklisted
+        │   └── When transferFrom is called by the spender
+        │       └── Then it should revert with BlacklistedAddress(spender)
+        └── Given the spender is not blacklisted
+            └── When transferFrom is called by the spender
+                └── Then it should move the holder's tokens
+    */
+
+    function testTransferFrom_revertGivenSpenderIsBlacklisted(uint amount_)
+        public
+    {
+        amount_ = bound(amount_, 1, uint(type(uint).max - 1));
+        address holder = makeAddr("holder");
+        address spender = makeAddr("spender");
+        address dest = makeAddr("dest");
+
+        _fundAddress(holder, amount_);
+        vm.prank(holder);
+        token.approve(spender, amount_);
+
+        // Blacklist the spender only. Holder and dest stay clean, so the
+        // `_update(from, to)` checks would pass; the spender check must catch it.
+        _blacklistAddress(spender);
+
+        vm.prank(spender);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Issuance_Blacklist_v1
+                    .ERC20Issuance_Blacklist_BlacklistedAddress
+                    .selector,
+                spender
+            )
+        );
+        token.transferFrom(holder, dest, amount_);
+
+        // Funds must not have moved.
+        assertEq(token.balanceOf(holder), amount_, "holder balance untouched");
+        assertEq(token.balanceOf(dest), 0, "dest received nothing");
+    }
+
+    function testTransferFrom_worksGivenSpenderIsNotBlacklisted(uint amount_)
+        public
+    {
+        amount_ = bound(amount_, 1, uint(type(uint).max - 1));
+        address holder = makeAddr("holder");
+        address spender = makeAddr("spender");
+        address dest = makeAddr("dest");
+
+        _fundAddress(holder, amount_);
+        vm.prank(holder);
+        token.approve(spender, amount_);
+
+        vm.prank(spender);
+        token.transferFrom(holder, dest, amount_);
+
+        assertEq(token.balanceOf(holder), 0, "holder fully spent");
+        assertEq(token.balanceOf(dest), amount_, "dest received funds");
+    }
+
     // ================================================================================
     // Helper Functions
 
