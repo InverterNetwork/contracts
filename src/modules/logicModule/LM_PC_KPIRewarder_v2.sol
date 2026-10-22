@@ -70,8 +70,8 @@ contract LM_PC_KPIRewarder_v2 is
     //   or not (see below).
     // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying
     //   the value to be asserted and the KPI to use for the reward distrbution in case it resolves
-    // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved.
-    //   They will be added before posting the next assertion.
+    // - To ensure fairness, staking is blocked while an assertion is pending and until the reward window
+    //   opened by its resolution has closed, so a resolved round only pays the stakers that were staked during it.
     // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function.
     //   This will calculate the final reward value and distribute it to the stakers.
 
@@ -86,9 +86,11 @@ contract LM_PC_KPIRewarder_v2 is
     mapping(bytes32 => RewardRoundConfiguration) internal assertionConfig;
     /// @dev	 For locking certain utilities when there are assertions open.
     bool internal assertionPending;
+    /// @dev	End of the reward window opened by the last resolved assertion. Staking is blocked until then.
+    uint internal rewardWindowEnd;
 
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[49] private __gap;
 
     /*
     Tranche Example:
@@ -298,6 +300,12 @@ contract LM_PC_KPIRewarder_v2 is
             );
         }
 
+        // Block staking in the reward window of a resolved assertion, otherwise the assertion could be settled and
+        // staked into within the same transaction to capture a share of a round the staker was never part of.
+        if (block.timestamp < rewardWindowEnd) {
+            revert Module__LM_PC_KPIRewarder_v2__CannotStakeDuringRewardWindow();
+        }
+
         address sender = _msgSender();
 
         _stake(sender, amount);
@@ -395,6 +403,7 @@ contract LM_PC_KPIRewarder_v2 is
             }
 
             _setRewards(rewardAmount, 1);
+            rewardWindowEnd = block.timestamp + 1;
             assertionConfig[assertionId].distributed = true;
         } else {
             // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding

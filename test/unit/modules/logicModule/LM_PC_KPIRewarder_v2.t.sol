@@ -769,6 +769,8 @@ stakeTest
 │   └── it should revert
 ├── when there is an unresolved assertion live
 │   └── it should revert
+├── when the reward window of a resolved assertion is open
+│   └── it should revert
 ├── when the caller does not have sufficient funds
 │   └── it should revert
 └── when the caller has sufficient funds
@@ -855,6 +857,49 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
         vm.expectRevert();
         kpiManager.stake(1000e18);
         vm.stopPrank();
+    }
+
+    function test_RevertWhen_TheRewardWindowIsOpen() external {
+        // it should revert
+
+        address[] memory users = new address[](2);
+        users[0] = makeAddr("staker1");
+        users[1] = makeAddr("staker2");
+        uint[] memory amounts = new uint[](2);
+        amounts[0] = 1000e18;
+        amounts[1] = 1000e18;
+
+        (bytes32 createdID,,,) =
+            setUpStateForAssertionResolution(users, amounts, 250e18, true);
+
+        // Settling the assertion and staking in the same transaction must not be possible
+        vm.prank(address(ooV3));
+        kpiManager.assertionResolvedCallback(createdID, true);
+
+        address sniper = makeAddr("sniper");
+        uint sniperAmount = 18_000e18;
+        stakingToken.mint(sniper, sniperAmount);
+        vm.startPrank(sniper);
+        stakingToken.approve(address(kpiManager), sniperAmount);
+        vm.expectRevert(
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__CannotStakeDuringRewardWindow
+                .selector
+        );
+        kpiManager.stake(sniperAmount);
+
+        // Once the window has closed, staking works again but earns nothing from the resolved round
+        vm.warp(block.timestamp + 1);
+        kpiManager.stake(sniperAmount);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 10);
+        assertEq(kpiManager.getEarned(sniper), 0);
+        assertApproxEqAbs(
+            kpiManager.getEarned(users[0]) + kpiManager.getEarned(users[1]),
+            kpiManager.getRewardRate(),
+            1e8
+        );
     }
 
     function test_WhenTheCallerHasSufficientFunds(uint amount) external {

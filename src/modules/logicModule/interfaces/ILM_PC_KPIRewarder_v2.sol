@@ -55,6 +55,9 @@ interface ILM_PC_KPIRewarder_v2 {
     /// @notice The user cannot stake while an assertion is unresolved.
     error Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending();
 
+    /// @notice The user cannot stake while the reward window of a resolved assertion is open.
+    error Module__LM_PC_KPIRewarder_v2__CannotStakeDuringRewardWindow();
+
     /// @notice Callback received references non existent assertionId.
     error Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
         bytes32 assertionId

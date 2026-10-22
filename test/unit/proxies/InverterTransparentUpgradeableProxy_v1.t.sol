@@ -157,4 +157,37 @@ contract InverterTransparentUpgradeableProxyV1Test is Test {
         assertEq(returnedMinorVersion, initialMinorVersion + 1);
         assertEq(returnedPatchVersion, initialPatchVersion + 1);
     }
+
+    function test_upgradeToNewestVersionKeepsImplementationStorage() public {
+        // Simulate implementation state in the first storage slots, e.g. the orchestrator of a module
+        for (uint i; i < 3; i++) {
+            vm.store(address(proxy), bytes32(i), bytes32(uint(0xdead + i)));
+        }
+
+        beacon.overrideImplementation(address(implementation2));
+        beacon.overrideVersion(
+            initialMajorVersion + 1,
+            initialMinorVersion + 1,
+            initialPatchVersion + 1
+        );
+
+        vm.prank(admin);
+        IInverterTransparentUpgradeableProxy_v1(address(proxy))
+            .upgradeToNewestVersion();
+
+        for (uint i; i < 3; i++) {
+            assertEq(
+                vm.load(address(proxy), bytes32(i)), bytes32(uint(0xdead + i))
+            );
+        }
+
+        (
+            uint returnedMajorVersion,
+            uint returnedMinorVersion,
+            uint returnedPatchVersion
+        ) = proxy.version();
+        assertEq(returnedMajorVersion, initialMajorVersion + 1);
+        assertEq(returnedMinorVersion, initialMinorVersion + 1);
+        assertEq(returnedPatchVersion, initialPatchVersion + 1);
+    }
 }
