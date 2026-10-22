@@ -2091,6 +2091,9 @@ contract PP_StreamingV1Test is ModuleTest {
         // pass the test here
         vm.assume(randomToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
 
+        // The fuzzer can pick addresses of tokens deployed in the test setup, which are valid
+        vm.assume(randomToken.code.length == 0);
+
         vm.prank(sender);
 
         assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);

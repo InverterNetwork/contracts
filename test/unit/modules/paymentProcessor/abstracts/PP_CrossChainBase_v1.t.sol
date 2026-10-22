@@ -638,6 +638,8 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     ) public {
         // Validate test inputs
         helper_ensureNoAddressCollision(addr_);
+        // The fuzzer can pick addresses of tokens deployed in the test setup, which are valid
+        vm.assume(addr_.code.length == 0);
 
         // Test function call
         bool isValid =
