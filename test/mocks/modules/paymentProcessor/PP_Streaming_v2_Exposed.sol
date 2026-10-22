@@ -48,6 +48,13 @@ contract PP_Streaming_v2_Exposed is PP_Streaming_v2 {
         return _validTimes(_start, _cliff, _end);
     }
 
+    function exposed_validOriginAndTargetChain(
+        uint originChainId,
+        uint targetChainId
+    ) external view returns (bool) {
+        return _validOriginAndTargetChain(originChainId, targetChainId);
+    }
+
     function exposed_validPaymentToken(address _token)
         external
         returns (bool)
