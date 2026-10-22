@@ -2519,9 +2519,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             _token.balanceOf(caller_), 0, "Caller should not receive the funds."
         );
         assertEq(
-            queue.unclaimable(
-                address(paymentClient), address(_token), caller_
-            ),
+            queue.unclaimable(address(paymentClient), address(_token), caller_),
             0,
             "Caller's unclaimable balance should be cleared."
         );
