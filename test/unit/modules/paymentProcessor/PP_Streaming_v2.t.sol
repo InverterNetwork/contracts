@@ -2031,7 +2031,10 @@ contract PP_StreamingV1Test is ModuleTest {
         ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
             && paymentProcessor.exposed_validTimes(
                 uint(order.data[0]), uint(order.data[1]), uint(order.data[2])
-            ) && paymentProcessor.exposed__validTotal(order.amount);
+            ) && paymentProcessor.exposed__validTotal(order.amount)
+            && paymentProcessor.exposed_validOriginAndTargetChain(
+                order.originChainId, order.targetChainId
+            );
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
