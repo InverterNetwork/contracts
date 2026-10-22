@@ -8,13 +8,12 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // SuT
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
-
 import {ERC20PaymentClientBaseV1Mock} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
-import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
+import {FM_DepositVault_v1_Exposed} from
+    "test/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
 // Internal Dependencies
 import {
@@ -31,18 +30,14 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 contract FM_DepositVaultV1Test is ModuleTest {
     // SuT
-    FM_DepositVault_v1 vault;
+    FM_DepositVault_v1_Exposed vault;
     ERC20PaymentClientBaseV1Mock client;
 
-    //--------------------------------------------------------------------------
-    // Events
-
-    event Deposit(address indexed _from, uint _amount);
-    event TransferOrchestratorToken(address indexed _to, uint _amount);
+    uint internal constant BPS = 10_000;
 
     function setUp() public {
-        address impl = address(new FM_DepositVault_v1());
-        vault = FM_DepositVault_v1(Clones.clone(impl));
+        address impl = address(new FM_DepositVault_v1_Exposed());
+        vault = FM_DepositVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
 
@@ -51,6 +46,9 @@ contract FM_DepositVaultV1Test is ModuleTest {
 
         client = new ERC20PaymentClientBaseV1Mock();
         _addLogicModuleToOrchestrator(address(client));
+
+        vm.prank(address(governor));
+        feeManager.setMaxFee(feeManager.BPS());
     }
 
     function testSupportsInterface() public {
@@ -84,11 +82,15 @@ contract FM_DepositVaultV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    function testDeposit_Works(address user, uint amount) public {
+    function testDeposit_Works(address user, uint amount, uint fee) public {
         vm.assume(
             user != address(0) && user != address(_token)
                 && user != address(vault) && user != vault.trustedForwarder()
+                && user != treasury
         );
+        //Restrict to reasonable amounts
+        amount = bound(amount, 1, type(uint128).max);
+        fee = bound(fee, 0, BPS);
 
         // Setup
         _token.mint(user, amount);
@@ -96,14 +98,30 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vm.prank(user);
         _token.approve(address(vault), amount);
 
+        if (fee != 0) {
+            feeManager.setDefaultCollateralFee(fee);
+        }
+
+        //Expected Amounts
+        uint expectedFeeAmount = amount * fee / BPS;
+        uint expectedRestAmount = amount - expectedFeeAmount;
+
         // Deposit
-        vm.prank(user);
+        if (expectedFeeAmount != 0) {
+            vm.expectEmit(true, true, true, true);
+            emit IModule_v1.ProtocolFeeTransferred(
+                address(_token),
+                feeManager.getDefaultProtocolTreasury(),
+                expectedFeeAmount
+            );
+        }
         vm.expectEmit(true, true, true, true);
-        emit Deposit(user, amount);
+        emit IFM_DepositVault_v1.Deposit(user, amount);
+        vm.prank(user);
         vault.deposit(amount);
 
         // Assert balance
-        assertEq(_token.balanceOf(address(vault)), amount);
+        assertEq(_token.balanceOf(address(vault)), expectedRestAmount);
         assertEq(_token.balanceOf(user), 0);
     }
 
@@ -116,7 +134,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         _token.mint(address(vault), amount);
 
         vm.expectEmit(true, true, true, true);
-        emit TransferOrchestratorToken(to, amount);
+        emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
 
         vm.prank(address(client));
         vault.transferOrchestratorToken(to, amount);
@@ -134,5 +152,50 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.transferOrchestratorToken(address(0), 0);
     }
 
-    // =========================================================================
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function testProcessProtocolFeeViaTransfer(address treasury, uint amount)
+        public
+    {
+        vm.assume(treasury != address(0) && treasury != address(vault));
+        amount = bound(amount, 1, type(uint).max);
+
+        // Setup
+        _token.mint(address(vault), amount);
+        assertEq(_token.balanceOf(address(vault)), amount);
+
+        vm.expectEmit(true, true, true, true);
+        emit IModule_v1.ProtocolFeeTransferred(
+            address(_token), treasury, amount
+        );
+
+        vault.exposed_processProtocolFeeViaTransfer(treasury, _token, amount);
+
+        assertEq(_token.balanceOf(treasury), amount);
+        assertEq(_token.balanceOf(address(vault)), 0);
+    }
+
+    function testProcessProtocolFeeViaTransferSkipsFeeCollectionIfFeeIsZero()
+        public
+    {
+        // Setup
+        _token.mint(address(vault), 1);
+        assertEq(_token.balanceOf(address(vault)), 1);
+
+        vault.exposed_processProtocolFeeViaTransfer(address(1), _token, 0);
+
+        assertEq(_token.balanceOf(address(vault)), 1);
+    }
+
+    function testValidateRecipient(address receiver) public {
+        if (receiver == address(0) || receiver == address(vault)) {
+            vm.expectRevert(
+                IFM_DepositVault_v1
+                    .Module__DepositVault__InvalidRecipient
+                    .selector
+            );
+        }
+        vault.exposed_validateRecipient(receiver);
+    }
 }

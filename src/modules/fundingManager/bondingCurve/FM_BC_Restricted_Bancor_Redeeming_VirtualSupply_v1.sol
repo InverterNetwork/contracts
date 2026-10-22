@@ -12,25 +12,32 @@ import {
 /**
  * @title   Inverter Restricted Bancor Virtual Supply Bonding Curve Funding Manager
  *
- * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
- *          a virtual supply for both the issuance and the collateral as input. It integrates
- *          Aragon's Bancor Formula to manage the calculations for token issuance and redemption
- *          rates based on specified reserve ratios.
+ * @notice  This contract enables the issuance and redeeming of tokens on a
+ *          bonding curve, using a virtual supply for both the issuance and
+ *          the collateral as input. It integrates Aragon's Bancor Formula to
+ *          manage the calculations for token issuance and redemption rates
+ *          based on specified reserve ratios.
  *
- * @dev     It overrides the `buyFor()` and `sellTo()` functions of its parent contract to limit
- *          them to callers holding a "Curve Interaction" role. Since the upstream functions `buy()` and `sell()`
- *          call these functions internally, they also become gated.
+ * @dev     It overrides the `buyFor()` and `sellTo()` functions of its parent
+ *          contract to limit them to callers holding a "Curve Interaction"
+ *          role. Since the upstream functions `buy()` and `sell()` call these
+ *          functions internally, they also become gated.
  *
- *          PLEASE NOTE: This means that the workflow itself can only mint tokens through buying
- *          and selling by somebody with the `CURVE_INTERACTION_ROLE`, but NOT that there are no other ways to
- *          mint tokens. The Bonding Curve uses an external token contract, and there is no guarantee that said
- *          uses an external token contract, and there is no guarantee that said contract won't
- *          have an additional way to mint tokens (and potentially sell them on the cruve to receive
- *          backing collateral)
+ *          PLEASE NOTE: This means that the workflow itself can only mint
+ *          tokens through buying and selling by somebody with the
+ *          `CURVE_INTERACTION_ROLE`, but NOT that there are no other ways to
+ *          mint tokens. The Bonding Curve uses an external token contract, and
+ *          there is no guarantee that said uses an external token contract, and
+ *          there is no guarantee that said contract won't have an additional
+ *          way to mint tokens (and potentially sell them on the cruve to
+ *          receive backing collateral)
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.0
  *
  * @author  Inverter Network
  */

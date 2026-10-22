@@ -33,6 +33,14 @@ interface IModule_v1 {
         address indexed parentOrchestrator, Metadata metadata
     );
 
+    /// @notice Event emitted when protocol fee has been transferred to the treasury.
+    /// @param  token The token received as protocol fee.
+    /// @param  treasury The protocol treasury address receiving the token fee amount.
+    /// @param  feeAmount The fee amount transferred to the treasury.
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint feeAmount
+    );
+
     //--------------------------------------------------------------------------
     // Errors
 
