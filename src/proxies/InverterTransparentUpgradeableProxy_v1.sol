@@ -66,14 +66,19 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @dev	The address of the beacon that is used to fetch the implementation address.
     IInverterBeacon_v1 internal immutable _beacon;
 
-    /// @dev	The major version of the implementation.
-    uint internal majorVersion;
+    /// @dev	The version of the linked implementation, stored in an ERC-7201 namespace so it cannot
+    ///         collide with the storage of the implementation the proxy delegates to.
+    /// @custom:storage-location erc7201:inverter.storage.InverterTransparentUpgradeableProxy_v1
+    struct VersionStorage {
+        uint majorVersion;
+        uint minorVersion;
+        uint patchVersion;
+    }
 
-    /// @dev	The minor version of the implementation.
-    uint internal minorVersion;
-
-    /// @dev	The patch version of the implementation.
-    uint internal patchVersion;
+    /// @dev	keccak256(abi.encode(uint(keccak256("inverter.storage.InverterTransparentUpgradeableProxy_v1")) - 1))
+    ///         & ~bytes32(uint(0xff))
+    bytes32 private constant VERSION_STORAGE_LOCATION =
+        0x7f64a4379a384334ad31a069fd0e3183465498d81cb6b14f5f286747a479a800;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -93,7 +98,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
 
         _beacon = beacon;
         _admin = initialOwner;
-        (majorVersion, minorVersion, patchVersion) = _beacon.version();
+        _setVersion();
         // Set the storage value and emit an event for ERC-1967 compatibility
         ERC1967Utils.changeAdmin(initialOwner);
     }
@@ -108,7 +113,8 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @return The minor version.
     /// @return The patch version.
     function version() external view returns (uint, uint, uint) {
-        return (majorVersion, minorVersion, patchVersion);
+        VersionStorage storage $ = _getVersionStorage();
+        return ($.majorVersion, $.minorVersion, $.patchVersion);
     }
 
     /// @dev    Fallback function to delegate calls to the implementation contract
@@ -125,7 +131,24 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
         // Override implementation
         ERC1967Utils.upgradeToAndCall(_beacon.implementation(), bytes(""));
         // Override version
-        (majorVersion, minorVersion, patchVersion) = _beacon.version();
+        _setVersion();
+    }
+
+    /// @dev	Stores the current version of the linked beacon.
+    function _setVersion() internal {
+        VersionStorage storage $ = _getVersionStorage();
+        ($.majorVersion, $.minorVersion, $.patchVersion) = _beacon.version();
+    }
+
+    /// @dev	Returns the namespaced storage struct holding the version.
+    function _getVersionStorage()
+        private
+        pure
+        returns (VersionStorage storage $)
+    {
+        assembly {
+            $.slot := VERSION_STORAGE_LOCATION
+        }
     }
 
     /// @dev	If caller is the admin process the call internally, otherwise transparently fallback to the proxy behavior.
