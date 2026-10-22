@@ -129,7 +129,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             console.log(
                 "Failed to get valid rpc url for sepolia from env, using fallback"
             );
-            rpcUrl = vm.rpcUrl("https://rpc2.sepolia.org/");
+            rpcUrl = vm.rpcUrl("https://sepolia.drpc.org/");
         }
 
         // Try creating the fork via the rpc url set above
@@ -137,9 +137,16 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         try vm.createSelectFork(rpcUrl) returns (uint forkId) {
             sepoliaForkId = forkId;
         } catch {
-            revert(
-                "Failed to create fork, missing working Sepolia RPC URL - Check README.md"
-            );
+            // The configured rpc can fail, retry with the public fallback
+            try vm.createSelectFork("https://sepolia.drpc.org/") returns (
+                uint forkId
+            ) {
+                sepoliaForkId = forkId;
+            } catch {
+                revert(
+                    "Failed to create fork, missing working Sepolia RPC URL - Check README.md"
+                );
+            }
         }
 
         // We deploy and label the necessary tokens for the tests
