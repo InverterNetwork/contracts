@@ -102,7 +102,6 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     uint64 constant ASSERTION_LIVENESS = 25_000;
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     uint constant MOCK_ASSERTED_VALUE = 250;
-    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
 
     // KPI mock data
     uint constant NUM_OF_TRANCHES = 4;
@@ -275,7 +274,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         }
         _assumeValidAddresses(users);
 
-        // Mint enough USDC to the participants
+        // Give the automation service USDC to pay the assertion bonds
         _setupUSDC();
 
         // give the automation service the rights to post assertions
@@ -358,7 +357,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         bytes32 assertionId = kpiRewarder.postAssertion(
             MOCK_ASSERTION_DATA_ID,
             MOCK_ASSERTED_VALUE,
-            MOCK_ASSERTER_ADDRESS,
+            AUTOMATION_SERVICE, // the asserter pays the bond
             0 // target KPI
         );
 
@@ -458,17 +457,12 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     }
 
     function _setupUSDC() internal {
-        vm.prank(address(USDC_Minter));
-        USDC.mint(address(this), 100_000_000e18);
-        // - Seed Automation service with Bond tokens and funds for execution
-        USDC.transfer(address(AUTOMATION_SERVICE), 1_000_000e18);
-        // - Ensure allowances
-        USDC.approve(
-            address(kpiRewarder),
-            OptimisticOracleV3Interface(ooV3_address).getMinimumBond(
-                USDC_address
-            )
-        );
+        // - Seed Automation service with Bond tokens. The Sepolia USDC minter can no longer be relied on,
+        //   so set the balance directly
+        deal(USDC_address, AUTOMATION_SERVICE, 1_000_000e18);
+        // - Ensure allowances (the asserter pays the bond for every round)
+        vm.prank(AUTOMATION_SERVICE);
+        USDC.approve(address(kpiRewarder), type(uint).max);
     }
 
     function _prepareLM_PC_KPIRewarder_v2() internal {
