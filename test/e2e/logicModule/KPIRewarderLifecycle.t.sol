@@ -358,7 +358,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         bytes32 assertionId = kpiRewarder.postAssertion(
             MOCK_ASSERTION_DATA_ID,
             MOCK_ASSERTED_VALUE,
-            MOCK_ASSERTER_ADDRESS,
+            AUTOMATION_SERVICE, // the asserter pays the bond
             0 // target KPI
         );
 
@@ -458,17 +458,13 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     }
 
     function _setupUSDC() internal {
-        vm.prank(address(USDC_Minter));
-        USDC.mint(address(this), 100_000_000e18);
+        // The Sepolia USDC minter can no longer be relied on, so set the balance directly
+        deal(USDC_address, address(this), 100_000_000e18);
         // - Seed Automation service with Bond tokens and funds for execution
         USDC.transfer(address(AUTOMATION_SERVICE), 1_000_000e18);
-        // - Ensure allowances
-        USDC.approve(
-            address(kpiRewarder),
-            OptimisticOracleV3Interface(ooV3_address).getMinimumBond(
-                USDC_address
-            )
-        );
+        // - Ensure allowances (the asserter pays the bond for every round)
+        vm.prank(AUTOMATION_SERVICE);
+        USDC.approve(address(kpiRewarder), type(uint).max);
     }
 
     function _prepareLM_PC_KPIRewarder_v2() internal {
